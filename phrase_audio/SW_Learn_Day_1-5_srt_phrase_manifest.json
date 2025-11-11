@@ -1,0 +1,747 @@
+{
+  "subs": "C:\\Python\\AuTr\\outputs\\SW_Learn_Day_1-5_srt.json",
+  "media": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\input_download\\SW_Learn_Day_1-5.mp4",
+  "phrase": "*",
+  "mode": "all",
+  "ignore_case": true,
+  "sr": 16000,
+  "channels": 1,
+  "ext": "wav",
+  "pad": 0.7,
+  "bitrate": "192k",
+  "pcm_fmt": "s16le",
+  "hq_resample": false,
+  "accurate_seek": false,
+  "min_duration": 1.0,
+  "clips": [
+    {
+      "index": 0,
+      "start": 3.94,
+      "end": 6.42,
+      "start_padded": 3.24,
+      "end_padded": 7.12,
+      "text": "Lyssna och se jefter.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0001_SW_Learn_Day_1-5_srt_00-00-03.240_00-00-07.120.wav",
+      "merged_from": [
+        0
+      ]
+    },
+    {
+      "index": 1,
+      "start": 8.14,
+      "end": 12.0,
+      "start_padded": 7.44,
+      "end_padded": 12.7,
+      "text": "Hej, hej.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0002_SW_Learn_Day_1-5_srt_00-00-07.440_00-00-12.700.wav",
+      "merged_from": [
+        1
+      ]
+    },
+    {
+      "index": 2,
+      "start": 12.84,
+      "end": 15.98,
+      "start_padded": 12.14,
+      "end_padded": 16.68,
+      "text": "Hur, hur.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0003_SW_Learn_Day_1-5_srt_00-00-12.140_00-00-16.680.wav",
+      "merged_from": [
+        2
+      ]
+    },
+    {
+      "index": 3,
+      "start": 17.520000000000003,
+      "end": 21.42,
+      "start_padded": 16.820000000000004,
+      "end_padded": 22.12,
+      "text": "Är, är.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0004_SW_Learn_Day_1-5_srt_00-00-16.820_00-00-22.120.wav",
+      "merged_from": [
+        3
+      ]
+    },
+    {
+      "index": 4,
+      "start": 22.94,
+      "end": 26.54,
+      "start_padded": 22.240000000000002,
+      "end_padded": 27.24,
+      "text": "Läget, läget.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0005_SW_Learn_Day_1-5_srt_00-00-22.240_00-00-27.240.wav",
+      "merged_from": [
+        4
+      ]
+    },
+    {
+      "index": 5,
+      "start": 28.240000000000002,
+      "end": 29.64,
+      "start_padded": 27.540000000000003,
+      "end_padded": 30.34,
+      "text": "Bra.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0006_SW_Learn_Day_1-5_srt_00-00-27.540_00-00-30.340.wav",
+      "merged_from": [
+        5
+      ]
+    },
+    {
+      "index": 6,
+      "start": 33.38,
+      "end": 36.02,
+      "start_padded": 32.68,
+      "end_padded": 36.720000000000006,
+      "text": "Hej, hur är läget?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0007_SW_Learn_Day_1-5_srt_00-00-32.680_00-00-36.720.wav",
+      "merged_from": [
+        6
+      ]
+    },
+    {
+      "index": 7,
+      "start": 37.46,
+      "end": 47.3,
+      "start_padded": 36.76,
+      "end_padded": 48.0,
+      "text": "Bra. God morgon.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0008_SW_Learn_Day_1-5_srt_00-00-36.760_00-00-48.000.wav",
+      "merged_from": [
+        7,
+        8
+      ]
+    },
+    {
+      "index": 9,
+      "start": 48.980000000000004,
+      "end": 50.38,
+      "start_padded": 48.28,
+      "end_padded": 51.080000000000005,
+      "text": "Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0009_SW_Learn_Day_1-5_srt_00-00-48.280_00-00-51.080.wav",
+      "merged_from": [
+        9
+      ]
+    },
+    {
+      "index": 10,
+      "start": 50.38,
+      "end": 52.56,
+      "start_padded": 49.68,
+      "end_padded": 53.260000000000005,
+      "text": "Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0010_SW_Learn_Day_1-5_srt_00-00-49.680_00-00-53.260.wav",
+      "merged_from": [
+        10
+      ]
+    },
+    {
+      "index": 11,
+      "start": 55.04,
+      "end": 60.66,
+      "start_padded": 54.339999999999996,
+      "end_padded": 61.36,
+      "text": "Syns. Senare.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0011_SW_Learn_Day_1-5_srt_00-00-54.340_00-01-01.360.wav",
+      "merged_from": [
+        11,
+        12
+      ]
+    },
+    {
+      "index": 13,
+      "start": 65.62,
+      "end": 66.76,
+      "start_padded": 64.92,
+      "end_padded": 67.46000000000001,
+      "text": "Hej då.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0012_SW_Learn_Day_1-5_srt_00-01-04.920_00-01-07.460.wav",
+      "merged_from": [
+        13
+      ]
+    },
+    {
+      "index": 14,
+      "start": 70.14,
+      "end": 72.2,
+      "start_padded": 69.44,
+      "end_padded": 72.9,
+      "text": "God morgon Anna.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0013_SW_Learn_Day_1-5_srt_00-01-09.440_00-01-12.900.wav",
+      "merged_from": [
+        14
+      ]
+    },
+    {
+      "index": 15,
+      "start": 72.2,
+      "end": 74.62,
+      "start_padded": 71.5,
+      "end_padded": 75.32000000000001,
+      "text": "God morgon, Lysa.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0014_SW_Learn_Day_1-5_srt_00-01-11.500_00-01-15.320.wav",
+      "merged_from": [
+        15
+      ]
+    },
+    {
+      "index": 16,
+      "start": 75.98,
+      "end": 80.14,
+      "start_padded": 75.28,
+      "end_padded": 80.84,
+      "text": "God morgon, Anna. Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0015_SW_Learn_Day_1-5_srt_00-01-15.280_00-01-20.840.wav",
+      "merged_from": [
+        16,
+        17
+      ]
+    },
+    {
+      "index": 18,
+      "start": 81.38,
+      "end": 84.3,
+      "start_padded": 80.67999999999999,
+      "end_padded": 85.0,
+      "text": "Vi. Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0016_SW_Learn_Day_1-5_srt_00-01-20.680_00-01-25.000.wav",
+      "merged_from": [
+        18,
+        19
+      ]
+    },
+    {
+      "index": 20,
+      "start": 85.2,
+      "end": 86.52,
+      "start_padded": 84.5,
+      "end_padded": 87.22,
+      "text": "Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0017_SW_Learn_Day_1-5_srt_00-01-24.500_00-01-27.220.wav",
+      "merged_from": [
+        20
+      ]
+    },
+    {
+      "index": 21,
+      "start": 86.82,
+      "end": 88.1,
+      "start_padded": 86.11999999999999,
+      "end_padded": 88.8,
+      "text": "Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0018_SW_Learn_Day_1-5_srt_00-01-26.120_00-01-28.800.wav",
+      "merged_from": [
+        21
+      ]
+    },
+    {
+      "index": 22,
+      "start": 94.72,
+      "end": 95.86,
+      "start_padded": 94.02,
+      "end_padded": 96.56,
+      "text": "Vi. Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0019_SW_Learn_Day_1-5_srt_00-01-34.020_00-01-36.560.wav",
+      "merged_from": [
+        22,
+        23,
+        24,
+        25
+      ]
+    },
+    {
+      "index": 26,
+      "start": 95.9,
+      "end": 100.3,
+      "start_padded": 95.2,
+      "end_padded": 101.0,
+      "text": "Vi. Vi. Vi. Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0020_SW_Learn_Day_1-5_srt_00-01-35.200_00-01-41.000.wav",
+      "merged_from": [
+        26,
+        27,
+        28,
+        29
+      ]
+    },
+    {
+      "index": 30,
+      "start": 105.44,
+      "end": 106.84,
+      "start_padded": 104.74,
+      "end_padded": 107.54,
+      "text": "Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0021_SW_Learn_Day_1-5_srt_00-01-44.740_00-01-47.540.wav",
+      "merged_from": [
+        30
+      ]
+    },
+    {
+      "index": 31,
+      "start": 106.88,
+      "end": 113.48,
+      "start_padded": 106.17999999999999,
+      "end_padded": 114.18,
+      "text": "Vi.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0022_SW_Learn_Day_1-5_srt_00-01-46.180_00-01-54.180.wav",
+      "merged_from": [
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ]
+    },
+    {
+      "index": 37,
+      "start": 113.48,
+      "end": 117.16,
+      "start_padded": 112.78,
+      "end_padded": 117.86,
+      "text": "En kaffe. En t.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0023_SW_Learn_Day_1-5_srt_00-01-52.780_00-01-57.860.wav",
+      "merged_from": [
+        37,
+        38
+      ]
+    },
+    {
+      "index": 39,
+      "start": 118.26,
+      "end": 119.28,
+      "start_padded": 117.56,
+      "end_padded": 119.98,
+      "text": "En t.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0024_SW_Learn_Day_1-5_srt_00-01-57.560_00-01-59.980.wav",
+      "merged_from": [
+        39
+      ]
+    },
+    {
+      "index": 40,
+      "start": 120.56,
+      "end": 121.96,
+      "start_padded": 119.86,
+      "end_padded": 122.66,
+      "text": "Ja.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0025_SW_Learn_Day_1-5_srt_00-01-59.860_00-02-02.660.wav",
+      "merged_from": [
+        40
+      ]
+    },
+    {
+      "index": 41,
+      "start": 123.72,
+      "end": 126.62,
+      "start_padded": 123.02,
+      "end_padded": 127.32000000000001,
+      "text": "Ja. Nej.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0026_SW_Learn_Day_1-5_srt_00-02-03.020_00-02-07.320.wav",
+      "merged_from": [
+        41,
+        42
+      ]
+    },
+    {
+      "index": 43,
+      "start": 128.2,
+      "end": 131.12,
+      "start_padded": 127.49999999999999,
+      "end_padded": 131.82,
+      "text": "Nej. Tack.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0027_SW_Learn_Day_1-5_srt_00-02-07.500_00-02-11.820.wav",
+      "merged_from": [
+        43,
+        44
+      ]
+    },
+    {
+      "index": 45,
+      "start": 132.72,
+      "end": 135.8,
+      "start_padded": 132.02,
+      "end_padded": 136.5,
+      "text": "Tack. Tack. En kaffe.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0028_SW_Learn_Day_1-5_srt_00-02-12.020_00-02-16.500.wav",
+      "merged_from": [
+        45,
+        46,
+        47
+      ]
+    },
+    {
+      "index": 48,
+      "start": 136.56,
+      "end": 139.44,
+      "start_padded": 135.86,
+      "end_padded": 140.14,
+      "text": "Ja, tack. En kaffe.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0029_SW_Learn_Day_1-5_srt_00-02-15.860_00-02-20.140.wav",
+      "merged_from": [
+        48,
+        49
+      ]
+    },
+    {
+      "index": 50,
+      "start": 140.38,
+      "end": 143.38,
+      "start_padded": 139.68,
+      "end_padded": 144.07999999999998,
+      "text": "Ja, tack. En t.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0030_SW_Learn_Day_1-5_srt_00-02-19.680_00-02-24.080.wav",
+      "merged_from": [
+        50,
+        51
+      ]
+    },
+    {
+      "index": 52,
+      "start": 144.18,
+      "end": 150.52,
+      "start_padded": 143.48000000000002,
+      "end_padded": 151.22,
+      "text": "Nej, tack. Vad.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0031_SW_Learn_Day_1-5_srt_00-02-23.480_00-02-31.220.wav",
+      "merged_from": [
+        52,
+        53
+      ]
+    },
+    {
+      "index": 54,
+      "start": 151.9,
+      "end": 154.94,
+      "start_padded": 151.20000000000002,
+      "end_padded": 155.64,
+      "text": "Vad. Heter.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0032_SW_Learn_Day_1-5_srt_00-02-31.200_00-02-35.640.wav",
+      "merged_from": [
+        54,
+        55
+      ]
+    },
+    {
+      "index": 56,
+      "start": 154.94,
+      "end": 157.22,
+      "start_padded": 154.24,
+      "end_padded": 157.92,
+      "text": "Heter.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0033_SW_Learn_Day_1-5_srt_00-02-34.240_00-02-37.920.wav",
+      "merged_from": [
+        56
+      ]
+    },
+    {
+      "index": 57,
+      "start": 157.94,
+      "end": 159.34,
+      "start_padded": 157.24,
+      "end_padded": 160.04,
+      "text": "Du.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0034_SW_Learn_Day_1-5_srt_00-02-37.240_00-02-40.040.wav",
+      "merged_from": [
+        57
+      ]
+    },
+    {
+      "index": 58,
+      "start": 160.92,
+      "end": 163.56,
+      "start_padded": 160.22,
+      "end_padded": 164.26,
+      "text": "Du. Jag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0035_SW_Learn_Day_1-5_srt_00-02-40.220_00-02-44.260.wav",
+      "merged_from": [
+        58,
+        59
+      ]
+    },
+    {
+      "index": 60,
+      "start": 165.08,
+      "end": 167.66,
+      "start_padded": 164.38000000000002,
+      "end_padded": 168.35999999999999,
+      "text": "Jag. Och.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0036_SW_Learn_Day_1-5_srt_00-02-44.380_00-02-48.360.wav",
+      "merged_from": [
+        60,
+        61
+      ]
+    },
+    {
+      "index": 62,
+      "start": 171.44,
+      "end": 172.64,
+      "start_padded": 170.74,
+      "end_padded": 173.33999999999997,
+      "text": "Vad heter du?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0037_SW_Learn_Day_1-5_srt_00-02-50.740_00-02-53.340.wav",
+      "merged_from": [
+        62
+      ]
+    },
+    {
+      "index": 63,
+      "start": 175.94,
+      "end": 178.0,
+      "start_padded": 175.24,
+      "end_padded": 178.7,
+      "text": "Jag heter Anna och du?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0038_SW_Learn_Day_1-5_srt_00-02-55.240_00-02-58.700.wav",
+      "merged_from": [
+        63
+      ]
+    },
+    {
+      "index": 64,
+      "start": 178.82,
+      "end": 181.16,
+      "start_padded": 178.12,
+      "end_padded": 181.85999999999999,
+      "text": "Jag heter Anna och du?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0039_SW_Learn_Day_1-5_srt_00-02-58.120_00-03-01.860.wav",
+      "merged_from": [
+        64
+      ]
+    },
+    {
+      "index": 65,
+      "start": 182.16,
+      "end": 183.64,
+      "start_padded": 181.46,
+      "end_padded": 184.33999999999997,
+      "text": "Jag heter Anders.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0040_SW_Learn_Day_1-5_srt_00-03-01.460_00-03-04.340.wav",
+      "merged_from": [
+        65
+      ]
+    },
+    {
+      "index": 66,
+      "start": 184.98,
+      "end": 186.2,
+      "start_padded": 184.28,
+      "end_padded": 186.89999999999998,
+      "text": "Jag heter Anders.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0041_SW_Learn_Day_1-5_srt_00-03-04.280_00-03-06.900.wav",
+      "merged_from": [
+        66
+      ]
+    },
+    {
+      "index": 67,
+      "start": 188.08,
+      "end": 189.26,
+      "start_padded": 187.38000000000002,
+      "end_padded": 189.95999999999998,
+      "text": "Vad heter du?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0042_SW_Learn_Day_1-5_srt_00-03-07.380_00-03-09.960.wav",
+      "merged_from": [
+        67
+      ]
+    },
+    {
+      "index": 68,
+      "start": 189.78,
+      "end": 191.7,
+      "start_padded": 189.08,
+      "end_padded": 192.39999999999998,
+      "text": "Jag heter Anders och du?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0043_SW_Learn_Day_1-5_srt_00-03-09.080_00-03-12.400.wav",
+      "merged_from": [
+        68
+      ]
+    },
+    {
+      "index": 69,
+      "start": 192.04,
+      "end": 194.86,
+      "start_padded": 191.34,
+      "end_padded": 195.56,
+      "text": "Vad heter du? Jag heter Sara.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0044_SW_Learn_Day_1-5_srt_00-03-11.340_00-03-15.560.wav",
+      "merged_from": [
+        69,
+        70
+      ]
+    },
+    {
+      "index": 71,
+      "start": 196.14,
+      "end": 198.6,
+      "start_padded": 195.44,
+      "end_padded": 199.29999999999998,
+      "text": "Var. Var.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0045_SW_Learn_Day_1-5_srt_00-03-15.440_00-03-19.300.wav",
+      "merged_from": [
+        71,
+        72
+      ]
+    },
+    {
+      "index": 73,
+      "start": 200.02,
+      "end": 201.1,
+      "start_padded": 199.32000000000002,
+      "end_padded": 201.79999999999998,
+      "text": "Bor. Bor.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0046_SW_Learn_Day_1-5_srt_00-03-19.320_00-03-21.800.wav",
+      "merged_from": [
+        73,
+        74
+      ]
+    },
+    {
+      "index": 75,
+      "start": 204.82,
+      "end": 207.3,
+      "start_padded": 204.12,
+      "end_padded": 208.0,
+      "text": "På. På.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0047_SW_Learn_Day_1-5_srt_00-03-24.120_00-03-28.000.wav",
+      "merged_from": [
+        75,
+        76
+      ]
+    },
+    {
+      "index": 77,
+      "start": 209.46,
+      "end": 214.4,
+      "start_padded": 208.76000000000002,
+      "end_padded": 215.1,
+      "text": "Vägen. I.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0048_SW_Learn_Day_1-5_srt_00-03-28.760_00-03-35.100.wav",
+      "merged_from": [
+        77,
+        78
+      ]
+    },
+    {
+      "index": 79,
+      "start": 215.9,
+      "end": 218.42,
+      "start_padded": 215.20000000000002,
+      "end_padded": 219.11999999999998,
+      "text": "I. Var bor du?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0049_SW_Learn_Day_1-5_srt_00-03-35.200_00-03-39.120.wav",
+      "merged_from": [
+        79,
+        80
+      ]
+    },
+    {
+      "index": 81,
+      "start": 222.48,
+      "end": 225.48,
+      "start_padded": 221.78,
+      "end_padded": 226.17999999999998,
+      "text": "Jag bor på Ringvägen i Stockholm.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0050_SW_Learn_Day_1-5_srt_00-03-41.780_00-03-46.180.wav",
+      "merged_from": [
+        81
+      ]
+    },
+    {
+      "index": 82,
+      "start": 226.48,
+      "end": 228.98,
+      "start_padded": 225.78,
+      "end_padded": 229.67999999999998,
+      "text": "Jag bor på Ringvägen i Stockholm.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0051_SW_Learn_Day_1-5_srt_00-03-45.780_00-03-49.680.wav",
+      "merged_from": [
+        82
+      ]
+    },
+    {
+      "index": 83,
+      "start": 231.24,
+      "end": 232.62,
+      "start_padded": 230.54000000000002,
+      "end_padded": 233.32,
+      "text": "Var bor du?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0052_SW_Learn_Day_1-5_srt_00-03-50.540_00-03-53.320.wav",
+      "merged_from": [
+        83
+      ]
+    },
+    {
+      "index": 84,
+      "start": 233.22,
+      "end": 234.98,
+      "start_padded": 232.52,
+      "end_padded": 235.67999999999998,
+      "text": "Jag bor på Kalavägen i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0053_SW_Learn_Day_1-5_srt_00-03-52.520_00-03-55.680.wav",
+      "merged_from": [
+        84
+      ]
+    },
+    {
+      "index": 85,
+      "start": 237.02,
+      "end": 240.68,
+      "start_padded": 236.32000000000002,
+      "end_padded": 241.38,
+      "text": "Var bor du? Jag bor på Kalavägen i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0054_SW_Learn_Day_1-5_srt_00-03-56.320_00-04-01.380.wav",
+      "merged_from": [
+        85,
+        86
+      ]
+    },
+    {
+      "index": 87,
+      "start": 241.66,
+      "end": 244.98,
+      "start_padded": 240.96,
+      "end_padded": 245.67999999999998,
+      "text": "Du kan lära dig 800 ord på 160 dagar",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0055_SW_Learn_Day_1-5_srt_00-04-00.960_00-04-05.680.wav",
+      "merged_from": [
+        87
+      ]
+    },
+    {
+      "index": 88,
+      "start": 244.98,
+      "end": 246.52,
+      "start_padded": 244.28,
+      "end_padded": 247.22,
+      "text": "med 5 ord per dag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0056_SW_Learn_Day_1-5_srt_00-04-04.280_00-04-07.220.wav",
+      "merged_from": [
+        88
+      ]
+    },
+    {
+      "index": 89,
+      "start": 247.62,
+      "end": 250.2,
+      "start_padded": 246.92000000000002,
+      "end_padded": 250.89999999999998,
+      "text": "A1 nivån i språker 800 ord.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0057_SW_Learn_Day_1-5_srt_00-04-06.920_00-04-10.900.wav",
+      "merged_from": [
+        89
+      ]
+    },
+    {
+      "index": 90,
+      "start": 251.22,
+      "end": 254.2,
+      "start_padded": 250.52,
+      "end_padded": 254.89999999999998,
+      "text": "Prenumerera och lära dig svenska varje dag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0058_SW_Learn_Day_1-5_srt_00-04-10.520_00-04-14.900.wav",
+      "merged_from": [
+        90
+      ]
+    }
+  ]
+}
