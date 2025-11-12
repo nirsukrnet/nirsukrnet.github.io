@@ -17,7 +17,8 @@ async function loadScript(src) {
    const scripts = [
 
     "./assets/js_data/global_var.js",  // must be first to define global_var class used in other scripts    
-    "./assets/js_data/db_connswmp3.js"    
+    "./assets/js_data/db_connswmp3.js",
+    "./assets/js_data/output_audio_text.js"
 
   ];
 

@@ -12,14 +12,18 @@
 		.list { display: grid; grid-template-columns: 1fr auto auto; gap: 10px 12px; align-items: center; }
 		.head { font-weight: 600; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
 		.row { padding: 4px 0; border-bottom: 1px dashed #eee; }
+		.audio_row { display: none; }
 		.text { white-space: pre-wrap; }
+		/* Keep Play + Mark buttons on one line */
+		.controls { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
 		button { padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; background: #fafafa; cursor: pointer; }
 		button:hover { background: #f0f0f0; }
 		audio { height: 28px; }
 		.muted { color: #888; }
 	</style>
+        <script src="./assets/js_data/main_loadscripts.js"></script>	
 </head>
-<body>
+<body onload="MainFunc();">
 	<h1>Phrase Audio Player</h1>
 	<div class="controls">
 		<label>
@@ -36,113 +40,7 @@
 		<!-- rows injected here -->
 	</div>
 
-	<script>
-		(function() {
-			// New local paths: Html/phrase_audio contains both the JSON and audio files
-			const jsonPath = 'phrase_audio/SW_Learn_Day_1-5_srt_phrase.json';
-			const baseAudioRel = 'phrase_audio/';
-			const listEl = document.getElementById('list');
-			const filterEl = document.getElementById('filter');
-			let rows = [];
-			let currentAudio = null;
 
-				// If opened via file:// protocol, fetch() will be blocked by browser CORS rules for local files.
-				// Provide a clear inline notice with instructions to launch a local server.
-				if (location.protocol === 'file:') {
-					const warn = document.createElement('div');
-					warn.style.background = '#ffe9d5';
-					warn.style.border = '1px solid #ffb97a';
-					warn.style.padding = '10px 12px';
-					warn.style.marginBottom = '12px';
-					warn.style.borderRadius = '6px';
-					warn.innerHTML = '<strong>Local file mode:</strong> Browsers block fetch() of other local files.<br>' +
-						'Run a simple server in the project root:<br>' +
-						'<code>python -m http.server 8000</code><br>' +
-						'Then open: <code>http://localhost:8000/Html/mp3.html</code>.';
-					document.body.insertBefore(warn, document.body.firstChild.nextSibling);
-				}
 
-			function filenameFromPath(p) {
-				if (!p) return '';
-				const parts = p.split(/[/\\\\]/);
-				return parts[parts.length - 1];
-			}
-
-			function makeRow(seg, idx) {
-				const text = (seg.text || '').trim();
-				const fileAbs = seg.file || '';
-				const fileName = filenameFromPath(fileAbs);
-				const src = baseAudioRel + encodeURIComponent(fileName);
-
-				const textEl = document.createElement('div');
-				textEl.className = 'text row';
-				textEl.textContent = text || '(no text)';
-
-				const playEl = document.createElement('div');
-				playEl.className = 'row';
-				const btn = document.createElement('button');
-				btn.textContent = 'Play';
-				playEl.appendChild(btn);
-
-				const audioEl = document.createElement('audio');
-				audioEl.controls = true;
-				audioEl.preload = 'none';
-				audioEl.src = src;
-
-				btn.addEventListener('click', () => {
-					try {
-						if (currentAudio && currentAudio !== audioEl) {
-							currentAudio.pause();
-						}
-						currentAudio = audioEl;
-						audioEl.currentTime = 0;
-						audioEl.play();
-					} catch (e) {
-						console.warn('play failed', e);
-					}
-				});
-
-				return { elms: [textEl, playEl, audioEl], textLower: text.toLowerCase() };
-			}
-
-			function render(list) {
-				// Remove old rows
-				while (listEl.children.length > 3) {
-					listEl.removeChild(listEl.lastChild);
-				}
-				list.forEach(r => {
-					r.elms.forEach(e => listEl.appendChild(e));
-				});
-			}
-
-			function applyFilter() {
-				const q = filterEl.value.trim().toLowerCase();
-				if (!q) return render(rows);
-				const filtered = rows.filter(r => r.textLower.includes(q));
-				render(filtered);
-			}
-
-			filterEl.addEventListener('input', applyFilter);
-
-			fetch(jsonPath)
-				.then(r => {
-					if (!r.ok) throw new Error('Failed to load JSON: ' + r.status);
-					return r.json();
-				})
-				.then(data => {
-					const segs = Array.isArray(data && data.segments) ? data.segments : [];
-					rows = segs.map(makeRow);
-					render(rows);
-				})
-				.catch(err => {
-							// If running under file://, we already warned; still show error block.
-					const errEl = document.createElement('div');
-					errEl.style.color = 'crimson';
-					errEl.style.marginTop = '8px';
-					errEl.textContent = 'Error: ' + err;
-					document.body.appendChild(errEl);
-				});
-		})();
-	</script>
 </body>
 </html>

@@ -28,7 +28,7 @@ class URL_DataSet {
             URL_identity: `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=`,
             email:"saps1@nukr.net",
             password:"B0u_1hg81apAqw",
-            URL_RelDatabaseRoot: 'data_base1'
+            URL_RelDatabaseRoot: 'data_base2'
        };
         GCP_FirebaseConfig['URL_identity'] = GCP_AdditionalConst.URL_identity;
         GCP_FirebaseConfig['email'] = GCP_AdditionalConst.email;
@@ -52,170 +52,6 @@ class URL_DataSet {
         this.refreshToken = data.refreshToken || null;
     }
 
-    // ---- Firebase Storage (upload one file) ----
-    getStorageBucket() {
-        let b = (this.firebaseConfig && this.firebaseConfig.storageBucket) || '';
-        // Normalize common misconfig: 'project.firebasestorage.app' -> 'project.appspot.com'
-        if (b && /\.firebasestorage\.app$/i.test(b)) {
-            b = b.replace(/\.firebasestorage\.app$/i, '.appspot.com');
-        }
-        return b;
-    }
-
-    getStorageBaseUrl() {
-        const bucket = this.getStorageBucket();
-        if (!bucket) return '';
-        return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}`;
-    }
-
-    /**
-     * Upload a single file (Blob/File/Uint8Array) to Firebase Storage using REST API.
-     * Requires the user to be signed in (this.idToken must be set).
-     *
-     * @param {Blob|Uint8Array} fileBlob - the binary content (File from <input type="file"> works)
-     * @param {string} storagePath - destination path in the bucket, e.g. 'phrase_audio/myclip.wav'
-     * @param {string=} contentType - MIME type (falls back to fileBlob.type or 'application/octet-stream')
-     * @returns {Promise<{meta: any, downloadUrl: string|null}>}
-     */
-    async uploadFileToStorage(fileBlob, storagePath, contentType) {
-        if (!this.refreshToken) {
-            throw new Error('Not authenticated: call SignIn_User() first (need refreshToken).');
-        }
-        const base = this.getStorageBaseUrl();
-        if (!base) {
-            throw new Error('Storage bucket not configured.');
-        }
-        if (!fileBlob) {
-            throw new Error('fileBlob is required');
-        }
-        if (!storagePath || typeof storagePath !== 'string') {
-            throw new Error('storagePath is required');
-        }
-
-        const url = `${base}/o?uploadType=media&name=${encodeURIComponent(storagePath)}`;
-        const ct = contentType || (fileBlob.type || 'application/octet-stream');
-
-        // Obtain an OAuth access token (Firebase Storage REST prefers Google OAuth token, not raw idToken)
-        const accessToken = await this.getAccessToken();
-
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': ct
-            },
-            body: fileBlob
-        });
-
-        if (!res.ok) {
-            let txt = '';
-            try { txt = await res.text(); } catch (_) {}
-            throw new Error(`Storage upload failed: ${res.status} ${res.statusText} ${txt}`);
-        }
-        const meta = await res.json();
-        const downloadUrl = this.getDownloadUrlFromMeta(meta);
-        return { meta, downloadUrl };
-    }
-
-    /**
-     * Construct a public download URL (requires downloadTokens in metadata and open rules or token in query).
-     */
-    getDownloadUrlFromMeta(meta) {
-        try {
-            const bucket = meta.bucket;
-            const name = meta.name; // path inside bucket
-            const token = (meta.downloadTokens || '').split(',')[0] || null;
-            if (!bucket || !name) return null;
-            const base = `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(name)}`;
-            return token ? `${base}?alt=media&token=${encodeURIComponent(token)}` : `${base}?alt=media`;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    /**
-     * Convenience: fetch a local URL (served by your http server) and upload its bytes to Firebase Storage.
-     * Example localUrl: '/Html/phrase_audio/sample.wav' or 'phrase_audio/sample.wav' relative to current page.
-     * @param {string} localUrl - URL path reachable by the browser (same-origin)
-     * @param {string} storagePath - destination in storage bucket, e.g. 'phrase_audio/sample.wav'
-     * @param {string=} contentType - explicit MIME type; autodetects from response if not given
-     */
-    async uploadFileFromLocalUrl(localUrl, storagePath, contentType) {
-        if (!localUrl) throw new Error('localUrl is required');
-        const res = await fetch(localUrl);
-        if (!res.ok) {
-            throw new Error(`Failed to read localUrl: ${res.status} ${res.statusText}`);
-        }
-        const ct = contentType || res.headers.get('Content-Type') || undefined;
-        const blob = await res.blob();
-        try {
-            return await this.uploadFileToStorage(blob, storagePath, ct);
-        } catch (e) {
-            // Likely CORS on REST path; fallback to Firebase Web SDK upload which handles CORS
-            console.warn('REST upload failed, falling back to Firebase SDK upload:', e);
-            return await this.uploadFileToStorageViaSdk(blob, storagePath, ct);
-        }
-    }
-
-    /**
-     * Fallback path: upload via Firebase Web SDK (modular) to avoid REST CORS issues.
-     * Dynamically imports SDK modules from gstatic.
-     */
-    async uploadFileToStorageViaSdk(fileBlob, storagePath, contentType) {
-        const rawCfg = this.firebaseConfig;
-        if (!rawCfg) throw new Error('Missing firebaseConfig');
-        const bucket = this.getStorageBucket();
-        if (!bucket) throw new Error('Cannot determine storage bucket');
-        // Prepare a clean config with normalized bucket
-        const cfg = { ...rawCfg, storageBucket: bucket };
-        // Dynamic imports of ESM modules
-        const [{ initializeApp }, { getAuth, signInWithEmailAndPassword }, { getStorage, ref, uploadBytes, getDownloadURL }] = await Promise.all([
-            import('https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js'),
-            import('https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js'),
-            import('https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js')
-        ]);
-        const app = initializeApp(cfg);
-        const auth = getAuth(app);
-        if (!auth.currentUser) {
-            await signInWithEmailAndPassword(auth, this.email, this.password);
-        }
-        const storage = getStorage(app, `gs://${bucket}`);
-        const storageRef = ref(storage, storagePath.replace(/^\/+/, ''));
-        const meta = contentType ? { contentType } : undefined;
-        const snap = await uploadBytes(storageRef, fileBlob, meta);
-        let downloadUrl = null;
-        try {
-            downloadUrl = await getDownloadURL(storageRef);
-        } catch {}
-        return { meta: { bucket, name: storagePath }, downloadUrl, snapshot: snap };
-    }
-
-    /**
-     * Exchange refreshToken for an OAuth access_token using SecureToken service.
-     * Firebase returns: access_token, expires_in, token_type (Bearer), id_token, user_id
-     */
-    async getAccessToken() {
-        if (!this.refreshToken) {
-            throw new Error('Missing refreshToken; call SignIn_User first.');
-        }
-        // Cache token until near expiry to avoid repeated exchanges.
-        const now = Date.now();
-        if (this._cachedAccess && this._cachedAccess.expiresAt > now + 30000) {
-            return this._cachedAccess.token;
-        }
-        const url = `https://securetoken.googleapis.com/v1/token?key=${this.firebaseConfig.apiKey}`;
-        const body = new URLSearchParams({ grant_type: 'refresh_token', refresh_token: this.refreshToken });
-        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
-        if (!res.ok) {
-            const txt = await safeReadText(res);
-            throw new Error(`Failed to obtain access token: ${res.status} ${res.statusText} ${txt}`);
-        }
-        const data = await res.json();
-        const accessToken = data.access_token;
-        const expiresIn = parseInt(data.expires_in || '3600', 10) * 1000; // ms
-        this._cachedAccess = { token: accessToken, expiresAt: Date.now() + expiresIn };
-        return accessToken;
-    }
   
     async SignIn_User() {
         const email = this.email;
@@ -333,10 +169,10 @@ class GlobalVars {
       ...(initial.cst || {})
     };
     this.sts = {
-      vdata1: null,      
-      content_table_name: 'content_table1',
-      rows_table_content: [],
-      content_tables: [],
+      vdata1: null,
+      tables_meta: [],
+      audio_phrases: [],
+      lessons_audio_phrases: [],
       ...(initial.sts || {})
     };
 
@@ -348,17 +184,17 @@ class GlobalVars {
   }
 
 
-  SaveToFB_Content_By_Index(IndexContent, var_item_content, content_text) {
-    let addurl = "root_content/tables/0/rows"+"/"+IndexContent+"/"+var_item_content;
-    let ObjRequest = this.URL_DS.GetObjForRequest();
-    ObjRequest.vobj = content_text;
-    ObjRequest.ametod = 'PUT';
-    ObjRequest.addUrl = addurl;      
-    ObjRequest.CallBackFunction = function(vdata, ametod) {        
-        let contenttext_fb = vdata;
-    };
-    gv.URL_DS.requestData_By_URL_Path(ObjRequest);
-  }
+//   SaveToFB_Content_By_Index(IndexContent, var_item_content, content_text) {
+//     let addurl = "root_content/tables/0/rows"+"/"+IndexContent+"/"+var_item_content;
+//     let ObjRequest = this.URL_DS.GetObjForRequest();
+//     ObjRequest.vobj = content_text;
+//     ObjRequest.ametod = 'PUT';
+//     ObjRequest.addUrl = addurl;      
+//     ObjRequest.CallBackFunction = function(vdata, ametod) {        
+//         let contenttext_fb = vdata;
+//     };
+//     gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+//   }
 
 }
 
