@@ -1,0 +1,8 @@
+.control-button{
+    margin-left: 14px;
+    margin-right: 14px;
+    border: 1px solid var(--oap-btn-border);
+    border-radius: 6px;
+    background: var(--oap-btn-bg);
+    cursor: pointer;
+} 

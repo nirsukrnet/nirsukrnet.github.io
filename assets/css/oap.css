@@ -1,0 +1,98 @@
+:root {
+  --oap-gap: 8px;
+  --oap-text-font-size: 16px;
+  --oap-btn-bg: #fafafa;
+  --oap-btn-border: #ccc;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  margin: 16px;
+}
+
+h1 {
+  font-size: 1.25rem;
+  margin: 0 0 12px;
+}
+
+/* Change list to single column flow */
+.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.head {
+  font-weight: 600;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+}
+
+.row {
+  padding: 4px 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.segment {
+  padding: 8px 10px;
+  border: 1px solid #e2e2e2;
+  border-radius: 6px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.seg-row.text {
+  white-space: pre-wrap;
+  font-size: var(--oap-text-font-size);
+  padding-bottom: 10px;
+  padding-top: 10px;
+  padding-left: 4px;
+  padding-right: 4px;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(77, 166, 255, 0.08);
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.seg-row.seg-controls {
+  display: flex;
+  gap: var(--oap-gap);
+  margin-bottom: 10px;
+  margin-top: 10px;
+  margin-left: 4px;
+  margin-right: 4px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.seg-row.audio {
+  display: none; /* currently hidden */
+}
+
+.audio_row {
+  display: block;
+}
+
+button {
+  padding: 6px 10px;
+  border: 1px solid var(--oap-btn-border);
+  border-radius: 6px;
+  background: var(--oap-btn-bg);
+  cursor: pointer;
+}
+
+button:hover {
+  background: #f0f0f0;
+}
+
+audio {
+  height: 28px;
+}
+
+.muted {
+  color: #888;
+}
