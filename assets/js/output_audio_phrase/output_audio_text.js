@@ -12,6 +12,11 @@ function loadContentData() {
         for (const seg of rows_phrases) {
             if (String(seg.lesson_id) === sel) source_phrases.push(seg);
         }
+        // Fallback: if filter produced 0 rows (e.g., mismatch between menu id field and phrase lesson_id), show all
+        if (source_phrases.length === 0) {
+            console.warn('[oap] No phrases matched lesson_id =', sel, ' — falling back to all phrases.');
+            source_phrases = rows_phrases.slice();
+        }
     }
 
     Outputaudiotext_createStyles_oap();

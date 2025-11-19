@@ -74,7 +74,13 @@ async function loadStyle(href) {
     }
   } catch {}
 
-  if (!Number.isFinite(last) || (now - last) > FIVE_MIN_MS) {
+  // Detect iOS Safari (excluding Chrome/Firefox on iOS which also include 'Safari')
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS/.test(ua);
+  const skipClearForIOS = isIOS && isSafari; // avoid potential reload loops when storage limited
+
+  if (!skipClearForIOS && (!Number.isFinite(last) || (now - last) > FIVE_MIN_MS)) {
     // Persist guard BEFORE clearing so it survives; use all fallbacks
     setCookie(GUARD_KEY, String(now), 365 * 24 * 60 * 60);
     try { sessionStorage.setItem(GUARD_KEY, String(now)); } catch {}
@@ -107,7 +113,7 @@ async function loadStyle(href) {
 
   // Provide stub for MainFunc so body onload doesn't error prematurely
   if (typeof window.MainFunc !== 'function') {
-    window.MainFunc = function(){ console.warn('MainFunc stub: core scripts not yet loaded.'); };
+    window.MainFunc = function(){ /* stub */ };
   }
 
   // Then load scripts with fallback

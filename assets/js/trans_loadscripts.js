@@ -33,7 +33,11 @@
   try { const ss = parseInt(sessionStorage.getItem(GUARD_KEY) || '0', 10); if (Number.isFinite(ss)) last = Math.max(last, ss); } catch {}
   // window.name fallback
   try { const m = /(?:^|;)\s*"?app_lastClearAt"?=([0-9]+)/.exec(window.name); if (m){ const wn = parseInt(m[1],10); if (Number.isFinite(wn)) last = Math.max(last, wn); } } catch {}
-  if (!Number.isFinite(last) || (now - last) > FIVE_MIN_MS){
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS/.test(ua);
+  const skipClearForIOS = isIOS && isSafari;
+  if (!skipClearForIOS && (!Number.isFinite(last) || (now - last) > FIVE_MIN_MS)){
     setCookie(GUARD_KEY, String(now), 365*24*60*60);
     try { sessionStorage.setItem(GUARD_KEY, String(now)); } catch {}
     try {

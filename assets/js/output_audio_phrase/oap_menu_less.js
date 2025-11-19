@@ -68,9 +68,25 @@
   }
 
   function buildListData(){
-    // Use only unique lesson_id values from audio_phrases, as-is (no parsing/normalizing)
-    const les_list1 = Array.isArray(window.gv?.sts?.lessons_audio_phrases) ? window.gv.sts.lessons_audio_phrases : [];
-    return les_list1;
+    // Prefer lesson_id list; fall back to lessons_audio_phrases if structure differs.
+    const phrases = Array.isArray(window.gv?.sts?.audio_phrases) ? window.gv.sts.audio_phrases : [];
+    const map = new Map();
+    for (const p of phrases){
+      if (p && p.lesson_id != null){
+        const id = String(p.lesson_id);
+        if (!map.has(id)){
+          // Attempt label from title/name/file_name; else generic
+          const label = p.title || p.name || p.file_name || `Lesson ${id}`;
+          map.set(id, { lesson_id: id, label });
+        }
+      }
+    }
+    // If none discovered, fall back to original lessons_audio_phrases array
+    if (map.size === 0){
+      const les_list1 = Array.isArray(window.gv?.sts?.lessons_audio_phrases) ? window.gv.sts.lessons_audio_phrases : [];
+      return les_list1.map(x => ({ lesson_id: String(x.lesson_id ?? x.rec_id), label: x.title || x.name || `Lesson ${x.lesson_id ?? x.rec_id}` }));
+    }
+    return Array.from(map.values());
   }
 
   function createMenuDom(){
@@ -139,16 +155,15 @@
     const data = buildListData();
     const sel = String(currentSelectedId() ?? '');
     data.forEach(item => {
-            // "rec_id": "2",
-            // "title": "SW_Learn_Day_7-10_sr",
-
+      const idVal = String(item.lesson_id ?? item.rec_id);
+      const labelVal = item.label || item.title || item.name || `Lesson ${idVal}`;
       const li = document.createElement('li');
       li.className = 'oap-menu-less__item';
-      li.setAttribute('data-lesson-id', String(item.rec_id));
-      li.setAttribute('data-label', item.title);
-      li.textContent = item.title;
-      if (String(item.rec_id) === sel) li.classList.add('is-active');
-      li.addEventListener('click', () => setSelectedId(item.rec_id));
+      li.setAttribute('data-lesson-id', idVal);
+      li.setAttribute('data-label', labelVal);
+      li.textContent = labelVal;
+      if (idVal === sel) li.classList.add('is-active');
+      li.addEventListener('click', () => setSelectedId(idVal));
       list.appendChild(li);
     });
     highlightActive();
