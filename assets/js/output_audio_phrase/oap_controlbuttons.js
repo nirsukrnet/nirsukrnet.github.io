@@ -37,16 +37,14 @@ function addButtonsPlay_oap(playEl, audioEl, index1) {
 function addButtonsTrans_oap(playBlockEl, index1){
     const btn_trans1 = document.createElement('button');
     btn_trans1.id = `btn-trans1-${index1}`;
-    btn_trans1.textContent = 'Trans1';
+    const transPref = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
+    const labelMap = { en: 'Trans EN', uk: 'Trans UK', sv: 'Trans SV' };
+    btn_trans1.textContent = labelMap[transPref] || 'Trans';
     playBlockEl.appendChild(btn_trans1);
     btn_trans1.addEventListener('click', () => {
         const textEnEl = document.getElementById(`text-en-${index1}`);
         if (textEnEl) {
-            if (textEnEl.style.display === 'none') {
-                textEnEl.style.display = 'block';
-            } else {
-                textEnEl.style.display = 'none';
-            }
+            textEnEl.classList.toggle('is-visible');
         }
     });
 }
@@ -54,7 +52,7 @@ function addButtonsTrans_oap(playBlockEl, index1){
 function HideOtherTrans_oap(playBlockEl, index1){
     const textEnEl = document.getElementById(`text-en-${index1}`);
     if (textEnEl) {
-        textEnEl.style.display = 'none';
+        textEnEl.classList.remove('is-visible');
     }
 }
 
@@ -62,6 +60,8 @@ function addButtonsMark_oap(seg1, typemark, parentEl) {
     const btn1 = document.createElement('button');
     btn1.setAttribute('data-rec-id', seg1.rec_id);
     btn1.setAttribute('data-lesson-id', seg1.lesson_id);
+    // Also include the currently selected group/lesson selector id for clarity
+    try { btn1.setAttribute('data-group-id', (window.gv?.sts?.selected_lesson_id ?? '')); } catch {}
     btn1.className = 'control-button';
     // Determine initial value from data; default to '0' when empty/undefined
     let initialVal = '0';

@@ -41,7 +41,24 @@ async function init() {
 async function Get_Rows_All_Tables() {
    gv.sts.audio_phrases = await Get_Rows_Of_Table("audio_phrases");
    gv.sts.lessons_audio_phrases = await Get_Rows_Of_Table("lessons_audio_phrases");
-   loadContentData();
+   try {
+     if (typeof window.loadContentData === 'function') {
+       loadContentData();
+     }
+   } catch (e) {
+     console.warn('loadContentData() unavailable on this page');
+   }
+   try {
+     // Notify UI components (like the lessons menu) that data is ready
+     const detail = {
+       lessons: gv.sts.lessons_audio_phrases,
+       phrases: gv.sts.audio_phrases,
+       selected_lesson_id: gv.sts.selected_lesson_id
+     };
+     window.dispatchEvent(new CustomEvent('oap:data-loaded', { detail }));
+   } catch (e) {
+     console.warn('oap:data-loaded dispatch failed', e);
+   }
 }
 
 async function Get_Rows_Of_Table(pageIdStr) {

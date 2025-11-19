@@ -1,0 +1,122 @@
+:root {
+  --oap-menu-z: 10000;
+  --oap-menu-btn-size: 40px;
+  --oap-menu-gap: 8px;
+  --oap-menu-bg: #ffffff;
+  --oap-menu-fg: #222;
+  --oap-menu-border: #d0d7de;
+  --oap-menu-shadow: 0 8px 24px rgba(140,149,159,0.2), 0 2px 4px rgba(31,35,40,0.06);
+  --oap-accent: var(--oap-btn-bg, #f6f8fa);
+}
+
+/* Top-right floating container */
+.oap-menu-less {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: var(--oap-menu-z);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.oap-menu-less__btn {
+  width: var(--oap-menu-btn-size);
+  height: var(--oap-menu-btn-size);
+  border-radius: 50%;
+  border: 1px solid var(--oap-menu-border);
+  background: var(--oap-accent);
+  color: var(--oap-menu-fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(31,35,40,0.04);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.oap-menu-less__btn:hover {
+  background: #eef1f4;
+  border-color: #c6ced6;
+}
+.oap-menu-less__btn:active {
+  transform: translateY(0.5px);
+}
+
+.oap-menu-less__icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* Popup */
+.oap-menu-less__popup {
+  position: absolute;
+  top: calc(var(--oap-menu-btn-size) + var(--oap-menu-gap));
+  right: 0;
+  min-width: 280px;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--oap-menu-bg);
+  color: var(--oap-menu-fg);
+  border: 1px solid var(--oap-menu-border);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: var(--oap-menu-shadow);
+  display: none;
+}
+.oap-menu-less__popup.open {
+  display: block;
+}
+
+.oap-menu-less__title {
+  font-weight: 600;
+  font-size: 13px;
+  opacity: 0.8;
+  padding: 6px 8px 4px 8px;
+}
+
+.oap-menu-less__list {
+  list-style: none;
+  margin: 4px 0 0 0;
+  padding: 0;
+}
+
+.oap-menu-less__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.oap-menu-less__item:hover {
+  background: #f1f5f9;
+}
+.oap-menu-less__item.is-active {
+  background: #e8eef6;
+  font-weight: 600;
+}
+
+/* Add a subtle checkmark for the active item */
+.oap-menu-less__item.is-active::after {
+  content: '✓';
+  margin-left: auto;
+  color: #1d4ed8;
+}
+
+.oap-menu-less__badge {
+  max-width: 240px;
+  padding: 2px 8px;
+  height: 22px;
+  line-height: 18px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: #e6eef7;
+  border: 1px solid #c6d3e0;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -32,7 +32,8 @@ async function loadStyle(href) {
    // 1) Styles to load (in order)
    const styles = [
     "./assets/css/oap.css",
-	  "./assets/css/oap_buttons.css"
+	  "./assets/css/oap_buttons.css",
+	  "./assets/css/oap_menu_less.css"
    ];
 
    // 2) Scripts to load (in order)
@@ -41,7 +42,8 @@ async function loadStyle(href) {
     "./assets/js/db_connswmp3.js",
     "./assets/js/output_audio_phrase/oap_styles.js",
     "./assets/js/output_audio_phrase/oap_controlbuttons.js",
-    "./assets/js/output_audio_phrase/output_audio_text.js"
+    "./assets/js/output_audio_phrase/output_audio_text.js",
+    "./assets/js/output_audio_phrase/oap_menu_less.js"
   ];
 
   // Time‑gated clear: run at most once every 5 minutes

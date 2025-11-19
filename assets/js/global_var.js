@@ -170,6 +170,7 @@ class GlobalVars {
     };
     this.sts = {
       vdata1: null,
+      selected_lesson_id: 2,  // Default selected lesson ID
       tables_meta: [],
       audio_phrases: [],
       lessons_audio_phrases: [],

@@ -1,0 +1,938 @@
+{
+  "subs": "C:\\Python\\AuTr\\outputs\\SW_Learn_Day_16-20_srt.json",
+  "media": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\input_download\\SW_Learn_Day_16-20.mp4",
+  "output_phrase_audio_dir1": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio",
+  "phrases": [
+    "*"
+  ],
+  "regex": false,
+  "ignore_case": true,
+  "pad": 0.7,
+  "min_duration": 1.0,
+  "segments": [
+    {
+      "index": 0,
+      "start": 3.4600000000000004,
+      "end": 9.02,
+      "start_padded": 2.7600000000000007,
+      "end_padded": 9.719999999999999,
+      "text": "Lyssna och säga efter. Öva uttalet.",
+      "glob_id": "2025111811371161001",
+      "file_name": "swday_0001_SW_Learn_Day_16-20_srt_00-00-02.760_00-00-09.720.wav",
+      "merged_from": [
+        0
+      ]
+    },
+    {
+      "index": 1,
+      "start": 9.84,
+      "end": 18.98,
+      "start_padded": 9.14,
+      "end_padded": 19.68,
+      "text": "Repetition är och heter i är det.",
+      "glob_id": "2025111811371161002",
+      "file_name": "swday_0002_SW_Learn_Day_16-20_srt_00-00-09.140_00-00-19.680.wav",
+      "merged_from": [
+        1
+      ]
+    },
+    {
+      "index": 2,
+      "start": 19.98,
+      "end": 26.92,
+      "start_padded": 19.28,
+      "end_padded": 27.62,
+      "text": "Tre, två, ja, nej. Det är att här.",
+      "glob_id": "2025111811371161003",
+      "file_name": "swday_0003_SW_Learn_Day_16-20_srt_00-00-19.280_00-00-27.620.wav",
+      "merged_from": [
+        2
+      ]
+    },
+    {
+      "index": 3,
+      "start": 28.14,
+      "end": 32.82,
+      "start_padded": 27.44,
+      "end_padded": 33.52,
+      "text": "En familj, två familjer, har.",
+      "glob_id": "2025111811371161004",
+      "file_name": "swday_0004_SW_Learn_Day_16-20_srt_00-00-27.440_00-00-33.520.wav",
+      "merged_from": [
+        3
+      ]
+    },
+    {
+      "index": 4,
+      "start": 34.08,
+      "end": 37.6,
+      "start_padded": 33.379999999999995,
+      "end_padded": 38.300000000000004,
+      "text": "En dotter, två dottrar.",
+      "glob_id": "2025111811371161005",
+      "file_name": "swday_0005_SW_Learn_Day_16-20_srt_00-00-33.380_00-00-38.300.wav",
+      "merged_from": [
+        4
+      ]
+    },
+    {
+      "index": 5,
+      "start": 38.66,
+      "end": 41.7,
+      "start_padded": 37.959999999999994,
+      "end_padded": 42.400000000000006,
+      "text": "En son, två söner.",
+      "glob_id": "2025111811371161006",
+      "file_name": "swday_0006_SW_Learn_Day_16-20_srt_00-00-37.960_00-00-42.400.wav",
+      "merged_from": [
+        5
+      ]
+    },
+    {
+      "index": 6,
+      "start": 42.7,
+      "end": 48.78,
+      "start_padded": 42.0,
+      "end_padded": 49.480000000000004,
+      "text": "Det här är min familj. Jag har en dotter och en son.",
+      "glob_id": "2025111811371161007",
+      "file_name": "swday_0007_SW_Learn_Day_16-20_srt_00-00-42.000_00-00-49.480.wav",
+      "merged_from": [
+        6
+      ]
+    },
+    {
+      "index": 7,
+      "start": 50.54,
+      "end": 55.48,
+      "start_padded": 49.839999999999996,
+      "end_padded": 56.18,
+      "text": "Min dotter heter Marie. Min son heter Thomas.",
+      "glob_id": "2025111811371161008",
+      "file_name": "swday_0008_SW_Learn_Day_16-20_srt_00-00-49.840_00-00-56.180.wav",
+      "merged_from": [
+        7
+      ]
+    },
+    {
+      "index": 8,
+      "start": 57.34,
+      "end": 61.6,
+      "start_padded": 56.64,
+      "end_padded": 62.300000000000004,
+      "text": "I min familj är det tre söner och två dottrar.",
+      "glob_id": "2025111811371161009",
+      "file_name": "swday_0009_SW_Learn_Day_16-20_srt_00-00-56.640_00-01-02.300.wav",
+      "merged_from": [
+        8
+      ]
+    },
+    {
+      "index": 9,
+      "start": 62.9,
+      "end": 65.96,
+      "start_padded": 62.199999999999996,
+      "end_padded": 66.66,
+      "text": "Mina dottrar heter Åsa och Anna.",
+      "glob_id": "2025111811371161010",
+      "file_name": "swday_0010_SW_Learn_Day_16-20_srt_00-01-02.200_00-01-06.660.wav",
+      "merged_from": [
+        9
+      ]
+    },
+    {
+      "index": 10,
+      "start": 67.04,
+      "end": 72.88,
+      "start_padded": 66.34,
+      "end_padded": 73.58,
+      "text": "Mina söner heter Peter, Thomas och Claes.",
+      "glob_id": "2025111811371161011",
+      "file_name": "swday_0011_SW_Learn_Day_16-20_srt_00-01-06.340_00-01-13.580.wav",
+      "merged_from": [
+        10
+      ]
+    },
+    {
+      "index": 11,
+      "start": 73.18,
+      "end": 75.68,
+      "start_padded": 72.48,
+      "end_padded": 76.38000000000001,
+      "text": "Heter din dotter Lisa? Ja.",
+      "glob_id": "2025111811371161012",
+      "file_name": "swday_0012_SW_Learn_Day_16-20_srt_00-01-12.480_00-01-16.380.wav",
+      "merged_from": [
+        11
+      ]
+    },
+    {
+      "index": 12,
+      "start": 77.56,
+      "end": 83.34,
+      "start_padded": 76.86,
+      "end_padded": 84.04,
+      "text": "Heter din son Peter? Nej, min son heter Claes.",
+      "glob_id": "2025111811371161013",
+      "file_name": "swday_0013_SW_Learn_Day_16-20_srt_00-01-16.860_00-01-24.040.wav",
+      "merged_from": [
+        12
+      ]
+    },
+    {
+      "index": 13,
+      "start": 84.3,
+      "end": 89.78,
+      "start_padded": 83.6,
+      "end_padded": 90.48,
+      "text": "Repetition. Det här är min familj. Har.",
+      "glob_id": "2025111811371161014",
+      "file_name": "swday_0014_SW_Learn_Day_16-20_srt_00-01-23.600_00-01-30.480.wav",
+      "merged_from": [
+        13
+      ]
+    },
+    {
+      "index": 14,
+      "start": 90.78,
+      "end": 94.28,
+      "start_padded": 90.08,
+      "end_padded": 94.98,
+      "text": "En fru, två fruvar.",
+      "glob_id": "2025111811371161015",
+      "file_name": "swday_0015_SW_Learn_Day_16-20_srt_00-01-30.080_00-01-34.980.wav",
+      "merged_from": [
+        14
+      ]
+    },
+    {
+      "index": 15,
+      "start": 95.56,
+      "end": 98.16,
+      "start_padded": 94.86,
+      "end_padded": 98.86,
+      "text": "En make, en man.",
+      "glob_id": "2025111811371161016",
+      "file_name": "swday_0016_SW_Learn_Day_16-20_srt_00-01-34.860_00-01-38.860.wav",
+      "merged_from": [
+        15
+      ]
+    },
+    {
+      "index": 16,
+      "start": 99.3,
+      "end": 103.18,
+      "start_padded": 98.6,
+      "end_padded": 103.88000000000001,
+      "text": "Två makar, två män.",
+      "glob_id": "2025111811371161017",
+      "file_name": "swday_0017_SW_Learn_Day_16-20_srt_00-01-38.600_00-01-43.880.wav",
+      "merged_from": [
+        16
+      ]
+    },
+    {
+      "index": 17,
+      "start": 104.7,
+      "end": 108.72,
+      "start_padded": 104.0,
+      "end_padded": 109.42,
+      "text": "En syster, två sistrar.",
+      "glob_id": "2025111811371161018",
+      "file_name": "swday_0018_SW_Learn_Day_16-20_srt_00-01-44.000_00-01-49.420.wav",
+      "merged_from": [
+        17
+      ]
+    },
+    {
+      "index": 18,
+      "start": 109.98,
+      "end": 114.18,
+      "start_padded": 109.28,
+      "end_padded": 114.88000000000001,
+      "text": "En broer, två bröder.",
+      "glob_id": "2025111811371161019",
+      "file_name": "swday_0019_SW_Learn_Day_16-20_srt_00-01-49.280_00-01-54.880.wav",
+      "merged_from": [
+        18
+      ]
+    },
+    {
+      "index": 19,
+      "start": 115.6,
+      "end": 120.24,
+      "start_padded": 114.89999999999999,
+      "end_padded": 120.94,
+      "text": "Ett syskon, två syskon.",
+      "glob_id": "2025111811371161020",
+      "file_name": "swday_0020_SW_Learn_Day_16-20_srt_00-01-54.900_00-02-00.940.wav",
+      "merged_from": [
+        19
+      ]
+    },
+    {
+      "index": 20,
+      "start": 122.1,
+      "end": 123.66,
+      "start_padded": 121.39999999999999,
+      "end_padded": 124.36,
+      "text": "Det här är min fru.",
+      "glob_id": "2025111811371161021",
+      "file_name": "swday_0021_SW_Learn_Day_16-20_srt_00-02-01.400_00-02-04.360.wav",
+      "merged_from": [
+        20
+      ]
+    },
+    {
+      "index": 21,
+      "start": 125.12,
+      "end": 126.4,
+      "start_padded": 124.42,
+      "end_padded": 127.10000000000001,
+      "text": "Hon heter Marie.",
+      "glob_id": "2025111811371161022",
+      "file_name": "swday_0022_SW_Learn_Day_16-20_srt_00-02-04.420_00-02-07.100.wav",
+      "merged_from": [
+        21
+      ]
+    },
+    {
+      "index": 22,
+      "start": 127.72,
+      "end": 129.3,
+      "start_padded": 127.02,
+      "end_padded": 130.0,
+      "text": "Det här är min make.",
+      "glob_id": "2025111811371161023",
+      "file_name": "swday_0023_SW_Learn_Day_16-20_srt_00-02-07.020_00-02-10.000.wav",
+      "merged_from": [
+        22
+      ]
+    },
+    {
+      "index": 23,
+      "start": 130.74,
+      "end": 132.1,
+      "start_padded": 130.04000000000002,
+      "end_padded": 132.79999999999998,
+      "text": "Det här är min man.",
+      "glob_id": "2025111811371161024",
+      "file_name": "swday_0024_SW_Learn_Day_16-20_srt_00-02-10.040_00-02-12.800.wav",
+      "merged_from": [
+        23
+      ]
+    },
+    {
+      "index": 24,
+      "start": 133.58,
+      "end": 135.32,
+      "start_padded": 132.88000000000002,
+      "end_padded": 136.01999999999998,
+      "text": "Han heter Thomas.",
+      "glob_id": "2025111811371161025",
+      "file_name": "swday_0025_SW_Learn_Day_16-20_srt_00-02-12.880_00-02-16.020.wav",
+      "merged_from": [
+        24
+      ]
+    },
+    {
+      "index": 25,
+      "start": 137.18,
+      "end": 141.98,
+      "start_padded": 136.48000000000002,
+      "end_padded": 142.67999999999998,
+      "text": "Jag har tre sistrar, Janett, Sara och Linnea.",
+      "glob_id": "2025111811371161026",
+      "file_name": "swday_0026_SW_Learn_Day_16-20_srt_00-02-16.480_00-02-22.680.wav",
+      "merged_from": [
+        25
+      ]
+    },
+    {
+      "index": 26,
+      "start": 143.12,
+      "end": 147.58,
+      "start_padded": 142.42000000000002,
+      "end_padded": 148.28,
+      "text": "Jag har två bröder, Anders och Jesper.",
+      "glob_id": "2025111811371161027",
+      "file_name": "swday_0027_SW_Learn_Day_16-20_srt_00-02-22.420_00-02-28.280.wav",
+      "merged_from": [
+        26
+      ]
+    },
+    {
+      "index": 27,
+      "start": 148.72,
+      "end": 153.58,
+      "start_padded": 148.02,
+      "end_padded": 154.28,
+      "text": "Janett, Sara, Linnea, Anders och Jesper är mina syskon.",
+      "glob_id": "2025111811371161028",
+      "file_name": "swday_0028_SW_Learn_Day_16-20_srt_00-02-28.020_00-02-34.280.wav",
+      "merged_from": [
+        27
+      ]
+    },
+    {
+      "index": 28,
+      "start": 154.7,
+      "end": 162.18,
+      "start_padded": 154.0,
+      "end_padded": 162.88,
+      "text": "Repetition. En man, en mamma, en mor, en pappa.",
+      "glob_id": "2025111811371161029",
+      "file_name": "swday_0029_SW_Learn_Day_16-20_srt_00-02-34.000_00-02-42.880.wav",
+      "merged_from": [
+        28
+      ]
+    },
+    {
+      "index": 29,
+      "start": 163.12,
+      "end": 169.92,
+      "start_padded": 162.42000000000002,
+      "end_padded": 170.61999999999998,
+      "text": "En far, är, en syster, en broer.",
+      "glob_id": "2025111811371161030",
+      "file_name": "swday_0030_SW_Learn_Day_16-20_srt_00-02-42.420_00-02-50.620.wav",
+      "merged_from": [
+        29
+      ]
+    },
+    {
+      "index": 30,
+      "start": 170.92,
+      "end": 173.54,
+      "start_padded": 170.22,
+      "end_padded": 174.23999999999998,
+      "text": "Grammatik, genetiv.",
+      "glob_id": "2025111811371161031",
+      "file_name": "swday_0031_SW_Learn_Day_16-20_srt_00-02-50.220_00-02-54.240.wav",
+      "merged_from": [
+        30
+      ]
+    },
+    {
+      "index": 31,
+      "start": 174.88,
+      "end": 178.0,
+      "start_padded": 174.18,
+      "end_padded": 178.7,
+      "text": "En kvinna, två kvinnor.",
+      "glob_id": "2025111811371161032",
+      "file_name": "swday_0032_SW_Learn_Day_16-20_srt_00-02-54.180_00-02-58.700.wav",
+      "merged_from": [
+        31
+      ]
+    },
+    {
+      "index": 32,
+      "start": 179.38,
+      "end": 182.82,
+      "start_padded": 178.68,
+      "end_padded": 183.51999999999998,
+      "text": "En kusin, två kusiner.",
+      "glob_id": "2025111811371161033",
+      "file_name": "swday_0033_SW_Learn_Day_16-20_srt_00-02-58.680_00-03-03.520.wav",
+      "merged_from": [
+        32
+      ]
+    },
+    {
+      "index": 33,
+      "start": 184.6,
+      "end": 187.98,
+      "start_padded": 183.9,
+      "end_padded": 188.67999999999998,
+      "text": "En far mor, en mor mor.",
+      "glob_id": "2025111811371161034",
+      "file_name": "swday_0034_SW_Learn_Day_16-20_srt_00-03-03.900_00-03-08.680.wav",
+      "merged_from": [
+        33
+      ]
+    },
+    {
+      "index": 34,
+      "start": 189.48,
+      "end": 192.94,
+      "start_padded": 188.78,
+      "end_padded": 193.64,
+      "text": "En far far, en mor far.",
+      "glob_id": "2025111811371161035",
+      "file_name": "swday_0035_SW_Learn_Day_16-20_srt_00-03-08.780_00-03-13.640.wav",
+      "merged_from": [
+        34
+      ]
+    },
+    {
+      "index": 35,
+      "start": 194.08,
+      "end": 198.16,
+      "start_padded": 193.38000000000002,
+      "end_padded": 198.85999999999999,
+      "text": "En far broer, en mor broer.",
+      "glob_id": "2025111811371161036",
+      "file_name": "swday_0036_SW_Learn_Day_16-20_srt_00-03-13.380_00-03-18.860.wav",
+      "merged_from": [
+        35
+      ]
+    },
+    {
+      "index": 36,
+      "start": 199.16,
+      "end": 203.06,
+      "start_padded": 198.46,
+      "end_padded": 203.76,
+      "text": "En fastor, en muster.",
+      "glob_id": "2025111811371161037",
+      "file_name": "swday_0037_SW_Learn_Day_16-20_srt_00-03-18.460_00-03-23.760.wav",
+      "merged_from": [
+        36
+      ]
+    },
+    {
+      "index": 37,
+      "start": 204.44,
+      "end": 207.84,
+      "start_padded": 203.74,
+      "end_padded": 208.54,
+      "text": "Min mamma, min mor, är en kvinna.",
+      "glob_id": "2025111811371161038",
+      "file_name": "swday_0038_SW_Learn_Day_16-20_srt_00-03-23.740_00-03-28.540.wav",
+      "merged_from": [
+        37
+      ]
+    },
+    {
+      "index": 38,
+      "start": 209.46,
+      "end": 213.08,
+      "start_padded": 208.76000000000002,
+      "end_padded": 213.78,
+      "text": "Min pappa, min far, är en man.",
+      "glob_id": "2025111811371161039",
+      "file_name": "swday_0039_SW_Learn_Day_16-20_srt_00-03-28.760_00-03-33.780.wav",
+      "merged_from": [
+        38
+      ]
+    },
+    {
+      "index": 39,
+      "start": 214.28,
+      "end": 217.0,
+      "start_padded": 213.58,
+      "end_padded": 217.7,
+      "text": "Lägg till ett s så blir det genetiv.",
+      "glob_id": "2025111811371161040",
+      "file_name": "swday_0040_SW_Learn_Day_16-20_srt_00-03-33.580_00-03-37.700.wav",
+      "merged_from": [
+        39
+      ]
+    },
+    {
+      "index": 40,
+      "start": 217.78,
+      "end": 219.02,
+      "start_padded": 217.08,
+      "end_padded": 219.72,
+      "text": "Mamas barn.",
+      "glob_id": "2025111811371161041",
+      "file_name": "swday_0041_SW_Learn_Day_16-20_srt_00-03-37.080_00-03-39.720.wav",
+      "merged_from": [
+        40
+      ]
+    },
+    {
+      "index": 41,
+      "start": 220.46,
+      "end": 224.14,
+      "start_padded": 219.76000000000002,
+      "end_padded": 224.83999999999997,
+      "text": "Min pappas mamma är min farmor.",
+      "glob_id": "2025111811371161042",
+      "file_name": "swday_0042_SW_Learn_Day_16-20_srt_00-03-39.760_00-03-44.840.wav",
+      "merged_from": [
+        41
+      ]
+    },
+    {
+      "index": 42,
+      "start": 225.14,
+      "end": 228.94,
+      "start_padded": 224.44,
+      "end_padded": 229.64,
+      "text": "Min fars mor är min farmor.",
+      "glob_id": "2025111811371161043",
+      "file_name": "swday_0043_SW_Learn_Day_16-20_srt_00-03-44.440_00-03-49.640.wav",
+      "merged_from": [
+        42
+      ]
+    },
+    {
+      "index": 43,
+      "start": 229.58,
+      "end": 233.52,
+      "start_padded": 228.88000000000002,
+      "end_padded": 234.22,
+      "text": "Min pappas pappa är min farfar.",
+      "glob_id": "2025111811371161044",
+      "file_name": "swday_0044_SW_Learn_Day_16-20_srt_00-03-48.880_00-03-54.220.wav",
+      "merged_from": [
+        43
+      ]
+    },
+    {
+      "index": 44,
+      "start": 234.96,
+      "end": 238.2,
+      "start_padded": 234.26000000000002,
+      "end_padded": 238.89999999999998,
+      "text": "Min fars far är min farfar.",
+      "glob_id": "2025111811371161045",
+      "file_name": "swday_0045_SW_Learn_Day_16-20_srt_00-03-54.260_00-03-58.900.wav",
+      "merged_from": [
+        44
+      ]
+    },
+    {
+      "index": 45,
+      "start": 239.86,
+      "end": 243.14,
+      "start_padded": 239.16000000000003,
+      "end_padded": 243.83999999999997,
+      "text": "Min mammas mamma är min mormor.",
+      "glob_id": "2025111811371161046",
+      "file_name": "swday_0046_SW_Learn_Day_16-20_srt_00-03-59.160_00-04-03.840.wav",
+      "merged_from": [
+        45
+      ]
+    },
+    {
+      "index": 46,
+      "start": 244.78,
+      "end": 247.66,
+      "start_padded": 244.08,
+      "end_padded": 248.35999999999999,
+      "text": "Min mors mor är min mormor.",
+      "glob_id": "2025111811371161047",
+      "file_name": "swday_0047_SW_Learn_Day_16-20_srt_00-04-04.080_00-04-08.360.wav",
+      "merged_from": [
+        46
+      ]
+    },
+    {
+      "index": 47,
+      "start": 249.06,
+      "end": 252.7,
+      "start_padded": 248.36,
+      "end_padded": 253.39999999999998,
+      "text": "Min mammas pappa är min morfar.",
+      "glob_id": "2025111811371161048",
+      "file_name": "swday_0048_SW_Learn_Day_16-20_srt_00-04-08.360_00-04-13.400.wav",
+      "merged_from": [
+        47
+      ]
+    },
+    {
+      "index": 48,
+      "start": 254.14,
+      "end": 257.8,
+      "start_padded": 253.44,
+      "end_padded": 258.5,
+      "text": "Min mors far är min morfar.",
+      "glob_id": "2025111811371161049",
+      "file_name": "swday_0049_SW_Learn_Day_16-20_srt_00-04-13.440_00-04-18.500.wav",
+      "merged_from": [
+        48
+      ]
+    },
+    {
+      "index": 49,
+      "start": 259.24,
+      "end": 264.14,
+      "start_padded": 258.54,
+      "end_padded": 264.84,
+      "text": "Min pappas, min fars, broer, är min farb.",
+      "glob_id": "2025111811371161050",
+      "file_name": "swday_0050_SW_Learn_Day_16-20_srt_00-04-18.540_00-04-24.840.wav",
+      "merged_from": [
+        49
+      ]
+    },
+    {
+      "index": 50,
+      "start": 265.6,
+      "end": 271.02,
+      "start_padded": 264.90000000000003,
+      "end_padded": 271.71999999999997,
+      "text": "Min pappas, min fars, syster, är min fastor.",
+      "glob_id": "2025111811371161051",
+      "file_name": "swday_0051_SW_Learn_Day_16-20_srt_00-04-24.900_00-04-31.720.wav",
+      "merged_from": [
+        50
+      ]
+    },
+    {
+      "index": 51,
+      "start": 272.6,
+      "end": 276.74,
+      "start_padded": 271.90000000000003,
+      "end_padded": 277.44,
+      "text": "Min mammas, min mors, broer, är min morbro.",
+      "glob_id": "2025111811371161052",
+      "file_name": "swday_0052_SW_Learn_Day_16-20_srt_00-04-31.900_00-04-37.440.wav",
+      "merged_from": [
+        51
+      ]
+    },
+    {
+      "index": 52,
+      "start": 277.74,
+      "end": 282.96,
+      "start_padded": 277.04,
+      "end_padded": 283.65999999999997,
+      "text": "Min mammas, min mors, syster, är min muster.",
+      "glob_id": "2025111811371161053",
+      "file_name": "swday_0053_SW_Learn_Day_16-20_srt_00-04-37.040_00-04-43.660.wav",
+      "merged_from": [
+        52
+      ]
+    },
+    {
+      "index": 53,
+      "start": 283.56,
+      "end": 289.12,
+      "start_padded": 282.86,
+      "end_padded": 289.82,
+      "text": "Min morbrors och min mustersbarn är mina kusiner.",
+      "glob_id": "2025111811371161054",
+      "file_name": "swday_0054_SW_Learn_Day_16-20_srt_00-04-42.860_00-04-49.820.wav",
+      "merged_from": [
+        53
+      ]
+    },
+    {
+      "index": 54,
+      "start": 290.34,
+      "end": 295.12,
+      "start_padded": 289.64,
+      "end_padded": 295.82,
+      "text": "Min farbrors och min fastersbarn är mina kusiner.",
+      "glob_id": "2025111811371161055",
+      "file_name": "swday_0055_SW_Learn_Day_16-20_srt_00-04-49.640_00-04-55.820.wav",
+      "merged_from": [
+        54
+      ]
+    },
+    {
+      "index": 55,
+      "start": 295.82,
+      "end": 302.94,
+      "start_padded": 295.12,
+      "end_padded": 303.64,
+      "text": "Repetition. Heter, har, bor, i.",
+      "glob_id": "2025111811371161056",
+      "file_name": "swday_0056_SW_Learn_Day_16-20_srt_00-04-55.120_00-05-03.640.wav",
+      "merged_from": [
+        55,
+        56
+      ]
+    },
+    {
+      "index": 57,
+      "start": 302.94,
+      "end": 307.5,
+      "start_padded": 302.24,
+      "end_padded": 308.2,
+      "text": "En tjej, två tjejer.",
+      "glob_id": "2025111811371161057",
+      "file_name": "swday_0057_SW_Learn_Day_16-20_srt_00-05-02.240_00-05-08.200.wav",
+      "merged_from": [
+        57
+      ]
+    },
+    {
+      "index": 58,
+      "start": 309.22,
+      "end": 312.38,
+      "start_padded": 308.52000000000004,
+      "end_padded": 313.08,
+      "text": "En kille, två killar.",
+      "glob_id": "2025111811371161058",
+      "file_name": "swday_0058_SW_Learn_Day_16-20_srt_00-05-08.520_00-05-13.080.wav",
+      "merged_from": [
+        58
+      ]
+    },
+    {
+      "index": 59,
+      "start": 314.1,
+      "end": 317.88,
+      "start_padded": 313.40000000000003,
+      "end_padded": 318.58,
+      "text": "En kompis, två kompisar.",
+      "glob_id": "2025111811371161059",
+      "file_name": "swday_0059_SW_Learn_Day_16-20_srt_00-05-13.400_00-05-18.580.wav",
+      "merged_from": [
+        59
+      ]
+    },
+    {
+      "index": 60,
+      "start": 319.2,
+      "end": 322.38,
+      "start_padded": 318.5,
+      "end_padded": 323.08,
+      "text": "En vän, två vänner.",
+      "glob_id": "2025111811371161060",
+      "file_name": "swday_0060_SW_Learn_Day_16-20_srt_00-05-18.500_00-05-23.080.wav",
+      "merged_from": [
+        60
+      ]
+    },
+    {
+      "index": 61,
+      "start": 324.2,
+      "end": 327.86,
+      "start_padded": 323.5,
+      "end_padded": 328.56,
+      "text": "En flickvän, två flickvänner.",
+      "glob_id": "2025111811371161061",
+      "file_name": "swday_0061_SW_Learn_Day_16-20_srt_00-05-23.500_00-05-28.560.wav",
+      "merged_from": [
+        61
+      ]
+    },
+    {
+      "index": 62,
+      "start": 328.86,
+      "end": 333.06,
+      "start_padded": 328.16,
+      "end_padded": 333.76,
+      "text": "En pojkvän, två pojkvänner.",
+      "glob_id": "2025111811371161062",
+      "file_name": "swday_0062_SW_Learn_Day_16-20_srt_00-05-28.160_00-05-33.760.wav",
+      "merged_from": [
+        62
+      ]
+    },
+    {
+      "index": 63,
+      "start": 334.32,
+      "end": 336.44,
+      "start_padded": 333.62,
+      "end_padded": 337.14,
+      "text": "Min kompis heter Lisa.",
+      "glob_id": "2025111811371161063",
+      "file_name": "swday_0063_SW_Learn_Day_16-20_srt_00-05-33.620_00-05-37.140.wav",
+      "merged_from": [
+        63
+      ]
+    },
+    {
+      "index": 64,
+      "start": 338.26,
+      "end": 340.12,
+      "start_padded": 337.56,
+      "end_padded": 340.82,
+      "text": "Min flickvän heter Anna.",
+      "glob_id": "2025111811371161064",
+      "file_name": "swday_0064_SW_Learn_Day_16-20_srt_00-05-37.560_00-05-40.820.wav",
+      "merged_from": [
+        64
+      ]
+    },
+    {
+      "index": 65,
+      "start": 341.8,
+      "end": 345.54,
+      "start_padded": 341.1,
+      "end_padded": 346.24,
+      "text": "Jag har en pojkvän, han heter Thomas.",
+      "glob_id": "2025111811371161065",
+      "file_name": "swday_0065_SW_Learn_Day_16-20_srt_00-05-41.100_00-05-46.240.wav",
+      "merged_from": [
+        65
+      ]
+    },
+    {
+      "index": 66,
+      "start": 347.54,
+      "end": 351.3,
+      "start_padded": 346.84000000000003,
+      "end_padded": 352.0,
+      "text": "Min kompis heter Lars. Han bor i Duved.",
+      "glob_id": "2025111811371161066",
+      "file_name": "swday_0066_SW_Learn_Day_16-20_srt_00-05-46.840_00-05-52.000.wav",
+      "merged_from": [
+        66
+      ]
+    },
+    {
+      "index": 67,
+      "start": 352.86,
+      "end": 355.8,
+      "start_padded": 352.16,
+      "end_padded": 356.5,
+      "text": "Min kompis Lars bor i Duved.",
+      "glob_id": "2025111811371161067",
+      "file_name": "swday_0067_SW_Learn_Day_16-20_srt_00-05-52.160_00-05-56.500.wav",
+      "merged_from": [
+        67
+      ]
+    },
+    {
+      "index": 68,
+      "start": 356.8,
+      "end": 360.6,
+      "start_padded": 356.1,
+      "end_padded": 361.3,
+      "text": "Vad heter din kompis? Hon heter Åsa.",
+      "glob_id": "2025111811371161068",
+      "file_name": "swday_0068_SW_Learn_Day_16-20_srt_00-05-56.100_00-06-01.300.wav",
+      "merged_from": [
+        68
+      ]
+    },
+    {
+      "index": 69,
+      "start": 362.02,
+      "end": 367.5,
+      "start_padded": 361.32,
+      "end_padded": 368.2,
+      "text": "Du kan lära dig 800 ord på 160 dagar, med 5 ord per dag.",
+      "glob_id": "2025111811371161069",
+      "file_name": "swday_0069_SW_Learn_Day_16-20_srt_00-06-01.320_00-06-08.200.wav",
+      "merged_from": [
+        69
+      ]
+    },
+    {
+      "index": 70,
+      "start": 368.62,
+      "end": 371.84,
+      "start_padded": 367.92,
+      "end_padded": 372.53999999999996,
+      "text": "A1-nivån i språk är 800 ord.",
+      "glob_id": "2025111811371161070",
+      "file_name": "swday_0070_SW_Learn_Day_16-20_srt_00-06-07.920_00-06-12.540.wav",
+      "merged_from": [
+        70
+      ]
+    },
+    {
+      "index": 71,
+      "start": 373.02,
+      "end": 376.66,
+      "start_padded": 372.32,
+      "end_padded": 377.36,
+      "text": "Prenumerera och lär dig svenska varje dag.",
+      "glob_id": "2025111811371161071",
+      "file_name": "swday_0071_SW_Learn_Day_16-20_srt_00-06-12.320_00-06-17.360.wav",
+      "merged_from": [
+        71
+      ]
+    }
+  ]
+}

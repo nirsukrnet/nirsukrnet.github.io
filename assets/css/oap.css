@@ -57,6 +57,10 @@ h1 {
   text-align: left;
 }
 
+/* Translation row is hidden by default; shown when toggled */
+.seg-row.text.trans { display: none; }
+.seg-row.text.trans.is-visible { display: block; }
+
 .seg-row.seg-controls {
   display: flex;
   gap: var(--oap-gap);

@@ -1,6 +1,19 @@
 function loadContentData() {
     const rows_phrases = gv.sts.audio_phrases;
-    if (!rows_phrases || !Array.isArray(rows_phrases)) return;    
+    const selected_lesson_id = gv.sts.selected_lesson_id;
+    if (!rows_phrases || !Array.isArray(rows_phrases)) return;
+
+    // Filter phrases strictly by selected lesson id without parsing/normalizing
+    let source_phrases = [];
+    if (selected_lesson_id === null || selected_lesson_id === undefined || String(selected_lesson_id) === '') {
+        source_phrases = rows_phrases.slice();
+    } else {
+        const sel = String(selected_lesson_id);
+        for (const seg of rows_phrases) {
+            if (String(seg.lesson_id) === sel) source_phrases.push(seg);
+        }
+    }
+
     Outputaudiotext_createStyles_oap();
 
     const listEl = document.getElementById('list');
@@ -8,12 +21,12 @@ function loadContentData() {
     let rows = [];
     let currentAudio = null;
 
-	rows = rows_phrases.map(makeRow);
+	rows = source_phrases.map(makeRow);
 	render(rows);
 
 			function render(list) {
 				// Remove old rows
-				while (listEl.children.length > 3) {
+				while (listEl.children.length > 0) {
 					listEl.removeChild(listEl.lastChild);
 				}
 				list.forEach(r => {
@@ -30,8 +43,28 @@ function loadContentData() {
 
 
             function makeRow(seg, idx) {
-				const text_sv = (seg.text_sv || '').trim();
-				const text_en = (seg.text_en || '').trim();
+                const text_sv = (seg.text_sv || '').trim();
+                // Prefer a user-selected translation target if provided; fall back smartly to a non-SV text
+                const transPref = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
+                const pickText = (lang) => {
+                    if (!lang) return '';
+                    const key = `text_${lang}`;
+                    return (seg[key] || '').trim();
+                };
+                const eq = (a,b) => (a||'').trim().toLowerCase() === (b||'').trim().toLowerCase();
+                let text_trans = pickText(transPref);
+                if (!text_trans || eq(text_trans, text_sv)) {
+                    const fallbacks = ['en','uk','sv'].filter(l => l !== transPref);
+                    for (const fb of fallbacks) {
+                        const cand = pickText(fb);
+                        if (cand && !eq(cand, text_sv)) { text_trans = cand; break; }
+                    }
+                }
+                // If still empty or same as source after fallback, blank it to avoid sv->sv duplicate
+                if (!text_trans || eq(text_trans, text_sv)) {
+                    text_trans = '';
+                }
+                const text_en = text_trans;
 				const fileAbs = seg.file_name || '';
                 const baseAudioRel = 'phrase_audio/';				
 				const src = baseAudioRel + encodeURIComponent(fileAbs);
@@ -45,10 +78,8 @@ function loadContentData() {
                 // Row 2: phrase text
                 const textEl_EN = document.createElement('div');
                 textEl_EN.className = 'seg-row text trans';
-                // add display: none;
-                textEl_EN.style.display = 'none';
                 textEl_EN.id = `text-en-${idx}`;
-                textEl_EN.textContent = text_en || '(no text)';
+                textEl_EN.textContent = text_en || '(no translation)';
                 // Row 2: controls
                 const playBlockEl = document.createElement('div');
                 playBlockEl.className = 'seg-row seg-controls';
@@ -87,5 +118,8 @@ function loadContentData() {
                 return { elms: [segmentEl], textLower: textFilter };
 			}
 }
+
+// Ensure callable via window from other components
+try { window.loadContentData = loadContentData; } catch {}
 
 
