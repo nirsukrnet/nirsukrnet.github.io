@@ -26,6 +26,16 @@ async function loadStyle(href) {
   });
 }
 
+(function ensureEarlyMainFuncStub(){
+  // Define a very early stub so body onload does not error on slow networks/iOS Safari.
+  if (typeof window.MainFunc !== 'function') {
+    const stub = function(){ window._mainFuncRanViaBody = true; };
+    // store reference for later comparison
+    window._earlyMainFuncStub = stub;
+    window.MainFunc = stub;
+  }
+})();
+
 (async function loadAppScripts() {   
   // Use relative paths unless explicitly hosting on localhost:8080
   //const USE_ABSOLUTE = location.origin.includes('localhost:8080');
@@ -112,8 +122,11 @@ async function loadStyle(href) {
   }
 
   // Provide stub for MainFunc so body onload doesn't error prematurely
+  // If body onload already fired the early stub, we'll call the real MainFunc after scripts load.
   if (typeof window.MainFunc !== 'function') {
-    window.MainFunc = function(){ /* stub */ };
+    const stub = function(){ window._mainFuncRanViaBody = true; };
+    window._earlyMainFuncStub = stub;
+    window.MainFunc = stub;
   }
 
   // Then load scripts with fallback
@@ -128,6 +141,16 @@ async function loadStyle(href) {
       }
     }
   }
+  // After scripts loaded, if the early stub ran we need to invoke the real MainFunc now.
+  try {
+    const real = window.MainFunc;
+    if (real && real !== window._earlyMainFuncStub) {
+      if (window._mainFuncRanViaBody && !window._mainInitDone) {
+        window._mainInitDone = true;
+        real();
+      }
+    }
+  } catch(e){ console.error('Post-load MainFunc invocation failed', e); }
   // Real MainFunc will run via body onload; optional second call safe if replaced
 })();
 
