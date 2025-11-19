@@ -28,7 +28,8 @@ async function loadStyle(href) {
 
 (async function loadAppScripts() {   
   // Use relative paths unless explicitly hosting on localhost:8080
-  const USE_ABSOLUTE = location.origin.includes('localhost:8080');
+  //const USE_ABSOLUTE = location.origin.includes('localhost:8080');
+  const USE_ABSOLUTE = location.origin.includes('nirsukrnet.github.io');
   const base = USE_ABSOLUTE ? location.origin : '';
 
    // 1) Styles to load (in order)
