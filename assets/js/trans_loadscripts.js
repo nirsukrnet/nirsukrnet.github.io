@@ -22,14 +22,27 @@
     });
   }
 
-  // Time‑gated clear (shared with main page). Adjust interval back to 5min if desired.
+  // Time‑gated clear (shared with main page) — resilient to disabled cookies (iOS Private mode)
   const FIVE_MIN_MS = 10 * 1000; // dev mode quick cycle; change to 5*60*1000 for production
-  const GUARD_COOKIE = 'app_lastClearAt';
+  const GUARD_KEY = 'app_lastClearAt';
   const now = Date.now();
-  const last = parseInt(getCookie(GUARD_COOKIE) || '0', 10);
+  let last = 0;
+  // cookie
+  const lastCookie = parseInt(getCookie(GUARD_KEY) || '0', 10); if (Number.isFinite(lastCookie)) last = Math.max(last, lastCookie);
+  // sessionStorage
+  try { const ss = parseInt(sessionStorage.getItem(GUARD_KEY) || '0', 10); if (Number.isFinite(ss)) last = Math.max(last, ss); } catch {}
+  // window.name fallback
+  try { const m = /(?:^|;)\s*"?app_lastClearAt"?=([0-9]+)/.exec(window.name); if (m){ const wn = parseInt(m[1],10); if (Number.isFinite(wn)) last = Math.max(last, wn); } } catch {}
   if (!Number.isFinite(last) || (now - last) > FIVE_MIN_MS){
-    setCookie(GUARD_COOKIE, String(now), 365*24*60*60);
-    const didReload = await clearAppOriginData(GUARD_COOKIE);
+    setCookie(GUARD_KEY, String(now), 365*24*60*60);
+    try { sessionStorage.setItem(GUARD_KEY, String(now)); } catch {}
+    try {
+      const namePairs = (window.name || '').split(';').filter(Boolean);
+      const filtered = namePairs.filter(p => !/^("?app_lastClearAt"?=)/.test(p.trim()));
+      filtered.push(`app_lastClearAt=${now}`);
+      window.name = filtered.join(';') + ';';
+    } catch {}
+    const didReload = await clearAppOriginData(GUARD_KEY);
     if (didReload) return; // will restart after reload
   }
 
@@ -84,9 +97,12 @@
       });
     } catch {}
     try {
-      if (indexedDB?.databases){ const dbs = await indexedDB.databases(); await Promise.all((dbs||[]).map(db => db?.name && indexedDB.deleteDatabase(db.name))); }
+      if (indexedDB && typeof indexedDB.databases === 'function'){
+        const dbs = await indexedDB.databases();
+        await Promise.all((dbs||[]).map(db => db && db.name && indexedDB.deleteDatabase(db.name)));
+      }
     } catch {}
-    try { const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } catch {}
+    try { if (typeof caches !== 'undefined'){ const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } } catch {}
     try { if ('serviceWorker' in navigator){ const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); } } catch {}
     location.reload();
     return true;

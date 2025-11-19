@@ -49,18 +49,44 @@ async function loadStyle(href) {
     "./assets/js/output_audio_phrase/oap_menu_less.js"
   ];
 
-  // Time‑gated clear: run at most once every 5 minutes
+  // Time‑gated clear: make this resilient when cookies/storage are disabled (iOS Private mode)
   //const FIVE_MIN_MS = 5 * 60 * 1000;
   const FIVE_MIN_MS = 10 * 1000;  
-  // Use a cookie name without special characters to avoid encoding mismatches
-  const GUARD_COOKIE = 'app_lastClearAt';
+  const GUARD_KEY = 'app_lastClearAt';
   const now = Date.now();
-  const last = parseInt(getCookie(GUARD_COOKIE) || '0', 10);
+
+  // Read last value from several fallbacks: cookie, sessionStorage, window.name
+  let last = 0;
+  // cookie
+  const lastCookie = parseInt(getCookie(GUARD_KEY) || '0', 10);
+  if (Number.isFinite(lastCookie)) last = Math.max(last, lastCookie);
+  // sessionStorage
+  try {
+    const ss = parseInt(sessionStorage.getItem(GUARD_KEY) || '0', 10);
+    if (Number.isFinite(ss)) last = Math.max(last, ss);
+  } catch {}
+  // window.name (works even when cookies/storage are blocked)
+  try {
+    const m = /(?:^|;)\s*"?app_lastClearAt"?=([0-9]+)/.exec(window.name);
+    if (m) {
+      const wn = parseInt(m[1], 10);
+      if (Number.isFinite(wn)) last = Math.max(last, wn);
+    }
+  } catch {}
 
   if (!Number.isFinite(last) || (now - last) > FIVE_MIN_MS) {
-    // write guard BEFORE clearing so it survives (we skip deleting it below)
-    setCookie(GUARD_COOKIE, String(now), 365 * 24 * 60 * 60);
-    const didReload = await clearAppOriginData(GUARD_COOKIE);
+    // Persist guard BEFORE clearing so it survives; use all fallbacks
+    setCookie(GUARD_KEY, String(now), 365 * 24 * 60 * 60);
+    try { sessionStorage.setItem(GUARD_KEY, String(now)); } catch {}
+    try {
+      // Store into window.name as a simple ;key=value; pair
+      const namePairs = (window.name || '').split(';').filter(Boolean);
+      const filtered = namePairs.filter(p => !/^("?app_lastClearAt"?=)/.test(p.trim()));
+      filtered.push(`app_lastClearAt=${now}`);
+      window.name = filtered.join(';') + ';';
+    } catch {}
+
+    const didReload = await clearAppOriginData(GUARD_KEY);
     if (didReload) return;
   }
 
@@ -137,16 +163,18 @@ async function clearAppOriginData(guardCookieName = 'app:lastClearAt'){
 
   // IndexedDB
   try {
-    if (indexedDB?.databases) {
+    if (indexedDB && typeof indexedDB.databases === 'function') {
       const dbs = await indexedDB.databases();
-      await Promise.all((dbs || []).map(db => db?.name && indexedDB.deleteDatabase(db.name)));
+      await Promise.all((dbs || []).map(db => db && db.name && indexedDB.deleteDatabase(db.name)));
     }
   } catch {}
 
   // Cache Storage
   try {
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => caches.delete(k)));
+    if (typeof caches !== 'undefined'){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
   } catch {}
 
   // Service Workers
