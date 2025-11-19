@@ -27,7 +27,9 @@ async function loadStyle(href) {
 }
 
 (async function loadAppScripts() {   
-   const start_url = 'http://localhost:8080';
+  // Use relative paths unless explicitly hosting on localhost:8080
+  const USE_ABSOLUTE = location.origin.includes('localhost:8080');
+  const base = USE_ABSOLUTE ? location.origin : '';
 
    // 1) Styles to load (in order)
    const styles = [
@@ -63,18 +65,37 @@ async function loadStyle(href) {
 
   // Skip extra clearing here; time-gated clear above prevents repeated reloads
 
-  // Load styles first
+  // Load styles first with fallback
   for (const href of styles) {
-    const full_href = start_url + href.slice(1);
-    await loadStyle(full_href);
+    try {
+      await loadStyle(base ? (base + href.slice(1)) : href);
+    } catch (e) {
+      if (base) { // fallback to relative
+        try { await loadStyle(href); } catch(e2){ console.error('Style load failed', href, e2); }
+      } else {
+        console.error('Style load failed', href, e);
+      }
+    }
   }
 
-  // Then load scripts
-  for (const src of scripts) {
-    let full_src = start_url + src.slice(1);
-    await loadScript(full_src);
+  // Provide stub for MainFunc so body onload doesn't error prematurely
+  if (typeof window.MainFunc !== 'function') {
+    window.MainFunc = function(){ console.warn('MainFunc stub: core scripts not yet loaded.'); };
   }
-  // MainFunc is now available for onload in HTML
+
+  // Then load scripts with fallback
+  for (const src of scripts) {
+    try {
+      await loadScript(base ? (base + src.slice(1)) : src);
+    } catch (e) {
+      if (base) {
+        try { await loadScript(src); } catch(e2){ console.error('Script load failed', src, e2); }
+      } else {
+        console.error('Script load failed', src, e);
+      }
+    }
+  }
+  // Real MainFunc will run via body onload; optional second call safe if replaced
 })();
 
 
