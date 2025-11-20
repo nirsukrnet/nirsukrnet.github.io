@@ -40,7 +40,18 @@
         root.appendChild(badge);
       }
       const active = document.querySelector('.oap-menu-less__item.is-active');
-      badge.textContent = active?.getAttribute('data-label') || '';
+      const label = active?.getAttribute('data-label') || '';
+
+      // Calculate count of items for the selected lesson
+      let countPrefix = '';
+      if (sel && window.gv?.sts?.audio_phrases && Array.isArray(window.gv.sts.audio_phrases)){
+        const count = window.gv.sts.audio_phrases.filter(p => String(p.lesson_id) === sel).length;
+        if (count > 0) {
+          countPrefix = `(${count}) `;
+        }
+      }
+
+      badge.textContent = countPrefix + label;
       badge.title = badge.textContent;
     }
   }
@@ -74,9 +85,9 @@
     for (const p of phrases){
       if (p && p.lesson_id != null){
         const id = String(p.lesson_id);
-        if (!map.has(id)){
-          // Attempt label from title/name/file_name; else generic
-          const label = p.title || p.name || p.file_name || `Lesson ${id}`;
+        if (!map.has(id)){          
+          //const label = p.title || p.name || p.file_name || `Lesson ${id}`;
+          const label = p.title;
           map.set(id, { lesson_id: id, label });
         }
       }

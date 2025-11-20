@@ -19,7 +19,7 @@ window._oapAudioController = window._oapAudioController || {
 
 function addButtonsPlay_oap(playEl, audioEl, index1) {
     const btn_play = document.createElement('button');
-    btn_play.textContent = 'Play';
+    btn_play.textContent = `P${index1}`;
     btn_play.className = 'control-button';
     btn_play.id = `btn-play-${index1}`;
     playEl.appendChild(btn_play);
