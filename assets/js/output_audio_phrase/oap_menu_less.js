@@ -18,6 +18,9 @@
     if (typeof window.loadContentData === 'function') {
       try { window.loadContentData(); } catch(e){ console.error('[oap] reload failed', e); }
     }
+    // Dispatch event for other listeners (e.g. translation tool)
+    window.dispatchEvent(new CustomEvent('oap:lesson-selected', { detail: { id } }));
+    
     // Update active item highlight
     highlightActive();
     // Close popup after selection

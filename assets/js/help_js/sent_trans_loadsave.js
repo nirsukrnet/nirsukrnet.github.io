@@ -1,6 +1,3 @@
-
-
-
 function ExpImpForTrans_loadDataToHTML() {
    ExpImpForTrans_Sentence_loadDataToHTML();  
 }
@@ -45,43 +42,17 @@ function transformData() {
     const rows = (window.gv && window.gv.sts && Array.isArray(window.gv.sts.audio_phrases)) ? window.gv.sts.audio_phrases : [];
     const selected_lesson_id = window.gv && window.gv.sts ? window.gv.sts.selected_lesson_id : null;
 
-    const normalizeId = (v) => {
-        if (v === null || v === undefined) return null;
-        if (typeof v === 'number' && !Number.isNaN(v)) return v;
-        if (typeof v === 'string') {
-            const t = v.trim();
-            if (t === '') return null;
-            if (/^\d+$/.test(t)) return Number(t);
-            return t.toLowerCase();
-        }
-        try { return String(v).toLowerCase(); } catch { return null; }
-    };
-
-    const selNorm = normalizeId(selected_lesson_id);
-
-    // Support range tags like SW_Learn_Day_7-10 or sw_learn_day_1-5_srt
-    function parseLessonRange(tag){
-        if (typeof tag !== 'string') return null;
-        const m = tag.match(/sw[_\- ]learn[_\- ]day[_\- ](\d+)[_\- ]?(?:to[_\- ]|\-|)(\d+)/i);
-        if (!m) return null;
-        const start = parseInt(m[1],10);
-        const end = parseInt(m[2],10);
-        if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
-        return { start: Math.min(start,end), end: Math.max(start,end) };
-    }
-
     let filtered = rows;
-    const range = parseLessonRange(selected_lesson_id);
-    if (range){
-        filtered = rows.filter(r => typeof r.lesson_id === 'number' && r.lesson_id >= range.start && r.lesson_id <= range.end);
-        if (!filtered.length){
-            console.info('[trans] lesson range parsed but no rows matched; falling back to all', { range, selected_lesson_id });
-            filtered = rows;
-        }
-    } else if (selNorm != null){
-        filtered = rows.filter(r => normalizeId(r.lesson_id) === selNorm);
-        if (!filtered.length){
-            console.info('[trans] selected_lesson_id did not match any lesson_id; using all rows', { selected_lesson_id, selNorm, total: rows.length });
+
+    // Strict filtering by lesson_id (string comparison)
+    if (selected_lesson_id !== null && selected_lesson_id !== undefined && String(selected_lesson_id) !== '') {
+        const sel = String(selected_lesson_id);
+        const matches = rows.filter(r => String(r.lesson_id) === sel);
+
+        if (matches.length > 0) {
+            filtered = matches;
+        } else {
+            console.warn('[trans] selected_lesson_id', sel, 'did not match any lesson_id; using all rows. Total rows:', rows.length);
             filtered = rows;
         }
     }
@@ -646,7 +617,9 @@ function RemoveAllStylesExpImpForTrans() {
 
 
 function ExpImpForTrans_createStyles_2() {
+   if (document.getElementById('style_ExpImpForTrans_2')) return;
    const style = document.createElement('style');
+   style.id = 'style_ExpImpForTrans_2';
    style.innerHTML = `
 
        .sentence-item {
@@ -744,4 +717,29 @@ function ExpImpForTrans_createStyles_2() {
    `;
    document.head.appendChild(style);
 }
+
+function RemoveAllStylesExpImpForTrans() {
+    const s2 = document.getElementById('style_ExpImpForTrans_2');
+    if (s2) s2.remove();
+}
+
+function ExpImpForTrans_createStyles() {
+    // Stub
+}
+
+window.ExpImpForTrans_createStyles_2 = ExpImpForTrans_createStyles_2;
+window.RemoveAllStylesExpImpForTrans = RemoveAllStylesExpImpForTrans;
+window.ExpImpForTrans_createStyles = ExpImpForTrans_createStyles;
+
+// Listen for lesson selection events from the menu to update the view
+window.addEventListener('oap:lesson-selected', () => {
+    console.log('[trans] Lesson selected, refreshing view...');
+    ExpImpForTrans_Sentence_loadDataToHTML();
+});
+
+// Listen for data loaded event to trigger initial render
+window.addEventListener('oap:data-loaded', () => {
+    console.log('[trans] Data loaded, refreshing view...');
+    ExpImpForTrans_Sentence_loadDataToHTML();
+});
 
