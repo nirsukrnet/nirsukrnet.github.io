@@ -83,23 +83,23 @@
 
   function buildListData(){
     // Prefer lesson_id list; fall back to lessons_audio_phrases if structure differs.
-    const phrases = Array.isArray(window.gv?.sts?.audio_phrases) ? window.gv.sts.audio_phrases : [];
-    const map = new Map();
-    for (const p of phrases){
-      if (p && p.lesson_id != null){
-        const id = String(p.lesson_id);
-        if (!map.has(id)){          
-          //const label = p.title || p.name || p.file_name || `Lesson ${id}`;
-          const label = p.title;
-          map.set(id, { lesson_id: id, label });
-        }
-      }
-    }
+    // const phrases = Array.isArray(window.gv?.sts?.audio_phrases) ? window.gv.sts.audio_phrases : [];
+    // const map = new Map();
+    // for (const p of phrases){
+    //   if (p && p.lesson_id != null){
+    //     const id = String(p.lesson_id);
+    //     if (!map.has(id)){          
+    //       //const label = p.title || p.name || p.file_name || `Lesson ${id}`;
+    //       const label = p.title;
+    //       map.set(id, { lesson_id: id, label });
+    //     }
+    //   }
+    // }
     // If none discovered, fall back to original lessons_audio_phrases array
-    if (map.size === 0){
+//    if (map.size === 0){
       const les_list1 = Array.isArray(window.gv?.sts?.lessons_audio_phrases) ? window.gv.sts.lessons_audio_phrases : [];
       return les_list1.map(x => ({ lesson_id: String(x.lesson_id ?? x.rec_id), label: x.title || x.name || `Lesson ${x.lesson_id ?? x.rec_id}` }));
-    }
+  //  }
     return Array.from(map.values());
   }
 
@@ -131,7 +131,8 @@
     if (!popup){
       popup = document.createElement('div');
       popup.className = 'oap-menu-less__popup';
-      popup.innerHTML = `<div class="oap-menu-less__title">Lessons</div><ul class="oap-menu-less__list"></ul>`;
+//      popup.innerHTML = `<div class="oap-menu-less__title">Lessons</div><ul class="oap-menu-less__list"></ul>`;
+      popup.innerHTML = `<ul class="oap-menu-less__list"></ul>`;
       root.appendChild(popup);
       // Close on click outside
       document.addEventListener('click', (e) => {
