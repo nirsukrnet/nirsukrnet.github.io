@@ -1,0 +1,1390 @@
+{
+  "subs": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\Learn_Swedish_Day_26_30_srt.json",
+  "media": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\input_download\\Learn_Swedish_Day_26_30.mp4",
+  "phrase": "*",
+  "mode": "all",
+  "ignore_case": true,
+  "sr": 16000,
+  "channels": 1,
+  "ext": "wav",
+  "pad": 0.7,
+  "bitrate": "192k",
+  "pcm_fmt": "s16le",
+  "hq_resample": false,
+  "accurate_seek": false,
+  "min_duration": 1.0,
+  "clips": [
+    {
+      "index": 0,
+      "start": 2.7399999999999998,
+      "end": 16.98,
+      "start_padded": 2.04,
+      "end_padded": 17.68,
+      "text": "Lyssna och se efter. Öva uttalet. Ska, för turum, framtid, imorgon.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0001_Learn_Swedish_Day_26_30_srt_00-00-02.040_00-00-17.680.wav",
+      "merged_from": [
+        0
+      ]
+    },
+    {
+      "index": 1,
+      "start": 17.98,
+      "end": 19.36,
+      "start_padded": 17.28,
+      "end_padded": 20.06,
+      "text": "Nästa",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0002_Learn_Swedish_Day_26_30_srt_00-00-17.280_00-00-20.060.wav",
+      "merged_from": [
+        1
+      ]
+    },
+    {
+      "index": 2,
+      "start": 19.98,
+      "end": 23.34,
+      "start_padded": 19.28,
+      "end_padded": 24.04,
+      "text": "Repetition, verb i infinitiv.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0003_Learn_Swedish_Day_26_30_srt_00-00-19.280_00-00-24.040.wav",
+      "merged_from": [
+        2
+      ]
+    },
+    {
+      "index": 3,
+      "start": 24.34,
+      "end": 25.74,
+      "start_padded": 23.64,
+      "end_padded": 26.439999999999998,
+      "text": "Arbeta",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0004_Learn_Swedish_Day_26_30_srt_00-00-23.640_00-00-26.440.wav",
+      "merged_from": [
+        3
+      ]
+    },
+    {
+      "index": 4,
+      "start": 25.74,
+      "end": 27.2,
+      "start_padded": 25.04,
+      "end_padded": 27.9,
+      "text": "Boh",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0005_Learn_Swedish_Day_26_30_srt_00-00-25.040_00-00-27.900.wav",
+      "merged_from": [
+        4
+      ]
+    },
+    {
+      "index": 5,
+      "start": 27.98,
+      "end": 31.08,
+      "start_padded": 27.28,
+      "end_padded": 31.779999999999998,
+      "text": "Diska Gå",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0006_Learn_Swedish_Day_26_30_srt_00-00-27.280_00-00-31.780.wav",
+      "merged_from": [
+        5,
+        6
+      ]
+    },
+    {
+      "index": 7,
+      "start": 31.98,
+      "end": 33.12,
+      "start_padded": 31.28,
+      "end_padded": 33.82,
+      "text": "Göra",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0007_Learn_Swedish_Day_26_30_srt_00-00-31.280_00-00-33.820.wav",
+      "merged_from": [
+        7
+      ]
+    },
+    {
+      "index": 8,
+      "start": 33.980000000000004,
+      "end": 36.58,
+      "start_padded": 33.28,
+      "end_padded": 37.28,
+      "text": "Handla Heta",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0008_Learn_Swedish_Day_26_30_srt_00-00-33.280_00-00-37.280.wav",
+      "merged_from": [
+        8,
+        9
+      ]
+    },
+    {
+      "index": 10,
+      "start": 36.58,
+      "end": 38.28,
+      "start_padded": 35.879999999999995,
+      "end_padded": 38.980000000000004,
+      "text": "Jobba",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0009_Learn_Swedish_Day_26_30_srt_00-00-35.880_00-00-38.980.wav",
+      "merged_from": [
+        10
+      ]
+    },
+    {
+      "index": 11,
+      "start": 38.980000000000004,
+      "end": 40.22,
+      "start_padded": 38.28,
+      "end_padded": 40.92,
+      "text": "Laga mat",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0010_Learn_Swedish_Day_26_30_srt_00-00-38.280_00-00-40.920.wav",
+      "merged_from": [
+        11
+      ]
+    },
+    {
+      "index": 12,
+      "start": 40.980000000000004,
+      "end": 42.58,
+      "start_padded": 40.28,
+      "end_padded": 43.28,
+      "text": "Läsa",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0011_Learn_Swedish_Day_26_30_srt_00-00-40.280_00-00-43.280.wav",
+      "merged_from": [
+        12
+      ]
+    },
+    {
+      "index": 13,
+      "start": 42.58,
+      "end": 43.94,
+      "start_padded": 41.879999999999995,
+      "end_padded": 44.64,
+      "text": "Plugga",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0012_Learn_Swedish_Day_26_30_srt_00-00-41.880_00-00-44.640.wav",
+      "merged_from": [
+        13
+      ]
+    },
+    {
+      "index": 14,
+      "start": 43.94,
+      "end": 45.36,
+      "start_padded": 43.239999999999995,
+      "end_padded": 46.06,
+      "text": "Spela",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0013_Learn_Swedish_Day_26_30_srt_00-00-43.240_00-00-46.060.wav",
+      "merged_from": [
+        14
+      ]
+    },
+    {
+      "index": 15,
+      "start": 45.94,
+      "end": 47.84,
+      "start_padded": 45.239999999999995,
+      "end_padded": 48.540000000000006,
+      "text": "Studera",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0014_Learn_Swedish_Day_26_30_srt_00-00-45.240_00-00-48.540.wav",
+      "merged_from": [
+        15
+      ]
+    },
+    {
+      "index": 16,
+      "start": 47.84,
+      "end": 50.04,
+      "start_padded": 47.14,
+      "end_padded": 50.74,
+      "text": "Städa",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0015_Learn_Swedish_Day_26_30_srt_00-00-47.140_00-00-50.740.wav",
+      "merged_from": [
+        16
+      ]
+    },
+    {
+      "index": 17,
+      "start": 50.04,
+      "end": 51.32,
+      "start_padded": 49.339999999999996,
+      "end_padded": 52.02,
+      "text": "Tala",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0016_Learn_Swedish_Day_26_30_srt_00-00-49.340_00-00-52.020.wav",
+      "merged_from": [
+        17
+      ]
+    },
+    {
+      "index": 18,
+      "start": 51.94,
+      "end": 53.26,
+      "start_padded": 51.239999999999995,
+      "end_padded": 53.96,
+      "text": "Titta på",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0017_Learn_Swedish_Day_26_30_srt_00-00-51.240_00-00-53.960.wav",
+      "merged_from": [
+        18
+      ]
+    },
+    {
+      "index": 19,
+      "start": 53.94,
+      "end": 55.0,
+      "start_padded": 53.239999999999995,
+      "end_padded": 55.7,
+      "text": "Tycka om",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0018_Learn_Swedish_Day_26_30_srt_00-00-53.240_00-00-55.700.wav",
+      "merged_from": [
+        19
+      ]
+    },
+    {
+      "index": 20,
+      "start": 55.0,
+      "end": 56.9,
+      "start_padded": 54.3,
+      "end_padded": 57.6,
+      "text": "Vara",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0019_Learn_Swedish_Day_26_30_srt_00-00-54.300_00-00-57.600.wav",
+      "merged_from": [
+        20
+      ]
+    },
+    {
+      "index": 21,
+      "start": 56.9,
+      "end": 59.48,
+      "start_padded": 56.199999999999996,
+      "end_padded": 60.18,
+      "text": "Tvätta kläder",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0020_Learn_Swedish_Day_26_30_srt_00-00-56.200_00-01-00.180.wav",
+      "merged_from": [
+        21
+      ]
+    },
+    {
+      "index": 22,
+      "start": 59.48,
+      "end": 71.52,
+      "start_padded": 58.779999999999994,
+      "end_padded": 72.22,
+      "text": "För turum är lika med ska plus infinitiv. Ska bo, ska plugga, ska arbeta, ska läsa.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0021_Learn_Swedish_Day_26_30_srt_00-00-58.780_00-01-12.220.wav",
+      "merged_from": [
+        22
+      ]
+    },
+    {
+      "index": 23,
+      "start": 72.58,
+      "end": 74.96,
+      "start_padded": 71.88,
+      "end_padded": 75.66,
+      "text": "Jag ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0022_Learn_Swedish_Day_26_30_srt_00-01-11.880_00-01-15.660.wav",
+      "merged_from": [
+        23
+      ]
+    },
+    {
+      "index": 24,
+      "start": 75.82,
+      "end": 77.84,
+      "start_padded": 75.11999999999999,
+      "end_padded": 78.54,
+      "text": "Du ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0023_Learn_Swedish_Day_26_30_srt_00-01-15.120_00-01-18.540.wav",
+      "merged_from": [
+        24
+      ]
+    },
+    {
+      "index": 25,
+      "start": 78.58,
+      "end": 80.42,
+      "start_padded": 77.88,
+      "end_padded": 81.12,
+      "text": "Han ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0024_Learn_Swedish_Day_26_30_srt_00-01-17.880_00-01-21.120.wav",
+      "merged_from": [
+        25
+      ]
+    },
+    {
+      "index": 26,
+      "start": 81.5,
+      "end": 83.46,
+      "start_padded": 80.8,
+      "end_padded": 84.16,
+      "text": "Hon ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0025_Learn_Swedish_Day_26_30_srt_00-01-20.800_00-01-24.160.wav",
+      "merged_from": [
+        26
+      ]
+    },
+    {
+      "index": 27,
+      "start": 84.72,
+      "end": 86.9,
+      "start_padded": 84.02,
+      "end_padded": 87.60000000000001,
+      "text": "Man ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0026_Learn_Swedish_Day_26_30_srt_00-01-24.020_00-01-27.600.wav",
+      "merged_from": [
+        27
+      ]
+    },
+    {
+      "index": 28,
+      "start": 87.74,
+      "end": 89.64,
+      "start_padded": 87.03999999999999,
+      "end_padded": 90.34,
+      "text": "Vi ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0027_Learn_Swedish_Day_26_30_srt_00-01-27.040_00-01-30.340.wav",
+      "merged_from": [
+        28
+      ]
+    },
+    {
+      "index": 29,
+      "start": 90.5,
+      "end": 92.66,
+      "start_padded": 89.8,
+      "end_padded": 93.36,
+      "text": "Ni ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0028_Learn_Swedish_Day_26_30_srt_00-01-29.800_00-01-33.360.wav",
+      "merged_from": [
+        29
+      ]
+    },
+    {
+      "index": 30,
+      "start": 93.48,
+      "end": 95.0,
+      "start_padded": 92.78,
+      "end_padded": 95.7,
+      "text": "Det ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0029_Learn_Swedish_Day_26_30_srt_00-01-32.780_00-01-35.700.wav",
+      "merged_from": [
+        30
+      ]
+    },
+    {
+      "index": 31,
+      "start": 95.76,
+      "end": 97.58,
+      "start_padded": 95.06,
+      "end_padded": 98.28,
+      "text": "Dom ska bo i Malmö.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0030_Learn_Swedish_Day_26_30_srt_00-01-35.060_00-01-38.280.wav",
+      "merged_from": [
+        31
+      ]
+    },
+    {
+      "index": 32,
+      "start": 98.41999999999999,
+      "end": 100.48,
+      "start_padded": 97.71999999999998,
+      "end_padded": 101.18,
+      "text": "Vad ska du göra i morgon?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0031_Learn_Swedish_Day_26_30_srt_00-01-37.720_00-01-41.180.wav",
+      "merged_from": [
+        32
+      ]
+    },
+    {
+      "index": 33,
+      "start": 101.38,
+      "end": 102.42,
+      "start_padded": 100.67999999999999,
+      "end_padded": 103.12,
+      "text": "Jag ska jobba.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0032_Learn_Swedish_Day_26_30_srt_00-01-40.680_00-01-43.120.wav",
+      "merged_from": [
+        33
+      ]
+    },
+    {
+      "index": 34,
+      "start": 103.48,
+      "end": 105.14,
+      "start_padded": 102.78,
+      "end_padded": 105.84,
+      "text": "Vad ska ni göra nästa år?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0033_Learn_Swedish_Day_26_30_srt_00-01-42.780_00-01-45.840.wav",
+      "merged_from": [
+        34
+      ]
+    },
+    {
+      "index": 35,
+      "start": 105.86,
+      "end": 107.06,
+      "start_padded": 105.16,
+      "end_padded": 107.76,
+      "text": "Vi ska arbeta.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0034_Learn_Swedish_Day_26_30_srt_00-01-45.160_00-01-47.760.wav",
+      "merged_from": [
+        35
+      ]
+    },
+    {
+      "index": 36,
+      "start": 108.64,
+      "end": 110.42,
+      "start_padded": 107.94,
+      "end_padded": 111.12,
+      "text": "Vad ska du göra nästa vecka?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0035_Learn_Swedish_Day_26_30_srt_00-01-47.940_00-01-51.120.wav",
+      "merged_from": [
+        36
+      ]
+    },
+    {
+      "index": 37,
+      "start": 111.42,
+      "end": 112.52,
+      "start_padded": 110.72,
+      "end_padded": 113.22,
+      "text": "Jag ska städa.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0036_Learn_Swedish_Day_26_30_srt_00-01-50.720_00-01-53.220.wav",
+      "merged_from": [
+        37
+      ]
+    },
+    {
+      "index": 38,
+      "start": 113.88,
+      "end": 115.82,
+      "start_padded": 113.17999999999999,
+      "end_padded": 116.52,
+      "text": "Vad ska du göra nästa tursdag?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0037_Learn_Swedish_Day_26_30_srt_00-01-53.180_00-01-56.520.wav",
+      "merged_from": [
+        38
+      ]
+    },
+    {
+      "index": 39,
+      "start": 116.84,
+      "end": 117.96,
+      "start_padded": 116.14,
+      "end_padded": 118.66,
+      "text": "Jag ska studera.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0038_Learn_Swedish_Day_26_30_srt_00-01-56.140_00-01-58.660.wav",
+      "merged_from": [
+        39
+      ]
+    },
+    {
+      "index": 40,
+      "start": 119.46,
+      "end": 121.42,
+      "start_padded": 118.75999999999999,
+      "end_padded": 122.12,
+      "text": "Jag ska arbeta i morgon.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0039_Learn_Swedish_Day_26_30_srt_00-01-58.760_00-02-02.120.wav",
+      "merged_from": [
+        40
+      ]
+    },
+    {
+      "index": 41,
+      "start": 123.92,
+      "end": 125.38,
+      "start_padded": 123.22,
+      "end_padded": 126.08,
+      "text": "Ska du laga mat?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0040_Learn_Swedish_Day_26_30_srt_00-02-03.220_00-02-06.080.wav",
+      "merged_from": [
+        41
+      ]
+    },
+    {
+      "index": 42,
+      "start": 126.98,
+      "end": 128.6,
+      "start_padded": 126.28,
+      "end_padded": 129.29999999999998,
+      "text": "Ja. Jag ska laga mat.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0041_Learn_Swedish_Day_26_30_srt_00-02-06.280_00-02-09.300.wav",
+      "merged_from": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ]
+    },
+    {
+      "index": 47,
+      "start": 129.8,
+      "end": 131.58,
+      "start_padded": 129.10000000000002,
+      "end_padded": 132.28,
+      "text": "Ska du laga mat i morgon?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0042_Learn_Swedish_Day_26_30_srt_00-02-09.100_00-02-12.280.wav",
+      "merged_from": [
+        47
+      ]
+    },
+    {
+      "index": 48,
+      "start": 132.46,
+      "end": 135.08,
+      "start_padded": 131.76000000000002,
+      "end_padded": 135.78,
+      "text": "Nej, jag ska inte laga mat i morgon.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0043_Learn_Swedish_Day_26_30_srt_00-02-11.760_00-02-15.780.wav",
+      "merged_from": [
+        48
+      ]
+    },
+    {
+      "index": 49,
+      "start": 136.66,
+      "end": 139.06,
+      "start_padded": 135.96,
+      "end_padded": 139.76,
+      "text": "Jag ska inte arbeta i morgon.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0044_Learn_Swedish_Day_26_30_srt_00-02-15.960_00-02-19.760.wav",
+      "merged_from": [
+        49
+      ]
+    },
+    {
+      "index": 50,
+      "start": 140.04,
+      "end": 142.14,
+      "start_padded": 139.34,
+      "end_padded": 142.83999999999997,
+      "text": "Du ska inte bo i åren nästa år.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0045_Learn_Swedish_Day_26_30_srt_00-02-19.340_00-02-22.840.wav",
+      "merged_from": [
+        50
+      ]
+    },
+    {
+      "index": 51,
+      "start": 143.68,
+      "end": 145.98,
+      "start_padded": 142.98000000000002,
+      "end_padded": 146.67999999999998,
+      "text": "Han ska inte diska nästa vecka.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0046_Learn_Swedish_Day_26_30_srt_00-02-22.980_00-02-26.680.wav",
+      "merged_from": [
+        51
+      ]
+    },
+    {
+      "index": 52,
+      "start": 147.42,
+      "end": 149.5,
+      "start_padded": 146.72,
+      "end_padded": 150.2,
+      "text": "Hon ska inte spela på tursdag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0047_Learn_Swedish_Day_26_30_srt_00-02-26.720_00-02-30.200.wav",
+      "merged_from": [
+        52
+      ]
+    },
+    {
+      "index": 53,
+      "start": 151.06,
+      "end": 152.58,
+      "start_padded": 150.36,
+      "end_padded": 153.28,
+      "text": "Man ska inte diska.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0048_Learn_Swedish_Day_26_30_srt_00-02-30.360_00-02-33.280.wav",
+      "merged_from": [
+        53
+      ]
+    },
+    {
+      "index": 54,
+      "start": 154.22,
+      "end": 156.18,
+      "start_padded": 153.52,
+      "end_padded": 156.88,
+      "text": "Vi ska inte handla efter skolan.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0049_Learn_Swedish_Day_26_30_srt_00-02-33.520_00-02-36.880.wav",
+      "merged_from": [
+        54
+      ]
+    },
+    {
+      "index": 55,
+      "start": 156.18,
+      "end": 159.6,
+      "start_padded": 155.48000000000002,
+      "end_padded": 160.29999999999998,
+      "text": "Ni ska inte laga mat efter jobbet.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0050_Learn_Swedish_Day_26_30_srt_00-02-35.480_00-02-40.300.wav",
+      "merged_from": [
+        55
+      ]
+    },
+    {
+      "index": 56,
+      "start": 161.2,
+      "end": 163.38,
+      "start_padded": 160.5,
+      "end_padded": 164.07999999999998,
+      "text": "Vi ska inte jobba på söndag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0051_Learn_Swedish_Day_26_30_srt_00-02-40.500_00-02-44.080.wav",
+      "merged_from": [
+        56
+      ]
+    },
+    {
+      "index": 57,
+      "start": 164.7,
+      "end": 166.8,
+      "start_padded": 164.0,
+      "end_padded": 167.5,
+      "text": "Det ska inte läsa på lördag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0052_Learn_Swedish_Day_26_30_srt_00-02-44.000_00-02-47.500.wav",
+      "merged_from": [
+        57
+      ]
+    },
+    {
+      "index": 58,
+      "start": 168.6,
+      "end": 177.08,
+      "start_padded": 167.9,
+      "end_padded": 177.78,
+      "text": "Repetition. Jag tycker om tursdag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0053_Learn_Swedish_Day_26_30_srt_00-02-47.900_00-02-57.780.wav",
+      "merged_from": [
+        58,
+        59
+      ]
+    },
+    {
+      "index": 60,
+      "start": 179.46,
+      "end": 183.66,
+      "start_padded": 178.76000000000002,
+      "end_padded": 184.35999999999999,
+      "text": "Dag ska i morgon.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0054_Learn_Swedish_Day_26_30_srt_00-02-58.760_00-03-04.360.wav",
+      "merged_from": [
+        60
+      ]
+    },
+    {
+      "index": 61,
+      "start": 185.5,
+      "end": 186.88,
+      "start_padded": 184.8,
+      "end_padded": 187.57999999999998,
+      "text": "Dansa.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0055_Learn_Swedish_Day_26_30_srt_00-03-04.800_00-03-07.580.wav",
+      "merged_from": [
+        61
+      ]
+    },
+    {
+      "index": 62,
+      "start": 188.94,
+      "end": 190.32,
+      "start_padded": 188.24,
+      "end_padded": 191.01999999999998,
+      "text": "Varje.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0056_Learn_Swedish_Day_26_30_srt_00-03-08.240_00-03-11.020.wav",
+      "merged_from": [
+        62
+      ]
+    },
+    {
+      "index": 63,
+      "start": 192.48,
+      "end": 193.84,
+      "start_padded": 191.78,
+      "end_padded": 194.54,
+      "text": "Spela fotboll.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0057_Learn_Swedish_Day_26_30_srt_00-03-11.780_00-03-14.540.wav",
+      "merged_from": [
+        63
+      ]
+    },
+    {
+      "index": 64,
+      "start": 195.62,
+      "end": 198.9,
+      "start_padded": 194.92000000000002,
+      "end_padded": 199.6,
+      "text": "Fotografera. En kamera.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0058_Learn_Swedish_Day_26_30_srt_00-03-14.920_00-03-19.600.wav",
+      "merged_from": [
+        64,
+        65
+      ]
+    },
+    {
+      "index": 66,
+      "start": 200.16,
+      "end": 201.16,
+      "start_padded": 199.46,
+      "end_padded": 201.85999999999999,
+      "text": "Två kameror.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0059_Learn_Swedish_Day_26_30_srt_00-03-19.460_00-03-21.860.wav",
+      "merged_from": [
+        66
+      ]
+    },
+    {
+      "index": 67,
+      "start": 203.24,
+      "end": 204.84,
+      "start_padded": 202.54000000000002,
+      "end_padded": 205.54,
+      "text": "Jag tycker om att dansa.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0060_Learn_Swedish_Day_26_30_srt_00-03-22.540_00-03-25.540.wav",
+      "merged_from": [
+        67
+      ]
+    },
+    {
+      "index": 68,
+      "start": 206.2,
+      "end": 208.36,
+      "start_padded": 205.5,
+      "end_padded": 209.06,
+      "text": "Jag dansar varje tursdag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0061_Learn_Swedish_Day_26_30_srt_00-03-25.500_00-03-29.060.wav",
+      "merged_from": [
+        68
+      ]
+    },
+    {
+      "index": 69,
+      "start": 209.62,
+      "end": 212.62,
+      "start_padded": 208.92000000000002,
+      "end_padded": 213.32,
+      "text": "Jag tycker också om att spela fotboll.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0062_Learn_Swedish_Day_26_30_srt_00-03-28.920_00-03-33.320.wav",
+      "merged_from": [
+        69
+      ]
+    },
+    {
+      "index": 70,
+      "start": 214.16,
+      "end": 216.94,
+      "start_padded": 213.46,
+      "end_padded": 217.64,
+      "text": "Jag spelar fotboll varje dag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0063_Learn_Swedish_Day_26_30_srt_00-03-33.460_00-03-37.640.wav",
+      "merged_from": [
+        70
+      ]
+    },
+    {
+      "index": 71,
+      "start": 218.52,
+      "end": 222.04,
+      "start_padded": 217.82000000000002,
+      "end_padded": 222.73999999999998,
+      "text": "Jag har en kamera och jag fotograferar varje dag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0064_Learn_Swedish_Day_26_30_srt_00-03-37.820_00-03-42.740.wav",
+      "merged_from": [
+        71
+      ]
+    },
+    {
+      "index": 72,
+      "start": 223.7,
+      "end": 225.76,
+      "start_padded": 223.0,
+      "end_padded": 226.45999999999998,
+      "text": "Ska du spela fotboll i morgon?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0065_Learn_Swedish_Day_26_30_srt_00-03-43.000_00-03-46.460.wav",
+      "merged_from": [
+        72
+      ]
+    },
+    {
+      "index": 73,
+      "start": 227.8,
+      "end": 230.78,
+      "start_padded": 227.10000000000002,
+      "end_padded": 231.48,
+      "text": "Ja, jag ska spela fotboll i morgon.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0066_Learn_Swedish_Day_26_30_srt_00-03-47.100_00-03-51.480.wav",
+      "merged_from": [
+        73
+      ]
+    },
+    {
+      "index": 74,
+      "start": 231.98,
+      "end": 234.66,
+      "start_padded": 231.28,
+      "end_padded": 235.35999999999999,
+      "text": "Repetition. Vad.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0067_Learn_Swedish_Day_26_30_srt_00-03-51.280_00-03-55.360.wav",
+      "merged_from": [
+        74,
+        75
+      ]
+    },
+    {
+      "index": 76,
+      "start": 235.76,
+      "end": 238.0,
+      "start_padded": 235.06,
+      "end_padded": 238.7,
+      "text": "En dag. Inte.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0068_Learn_Swedish_Day_26_30_srt_00-03-55.060_00-03-58.700.wav",
+      "merged_from": [
+        76,
+        77
+      ]
+    },
+    {
+      "index": 78,
+      "start": 238.0,
+      "end": 239.94,
+      "start_padded": 237.3,
+      "end_padded": 240.64,
+      "text": "Bara.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0069_Learn_Swedish_Day_26_30_srt_00-03-57.300_00-04-00.640.wav",
+      "merged_from": [
+        78
+      ]
+    },
+    {
+      "index": 79,
+      "start": 240.78,
+      "end": 242.96,
+      "start_padded": 240.08,
+      "end_padded": 243.66,
+      "text": "Vilka. Jag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0070_Learn_Swedish_Day_26_30_srt_00-04-00.080_00-04-03.660.wav",
+      "merged_from": [
+        79,
+        80
+      ]
+    },
+    {
+      "index": 81,
+      "start": 244.16,
+      "end": 247.66,
+      "start_padded": 243.46,
+      "end_padded": 248.35999999999999,
+      "text": "Du. En måltid.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0071_Learn_Swedish_Day_26_30_srt_00-04-03.460_00-04-08.360.wav",
+      "merged_from": [
+        81,
+        82
+      ]
+    },
+    {
+      "index": 83,
+      "start": 248.56,
+      "end": 249.8,
+      "start_padded": 247.86,
+      "end_padded": 250.5,
+      "text": "Två måltider.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0072_Learn_Swedish_Day_26_30_srt_00-04-07.860_00-04-10.500.wav",
+      "merged_from": [
+        83
+      ]
+    },
+    {
+      "index": 84,
+      "start": 251.42,
+      "end": 254.88,
+      "start_padded": 250.72,
+      "end_padded": 255.57999999999998,
+      "text": "Äta frukost. Äta lunch.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0073_Learn_Swedish_Day_26_30_srt_00-04-10.720_00-04-15.580.wav",
+      "merged_from": [
+        84,
+        85
+      ]
+    },
+    {
+      "index": 86,
+      "start": 256.86,
+      "end": 257.96,
+      "start_padded": 256.16,
+      "end_padded": 258.65999999999997,
+      "text": "Äta middag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0074_Learn_Swedish_Day_26_30_srt_00-04-16.160_00-04-18.660.wav",
+      "merged_from": [
+        86
+      ]
+    },
+    {
+      "index": 87,
+      "start": 259.14,
+      "end": 260.42,
+      "start_padded": 258.44,
+      "end_padded": 261.12,
+      "text": "Äta kvällsmat.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0075_Learn_Swedish_Day_26_30_srt_00-04-18.440_00-04-21.120.wav",
+      "merged_from": [
+        87
+      ]
+    },
+    {
+      "index": 88,
+      "start": 262.42,
+      "end": 265.92,
+      "start_padded": 261.72,
+      "end_padded": 266.62,
+      "text": "Fika. Äta mellanmål.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0076_Learn_Swedish_Day_26_30_srt_00-04-21.720_00-04-26.620.wav",
+      "merged_from": [
+        88,
+        89
+      ]
+    },
+    {
+      "index": 90,
+      "start": 267.04,
+      "end": 273.52,
+      "start_padded": 266.34000000000003,
+      "end_padded": 274.21999999999997,
+      "text": "Vilka mål får du? Jag äter frukost.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0077_Learn_Swedish_Day_26_30_srt_00-04-26.340_00-04-34.220.wav",
+      "merged_from": [
+        90,
+        91,
+        92
+      ]
+    },
+    {
+      "index": 93,
+      "start": 274.76,
+      "end": 276.42,
+      "start_padded": 274.06,
+      "end_padded": 277.12,
+      "text": "Äta lunch.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0078_Learn_Swedish_Day_26_30_srt_00-04-34.060_00-04-37.120.wav",
+      "merged_from": [
+        93
+      ]
+    },
+    {
+      "index": 94,
+      "start": 277.92,
+      "end": 282.28,
+      "start_padded": 277.22,
+      "end_padded": 282.97999999999996,
+      "text": "Fika. Äta mellanmål.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0079_Learn_Swedish_Day_26_30_srt_00-04-37.220_00-04-42.980.wav",
+      "merged_from": [
+        94,
+        95
+      ]
+    },
+    {
+      "index": 96,
+      "start": 283.6,
+      "end": 285.1,
+      "start_padded": 282.90000000000003,
+      "end_padded": 285.8,
+      "text": "Äta middag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0080_Learn_Swedish_Day_26_30_srt_00-04-42.900_00-04-45.800.wav",
+      "merged_from": [
+        96
+      ]
+    },
+    {
+      "index": 97,
+      "start": 286.6,
+      "end": 287.96,
+      "start_padded": 285.90000000000003,
+      "end_padded": 288.65999999999997,
+      "text": "Äta kvällsmat.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0081_Learn_Swedish_Day_26_30_srt_00-04-45.900_00-04-48.660.wav",
+      "merged_from": [
+        97
+      ]
+    },
+    {
+      "index": 98,
+      "start": 289.54,
+      "end": 292.42,
+      "start_padded": 288.84000000000003,
+      "end_padded": 293.12,
+      "text": "Vad äter du? Bara frukost, lunch och middag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0082_Learn_Swedish_Day_26_30_srt_00-04-48.840_00-04-53.120.wav",
+      "merged_from": [
+        98,
+        99,
+        100,
+        101,
+        102,
+        103
+      ]
+    },
+    {
+      "index": 100,
+      "start": 292.42,
+      "end": 294.76,
+      "start_padded": 291.72,
+      "end_padded": 295.46,
+      "text": "Jag äter bara frukost, lunch och middag.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0083_Learn_Swedish_Day_26_30_srt_00-04-51.720_00-04-55.460.wav",
+      "merged_from": [
+        100,
+        101,
+        102,
+        103,
+        104
+      ]
+    },
+    {
+      "index": 105,
+      "start": 296.28,
+      "end": 297.96,
+      "start_padded": 295.58,
+      "end_padded": 298.65999999999997,
+      "text": "Jag äter inte mellanmål.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0084_Learn_Swedish_Day_26_30_srt_00-04-55.580_00-04-58.660.wav",
+      "merged_from": [
+        105
+      ]
+    },
+    {
+      "index": 106,
+      "start": 297.96,
+      "end": 313.68,
+      "start_padded": 297.26,
+      "end_padded": 314.38,
+      "text": "mål och inte kvällsmat. Repetition. Kaffe, te, äta, frukost. Med och till.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0085_Learn_Swedish_Day_26_30_srt_00-04-57.260_00-05-14.380.wav",
+      "merged_from": [
+        106
+      ]
+    },
+    {
+      "index": 107,
+      "start": 313.68,
+      "end": 320.54,
+      "start_padded": 312.98,
+      "end_padded": 321.24,
+      "text": "ett bröd, brödet, två bröd",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0086_Learn_Swedish_Day_26_30_srt_00-05-12.980_00-05-21.240.wav",
+      "merged_from": [
+        107
+      ]
+    },
+    {
+      "index": 108,
+      "start": 321.68,
+      "end": 324.5,
+      "start_padded": 320.98,
+      "end_padded": 325.2,
+      "text": "smör, smöret",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0087_Learn_Swedish_Day_26_30_srt_00-05-20.980_00-05-25.200.wav",
+      "merged_from": [
+        108
+      ]
+    },
+    {
+      "index": 109,
+      "start": 326.68,
+      "end": 331.86,
+      "start_padded": 325.98,
+      "end_padded": 332.56,
+      "text": "en smörgås, smörgåsen, två smörgåsar",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0088_Learn_Swedish_Day_26_30_srt_00-05-25.980_00-05-32.560.wav",
+      "merged_from": [
+        109
+      ]
+    },
+    {
+      "index": 110,
+      "start": 333.68,
+      "end": 338.16,
+      "start_padded": 332.98,
+      "end_padded": 338.86,
+      "text": "en ost, osten, två ostar",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0089_Learn_Swedish_Day_26_30_srt_00-05-32.980_00-05-38.860.wav",
+      "merged_from": [
+        110
+      ]
+    },
+    {
+      "index": 111,
+      "start": 339.46,
+      "end": 342.14,
+      "start_padded": 338.76,
+      "end_padded": 342.84,
+      "text": "dricka, dricker",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0090_Learn_Swedish_Day_26_30_srt_00-05-38.760_00-05-42.840.wav",
+      "merged_from": [
+        111
+      ]
+    },
+    {
+      "index": 112,
+      "start": 343.16,
+      "end": 345.26,
+      "start_padded": 342.46000000000004,
+      "end_padded": 345.96,
+      "text": "Vad äter du till frukost?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0091_Learn_Swedish_Day_26_30_srt_00-05-42.460_00-05-45.960.wav",
+      "merged_from": [
+        112
+      ]
+    },
+    {
+      "index": 113,
+      "start": 346.62,
+      "end": 349.76,
+      "start_padded": 345.92,
+      "end_padded": 350.46,
+      "text": "Jag äter en smörgås med smör och ost.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0092_Learn_Swedish_Day_26_30_srt_00-05-45.920_00-05-50.460.wav",
+      "merged_from": [
+        113
+      ]
+    },
+    {
+      "index": 114,
+      "start": 350.9,
+      "end": 353.26,
+      "start_padded": 350.2,
+      "end_padded": 353.96,
+      "text": "Vad dricker du till frukost?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0093_Learn_Swedish_Day_26_30_srt_00-05-50.200_00-05-53.960.wav",
+      "merged_from": [
+        114
+      ]
+    },
+    {
+      "index": 115,
+      "start": 354.64,
+      "end": 358.78,
+      "start_padded": 353.94,
+      "end_padded": 359.47999999999996,
+      "text": "Jag dricker te. Jag dricker kaffe till frukost.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0094_Learn_Swedish_Day_26_30_srt_00-05-53.940_00-05-59.480.wav",
+      "merged_from": [
+        115,
+        116
+      ]
+    },
+    {
+      "index": 117,
+      "start": 359.82,
+      "end": 361.92,
+      "start_padded": 359.12,
+      "end_padded": 362.62,
+      "text": "Jag dricker inte te.",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0095_Learn_Swedish_Day_26_30_srt_00-05-59.120_00-06-02.620.wav",
+      "merged_from": [
+        117
+      ]
+    },
+    {
+      "index": 118,
+      "start": 363.12,
+      "end": 371.32,
+      "start_padded": 362.42,
+      "end_padded": 372.02,
+      "text": "Repetition. Vad du, jag till maten",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0096_Learn_Swedish_Day_26_30_srt_00-06-02.420_00-06-12.020.wav",
+      "merged_from": [
+        118,
+        119
+      ]
+    },
+    {
+      "index": 120,
+      "start": 371.32,
+      "end": 377.02,
+      "start_padded": 370.62,
+      "end_padded": 377.71999999999997,
+      "text": "dricka, tycka om, nej",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0097_Learn_Swedish_Day_26_30_srt_00-06-10.620_00-06-17.720.wav",
+      "merged_from": [
+        120
+      ]
+    },
+    {
+      "index": 121,
+      "start": 377.02,
+      "end": 380.62,
+      "start_padded": 376.32,
+      "end_padded": 381.32,
+      "text": "mjölk, mjölken",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0098_Learn_Swedish_Day_26_30_srt_00-06-16.320_00-06-21.320.wav",
+      "merged_from": [
+        121
+      ]
+    },
+    {
+      "index": 122,
+      "start": 381.8,
+      "end": 385.22,
+      "start_padded": 381.1,
+      "end_padded": 385.92,
+      "text": "vatten, vattnet",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0099_Learn_Swedish_Day_26_30_srt_00-06-21.100_00-06-25.920.wav",
+      "merged_from": [
+        122
+      ]
+    },
+    {
+      "index": 123,
+      "start": 386.8,
+      "end": 389.74,
+      "start_padded": 386.1,
+      "end_padded": 390.44,
+      "text": "en öl, två öl",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0100_Learn_Swedish_Day_26_30_srt_00-06-26.100_00-06-30.440.wav",
+      "merged_from": [
+        123
+      ]
+    },
+    {
+      "index": 124,
+      "start": 390.74,
+      "end": 394.14,
+      "start_padded": 390.04,
+      "end_padded": 394.84,
+      "text": "vin, vinet",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0101_Learn_Swedish_Day_26_30_srt_00-06-30.040_00-06-34.840.wav",
+      "merged_from": [
+        124
+      ]
+    },
+    {
+      "index": 125,
+      "start": 396.18,
+      "end": 399.12,
+      "start_padded": 395.48,
+      "end_padded": 399.82,
+      "text": "jos, josen",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0102_Learn_Swedish_Day_26_30_srt_00-06-35.480_00-06-39.820.wav",
+      "merged_from": [
+        125
+      ]
+    },
+    {
+      "index": 126,
+      "start": 400.5,
+      "end": 403.1,
+      "start_padded": 399.8,
+      "end_padded": 403.8,
+      "text": "Vad dricker du till maten?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0103_Learn_Swedish_Day_26_30_srt_00-06-39.800_00-06-43.800.wav",
+      "merged_from": [
+        126
+      ]
+    },
+    {
+      "index": 127,
+      "start": 404.2,
+      "end": 405.44,
+      "start_padded": 403.5,
+      "end_padded": 406.14,
+      "text": "Jag dricker vatten",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0104_Learn_Swedish_Day_26_30_srt_00-06-43.500_00-06-46.140.wav",
+      "merged_from": [
+        127
+      ]
+    },
+    {
+      "index": 128,
+      "start": 407.74,
+      "end": 409.8,
+      "start_padded": 407.04,
+      "end_padded": 410.5,
+      "text": "Dricker du vin till maten?",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0105_Learn_Swedish_Day_26_30_srt_00-06-47.040_00-06-50.500.wav",
+      "merged_from": [
+        128
+      ]
+    },
+    {
+      "index": 129,
+      "start": 411.48,
+      "end": 414.78,
+      "start_padded": 410.78000000000003,
+      "end_padded": 415.47999999999996,
+      "text": "nej, jag dricker mjölk till maten",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0106_Learn_Swedish_Day_26_30_srt_00-06-50.780_00-06-55.480.wav",
+      "merged_from": [
+        129
+      ]
+    },
+    {
+      "index": 130,
+      "start": 415.74,
+      "end": 418.1,
+      "start_padded": 415.04,
+      "end_padded": 418.8,
+      "text": "Jag tycker om att dricka vatten till maten",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0107_Learn_Swedish_Day_26_30_srt_00-06-55.040_00-06-58.800.wav",
+      "merged_from": [
+        130
+      ]
+    },
+    {
+      "index": 131,
+      "start": 419.1,
+      "end": 422.26,
+      "start_padded": 418.40000000000003,
+      "end_padded": 422.96,
+      "text": "Jag tycker inte om att dricka öl till maten",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0108_Learn_Swedish_Day_26_30_srt_00-06-58.400_00-07-02.960.wav",
+      "merged_from": [
+        131
+      ]
+    },
+    {
+      "index": 132,
+      "start": 422.26,
+      "end": 426.1,
+      "start_padded": 421.56,
+      "end_padded": 426.8,
+      "text": "Du kan lära dig 800 ord på 160 dagar",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0109_Learn_Swedish_Day_26_30_srt_00-07-01.560_00-07-06.800.wav",
+      "merged_from": [
+        132
+      ]
+    },
+    {
+      "index": 133,
+      "start": 426.68,
+      "end": 429.18,
+      "start_padded": 425.98,
+      "end_padded": 429.88,
+      "text": "med 5 ord per dag",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0110_Learn_Swedish_Day_26_30_srt_00-07-05.980_00-07-09.880.wav",
+      "merged_from": [
+        133
+      ]
+    },
+    {
+      "index": 134,
+      "start": 429.18,
+      "end": 432.92,
+      "start_padded": 428.48,
+      "end_padded": 433.62,
+      "text": "A1-nivån i språk är 800 ord",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0111_Learn_Swedish_Day_26_30_srt_00-07-08.480_00-07-13.620.wav",
+      "merged_from": [
+        134
+      ]
+    },
+    {
+      "index": 135,
+      "start": 434.06,
+      "end": 437.62,
+      "start_padded": 433.36,
+      "end_padded": 438.32,
+      "text": "Prenumerera och lär dig svenska varje dag",
+      "file": "C:\\Python\\AuTr\\AudioTranscr\\outputs\\phrase_audio\\swday_0112_Learn_Swedish_Day_26_30_srt_00-07-13.360_00-07-18.320.wav",
+      "merged_from": [
+        135
+      ]
+    }
+  ]
+}
