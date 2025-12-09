@@ -1,0 +1,171 @@
+
+// Single Audio Playback Controller
+window._oapAudioController = window._oapAudioController || {
+    audio: null,
+    timeUpdateHandler: null,
+    
+    init(src) {
+        if (!this.audio) {
+            this.audio = new Audio(src);
+            this.audio.preload = 'auto';
+        } else {
+            this.audio.src = src;
+        }
+    },
+
+    playSegment(startTime, endTime) {
+        if (!this.audio) return;
+
+        // Remove previous listener if any
+        if (this.timeUpdateHandler) {
+            this.audio.removeEventListener('timeupdate', this.timeUpdateHandler);
+        }
+
+        this.audio.pause();
+        this.audio.currentTime = startTime;
+
+        this.timeUpdateHandler = () => {
+            if (this.audio.currentTime >= endTime) {
+                this.audio.pause();
+                this.audio.removeEventListener('timeupdate', this.timeUpdateHandler);
+                this.timeUpdateHandler = null;
+            }
+        };
+
+        this.audio.addEventListener('timeupdate', this.timeUpdateHandler);
+        
+        this.audio.play().catch(e => console.warn('play failed', e));
+    }
+};
+
+// Initialize with the single MP3 file
+window._oapAudioController.init('phrase_audio/SW_Learn_Day_1-5.mp3');
+
+
+function addButtonsPlay_oap(playEl, fileName, index1) {
+    const btn_play = document.createElement('button');
+    btn_play.textContent = `P${index1}`;
+    btn_play.className = 'control-button';
+    btn_play.id = `btn-play-${index1}`;
+    playEl.appendChild(btn_play);
+    
+    btn_play.addEventListener('click', () => {
+        // Parse filename to get start and end times
+        // Format: ..._HH-MM-SS.mmm_HH-MM-SS.mmm.wav
+        // Example: swday_0001_SW_Learn_Day_1-5_srt_00-00-03.240_00-00-07.120.wav
+        
+        try {
+            // Extract the timestamp part using regex
+            // Looking for pattern: _(\d{2}-\d{2}-\d{2}\.\d{3})_(\d{2}-\d{2}-\d{2}\.\d{3})\.wav$
+            const match = fileName.match(/_(\d{2}-\d{2}-\d{2}\.\d{3})_(\d{2}-\d{2}-\d{2}\.\d{3})\.wav$/);
+            
+            if (match && match.length === 3) {
+                const startStr = match[1].replace(/-/g, ':'); // Convert 00-00-03.240 to 00:00:03.240
+                const endStr = match[2].replace(/-/g, ':');
+                
+                const startTime = parseTime(startStr);
+                const endTime = parseTime(endStr);
+                
+                window._oapAudioController.playSegment(startTime, endTime);
+            } else {
+                console.warn('Could not parse timestamps from filename:', fileName);
+            }
+        } catch (e) {
+            console.error('Error parsing filename:', e);
+        }
+    });
+}
+
+function parseTime(timeStr) {
+    // timeStr format: HH:MM:SS.mmm
+    const parts = timeStr.split(':');
+    if (parts.length !== 3) return 0;
+    
+    const hours = parseFloat(parts[0]);
+    const minutes = parseFloat(parts[1]);
+    const seconds = parseFloat(parts[2]);
+    
+    return (hours * 3600) + (minutes * 60) + seconds;
+}
+
+function addButtonsTrans_oap(playBlockEl, index1){
+    const btn_trans1 = document.createElement('button');
+    btn_trans1.id = `btn-trans1-${index1}`;
+    const transPref = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
+    const labelMap = { en: 'Trans EN', uk: 'Trans UK', sv: 'Trans SV' };
+    btn_trans1.textContent = labelMap[transPref] || 'Trans';
+    playBlockEl.appendChild(btn_trans1);
+    btn_trans1.addEventListener('click', () => {
+        const textEnEl = document.getElementById(`text-en-${index1}`);
+        if (textEnEl) {
+            textEnEl.classList.toggle('is-visible');
+        }
+    });
+}
+
+function HideOtherTrans_oap(playBlockEl, index1){
+    const textEnEl = document.getElementById(`text-en-${index1}`);
+    if (textEnEl) {
+        textEnEl.classList.remove('is-visible');
+    }
+}
+
+function addButtonsMark_oap(seg1, typemark, parentEl) {
+    const btn1 = document.createElement('button');
+    btn1.setAttribute('data-rec-id', seg1.rec_id);
+    btn1.setAttribute('data-lesson-id', seg1.lesson_id);
+    // Also include the currently selected group/lesson selector id for clarity
+    try { btn1.setAttribute('data-group-id', (window.gv?.sts?.selected_lesson_id ?? '')); } catch {}
+    btn1.className = 'control-button';
+    // Determine initial value from data; default to '0' when empty/undefined
+    let initialVal = '0';
+    if (typemark === 'mark1') {
+        btn1.textContent = 'Mark1';
+        initialVal = (seg1.mark1 === '1') ? '1' : '0';
+    } else if (typemark === 'mark2') {
+        btn1.textContent = 'Mark2';
+        initialVal = (seg1.mark2 === '1') ? '1' : '0';
+    } else if (typemark === 'mark3') {
+        btn1.textContent = 'Mark3';
+        initialVal = (seg1.mark3 === '1') ? '1' : '0';
+    } else {
+        btn1.textContent = 'Mark';
+    }
+    btn1.setAttribute('varmark', initialVal);
+    if (initialVal === '1') {
+        btn1.style.backgroundColor = 'lightgreen';
+    }
+    btn1.addEventListener('click', () => {
+        const recId = btn1.getAttribute('data-rec-id');
+        const lessonId = btn1.getAttribute('data-lesson-id');
+        const varMark = btn1.getAttribute('varmark');
+        const nameMarkField = btn1.textContent.toLowerCase();
+        if (varMark === '1') {
+            btn1.setAttribute('varmark', '0');
+            btn1.style.backgroundColor = '';
+        } else {
+            btn1.setAttribute('varmark', '1');
+            btn1.style.backgroundColor = 'lightgreen';
+        }
+        // Update in gv.sts.audio_phrases
+        let segFound = null;
+        let itemindex = -1;
+        for (let i = 0; i < gv.sts.audio_phrases.length; i++) {
+            let item = gv.sts.audio_phrases[i];
+            if (item.rec_id === recId && item.lesson_id === lessonId) {
+                segFound = item;
+                itemindex = i;
+                segFound[nameMarkField] = btn1.getAttribute('varmark');
+                break;
+            }
+        }
+        Update_And_Save_Audio_Phrase_ItemByIndex(segFound, itemindex);
+    });
+    parentEl.appendChild(btn1);
+}
+
+function getButtonsControlsStyles_oap(){
+    let style1 = `
+    `;
+    return style1;
+} 

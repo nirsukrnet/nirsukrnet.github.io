@@ -1,12 +1,21 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Phrase Audio Player</title>
-    <script src="./assets/js/main_loadscripts.js"></script>	
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>One Audio Player</title>
+    
+    <!-- Load the script with 'defer' so it doesn't block page rendering -->
+    <script src="./assets/js/output_oneaudio/oneaudio_loadscripts.js" defer></script>	
+
+    <!-- Initialize after the DOM is ready -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            MainFunc();
+        });
+    </script>	
 </head>
-<body onload="MainFunc();">
+<body>
 	<div class="controls">
 		<label>
 			<input id="filter" type="text" placeholder="Type to filter by phrase text…" />
