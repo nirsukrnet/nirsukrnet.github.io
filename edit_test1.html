@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Segment Tester</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .control-group { margin-bottom: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+        label { display: inline-block; width: 100px; font-weight: bold; }
+        input[type="number"] { padding: 5px; width: 100px; }
+        button { padding: 8px 16px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        #status { margin-bottom: 10px; font-style: italic; color: #666; }
+        #log { margin-top: 20px; background: #eee; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #ccc; }
+        audio { width: 100%; margin-top: 10px; }
+
+        /* Timeline Visualization */
+        #timeline { position: relative; width: 100%; height: 30px; background: #e0e0e0; margin-top: 15px; border: 1px solid #ccc; }
+        .marker { position: absolute; height: 100%; top: 0; }
+        #markerStart { background-color: rgba(0, 128, 0, 0.7); width: 4px; z-index: 10; }
+        #markerEnd { background-color: rgba(255, 0, 0, 0.7); width: 4px; z-index: 10; }
+        #markerCurrent { background-color: blue; width: 2px; z-index: 20; }
+
+        /* Visualization Container */
+        .vis-container { border: 2px solid #ccc; border-radius: 6px; padding: 10px; margin-top: 15px; background: #fff; }
+
+        /* Spectrum Canvas */
+        #spectrum { width: 100%; height: 100px; background: #000; margin-top: 0; border: 1px solid #333; display: block; }
+        
+        /* Adjust timeline margin inside container */
+        #timeline { margin-top: 0; margin-bottom: 5px; border: none; }
+
+        #FirstFrameWithBorder { border: 2px solid #333; border-radius: 8px; padding: 20px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Audio Segment Tester</h1>
+    
+    <div id="FirstFrameWithBorder">
+    <div id="status">Initializing...</div>
+
+    <div class="control-group">
+        <div>
+            <label for="startTime">Start Time:</label>
+            <input type="number" id="startTime" value="20.00" step="0.01"> sec
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="endTime">End Time:</label>
+            <input type="number" id="endTime" value="25.00" step="0.01"> sec
+        </div>
+    </div>
+
+    <div class="control-group">
+        <button id="btnPlay">Play Segment</button>
+        <button id="btnStop">Stop</button>
+    </div>
+
+    <audio id="audioPlayer" controls></audio>
+
+    <div class="vis-container">
+        <div id="timeline">
+            <div id="markerStart" class="marker" title="Start Time"></div>
+            <div id="markerEnd" class="marker" title="End Time"></div>
+            <div id="markerCurrent" class="marker" title="Current Position"></div>
+        </div>
+
+        <canvas id="spectrum"></canvas>
+    </div>
+    </div>
+
+    <h3>Debug Log</h3>
+    <div id="log"></div>
+
+    <script>
+        const audio = document.getElementById('audioPlayer');
+        const statusEl = document.getElementById('status');
+        const btnPlay = document.getElementById('btnPlay');
+        const btnStop = document.getElementById('btnStop');
+        const inputStart = document.getElementById('startTime');
+        const inputEnd = document.getElementById('endTime');
+        const logEl = document.getElementById('log');
+
+        const markerStart = document.getElementById('markerStart');
+        const markerEnd = document.getElementById('markerEnd');
+        const markerCurrent = document.getElementById('markerCurrent');
+        const canvas = document.getElementById('spectrum');
+        const canvasCtx = canvas.getContext('2d');
+
+        let timeUpdateHandler = null;
+        let checkSeekInterval = null;
+        
+        // Web Audio API variables
+        let audioCtx = null;
+        let audioBuffer = null; // Store the full decoded audio
+        let isWaveformReady = false;
+
+        function log(msg) {
+            const time = new Date().toISOString().split('T')[1].slice(0, -1);
+            logEl.innerHTML += `[${time}] ${msg}<br>`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(msg);
+        }
+
+        function updateMarkers() {
+            // In "Zoomed Mode", the bar represents Start -> End.
+            // So Start is always 0%, End is always 100%.
+            markerStart.style.left = '0%';
+            markerEnd.style.left = '100%';
+        }
+
+        function updateCurrentMarker() {
+            const start = parseFloat(inputStart.value);
+            const end = parseFloat(inputEnd.value);
+            
+            if (isNaN(start) || isNaN(end) || start >= end) return;
+
+            const current = audio.currentTime;
+            const duration = end - start;
+            
+            // Calculate percentage relative to the segment
+            let percentage = (current - start) / duration * 100;
+            
+            // Clamp visual marker to 0-100% to avoid it flying off if audio plays slightly outside
+            percentage = Math.max(0, Math.min(100, percentage));
+
+            markerCurrent.style.left = percentage + '%';
+        }
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            // Set actual size in memory (scaled to account for extra pixel density)
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // Normalize coordinate system to use css pixels
+            canvasCtx.scale(dpr, dpr);
+            
+            // Redraw if data exists
+            if (isWaveformReady) drawWaveform();
+        }
+
+        async function initWaveform(blob) {
+            try {
+                log("Decoding audio data for waveform...");
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const arrayBuffer = await blob.arrayBuffer();
+                audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                
+                isWaveformReady = true;
+                log("Audio decoded. Waveform ready.");
+                
+                // Setup resize handler
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas(); // Initial sizing
+                
+            } catch (e) {
+                log("Error decoding audio: " + e.message);
+            }
+        }
+
+        function drawWaveform() {
+            if (!isWaveformReady || !audioBuffer) return;
+
+            const start = parseFloat(inputStart.value);
+            const end = parseFloat(inputEnd.value);
+            
+            if (isNaN(start) || isNaN(end) || start >= end) return;
+
+            // Get logical size (CSS pixels)
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+
+            // Clear canvas
+            canvasCtx.clearRect(0, 0, width, height);
+            canvasCtx.fillStyle = '#1a1a1a'; // Darker background
+            canvasCtx.fillRect(0, 0, width, height);
+
+            // Get data
+            const rawData = audioBuffer.getChannelData(0); // Use channel 0
+            const sampleRate = audioBuffer.sampleRate;
+            
+            const startSample = Math.floor(start * sampleRate);
+            const endSample = Math.floor(end * sampleRate);
+            const totalSamples = endSample - startSample;
+            
+            // Draw Waveform
+            canvasCtx.lineWidth = 1;
+            canvasCtx.fillStyle = '#ff5252'; // Filled shape color
+            canvasCtx.beginPath();
+
+            const step = Math.ceil(totalSamples / width);
+            const amp = height / 2;
+
+            // Draw top half
+            canvasCtx.moveTo(0, amp);
+            for (let i = 0; i < width; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = rawData[startSample + (i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                // Draw to the max point
+                canvasCtx.lineTo(i, (1 - max) * amp);
+            }
+
+            // Draw bottom half (mirror)
+            for (let i = width - 1; i >= 0; i--) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = rawData[startSample + (i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                // Draw to the min point
+                canvasCtx.lineTo(i, (1 - min) * amp);
+            }
+            
+            canvasCtx.closePath();
+            canvasCtx.fill();
+
+            // Draw Ruler Scale
+            const duration = end - start;
+            canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            canvasCtx.font = '11px sans-serif';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.lineWidth = 1;
+
+            // Determine step size based on duration
+            let tickStep = 1;
+            if (duration <= 1) tickStep = 0.1;
+            else if (duration <= 5) tickStep = 0.5;
+            else if (duration <= 10) tickStep = 1;
+            else tickStep = 5;
+
+            // Find first tick
+            const firstTick = Math.ceil(start / tickStep) * tickStep;
+            
+            for (let t = firstTick; t < end; t += tickStep) {
+                const x = (t - start) / duration * width;
+                
+                // Draw tick mark
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 0);
+                canvasCtx.lineTo(x, 15);
+                canvasCtx.stroke();
+
+                // Draw grid line (faint)
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 15);
+                canvasCtx.lineTo(x, height);
+                canvasCtx.stroke();
+
+                // Draw label
+                canvasCtx.fillText(t.toFixed(1), x, 28);
+            }
+
+            // Draw Playhead Cursor
+            const current = audio.currentTime;
+            if (current >= start && current <= end) {
+                const progress = (current - start) / (end - start);
+                const x = progress * width;
+                
+                canvasCtx.strokeStyle = '#ffffff';
+                canvasCtx.lineWidth = 2;
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 0);
+                canvasCtx.lineTo(x, height);
+                canvasCtx.stroke();
+            }
+            
+            // Keep animating for the cursor
+            requestAnimationFrame(drawWaveform);
+        }
+
+        async function initAudio() {
+            try {
+                statusEl.textContent = "Downloading Audio (Blob Method)...";
+                log("Fetching phrase_audio/SW_Learn_Day_1-5.mp3...");
+                
+                const response = await fetch('phrase_audio/SW_Learn_Day_1-5.mp3');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const blob = await response.blob();
+                log(`Blob loaded. Size: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+                
+                // Initialize Waveform (Decode data)
+                // We clone the blob because arrayBuffer() might consume it or we just want to be safe
+                initWaveform(blob.slice(0, blob.size, blob.type));
+
+                const url = URL.createObjectURL(blob);
+                audio.src = url;
+                statusEl.textContent = "Ready";
+                log("Audio source set to Blob URL.");
+
+            } catch (e) {
+                statusEl.textContent = "Error loading audio";
+                statusEl.style.color = "red";
+                log(`Error: ${e.message}`);
+            }
+        }
+
+        function stopPlayback() {
+            audio.pause();
+            if (timeUpdateHandler) {
+                audio.removeEventListener('timeupdate', timeUpdateHandler);
+                timeUpdateHandler = null;
+            }
+            if (checkSeekInterval) {
+                clearInterval(checkSeekInterval);
+                checkSeekInterval = null;
+            }
+            log("Playback stopped.");
+        }
+
+        function playSegment() {
+            const start = parseFloat(inputStart.value);
+            const end = parseFloat(inputEnd.value);
+
+            if (isNaN(start) || isNaN(end) || start >= end) {
+                log("Invalid start/end times.");
+                return;
+            }
+
+            log(`Requesting playback: ${start}s -> ${end}s`);
+            
+            // Reset
+            stopPlayback();
+
+            // Set time
+            audio.currentTime = start;
+
+            // Polling loop to wait for seek to complete
+            // This is crucial for local files/blobs where 'seeked' event might be tricky or immediate
+            checkSeekInterval = setInterval(() => {
+                // Check if currentTime is close enough to target start time
+                // Note: currentTime might not be exactly equal to start due to frame alignment
+                if (audio.currentTime >= start - 0.1) {
+                    clearInterval(checkSeekInterval);
+                    checkSeekInterval = null;
+                    
+                    log(`Seek confirmed at ${audio.currentTime.toFixed(3)}s. Playing...`);
+                    
+                    audio.play().then(() => {
+                        // Set up stop listener
+                        timeUpdateHandler = () => {
+                            if (audio.currentTime >= end) {
+                                audio.pause();
+                                log(`Reached end time (${end}s). Paused.`);
+                                audio.removeEventListener('timeupdate', timeUpdateHandler);
+                                timeUpdateHandler = null;
+                            }
+                        };
+                        audio.addEventListener('timeupdate', timeUpdateHandler);
+                    }).catch(e => log(`Play failed: ${e.message}`));
+                }
+            }, 50); // Check every 50ms
+        }
+
+        btnPlay.addEventListener('click', playSegment);
+        btnStop.addEventListener('click', stopPlayback);
+
+        inputStart.addEventListener('input', () => { updateMarkers(); drawWaveform(); });
+        inputEnd.addEventListener('input', () => { updateMarkers(); drawWaveform(); });
+        audio.addEventListener('loadedmetadata', updateMarkers);
+        audio.addEventListener('timeupdate', updateCurrentMarker);
+
+        // Initialize on load
+        initAudio();
+    </script>
+</body>
+</html>

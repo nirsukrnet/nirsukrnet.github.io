@@ -4,12 +4,22 @@ window._oapAudioController = window._oapAudioController || {
     audio: null,
     timeUpdateHandler: null,
     
-    init(src) {
+    async init(src) {
         if (!this.audio) {
-            this.audio = new Audio(src);
+            this.audio = new Audio();
             this.audio.preload = 'auto';
-        } else {
-            this.audio.src = src;
+        }
+        
+        try {
+            console.log("[OneAudio] Fetching audio file into memory...");
+            const response = await fetch(src);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            this.audio.src = blobUrl;
+            console.log("[OneAudio] Audio loaded into memory. Ready for playback.");
+        } catch (e) {
+            console.error("[OneAudio] Failed to load audio file:", e);
+            alert("Failed to load audio file. Check console.");
         }
     },
 
@@ -19,22 +29,47 @@ window._oapAudioController = window._oapAudioController || {
         // Remove previous listener if any
         if (this.timeUpdateHandler) {
             this.audio.removeEventListener('timeupdate', this.timeUpdateHandler);
+            this.timeUpdateHandler = null;
         }
 
-        this.audio.pause();
-        this.audio.currentTime = startTime;
+        const startPlayback = async () => {
+            try {
+                // Robust seeking logic (Blob Method)
+                this.audio.currentTime = startTime;
+                
+                // Wait for seek to complete (polling)
+                const checkSeek = setInterval(() => {
+                    if (this.audio.currentTime >= startTime - 0.5) {
+                        clearInterval(checkSeek);
+                        
+                        this.audio.play().catch(e => console.error("Play failed:", e));
 
-        this.timeUpdateHandler = () => {
-            if (this.audio.currentTime >= endTime) {
-                this.audio.pause();
-                this.audio.removeEventListener('timeupdate', this.timeUpdateHandler);
-                this.timeUpdateHandler = null;
+                        this.timeUpdateHandler = () => {
+                            if (this.audio.currentTime >= endTime) {
+                                this.audio.pause();
+                                this.audio.removeEventListener('timeupdate', this.timeUpdateHandler);
+                                this.timeUpdateHandler = null;
+                            }
+                        };
+                        this.audio.addEventListener('timeupdate', this.timeUpdateHandler);
+                    }
+                }, 50); // Check every 50ms
+
+                // Safety timeout to prevent infinite loop if seek fails
+                setTimeout(() => clearInterval(checkSeek), 2000);
+
+            } catch (e) {
+                console.error("Playback failed:", e);
             }
         };
 
-        this.audio.addEventListener('timeupdate', this.timeUpdateHandler);
-        
-        this.audio.play().catch(e => console.warn('play failed', e));
+        if (this.audio.readyState >= 1) { // HAVE_METADATA
+            startPlayback();
+        } else {
+            this.audio.addEventListener('loadedmetadata', () => {
+                startPlayback();
+            }, { once: true });
+        }
     }
 };
 
@@ -42,7 +77,7 @@ window._oapAudioController = window._oapAudioController || {
 window._oapAudioController.init('phrase_audio/SW_Learn_Day_1-5.mp3');
 
 
-function addButtonsPlay_oap(playEl, fileName, index1) {
+function addButtonsPlay_oap(playEl, segmentData, index1) {
     const btn_play = document.createElement('button');
     btn_play.textContent = `P${index1}`;
     btn_play.className = 'control-button';
@@ -50,28 +85,16 @@ function addButtonsPlay_oap(playEl, fileName, index1) {
     playEl.appendChild(btn_play);
     
     btn_play.addEventListener('click', () => {
-        // Parse filename to get start and end times
-        // Format: ..._HH-MM-SS.mmm_HH-MM-SS.mmm.wav
-        // Example: swday_0001_SW_Learn_Day_1-5_srt_00-00-03.240_00-00-07.120.wav
+        // Use start/end from segment data directly
+        const startTime = segmentData.start;
+        const endTime = segmentData.end;
         
-        try {
-            // Extract the timestamp part using regex
-            // Looking for pattern: _(\d{2}-\d{2}-\d{2}\.\d{3})_(\d{2}-\d{2}-\d{2}\.\d{3})\.wav$
-            const match = fileName.match(/_(\d{2}-\d{2}-\d{2}\.\d{3})_(\d{2}-\d{2}-\d{2}\.\d{3})\.wav$/);
-            
-            if (match && match.length === 3) {
-                const startStr = match[1].replace(/-/g, ':'); // Convert 00-00-03.240 to 00:00:03.240
-                const endStr = match[2].replace(/-/g, ':');
-                
-                const startTime = parseTime(startStr);
-                const endTime = parseTime(endStr);
-                
-                window._oapAudioController.playSegment(startTime, endTime);
-            } else {
-                console.warn('Could not parse timestamps from filename:', fileName);
-            }
-        } catch (e) {
-            console.error('Error parsing filename:', e);
+        console.log(`Button P${index1} clicked. Start: ${startTime}, End: ${endTime}`);
+
+        if (typeof startTime === 'number' && !isNaN(startTime) && typeof endTime === 'number' && !isNaN(endTime)) {
+             window._oapAudioController.playSegment(startTime, endTime);
+        } else {
+             console.warn('Invalid timestamps for segment:', segmentData);
         }
     });
 }

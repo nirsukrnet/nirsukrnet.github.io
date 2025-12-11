@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Test - Blob Method</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        #log { background: #f0f0f0; border: 1px solid #ccc; margin-top: 20px; padding: 10px; height: 300px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Audio Seek Test (Blob Method)</h1>
+    <p>This method downloads the whole file to memory first to fix seeking issues.</p>
+    
+    <audio id="myAudio" controls style="width: 100%; max-width: 500px;"></audio>
+    
+    <br><br>
+    <button id="btnLoad" onclick="loadAndPlay()">1. Load & Play Segment (20s - 25s)</button>
+    
+    <h3>Debug Log:</h3>
+    <div id="log"></div>
+
+    <script>
+        const audio = document.getElementById('myAudio');
+        const logDiv = document.getElementById('log');
+
+        function log(msg) {
+            const time = new Date().toISOString().split('T')[1].slice(0, -1);
+            logDiv.innerHTML += `[${time}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        async function loadAndPlay() {
+            try {
+                log("Fetching file as Blob...");
+                const response = await fetch('phrase_audio/SW_Learn_Day_1-5.mp3');
+                const blob = await response.blob();
+                log(`Blob loaded. Size: ${blob.size} bytes`);
+                
+                const url = URL.createObjectURL(blob);
+                audio.src = url;
+                log("Audio source set to Blob URL.");
+
+                // Wait for metadata
+                audio.onloadedmetadata = () => {
+                    log(`Metadata loaded. Duration: ${audio.duration}`);
+                    playSegment(20, 25);
+                };
+            } catch (e) {
+                log(`Error: ${e.message}`);
+            }
+        }
+
+        function playSegment(start, end) {
+            log(`Seeking to ${start}s...`);
+            audio.currentTime = start;
+            
+            const checkSeek = setInterval(() => {
+                log(`Current Time: ${audio.currentTime}`);
+                if (audio.currentTime >= start - 0.5) {
+                    clearInterval(checkSeek);
+                    audio.play();
+                    log("Playing...");
+                    
+                    const stopCheck = setInterval(() => {
+                        if (audio.currentTime >= end) {
+                            audio.pause();
+                            clearInterval(stopCheck);
+                            log("Paused at end time.");
+                        }
+                    }, 100);
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Segment Tester (Refactored)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .control-group1 { margin-bottom: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+        .control-group2 { margin-bottom: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+
+        label { display: inline-block; width: 100px; font-weight: bold; }
+        input[type="number"] { padding: 5px; width: 100px; }
+        button { padding: 8px 16px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        #status1 { margin-bottom: 10px; font-style: italic; color: #666; }
+        #status2 { margin-bottom: 10px; font-style: italic; color: #666; }
+        .control-group-btns1 { margin-bottom: 15px; }
+        .control-group-btns2 { margin-bottom: 15px; }
+        #log { margin-top: 20px; background: #eee; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #ccc; }
+        audio { width: 100%; margin-top: 10px; }
+
+        /* Timeline Visualization */
+        .marker { position: absolute; height: 100%; top: 0; }
+
+        /* Visualization Container */
+        .vis-container { border: 2px solid #ccc; border-radius: 6px; padding: 10px; margin-top: 15px; background: #fff; }
+
+        /* Spectrum Canvas */
+        #spectrum1 { width: 100%; height: 100px; background: #000; margin-top: 0; border: 1px solid #333; display: block; }
+        #spectrum2 { width: 100%; height: 100px; background: #000; margin-top: 0; border: 1px solid #333; display: block; }
+        
+        /* Adjust timeline margin inside container */
+        #timeline2 { margin-top: 0; margin-bottom: 5px; border: none; }
+        #FirstFrameWithBorder { border: 2px solid #333; border-radius: 8px; padding: 20px; margin-top: 20px; }
+        #SecondFrameWithBorder { border: 2px solid #333; border-radius: 8px; padding: 20px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Audio Segment Tester (Refactored)</h1>
+    
+    <div id="FirstFrameWithBorder">
+    <div id="status1">Initializing...</div>
+
+    <div class="control-group1">
+        <div>
+            <label for="startTime1">Start Time:</label>
+            <input type="number" id="startTime1" value="20.00" step="0.01"> sec
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="endTime1">End Time:</label>
+            <input type="number" id="endTime1" value="25.00" step="0.01"> sec
+        </div>
+    </div>
+
+    <div class="control-group-btns1">
+        <button id="btnPlay1">Play Segment</button>
+        <button id="btnStop1">Stop</button>
+    </div>
+
+    <audio id="audioPlayer1" controls style="display: none;"></audio>
+
+    <div class="vis-container1">
+
+        <canvas id="spectrum1"></canvas>
+    </div>
+    </div>
+
+    <div id="SecondFrameWithBorder">
+    <div id="status2">Editing</div>
+
+    <div class="control-group2">
+        <div>
+            <label for="startTime2">Start Time:</label>
+            <input type="number" id="startTime2" value="20.00" step="0.01"> sec
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="endTime2">End Time:</label>
+            <input type="number" id="endTime2" value="25.00" step="0.01"> sec
+        </div>
+    </div>
+
+    <div class="control-group-btns2">
+        <button id="btnPlay2">Play Segment</button>
+        <button id="btnStop2">Stop</button>
+    </div>
+
+    <audio id="audioPlayer2" controls style="display: none;"></audio>
+
+    <div class="vis-container2">
+        <div id="timeline2">
+            <div id="markerStart2" class="marker" title="Start Time"></div>
+            <div id="markerEnd2" class="marker" title="End Time"></div>
+            <div id="markerCurrent2" class="marker" title="Current Position"></div>
+        </div>
+
+        <canvas id="spectrum2"></canvas>
+    </div>
+    </div>
+
+
+    <h3>Debug Log</h3>
+    <div id="log"></div>
+
+    <script>
+        // ==========================================
+        // LIBRARY CODE (Reusable Functions)
+        // ==========================================
+
+        /**
+         * 1. Visualization
+         * 1.1) Renders the waveform, time ruler, and playhead cursor onto the provided canvas.
+         */
+        function drawWaveform(canvas, audioBuffer, start, end, currentTime) {
+            if (!audioBuffer) return canvas;
+            
+            const canvasCtx = canvas.getContext('2d');
+
+            if (isNaN(start) || isNaN(end) || start >= end) return canvas;
+
+            // Get logical size (CSS pixels)
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+
+            // Clear canvas
+            canvasCtx.clearRect(0, 0, width, height);
+            canvasCtx.fillStyle = '#1a1a1a'; // Darker background
+            canvasCtx.fillRect(0, 0, width, height);
+
+            // Get data
+            const rawData = audioBuffer.getChannelData(0); // Use channel 0
+            const sampleRate = audioBuffer.sampleRate;
+            
+            const startSample = Math.floor(start * sampleRate);
+            const endSample = Math.floor(end * sampleRate);
+            const totalSamples = endSample - startSample;
+            
+            // Draw Waveform
+            canvasCtx.lineWidth = 1;
+            canvasCtx.fillStyle = '#ff5252'; // Filled shape color
+            canvasCtx.beginPath();
+
+            const step = Math.ceil(totalSamples / width);
+            const amp = height / 2;
+
+            // Draw top half
+            canvasCtx.moveTo(0, amp);
+            for (let i = 0; i < width; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = rawData[startSample + (i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                // Draw to the max point
+                canvasCtx.lineTo(i, (1 - max) * amp);
+            }
+
+            // Draw bottom half (mirror)
+            for (let i = width - 1; i >= 0; i--) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = rawData[startSample + (i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                // Draw to the min point
+                canvasCtx.lineTo(i, (1 - min) * amp);
+            }
+            
+            canvasCtx.closePath();
+            canvasCtx.fill();
+
+            // Draw Ruler Scale
+            const duration = end - start;
+            canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            canvasCtx.font = '11px sans-serif';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.lineWidth = 1;
+
+            // Determine step size based on duration
+            let tickStep = 1;
+            if (duration <= 1) tickStep = 0.1;
+            else if (duration <= 5) tickStep = 0.5;
+            else if (duration <= 10) tickStep = 1;
+            else tickStep = 5;
+
+            // Find first tick
+            const firstTick = Math.ceil(start / tickStep) * tickStep;
+            
+            for (let t = firstTick; t < end; t += tickStep) {
+                const x = (t - start) / duration * width;
+                
+                // Draw tick mark
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 0);
+                canvasCtx.lineTo(x, 15);
+                canvasCtx.stroke();
+
+                // Draw grid line (faint)
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 15);
+                canvasCtx.lineTo(x, height);
+                canvasCtx.stroke();
+
+                // Draw label
+                canvasCtx.fillText(t.toFixed(1), x, 28);
+            }
+
+            // Draw Playhead Cursor
+            if (currentTime >= start && currentTime <= end) {
+                const progress = (currentTime - start) / (end - start);
+                const x = progress * width;
+                
+                canvasCtx.strokeStyle = '#ffffff';
+                canvasCtx.lineWidth = 2;
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 0);
+                canvasCtx.lineTo(x, height);
+                canvasCtx.stroke();
+            }
+            return canvas;
+        }
+
+        /**
+         * 1. Visualization
+         * 1.1) Adjusts the canvas width/height attributes to match display size and pixel density.
+         */
+        function resizeCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            const canvasCtx = canvas.getContext('2d');
+            
+            // Set actual size in memory (scaled to account for extra pixel density)
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // Normalize coordinate system to use css pixels
+            canvasCtx.scale(dpr, dpr);
+            
+            return canvas;
+        }
+
+        /**
+         * 2. Audio Processing
+         * 1.1) Decodes a Blob or ArrayBuffer into an AudioBuffer for visualization.
+         */
+        async function decodeAudioData(audioCtx, blob) {
+            const arrayBuffer = await blob.arrayBuffer();
+            return await audioCtx.decodeAudioData(arrayBuffer);
+        }
+
+        /**
+         * 3. Playback Control
+         * 1.1) Plays audio from a start time and stops automatically at an end time. Returns the interval ID for cancellation.
+         */
+        function playSegment(audioElement, start, end) {
+            if (isNaN(start) || isNaN(end) || start >= end) {
+                console.log("Invalid start/end times.");
+                return null;
+            }
+
+            // Set time
+            audioElement.currentTime = start;
+
+            // Polling loop to wait for seek to complete
+            const intervalId = setInterval(() => {
+                // Check if currentTime is close enough to target start time
+                if (audioElement.currentTime >= start - 0.1) {
+                    clearInterval(intervalId);
+                    
+                    audioElement.play().then(() => {
+                        // Set up stop listener
+                        const timeUpdateHandler = () => {
+                            if (audioElement.currentTime >= end) {
+                                audioElement.pause();
+                                audioElement.removeEventListener('timeupdate', timeUpdateHandler);
+                            }
+                        };
+                        audioElement.addEventListener('timeupdate', timeUpdateHandler);
+                    }).catch(e => console.log(`Play failed: ${e.message}`));
+                }
+            }, 50);
+
+            return intervalId;
+        }
+
+        /**
+         * 3. Playback Control
+         * 1.1) Stops audio playback and clears any active segment monitoring intervals.
+         */
+        function stopPlayback(audioElement, intervalId) {
+            audioElement.pause();
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            return audioElement;
+        }
+
+        /**
+         * 4. UI Updates
+         * 1.1) Updates the visual position of the current playback marker based on time.
+         */
+        function updateProgressMarker(markerElement, current, start, duration) {
+             // Calculate percentage relative to the segment
+             let percentage = (current - start) / duration * 100;
+            
+             // Clamp visual marker to 0-100% to avoid it flying off if audio plays slightly outside
+             percentage = Math.max(0, Math.min(100, percentage));
+ 
+             markerElement.style.left = percentage + '%';
+             return markerElement;
+        }
+
+        /**
+         * 4. UI Updates
+         * 1.1) Sets the positions of start and end markers (typically 0% and 100% for zoomed view).
+         */
+        function updateRangeMarkers(startMarker, endMarker) {
+            startMarker.style.left = '0%';
+            endMarker.style.left = '100%';
+            return { startMarker, endMarker };
+        }
+
+
+        // ==========================================
+        // IMPLEMENTATION CODE (Specific to this page)
+        // ==========================================
+
+        const logEl = document.getElementById('log');
+
+        function log(msg) {
+            const time = new Date().toISOString().split('T')[1].slice(0, -1);
+            logEl.innerHTML += `[${time}] ${msg}<br>`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(msg);
+        }
+
+        // 1. Define Context Objects
+        const context1 = {
+            id: 1,
+            audio: document.getElementById('audioPlayer1'),
+            statusEl: document.getElementById('status1'),
+            btnPlay: document.getElementById('btnPlay1'),
+            btnStop: document.getElementById('btnStop1'),
+            inputStart: document.getElementById('startTime1'),
+            inputEnd: document.getElementById('endTime1'),
+            canvas: document.getElementById('spectrum1'),
+            markerStart: null, 
+            markerEnd: null,
+            markerCurrent: null,
+            checkSeekInterval: null,
+            isWaveformReady: false,
+            audioBuffer: null,
+            audioCtx: null
+        };
+
+        const context2 = {
+            id: 2,
+            audio: document.getElementById('audioPlayer2'),
+            statusEl: document.getElementById('status2'),
+            btnPlay: document.getElementById('btnPlay2'),
+            btnStop: document.getElementById('btnStop2'),
+            inputStart: document.getElementById('startTime2'),
+            inputEnd: document.getElementById('endTime2'),
+            canvas: document.getElementById('spectrum2'),
+            markerStart: document.getElementById('markerStart2'),
+            markerEnd: document.getElementById('markerEnd2'),
+            markerCurrent: document.getElementById('markerCurrent2'),
+            checkSeekInterval: null,
+            isWaveformReady: false,
+            audioBuffer: null,
+            audioCtx: null
+        };
+
+        const contexts = [context1, context2];
+
+        // 2. Refactor Functions to Accept Context
+
+        function handleUpdateMarkers(ctx) {
+            if (ctx.markerStart && ctx.markerEnd) {
+                updateRangeMarkers(ctx.markerStart, ctx.markerEnd);
+            }
+        }
+
+        function handleUpdateCurrentMarker(ctx) {
+            if (!ctx.markerCurrent) return;
+
+            const start = parseFloat(ctx.inputStart.value);
+            const end = parseFloat(ctx.inputEnd.value);
+            
+            if (isNaN(start) || isNaN(end) || start >= end) return;
+
+            const current = ctx.audio.currentTime;
+            const duration = end - start;
+            
+            updateProgressMarker(ctx.markerCurrent, current, start, duration);
+        }
+
+        function handleResizeCanvas(ctx) {
+            if (ctx.canvas) {
+                resizeCanvas(ctx.canvas);
+            }
+        }
+
+        function handleStopPlayback(ctx) {
+            stopPlayback(ctx.audio, ctx.checkSeekInterval);
+            ctx.checkSeekInterval = null;
+            log(`[Frame ${ctx.id}] Playback stopped.`);
+        }
+
+        function handlePlaySegment(ctx) {
+            const start = parseFloat(ctx.inputStart.value);
+            const end = parseFloat(ctx.inputEnd.value);
+
+            log(`[Frame ${ctx.id}] Requesting playback: ${start}s -> ${end}s`);
+            
+            handleStopPlayback(ctx);
+
+            ctx.checkSeekInterval = playSegment(ctx.audio, start, end);
+            
+            if (ctx.checkSeekInterval) {
+                 log(`[Frame ${ctx.id}] Seek initiated...`);
+            }
+        }
+
+        // Animation Loop (Handles all contexts)
+        function animate() {
+            contexts.forEach(ctx => {
+                if (ctx.isWaveformReady && ctx.audioBuffer && ctx.canvas) {
+                    const start = parseFloat(ctx.inputStart.value);
+                    const end = parseFloat(ctx.inputEnd.value);
+                    const current = ctx.audio.currentTime;
+                    drawWaveform(ctx.canvas, ctx.audioBuffer, start, end, current);
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // Initialization
+        async function initAudio(ctx, url) {
+            try {
+                ctx.statusEl.textContent = "Downloading Audio...";
+                log(`[Frame ${ctx.id}] Fetching ${url}...`);
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const blob = await response.blob();
+                log(`[Frame ${ctx.id}] Blob loaded. Size: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+                
+                log(`[Frame ${ctx.id}] Decoding audio data...`);
+                ctx.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                ctx.audioBuffer = await decodeAudioData(ctx.audioCtx, blob.slice(0, blob.size, blob.type));
+                
+                ctx.isWaveformReady = true;
+                log(`[Frame ${ctx.id}] Audio decoded. Waveform ready.`);
+                
+                // Initial resize
+                handleResizeCanvas(ctx);
+
+                const blobUrl = URL.createObjectURL(blob);
+                ctx.audio.src = blobUrl;
+                ctx.statusEl.textContent = "Ready";
+                log(`[Frame ${ctx.id}] Audio source set.`);
+
+            } catch (e) {
+                ctx.statusEl.textContent = "Error loading audio";
+                ctx.statusEl.style.color = "red";
+                log(`[Frame ${ctx.id}] Error: ${e.message}`);
+            }
+        }
+
+        // 3. Bind Event Listeners
+        contexts.forEach(ctx => {
+            if (ctx.btnPlay) ctx.btnPlay.addEventListener('click', () => handlePlaySegment(ctx));
+            if (ctx.btnStop) ctx.btnStop.addEventListener('click', () => handleStopPlayback(ctx));
+            
+            if (ctx.inputStart) ctx.inputStart.addEventListener('input', () => handleUpdateMarkers(ctx));
+            if (ctx.inputEnd) ctx.inputEnd.addEventListener('input', () => handleUpdateMarkers(ctx));
+            
+            if (ctx.audio) {
+                ctx.audio.addEventListener('loadedmetadata', () => handleUpdateMarkers(ctx));
+                ctx.audio.addEventListener('timeupdate', () => handleUpdateCurrentMarker(ctx));
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            contexts.forEach(ctx => handleResizeCanvas(ctx));
+        });
+
+        // Start Animation Loop
+        animate();
+
+        // Initialize Contexts
+        // Load audio for Frame 2 (as per original functionality)
+        initAudio(context2, 'phrase_audio/SW_Learn_Day_1-5.mp3');
+        initAudio(context1, 'phrase_audio/SW_Learn_Day_1-5.mp3');
+    </script>
+</body>
+</html>

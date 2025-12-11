@@ -38,15 +38,31 @@ async function LoadData() {
         if (Array.isArray(data)) {
              gv.sts.audio_phrases = data;
         } else if (data.segments) {
+             console.log("Loaded data.segments:", data.segments.length);
              // Map the 'segments' format to the expected 'audio_phrases' format
-             gv.sts.audio_phrases = data.segments.map(seg => ({
-                 ...seg,
-                 // Map 'text' to 'text_sv' as the default display text if text_sv is missing
-                 text_sv: seg.text_sv || seg.text || '',
-                 // Ensure start/end are numbers
-                 start: parseFloat(seg.start),
-                 end: parseFloat(seg.end)
-             }));
+             gv.sts.audio_phrases = data.segments.map((seg, idx) => {
+                 // Prefer padded times if available, else normal times
+                 const s = (seg.start_padded !== undefined) ? seg.start_padded : seg.start;
+                 const e = (seg.end_padded !== undefined) ? seg.end_padded : seg.end;
+                 
+                 const pStart = parseFloat(s);
+                 const pEnd = parseFloat(e);
+
+                 // Log the first few items to verify parsing
+                 if (idx < 3) {
+                     console.log(`[LoadData] Item ${idx}: raw_start=${s} -> parsed=${pStart}, raw_end=${e} -> parsed=${pEnd}`);
+                 }
+
+                 return {
+                     ...seg,
+                     // Map 'text' to 'text_sv' as the default display text if text_sv is missing
+                     text_sv: seg.text_sv || seg.text || '',
+                     // Ensure start/end are numbers
+                     start: pStart,
+                     end: pEnd
+                 };
+             });
+             console.log("Mapped audio_phrases[0]:", gv.sts.audio_phrases[0]);
         } else if (data.audio_phrases) {
              gv.sts.audio_phrases = data.audio_phrases;
         } else {

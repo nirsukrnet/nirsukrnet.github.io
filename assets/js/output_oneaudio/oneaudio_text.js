@@ -129,7 +129,7 @@ function loadContentData() {
         audioCell.className = 'seg-row audio';
         // Removed individual audio element creation
 
-        addButtonsPlay_oap(playBlockEl, fileAbs, idx); // Pass fileAbs instead of audioEl
+        addButtonsPlay_oap(playBlockEl, seg, idx); // Pass seg object instead of fileAbs
         addButtonsTrans_oap(playBlockEl, idx);
         addButtonsMark_oap(seg, 'mark1', playBlockEl);
         addButtonsMark_oap(seg, 'mark2', playBlockEl);
