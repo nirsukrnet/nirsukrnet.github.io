@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Audio Track Visualization 2</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 { margin-top: 0; }
+        
+        .visualization-area {
+            margin: 30px 0;
+            position: relative;
+        }
+
+        /* View Container (Represents the View Window) */
+        #view-container {
+            width: 800px; /* Represents view duration (end_pos_audioframe - start_pos_audioframe) */
+            height: 100px;
+            background: #333;
+            position: relative;
+            border: 2px solid #cc0; /* Yellow border to indicate it's the View Window */
+            overflow: hidden;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eee;
+            border-radius: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        .log-display {
+            margin-top: 20px;
+            padding: 10px;
+            background: #222;
+            color: #ccc;
+            font-family: monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Audio Track Visualization 2</h1>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Load Audio:</label>
+            <input type="file" id="audioInput" accept="audio/*">
+            <button id="btnLoadDefault">Load Default</button>
+        </div>
+        
+        <div class="control-group">
+            <h3>View Window (AudioFrame)</h3>
+            <label>Start (s):</label>
+            <input type="number" id="inp_start_frame" step="0.1" value="0">
+            <label>End (s):</label>
+            <input type="number" id="inp_end_frame" step="0.1" value="10">
+            <button id="btnUpdateView">Update View</button>
+        </div>
+    </div>
+
+    <div class="visualization-area">
+        <div id="view-container">
+            <canvas id="waveformCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="log-display" id="log-output"></div>
+
+</div>
+
+<script>
+    // --- 1. Class Definitions ---
+
+    class LogManager {
+        constructor(outputElement) {
+            this.outputElement = outputElement;            
+        }
+
+        log(message) {
+            console.log(message);
+            if (this.outputElement) {
+                const line = document.createElement('div');
+                line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                this.outputElement.appendChild(line);
+                this.outputElement.scrollTop = this.outputElement.scrollHeight;
+            }
+        }
+        
+        error(message) {
+            console.error(message);
+            if (this.outputElement) {
+                const line = document.createElement('div');
+                line.style.color = '#ff6b6b';
+                line.textContent = `[ERROR] ${message}`;
+                this.outputElement.appendChild(line);
+                this.outputElement.scrollTop = this.outputElement.scrollHeight;
+            }
+        }
+    }
+
+    class AudioSpectrum {
+        constructor(logManager) {
+            this.logMgr = logManager;
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.buffer = null;
+            this.data = null; // Float32Array of amplitude values (mono)
+            this.duration = 0;
+            this.sampleRate = 0;
+            this.step = 0; // Time duration per data point
+        }
+
+        async loadFromFile(file) {
+            this.logMgr.log(`Loading file: ${file.name}`);
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                await this.decodeAudio(arrayBuffer);
+            } catch (e) {
+                this.logMgr.error(`Error loading file: ${e.message}`);
+            }
+        }
+
+        async loadFromUrl(url) {
+            this.logMgr.log(`Fetching URL: ${url}`);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                await this.decodeAudio(arrayBuffer);
+            } catch (e) {
+                this.logMgr.error(`Error loading URL: ${e.message}`);
+            }
+        }
+
+        async decodeAudio(arrayBuffer) {
+            this.logMgr.log("Decoding audio data...");
+            try {
+                this.buffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                this.duration = this.buffer.duration;
+                this.sampleRate = this.buffer.sampleRate;
+                
+                // Extract channel data (mix down to mono if stereo)
+                const channel0 = this.buffer.getChannelData(0);
+                if (this.buffer.numberOfChannels > 1) {
+                    const channel1 = this.buffer.getChannelData(1);
+                    this.data = new Float32Array(channel0.length);
+                    for (let i = 0; i < channel0.length; i++) {
+                        this.data[i] = (channel0[i] + channel1[i]) / 2;
+                    }
+                } else {
+                    this.data = channel0;
+                }
+                
+                this.step = 1 / this.sampleRate;
+                this.logMgr.log(`Audio decoded. Duration: ${this.duration.toFixed(2)}s, Samples: ${this.data.length}`);
+                
+                // Notify controller that data is ready (simple callback for now)
+                if (this.onDataLoaded) this.onDataLoaded();
+                
+            } catch (e) {
+                this.logMgr.error(`Error decoding audio: ${e.message}`);
+            }
+        }
+
+        getSlice(startTime, endTime) {
+            if (!this.data) return null;
+
+            const startSample = Math.floor(startTime * this.sampleRate);
+            const endSample = Math.floor(endTime * this.sampleRate);
+            
+            // Clamp values
+            const start = Math.max(0, startSample);
+            const end = Math.min(this.data.length, endSample);
+            
+            if (start >= end) return null;
+
+            return this.data.subarray(start, end);
+        }
+    }
+
+    class AudioTrackController {
+        constructor(logManager, spectrum, canvasId) {
+            this.logMgr = logManager;
+            this.spectrum = spectrum;
+            this.canvas = document.getElementById(canvasId);
+            this.ctx = this.canvas.getContext('2d');
+            
+            // View Window State
+            this.start_pos_audioframe = 0;
+            this.end_pos_audioframe = 10; // Default 10s window
+
+            // Bind spectrum loaded event
+            this.spectrum.onDataLoaded = () => {
+                this.end_pos_audioframe = Math.min(10, this.spectrum.duration);
+                this.updateInputs();
+                this.render();
+            };
+
+            // Handle resize
+            window.addEventListener('resize', () => this.resizeCanvas());
+            this.resizeCanvas();
+        }
+
+        updateInputs() {
+            document.getElementById('inp_start_frame').value = this.start_pos_audioframe;
+            document.getElementById('inp_end_frame').value = this.end_pos_audioframe;
+        }
+
+        setViewWindow(start, end) {
+            this.start_pos_audioframe = parseFloat(start);
+            this.end_pos_audioframe = parseFloat(end);
+            this.render();
+        }
+
+        resizeCanvas() {
+            // Match canvas internal resolution to display size
+            this.canvas.width = this.canvas.parentElement.clientWidth;
+            this.canvas.height = this.canvas.parentElement.clientHeight;
+            this.render();
+        }
+
+        render() {
+            if (!this.spectrum.data) return;
+
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+            const ctx = this.ctx;
+
+            // Clear canvas
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, 0, width, height);
+
+            const duration = this.end_pos_audioframe - this.start_pos_audioframe;
+            if (duration <= 0) return;
+
+            // Get data for the current view
+            const slice = this.spectrum.getSlice(this.start_pos_audioframe, this.end_pos_audioframe);
+            if (!slice) return;
+
+            // Draw waveform
+            ctx.beginPath();
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 1;
+
+            // Optimization: Downsample for rendering
+            // Map pixel coordinates to data indices
+            const scale = slice.length / width;
+            const ampScale = height / 2;
+
+            for (let i = 0; i < width; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                // Calculate sample range for this pixel
+                const startIndex = Math.floor(i * scale);
+                const endIndex = Math.floor((i + 1) * scale);
+                
+                // Ensure we check at least one sample (important when zoomed in)
+                // and clamp to valid data range
+                const safeStart = Math.min(startIndex, slice.length - 1);
+                // Ensure we don't go past the end, but also ensure we cover at least one sample if possible
+                const safeEnd = Math.min(Math.max(endIndex, safeStart + 1), slice.length);
+
+                for (let j = safeStart; j < safeEnd; j++) {
+                    const val = slice[j];
+                    if (val < min) min = val;
+                    if (val > max) max = val;
+                }
+
+                // If no data was processed (shouldn't happen with logic above unless slice is empty), skip
+                if (min > max) continue;
+
+                // Draw vertical line for this pixel
+                const x = i;
+                const yMin = (1 + min) * ampScale;
+                const yMax = (1 + max) * ampScale;
+                
+                ctx.moveTo(x, yMin);
+                ctx.lineTo(x, yMax);
+            }
+            
+            ctx.stroke();
+        }
+    }
+
+    // --- 2. Initialization ---
+
+    const logMgr = new LogManager(document.getElementById('log-output'));
+    const spectrum = new AudioSpectrum(logMgr);
+    const controller = new AudioTrackController(logMgr, spectrum, 'waveformCanvas');
+
+    // --- 3. Event Listeners ---
+
+    // File Input
+    document.getElementById('audioInput').addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            spectrum.loadFromFile(e.target.files[0]);
+        }
+    });
+
+    // Load Default Button
+    document.getElementById('btnLoadDefault').addEventListener('click', () => {
+        // Using relative path as requested
+        spectrum.loadFromUrl('../phrase_audio/SW_Learn_Day_1-5.mp3');
+    });
+
+    // View Controls
+    document.getElementById('btnUpdateView').addEventListener('click', () => {
+        const start = document.getElementById('inp_start_frame').value;
+        const end = document.getElementById('inp_end_frame').value;
+        controller.setViewWindow(start, end);
+    });
+
+    // Initial Log
+    logMgr.log("Application initialized.");
+
+</script>
+
+</body>
+</html>

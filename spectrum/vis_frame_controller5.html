@@ -284,19 +284,18 @@
 
 
             this.logMgr?.log(`_updateVisuals_AS (Audio->Visual): selLeft=${selLeft.toFixed(2)}, selWidth=${selWidth.toFixed(2)}, pixelsPerSecond=${pixelsPerSecond.toFixed(2)}`); 
-//            if (caller != 'INIT') {
-                // Notify the UI (replaces render)
-                if (this.onUpdate) {
-                    this.onUpdate({
-                        selLeft,
-                        selWidth,
-                        pixelsPerSecond,
-                        audioFrame: { start: this.start_pos_audioframe, end: this.end_pos_audioframe },
-                        audioSel: { start: this.start_pos_audio_selection, end: this.end_pos_audio_selection },
-                        controller: this
-                    });
-                }
-//            }
+            // Notify the UI (replaces render)
+            if (this.onUpdate) {
+                this.onUpdate({
+                    selLeft,
+                    selWidth,
+                    pixelsPerSecond,
+                    audioFrame: { start: this.start_pos_audioframe, end: this.end_pos_audioframe },
+                    audioSel: { start: this.start_pos_audio_selection, end: this.end_pos_audio_selection },
+                    controller: this
+                });
+            }
+
 
         }
 
@@ -396,6 +395,12 @@
             if (sender && typeof sender.start === 'number' && typeof sender.end === 'number') {
                 receiver.setVisualSelection(sender.start, sender.end);
             }
+        }
+
+        set_from_source_to_framecontroller_value(source, receiver) {
+            // Example: Copy audio selection from source to receiver's audio frame
+            const audioSel = this.get_audio_selection(source);
+            receiver.setAudioFrame(audioSel.start, audioSel.end);
         }
 
     }

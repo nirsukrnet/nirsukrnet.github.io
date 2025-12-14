@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librosa Logic Visualization (Example Scenario)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .control-group { margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 20px; align-items: center; }
+        
+        label { font-weight: bold; margin-right: 5px; }
+        input[type="number"] { padding: 5px; width: 80px; }
+        button { padding: 8px 16px; cursor: pointer; font-size: 16px; background: #333; color: #fff; border: none; border-radius: 4px; }
+        button:hover { background: #555; }
+
+        .timeline-container { margin-bottom: 30px; }
+        .timeline-label { font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .timeline-canvas-wrapper { position: relative; height: 60px; background: #eee; border: 1px solid #ccc; border-radius: 4px; }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        .ruler { position: relative; height: 20px; margin-top: 5px; font-size: 10px; color: #666; }
+        .ruler-mark { position: absolute; transform: translateX(-50%); }
+
+        .legend { font-size: 12px; color: #666; margin-top: 5px; }
+        .legend span { display: inline-block; width: 12px; height: 12px; margin-right: 5px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <h1>Librosa Logic Visualization</h1>
+    <p>Visualizing the "Example Scenario" from the documentation.</p>
+
+    <div class="control-group">
+        <div>
+            <label for="joinDist">join_if_dist (sec):</label>
+            <input type="number" id="joinDist" value="0.5" step="0.1">
+        </div>
+        <div>
+            <label for="minDur">min_duration_sec (sec):</label>
+            <input type="number" id="minDur" value="1.0" step="0.1">
+        </div>
+        <button id="btnRecalculate">Recalculate</button>
+    </div>
+
+    <div class="timeline-container">
+        <div class="timeline-label">
+            <span>Layer 1: Raw Detection (Hardcoded)</span>
+            <span class="legend"><span style="background: rgba(255, 0, 0, 0.5);"></span>Intervals</span>
+        </div>
+        <div class="timeline-canvas-wrapper">
+            <canvas id="canvasRaw"></canvas>
+        </div>
+        <div class="ruler" id="rulerRaw"></div>
+    </div>
+
+    <div class="timeline-container">
+        <div class="timeline-label">
+            <span>Layer 2: Merged (join_if_dist applied)</span>
+            <span class="legend"><span style="background: rgba(0, 0, 255, 0.5);"></span>Merged Intervals</span>
+        </div>
+        <div class="timeline-canvas-wrapper">
+            <canvas id="canvasMerged"></canvas>
+        </div>
+        <div class="ruler" id="rulerMerged"></div>
+    </div>
+
+    <div class="timeline-container">
+        <div class="timeline-label">
+            <span>Layer 3: Filtered (min_duration_sec applied)</span>
+            <span class="legend"><span style="background: rgba(0, 128, 0, 0.5);"></span>Final Intervals</span>
+        </div>
+        <div class="timeline-canvas-wrapper">
+            <canvas id="canvasFiltered"></canvas>
+        </div>
+        <div class="ruler" id="rulerFiltered"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // DATA & LOGIC
+        // ==========================================
+
+        // 1. Raw Data (Hardcoded from Example Scenario)
+        // Intervals: [1.0, 2.0], [2.4, 3.0], [4.0, 4.5], [4.6, 4.8]
+        const rawIntervals = [
+            [1.0, 2.0],
+            [2.4, 3.0],
+            [4.0, 4.5],
+            [4.6, 4.8]
+        ];
+
+        const TOTAL_DURATION = 10.0; // 10 seconds example
+
+        // Logic: Merge Intervals
+        function mergeIntervals(intervals, maxDist) {
+            if (!intervals || intervals.length === 0) return [];
+            
+            // Sort by start time just in case
+            let sorted = [...intervals].sort((a, b) => a[0] - b[0]);
+            let merged = [];
+            let current = sorted[0];
+
+            for (let i = 1; i < sorted.length; i++) {
+                let next = sorted[i];
+                let gap = next[0] - current[1];
+
+                if (gap <= maxDist) {
+                    // Merge: extend current end to next end
+                    current[1] = Math.max(current[1], next[1]);
+                } else {
+                    // Push current and start new
+                    merged.push(current);
+                    current = next;
+                }
+            }
+            merged.push(current);
+            return merged;
+        }
+
+        // Logic: Filter by Duration
+        function filterIntervals(intervals, minDur) {
+            return intervals.filter(interval => {
+                let duration = interval[1] - interval[0];
+                return duration >= minDur;
+            });
+        }
+
+        // ==========================================
+        // VISUALIZATION
+        // ==========================================
+
+        function drawTimeline(canvasId, intervals, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Handle High DPI
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            const width = rect.width;
+            const height = rect.height;
+
+            // Clear
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Intervals
+            ctx.fillStyle = color;
+            
+            intervals.forEach(interval => {
+                const start = interval[0];
+                const end = interval[1];
+                
+                const x = (start / TOTAL_DURATION) * width;
+                const w = ((end - start) / TOTAL_DURATION) * width;
+                
+                ctx.fillRect(x, 0, w, height);
+                
+                // Draw text label
+                ctx.fillStyle = '#000';
+                ctx.font = '10px monospace';
+                ctx.fillText(`${start.toFixed(1)}-${end.toFixed(1)}`, x + 2, height - 5);
+                ctx.fillStyle = color; // Reset for next rect
+            });
+        }
+
+        function drawRuler(rulerId) {
+            const container = document.getElementById(rulerId);
+            container.innerHTML = '';
+            
+            for (let i = 0; i <= TOTAL_DURATION; i++) {
+                const mark = document.createElement('div');
+                mark.className = 'ruler-mark';
+                mark.style.left = (i / TOTAL_DURATION * 100) + '%';
+                mark.innerText = i + 's';
+                container.appendChild(mark);
+            }
+        }
+
+        // ==========================================
+        // APP CONTROLLER
+        // ==========================================
+
+        function update() {
+            const joinDist = parseFloat(document.getElementById('joinDist').value);
+            const minDur = parseFloat(document.getElementById('minDur').value);
+
+            // 1. Raw Layer
+            drawTimeline('canvasRaw', rawIntervals, 'rgba(255, 0, 0, 0.5)');
+
+            // 2. Merged Layer
+            // Deep copy rawIntervals because merge modifies in place if we are not careful (my impl creates new arrays but let's be safe)
+            // Actually my merge impl creates a new 'merged' array but pushes 'current' which is a reference if I'm not careful.
+            // Let's make sure we pass deep copies or handle it.
+            // My mergeIntervals: let sorted = [...intervals] (shallow copy of array). current = sorted[0] (ref to array [start, end]).
+            // If I modify current[1], I modify the original array inside rawIntervals!
+            // FIX: Deep copy first.
+            const rawCopy = JSON.parse(JSON.stringify(rawIntervals));
+            const mergedIntervals = mergeIntervals(rawCopy, joinDist);
+            drawTimeline('canvasMerged', mergedIntervals, 'rgba(0, 0, 255, 0.5)');
+
+            // 3. Filtered Layer
+            const filteredIntervals = filterIntervals(mergedIntervals, minDur);
+            drawTimeline('canvasFiltered', filteredIntervals, 'rgba(0, 128, 0, 0.5)');
+        }
+
+        // Init
+        window.addEventListener('resize', update);
+        document.getElementById('btnRecalculate').addEventListener('click', update);
+        
+        drawRuler('rulerRaw');
+        drawRuler('rulerMerged');
+        drawRuler('rulerFiltered');
+        
+        // Initial Draw
+        update();
+
+    </script>
+</body>
+</html>

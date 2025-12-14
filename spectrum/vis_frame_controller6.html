@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrameController Visualization</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 { margin-top: 0; }
+        
+        .visualization-area {
+            margin: 30px 0;
+            position: relative;
+        }
+
+        /* View Container (Represents the View Window) */
+        #view-container {
+            width: 800px; /* Represents view duration (end_pos_audioframe - start_pos_audioframe) */
+            height: 100px;
+            background: linear-gradient(90deg, #444 0%, #555 50%, #444 100%);
+            position: relative;
+            border: 2px solid #cc0; /* Yellow border to indicate it's the View Window */
+            overflow: hidden;
+        }
+        
+        
+        /* Mock Waveform Pattern */
+        #view-container::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: repeating-linear-gradient(90deg, 
+                transparent, 
+                transparent 2px, 
+                rgba(255,255,255,0.1) 2px, 
+                rgba(255,255,255,0.1) 4px
+            );
+            pointer-events: none;
+        }
+
+        /* Selection (AudioSelection) - Green */
+        #selection-segment {
+            position: absolute;
+            top: 10px;
+            bottom: 10px;
+            background-color: rgba(0, 255, 0, 0.4);
+            border: 2px solid rgba(0, 255, 0, 0.9);
+            box-sizing: border-box;
+            cursor: grab; /* Visual feedback */
+        }
+
+        #selection-segment:active {
+            cursor: grabbing;
+        }
+
+        #selection-segment::before {
+            content: "Selection";
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            font-size: 10px;
+            color: #090;
+            font-weight: bold;
+            white-space: nowrap;
+            pointer-events: none; /* Keep text non-interactive */
+        }
+
+        /* Resize Handles */
+        .handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            cursor: ew-resize;
+            background-color: rgba(0, 0, 0, 0.0); /* Transparent by default */
+            z-index: 20; /* Above the selection body */
+        }
+        .handle:hover {
+            background-color: rgba(0, 0, 0, 0.2); /* Visible on hover */
+        }
+        .handle-left {
+            left: 0;
+            /* Shift slightly left so it straddles the border */
+            transform: translateX(-50%); 
+        }
+        .handle-right {
+            right: 0;
+            /* Shift slightly right so it straddles the border */
+            transform: translateX(50%);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #eee;
+            border-radius: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: inline-block;
+            width: 180px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+        }
+
+        .state-display {
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+            color: #0f0;
+            font-family: monospace;
+            white-space: pre;
+            border-radius: 4px;
+        }
+
+        .log-display {
+            margin-top: 20px;
+            padding: 10px;
+            background: #222;
+            color: #ccc;
+            font-family: monospace;
+            font-size: 12px;
+            height: 550px;
+            overflow-y: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>FrameController Visualization (Zoomed View)</h1>
+    <p>Visualizing the <strong>View Window</strong> and the <strong>Selection</strong> relative to it.</p>
+    <p>The container width (800px) represents the duration of the View Window.</p>
+
+    <div class="visualization-area">
+        <div id="view-container">
+            <div id="selection-segment">
+                <div class="handle handle-left"></div>
+                <div class="handle handle-right"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div>
+            <h3>View Window (AudioFrame)</h3>
+            <div class="control-group">
+                <label>start_pos_audioframe:</label>
+                <input type="number" id="inp_start_frame" step="0.1"> s
+            </div>
+            <div class="control-group">
+                <label>end_pos_audioframe:</label>
+                <input type="number" id="inp_end_frame" step="0.1"> s
+            </div>
+        </div>
+        <div>
+            <h3>Selection (AudioSelection)</h3>
+            <div class="control-group">
+                <label>start_pos_audio_selection:</label>
+                <input type="number" id="inp_start_sel" step="0.1"> s
+            </div>
+            <div class="control-group">
+                <label>end_pos_audio_selection:</label>
+                <input type="number" id="inp_end_sel" step="0.1"> s
+            </div>
+        </div>
+    </div>
+
+    <div class="state-display" id="state-log">State: Initializing...</div>
+
+    <div class="log-display" id="log-output"></div>
+
+</div>
+
+<script>
+    // 1. FrameController Class Definition
+    class FrameController {
+        constructor(onUpdate) {
+            this.onUpdate = onUpdate; // Callback function to update HTML
+
+            // Total duration of the audio file (Reference only)
+            this.track_Duration = 80.0; 
+
+            // View Window (Yellow) - Defines the visible range
+            this.start_pos_audioframe = 10.0;
+            this.end_pos_audioframe = 30.0;
+
+            // Selection (Green) - The segment we are editing
+            this.start_pos_audio_selection = 15.0;
+            this.end_pos_audio_selection = 20.0;
+
+            // Visual Selection (Pixels) - Derived
+            this.start_pos_visual_selection = 0;
+            this.end_pos_visual_selection = 0;
+
+            this.current_time = 0;
+            this.is_playing = false;
+            this.canvas_width = 800; // The width of the view container
+            this.canvas_height = 100;
+
+            // Trigger initial calculation
+            this._updateVisuals_AS('INIT');
+        }
+
+        setLogManager(logManager) {
+            this.logMgr = logManager;
+        }
+
+        setAudioSelection(start, end) {
+            this.start_pos_audio_selection = start;
+            this.end_pos_audio_selection = end;
+            this.logMgr?.log(`setAudioSelection: start=${start}, end=${end}`); 
+            this._updateVisuals_AS('setAudioSelection');
+        }
+
+        setAudioFrame(start, end) {
+            this.start_pos_audioframe = start;
+            this.end_pos_audioframe = end;
+            this.logMgr?.log(`setAudioFrame: start=${start}, end=${end}`);
+            this._updateVisuals_AF('setAudioFrame'); // Auto-recalculate and notify
+        }
+
+        setVisualSelection(start, end) {
+            this.start_pos_visual_selection = start;
+            this.end_pos_visual_selection = end;            
+            this.logMgr?.log(`setVisualSelection: start=${start}, end=${end}`);
+            this._updateVisuals_AS('setVisualSelection');
+        }
+
+        setAllValuesFromSource(source) {
+            this.start_pos_audioframe = source.start_pos_audioframe;
+            this.end_pos_audioframe = source.end_pos_audioframe;
+            this.start_pos_audio_selection = source.start_pos_audio_selection;
+            this.end_pos_audio_selection = source.end_pos_audio_selection;
+            this.canvas_width = source.canvas_width;
+            this.canvas_height = source.canvas_height;
+            this.logMgr?.log(`setAllValuesFromSource called`);
+            this._updateVisuals_AS('setAllValuesFromSource');
+        }
+
+        // Internal method to calculate visuals and trigger UI update
+        _updateVisuals_AS(caller) {
+            const viewDuration = this.end_pos_audioframe - this.start_pos_audioframe;
+            let selLeft = 0, selWidth = 0, pixelsPerSecond = 0;
+
+            if (viewDuration > 0) {
+                pixelsPerSecond = this.canvas_width / viewDuration;
+                const relativeStart = this.start_pos_audio_selection - this.start_pos_audioframe;
+                const selectionDuration = this.end_pos_audio_selection - this.start_pos_audio_selection;
+
+                selLeft = relativeStart * pixelsPerSecond;
+                selWidth = selectionDuration * pixelsPerSecond;
+            }
+
+            // Update internal visual state
+            this.start_pos_visual_selection = selLeft;
+            this.end_pos_visual_selection = selLeft + selWidth;
+
+
+            this.logMgr?.log(`_updateVisuals_AS (Audio->Visual): selLeft=${selLeft.toFixed(2)}, selWidth=${selWidth.toFixed(2)}, pixelsPerSecond=${pixelsPerSecond.toFixed(2)}`); 
+            // Notify the UI (replaces render)
+            if (this.onUpdate) {
+                this.onUpdate({
+                    selLeft,
+                    selWidth,
+                    pixelsPerSecond,
+                    audioFrame: { start: this.start_pos_audioframe, end: this.end_pos_audioframe },
+                    audioSel: { start: this.start_pos_audio_selection, end: this.end_pos_audio_selection },
+                    controller: this
+                });
+            }
+
+
+        }
+
+        // Internal method to calculate visuals and trigger UI update
+        _updateVisuals_AF(caller) {
+
+           const viewDuration = this.end_pos_audioframe - this.start_pos_audioframe;
+            let pixelsPerSecond = 0;
+
+            if (viewDuration > 0) {
+                pixelsPerSecond = this.canvas_width / viewDuration;
+                
+                // Calculate Audio positions from Visual pixels
+                // AudioStart = FrameStart + (VisualLeft / PPS)
+                const relativeStart = this.start_pos_visual_selection / pixelsPerSecond;
+                const duration = (this.end_pos_visual_selection - this.start_pos_visual_selection) / pixelsPerSecond;
+
+                this.start_pos_audio_selection = this.start_pos_audioframe + relativeStart;
+                this.end_pos_audio_selection = this.start_pos_audio_selection + duration;
+            }            
+
+            // We still need to send visual data to UI for rendering
+            const selLeft = this.start_pos_visual_selection;
+            const selWidth = this.end_pos_visual_selection - this.start_pos_visual_selection;
+
+            this.logMgr?.log(`_updateVisuals_AF (Visual->Audio): selLeft=${selLeft.toFixed(2)}, selWidth=${selWidth.toFixed(2)}, pixelsPerSecond=${pixelsPerSecond.toFixed(2)}`);
+
+            if (this.onUpdate) {
+                this.onUpdate({
+                    selLeft,
+                    selWidth,
+                    pixelsPerSecond,
+                    audioFrame: { start: this.start_pos_audioframe, end: this.end_pos_audioframe },
+                    audioSel: { start: this.start_pos_audio_selection, end: this.end_pos_audio_selection },
+                    controller: this
+                });
+            }
+
+        }
+
+
+
+
+    }
+
+    class LogManager {
+        constructor(OutPutElement) {
+            this.OutPutElement = OutPutElement;            
+        }
+
+        log(message) {
+            console.log(`${message}`);
+            if (this.OutPutElement) {
+                // Create a new div element for the new line
+                const line = document.createElement('div');
+                line.textContent = message;
+                this.OutPutElement.appendChild(line);
+
+                // Auto-scroll to the bottom so new messages are visible
+                this.OutPutElement.scrollTop = this.OutPutElement.scrollHeight;
+            }
+        }
+    }
+
+    // 1.5 MessageManager Class Definition
+    class MessageManager {
+        input_to_audio_pos_sel(sender, receiver) {
+            if (sender && typeof sender.start === 'number' && typeof sender.end === 'number') {
+                receiver.setAudioSelection(sender.start, sender.end);
+            }
+        }
+
+        input_to_audio_pos_frame(sender, receiver) {
+            if (sender && typeof sender.start === 'number' && typeof sender.end === 'number') {
+                receiver.setAudioFrame(sender.start, sender.end);
+            }
+        }
+
+        // New methods for reading state
+        get_audio_selection(provider) {
+            return {
+                start: provider.start_pos_audio_selection,
+                end: provider.end_pos_audio_selection
+            };
+        }
+
+        get_audio_frame(provider) {
+            return {
+                start: provider.start_pos_audioframe,
+                end: provider.end_pos_audioframe
+            };
+        }
+
+        get_canvas_width(provider) {
+            return provider.canvas_width;
+        }
+
+        update_visual_selection(sender, receiver) {
+            if (sender && typeof sender.start === 'number' && typeof sender.end === 'number') {
+                receiver.setVisualSelection(sender.start, sender.end);
+            }
+        }
+
+        set_from_source_to_framecontroller_values(source, receiver) {
+            receiver.setAllValuesFromSource(source);
+        }
+
+    }
+
+    class Test_FC_Container {
+        constructor() {
+          this.fc_init = new FrameController(null);
+          this.init_values_to_framecontroller();          
+        }
+
+        init_values_to_framecontroller() {
+            // Total duration of the audio file (Reference only)
+            this.fc_init.track_Duration = 80.0; 
+            // View Window (Yellow) - Defines the visible range
+            this.fc_init.start_pos_audioframe = 10.0;
+            this.fc_init.end_pos_audioframe = 300.0;
+
+            // Selection (Green) - The segment we are editing
+            this.fc_init.start_pos_audio_selection = 50.0;
+            this.fc_init.end_pos_audio_selection = 100.0;
+
+            // Visual Selection (Pixels) - Derived
+            this.fc_init.start_pos_visual_selection = 0;
+            this.fc_init.end_pos_visual_selection = 0;
+
+            this.fc_init.current_time = 0;
+            this.fc_init.is_playing = false;
+            this.fc_init.canvas_width = 800; // The width of the view container
+            this.fc_init.canvas_height = 100;
+        }
+    }
+
+
+
+
+    // 2. Initialization
+    
+    // DOM Elements
+    const elViewContainer = document.getElementById('view-container');
+    const elSelection = document.getElementById('selection-segment');
+    const elHandleLeft = document.querySelector('.handle-left');
+    const elHandleRight = document.querySelector('.handle-right');
+    const elLog = document.getElementById('state-log');
+
+    const inpStartFrame = document.getElementById('inp_start_frame');
+    const inpEndFrame = document.getElementById('inp_end_frame');
+    const inpStartSel = document.getElementById('inp_start_sel');
+    const inpEndSel = document.getElementById('inp_end_sel');
+
+    let pixelsPerSecond = 0;
+
+    // This function replaces 'render()'
+    const onUIUpdate = (state) => {
+        // Update Global for dragging logic
+        pixelsPerSecond = state.pixelsPerSecond;
+
+        // Update Visual Elements
+        elSelection.style.left = state.selLeft + 'px';
+        elSelection.style.width = state.selWidth + 'px';
+
+        // Update Inputs
+        inpStartFrame.value = state.audioFrame.start.toFixed(2);
+        inpEndFrame.value = state.audioFrame.end.toFixed(2);
+        inpStartSel.value = state.audioSel.start.toFixed(2);
+        inpEndSel.value = state.audioSel.end.toFixed(2);
+
+        // Log State
+        const viewDuration = state.audioFrame.end - state.audioFrame.start;
+        elLog.textContent = JSON.stringify({
+            ...state.controller,
+            _viewDuration: viewDuration.toFixed(2),
+            _pixelsPerSecond: pixelsPerSecond.toFixed(2)
+        }, null, 2);
+    };
+
+    const frameController = new FrameController(onUIUpdate);
+    const messageManager = new MessageManager();
+    const logMgr = new LogManager(document.getElementById('log-output'));
+    frameController.setLogManager(logMgr);
+    const TestCont = new Test_FC_Container();
+    messageManager.set_from_source_to_framecontroller_values(TestCont.fc_init, frameController);
+
+
+    // 4. Event Listeners
+
+    // Function 1: Handles updates for the View Window (Frame)
+    function updateFrameFromInputs() {
+        const senderDataFrame = {
+            start: parseFloat(inpStartFrame.value),
+            end: parseFloat(inpEndFrame.value)
+        };
+        // Only update the frame
+        messageManager.input_to_audio_pos_frame(senderDataFrame, frameController);
+    }
+
+    // Function 2: Handles updates for the Selection (Green Box)
+    function updateSelectionFromInputs() {
+        const senderDataSel = {
+            start: parseFloat(inpStartSel.value),
+            end: parseFloat(inpEndSel.value)
+        };
+        // Only update the selection
+        messageManager.input_to_audio_pos_sel(senderDataSel, frameController);
+    }
+
+    // Attach specific listeners to specific inputs
+    inpStartFrame.addEventListener('input', updateFrameFromInputs);
+    inpEndFrame.addEventListener('input', updateFrameFromInputs);
+    
+    inpStartSel.addEventListener('input', updateSelectionFromInputs);
+    inpEndSel.addEventListener('input', updateSelectionFromInputs);
+
+    // --- Drag and Move/Resize Implementation ---
+    let dragMode = null; // 'move', 'resize-left', 'resize-right'
+    let dragStartX = 0;
+    let initialAudioStart = 0;
+    let initialAudioEnd = 0;
+
+    function startDrag(e, mode) {
+        dragMode = mode;
+        dragStartX = e.clientX;
+        
+        const currentSel = messageManager.get_audio_selection(frameController);
+        initialAudioStart = currentSel.start;
+        initialAudioEnd = currentSel.end;
+        
+        e.stopPropagation(); // Prevent bubbling
+        e.preventDefault(); // Prevent text selection
+    }
+
+    // Move Listener (on the selection body)
+    elSelection.addEventListener('mousedown', (e) => {
+        startDrag(e, 'move');
+        elSelection.style.cursor = 'grabbing';
+    });
+
+    // Resize Listeners (on the handles)
+    elHandleLeft.addEventListener('mousedown', (e) => {
+        startDrag(e, 'resize-left');
+    });
+
+    elHandleRight.addEventListener('mousedown', (e) => {
+        startDrag(e, 'resize-right');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!dragMode) return;
+
+        const deltaX = e.clientX - dragStartX;
+        const deltaTime = deltaX / pixelsPerSecond;
+        const viewWindow = messageManager.get_audio_frame(frameController);
+
+        let newStart = initialAudioStart;
+        let newEnd = initialAudioEnd;
+
+        if (dragMode === 'move') {
+            newStart += deltaTime;
+            newEnd += deltaTime;
+            const duration = initialAudioEnd - initialAudioStart;
+
+            // Boundary Checks
+            if (newStart < viewWindow.start) {
+                newStart = viewWindow.start;
+                newEnd = newStart + duration;
+            }
+            if (newEnd > viewWindow.end) {
+                newEnd = viewWindow.end;
+                newStart = newEnd - duration;
+            }
+        } else if (dragMode === 'resize-left') {
+            newStart += deltaTime;
+            
+            // Constraints
+            if (newStart < viewWindow.start) newStart = viewWindow.start;
+            if (newStart >= newEnd) newStart = newEnd - 0.01; // Prevent crossing
+            
+        } else if (dragMode === 'resize-right') {
+            newEnd += deltaTime;
+
+            // Constraints
+            if (newEnd > viewWindow.end) newEnd = viewWindow.end;
+            if (newEnd <= newStart) newEnd = newStart + 0.01; // Prevent crossing
+        }
+
+        // Update State via MessageManager
+        const senderData = {
+            start: newStart,
+            end: newEnd
+        };
+        messageManager.input_to_audio_pos_sel(senderData, frameController);
+        
+        // render() is removed
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (dragMode) {
+            dragMode = null;
+            elSelection.style.cursor = 'grab';
+        }
+    });
+
+</script>
+
+</body>
+</html>

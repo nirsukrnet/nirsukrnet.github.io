@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Audio Track Visualization</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 { margin-top: 0; }
+        
+        .visualization-area {
+            margin: 30px 0;
+            position: relative;
+        }
+
+        /* View Container (Represents the View Window) */
+        #view-container {
+            width: 800px; /* Represents view duration (end_pos_audioframe - start_pos_audioframe) */
+            height: 100px;
+            background: linear-gradient(90deg, #444 0%, #555 50%, #444 100%);
+            position: relative;
+            border: 2px solid #cc0; /* Yellow border to indicate it's the View Window */
+            overflow: hidden;
+        }
+        
+
+        .state-display {
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+            color: #0f0;
+            font-family: monospace;
+            white-space: pre;
+            border-radius: 4px;
+        }
+
+        .log-display {
+            margin-top: 20px;
+            padding: 10px;
+            background: #222;
+            color: #ccc;
+            font-family: monospace;
+            font-size: 12px;
+            height: 550px;
+            overflow-y: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>FrameController Visualization (Zoomed View)</h1>
+    <p>Visualizing the <strong>View Window</strong> and the <strong>Selection</strong> relative to it.</p>
+    <p>The container width (800px) represents the duration of the View Window.</p>
+
+    <div class="visualization-area">
+        <div id="view-container">
+            <div id="selection-segment">
+                <div class="handle handle-left"></div>
+                <div class="handle handle-right"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div>
+            <h3>View Window (AudioFrame)</h3>
+            <div class="control-group">
+                <label>start_pos_audioframe:</label>
+                <input type="number" id="inp_start_frame" step="0.1"> s
+            </div>
+            <div class="control-group">
+                <label>end_pos_audioframe:</label>
+                <input type="number" id="inp_end_frame" step="0.1"> s
+            </div>
+        </div>
+    </div>
+
+    <div class="log-display" id="log-output"></div>
+
+</div>
+
+<script>
+    // 1. Class Definitions
+    class AudioTrackController {
+        constructor(onUpdate) {
+            this.onUpdate = onUpdate; // Callback function to update HTML
+
+            // Total duration of the audio file (Reference only)
+            this.track_Duration = 0; 
+
+            this.start_pos_audio_selection = 0;
+            this.end_pos_audio_selection = 0;
+
+            this.canvas_width = 800; // The width of the view container
+            this.canvas_height = 100;
+
+        }
+
+        setLogManager(logManager) {
+            this.logMgr = logManager;
+        }
+
+        loadAudioTrack(audioFilePath) {
+            // Placeholder for loading audio track logic
+            this.logMgr?.log(`Loading audio track from: ${audioFilePath}`);
+        }
+
+    }
+
+    class LogManager {
+        constructor(OutPutElement) {
+            this.OutPutElement = OutPutElement;            
+        }
+
+        log(message) {
+            console.log(`${message}`);
+            if (this.OutPutElement) {
+                // Create a new div element for the new line
+                const line = document.createElement('div');
+                line.textContent = message;
+                this.OutPutElement.appendChild(line);
+
+                // Auto-scroll to the bottom so new messages are visible
+                this.OutPutElement.scrollTop = this.OutPutElement.scrollHeight;
+            }
+        }
+    }
+
+    // 1.5 MessageManager Class Definition
+    class MessageManager {
+        input_load_audio_track(filePath, frameController) {
+            frameController.loadAudioTrack(filePath);
+        }
+    }
+
+    class Test_FC_Container {
+        constructor() {
+        }
+
+        init_some_values___() {
+        }
+    }
+
+
+
+
+    // 2. Initialization
+    
+    // DOM Elements
+    const elLog = document.getElementById('state-log');
+
+
+
+    const AudioTrack1 = new AudioTrackController(render);
+    const messageManager = new MessageManager();
+    const logMgr = new LogManager(document.getElementById('log-output'));
+    AudioTrack1.setLogManager(logMgr);
+    const TestCont = new Test_FC_Container();
+    //messageManager.set_from_source_to_framecontroller_values(TestCont.fc_init, frameController);
+
+
+    
+</script>
+
+</body>
+</html>

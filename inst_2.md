@@ -29,3 +29,6 @@ To avoid decoding the entire audio file for visualization every time (which is r
 *   **Benefits**:
     *   **Fast Loading**: The waveform can be rendered immediately from the DB JSON without waiting for the MP3 to download or decode.
     *   **Low Bandwidth**: The data array is significantly smaller than the audio file.
+
+
+C:\Python\AuTr\html\phrase_audio\SW_Learn_Day_1-5.mp3

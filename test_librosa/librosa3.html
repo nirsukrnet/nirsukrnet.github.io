@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Segment Tester (Refactored with FrameController)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .control-group2 { margin-bottom: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+
+        label { display: inline-block; width: 100px; font-weight: bold; }
+        input[type="number"] { padding: 5px; width: 100px; }
+        button { padding: 8px 16px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        #status2 { margin-bottom: 10px; font-style: italic; color: #666; }
+        .control-group-btns2 { margin-bottom: 15px; }
+        #log { margin-top: 20px; background: #eee; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #ccc; }
+        audio { width: 100%; margin-top: 10px; }
+
+        /* Timeline Visualization */
+        .marker { position: absolute; height: 100%; top: 0; }
+
+        /* Visualization Container */
+        .vis-container2 { border: 2px solid #ccc; border-radius: 6px; padding: 10px; margin-top: 15px; background: #fff; position: relative; height: 120px; overflow: hidden; }
+
+        /* Spectrum Canvas */
+        #spectrum2 { width: 100%; height: 100%; background: #000; margin-top: 0; border: 1px solid #333; display: block; }
+        
+        /* Adjust timeline margin inside container */
+        #timeline2 { position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: none; pointer-events: none; }
+        
+        /* Markers */
+        .marker { position: absolute; height: 100%; top: 0; width: 2px; background-color: rgba(255, 255, 255, 0.8); pointer-events: none; }
+        
+        .marker-handle {
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border: 2px solid #333;
+            border-radius: 50%;
+            position: absolute;
+            top: -8px; /* Center vertically on top edge or just above */
+            left: -8px; /* Center horizontally */
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        #segmentHighlight {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background-color: rgba(0, 255, 0, 0.2); /* Green highlight for segment */
+            border: 1px solid rgba(0, 255, 0, 0.6);
+            pointer-events: auto;
+            cursor: grab;
+            z-index: 5;
+        }
+
+        #segmentHighlight:active {
+            cursor: grabbing;
+        }
+
+        #segmentHighlight .highlight-handle {
+            background-color: rgba(0, 255, 0, 0.8);
+        }
+
+        /* Global Timeline (Rule 1) */
+        #FirstFrameWithBorder { border: 2px solid #333; border-radius: 8px; padding: 10px; margin-top: 20px; background: #f9f9f9; }
+        .vis-container1 { position: relative; height: 60px; border: 1px solid #ccc; background: #000; }
+        #spectrum1 { width: 100%; height: 100%; display: block; }
+        #viewWindowHighlight {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background-color: rgba(255, 255, 0, 0.3); /* Yellow highlight */
+            border: 1px solid rgba(255, 255, 0, 0.8);
+            pointer-events: auto; /* Enable pointer events for dragging */
+            cursor: grab;
+        }
+        
+        #viewWindowHighlight:active {
+            cursor: grabbing;
+        }
+
+        .highlight-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            cursor: ew-resize;
+            background-color: rgba(255, 255, 0, 0.5);
+            z-index: 10;
+        }
+
+        .handle-start { left: -5px; }
+        .handle-end { right: -5px; }
+
+        #SecondFrameWithBorder { border: 2px solid #333; border-radius: 8px; padding: 20px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Audio Segment Tester (Refactored with FrameController)</h1>    
+
+    <!-- Rule 1: Global Timeline -->
+    <div id="FirstFrameWithBorder">
+        <div style="font-weight: bold; margin-bottom: 5px;">Global Timeline (Entire File)</div>
+        <div class="vis-container1">
+            <canvas id="spectrum1"></canvas>
+            <div id="viewWindowHighlight">
+                <div class="highlight-handle handle-start"></div>
+                <div class="highlight-handle handle-end"></div>
+            </div>
+        </div>
+        <div id="status1" style="font-size: 12px; color: #666; margin-top: 5px;">Loading...</div>
+    </div>
+
+    <!-- Rule 2: Segment Timeline -->
+    <div id="SecondFrameWithBorder">
+    <div id="status2">Editing</div>
+
+    <div class="control-group2">
+        <div>
+            <label for="startTime2">Start Time:</label>
+            <input type="number" id="startTime2" value="20.00" step="0.01"> sec
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="endTime2">End Time:</label>
+            <input type="number" id="endTime2" value="25.00" step="0.01"> sec
+        </div>
+    </div>
+
+    <div class="control-group-btns2">
+        <button id="btnPlay2">Play Segment</button>
+        <button id="btnStop2">Stop</button>
+        <button id="btnNext2">Next</button>
+        <button id="btnNextPlay2">Next Play</button>
+    </div>
+
+    <audio id="audioPlayer2" controls style="display: none;"></audio>
+
+    <div class="vis-container2">
+        <canvas id="spectrum2"></canvas>
+        <div id="timeline2">
+            <div id="segmentHighlight">
+                <div class="highlight-handle handle-start"></div>
+                <div class="highlight-handle handle-end"></div>
+            </div>
+            <div id="markerCurrent2" class="marker" title="Current Position"></div>
+        </div>
+    </div>
+    </div>
+
+
+    <h3>Debug Log</h3>
+    <div id="log"></div>
+
+    <script>
+        // ==========================================
+        // LIBRARY CODE (Reusable Functions)
+        // ==========================================
+
+        let soundIntervals = [];
+
+        /**
+         * 1. Visualization
+         * 1.2) Draws colored intervals on the canvas.
+         */
+        function drawIntervals(canvas, intervals, start, end) {
+            if (!intervals || intervals.length === 0) return;
+            
+            const ctx = canvas.getContext('2d');
+            // Get logical size (CSS pixels) - assuming canvas is already sized correctly by resizeCanvas
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+            const duration = end - start;
+            
+            if (duration <= 0) return;
+
+            intervals.forEach(interval => {
+                const [iStart, iEnd, label] = interval;
+                
+                // Check intersection
+                if (iEnd < start || iStart > end) return;
+                
+                // Calculate position
+                const xStart = Math.max(start, iStart);
+                const xEnd = Math.min(end, iEnd);
+                
+                const x = ((xStart - start) / duration) * width;
+                const w = ((xEnd - xStart) / duration) * width;
+                
+                // Set color
+                if (label === 0) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; // Red for silence
+                } else if (label === 1) {
+                    ctx.fillStyle = 'rgba(0, 0, 255, 0.3)'; // Blue for sound
+                } else {
+                    return; 
+                }
+                
+                ctx.fillRect(x, 0, w, height);
+            });
+        }
+
+        /**
+         * 1. Visualization
+         * 1.1) Renders the waveform, time ruler, and playhead cursor onto the provided canvas.
+         */
+        function drawWaveform(canvas, audioBuffer, start, end, currentTime) {
+            if (!audioBuffer) return canvas;
+            
+            const canvasCtx = canvas.getContext('2d');
+
+            if (isNaN(start) || isNaN(end) || start >= end) return canvas;
+
+            // Get logical size (CSS pixels)
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+
+            // Clear canvas
+            canvasCtx.clearRect(0, 0, width, height);
+            canvasCtx.fillStyle = '#1a1a1a'; // Darker background
+            canvasCtx.fillRect(0, 0, width, height);
+
+            // Get data
+            const rawData = audioBuffer.getChannelData(0); // Use channel 0
+            const sampleRate = audioBuffer.sampleRate;
+            
+            const startSample = Math.floor(start * sampleRate);
+            const endSample = Math.floor(end * sampleRate);
+            const totalSamples = endSample - startSample;
+            
+            // Draw Waveform
+            canvasCtx.lineWidth = 1;
+            canvasCtx.fillStyle = '#ff5252'; // Filled shape color
+            canvasCtx.beginPath();
+
+            const step = Math.ceil(totalSamples / width);
+            const amp = height / 2;
+
+            // Draw top half
+            canvasCtx.moveTo(0, amp);
+            for (let i = 0; i < width; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = rawData[startSample + (i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                // Draw to the max point
+                canvasCtx.lineTo(i, (1 - max) * amp);
+            }
+
+            // Draw bottom half (mirror)
+            for (let i = width - 1; i >= 0; i--) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = rawData[startSample + (i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                // Draw to the min point
+                canvasCtx.lineTo(i, (1 - min) * amp);
+            }
+            
+            canvasCtx.closePath();
+            canvasCtx.fill();
+
+            // Draw Ruler Scale
+            const duration = end - start;
+            canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            canvasCtx.font = '11px sans-serif';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.lineWidth = 1;
+
+            // Determine step size based on duration
+            let tickStep = 1;
+            if (duration <= 1) tickStep = 0.1;
+            else if (duration <= 5) tickStep = 0.5;
+            else if (duration <= 10) tickStep = 1;
+            else tickStep = 5;
+
+            // Find first tick
+            const firstTick = Math.ceil(start / tickStep) * tickStep;
+            
+            for (let t = firstTick; t < end; t += tickStep) {
+                const x = (t - start) / duration * width;
+                
+                // Draw tick mark
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 0);
+                canvasCtx.lineTo(x, 15);
+                canvasCtx.stroke();
+
+                // Draw grid line (faint)
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 15);
+                canvasCtx.lineTo(x, height);
+                canvasCtx.stroke();
+
+                // Draw label
+                canvasCtx.fillText(t.toFixed(1), x, 28);
+            }
+
+            // Draw Playhead Cursor
+            if (currentTime >= start && currentTime <= end) {
+                const progress = (currentTime - start) / (end - start);
+                const x = progress * width;
+                
+                canvasCtx.strokeStyle = '#ffffff';
+                canvasCtx.lineWidth = 2;
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(x, 0);
+                canvasCtx.lineTo(x, height);
+                canvasCtx.stroke();
+            }
+            return canvas;
+        }
+
+        /**
+         * 1. Visualization
+         * 1.1) Adjusts the canvas width/height attributes to match display size and pixel density.
+         */
+        function resizeCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            const canvasCtx = canvas.getContext('2d');
+            
+            // Set actual size in memory (scaled to account for extra pixel density)
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // Normalize coordinate system to use css pixels
+            canvasCtx.scale(dpr, dpr);
+            
+            return canvas;
+        }
+
+        /**
+         * 2. Audio Processing
+         * 1.1) Decodes a Blob or ArrayBuffer into an AudioBuffer for visualization.
+         */
+        async function decodeAudioData(audioCtx, blob) {
+            const arrayBuffer = await blob.arrayBuffer();
+            return await audioCtx.decodeAudioData(arrayBuffer);
+        }
+
+        /**
+         * 3. Playback Control
+         * 1.1) Plays audio from a start time and stops automatically at an end time. Returns the interval ID for cancellation.
+         */
+        function playSegment(audioElement, start, end) {
+            if (isNaN(start) || isNaN(end) || start >= end) {
+                console.log("Invalid start/end times.");
+                return null;
+            }
+
+            // Set time
+            audioElement.currentTime = start;
+
+            // Polling loop to wait for seek to complete
+            const intervalId = setInterval(() => {
+                // Check if currentTime is close enough to target start time
+                if (audioElement.currentTime >= start - 0.1) {
+                    clearInterval(intervalId);
+                    
+                    audioElement.play().then(() => {
+                        // Set up stop listener
+                        const timeUpdateHandler = () => {
+                            if (audioElement.currentTime >= end) {
+                                audioElement.pause();
+                                audioElement.removeEventListener('timeupdate', timeUpdateHandler);
+                            }
+                        };
+                        audioElement.addEventListener('timeupdate', timeUpdateHandler);
+                    }).catch(e => console.log(`Play failed: ${e.message}`));
+                }
+            }, 50);
+
+            return intervalId;
+        }
+
+        /**
+         * 3. Playback Control
+         * 1.1) Stops audio playback and clears any active segment monitoring intervals.
+         */
+        function stopPlayback(audioElement, intervalId) {
+            audioElement.pause();
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            return audioElement;
+        }
+
+        /**
+         * 4. UI Updates
+         * 1.1) Updates the visual position of the current playback marker based on time.
+         */
+        function updateProgressMarker(markerElement, current, start, duration) {
+             // Calculate percentage relative to the segment
+             let percentage = (current - start) / duration * 100;
+            
+             // Clamp visual marker to 0-100% to avoid it flying off if audio plays slightly outside
+             percentage = Math.max(0, Math.min(100, percentage));
+ 
+             markerElement.style.left = percentage + '%';
+             return markerElement;
+        }
+
+        /**
+         * 4. UI Updates
+         * 1.1) Sets the positions of start and end markers (typically 0% and 100% for zoomed view).
+         */
+        function updateRangeMarkers(startMarker, endMarker) {
+            startMarker.style.left = '0%';
+            endMarker.style.left = '100%';
+            return { startMarker, endMarker };
+        }
+
+
+        // ==========================================
+        // IMPLEMENTATION CODE (Specific to this page)
+        // ==========================================
+
+        const logEl = document.getElementById('log');
+
+        function log(msg) {
+            const time = new Date().toISOString().split('T')[1].slice(0, -1);
+            logEl.innerHTML += `[${time}] ${msg}<br>`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(msg);
+        }
+
+        // --- FrameController Class Definition ---
+        class FrameController {
+            constructor() {
+                /**
+                 * Full time duration of the track (in seconds).
+                 * Corresponds to audioBuffer.duration.
+                 */
+                this.track_Duration = 0;
+
+                /**
+                 * Start position of the selected audio segment (in seconds).
+                 * Corresponds to the 'Start Time' input and the start of the green 'segmentHighlight'.
+                 */
+                this.start_pos_audioframe = 0;
+
+                /**
+                 * End position of the selected audio segment (in seconds).
+                 * Corresponds to the 'End Time' input and the end of the green 'segmentHighlight'.
+                 */
+                this.end_pos_audioframe = 0;
+
+                /**
+                 * Start position of the visible time window (in seconds).
+                 * Corresponds to 'viewStart' in edit_test5.html.
+                 * This defines the start of the waveform currently rendered on the canvas.
+                 */
+                this.start_pos_visualframe = 0;
+
+                /**
+                 * End position of the visible time window (in seconds).
+                 * Corresponds to 'viewEnd' in edit_test5.html.
+                 * This defines the end of the waveform currently rendered on the canvas.
+                 */
+                this.end_pos_visualframe = 0;
+
+                /**
+                 * Current playback position (in seconds).
+                 * Corresponds to audio.currentTime and the 'markerCurrent' position.
+                 */
+                this.current_time = 0;
+
+                /**
+                 * Playback state.
+                 * True if audio is currently playing, false otherwise.
+                 */
+                this.is_playing = false;
+
+                /**
+                 * Width of the visualization canvas (in pixels).
+                 * Required to calculate pixel-to-second conversions for drag interactions.
+                 */
+                this.canvas_width = 0;
+                
+                /**
+                 * Height of the visualization canvas (in pixels).
+                 */
+                this.canvas_height = 0;
+            }
+        }
+
+        // Instantiate the controller
+        const frameController = new FrameController();
+
+        // 1. Define Context Objects (DOM References)
+        const context1 = {
+            id: 1,
+            // Global timeline doesn't need playback controls for now, just visualization
+            statusEl: document.getElementById('status1'),
+            canvas: document.getElementById('spectrum1'),
+            highlight: document.getElementById('viewWindowHighlight'),
+            handleStart: document.querySelector('#viewWindowHighlight .handle-start'),
+            handleEnd: document.querySelector('#viewWindowHighlight .handle-end'),
+            isWaveformReady: false,
+            audioBuffer: null,
+            audioCtx: null,
+            dragState: {
+                isDragging: false,
+                target: null, // 'start', 'end', or 'body'
+                startX: 0,
+                initialStart: 0,
+                initialEnd: 0
+            }
+        };
+
+        const context2 = {
+            id: 2,
+            audio: document.getElementById('audioPlayer2'),
+            statusEl: document.getElementById('status2'),
+            btnPlay: document.getElementById('btnPlay2'),
+            btnStop: document.getElementById('btnStop2'),
+            btnNext: document.getElementById('btnNext2'),
+            btnNextPlay: document.getElementById('btnNextPlay2'),
+            inputStart: document.getElementById('startTime2'),
+            inputEnd: document.getElementById('endTime2'),
+            canvas: document.getElementById('spectrum2'),
+            segmentHighlight: document.getElementById('segmentHighlight'),
+            handleStart: document.querySelector('#segmentHighlight .handle-start'),
+            handleEnd: document.querySelector('#segmentHighlight .handle-end'),
+            markerCurrent: document.getElementById('markerCurrent2'),
+            timeline: document.getElementById('timeline2'),
+            checkSeekInterval: null,
+            isWaveformReady: false,
+            audioBuffer: null,
+            audioCtx: null,
+            dragState: {
+                isDragging: false,
+                target: null,
+                startX: 0,
+                initialStart: 0,
+                initialEnd: 0
+            }
+        };
+
+        const contexts = [context1, context2];
+
+        // 2. Refactor Functions to Use FrameController
+
+        function updateGlobalHighlight(ctxGlobal) {
+            if (!ctxGlobal.highlight || frameController.track_Duration <= 0) return;
+            
+            const totalDuration = frameController.track_Duration;
+
+            // Use View Window (start_pos_visualframe/end_pos_visualframe) to show the visible range
+            const start = frameController.start_pos_visualframe;
+            const end = frameController.end_pos_visualframe;
+
+            const startPct = (start / totalDuration) * 100;
+            const endPct = (end / totalDuration) * 100;
+            const widthPct = endPct - startPct;
+
+            ctxGlobal.highlight.style.left = startPct + '%';
+            ctxGlobal.highlight.style.width = widthPct + '%';
+        }
+
+        function setupGlobalDragInteraction(ctxGlobal) {
+            const overlay = ctxGlobal.highlight;
+            const handleStart = ctxGlobal.handleStart;
+            const handleEnd = ctxGlobal.handleEnd;
+
+            const onMouseDown = (e, target) => {
+                e.stopPropagation(); // Prevent bubbling
+                ctxGlobal.dragState.isDragging = true;
+                ctxGlobal.dragState.target = target;
+                ctxGlobal.dragState.startX = e.clientX;
+                // Store initial View Window state from FrameController
+                ctxGlobal.dragState.initialStart = frameController.start_pos_visualframe;
+                ctxGlobal.dragState.initialEnd = frameController.end_pos_visualframe;
+                
+                // Store initial Segment state for "Lock Visual" behavior
+                ctxGlobal.dragState.initialSegmentStart = frameController.start_pos_audioframe;
+                ctxGlobal.dragState.initialSegmentEnd = frameController.end_pos_audioframe;
+                
+                window.addEventListener('mousemove', handleGlobalDrag);
+                window.addEventListener('mouseup', stopGlobalDrag);
+            };
+
+            // Bind events
+            overlay.addEventListener('mousedown', (e) => onMouseDown(e, 'body'));
+            handleStart.addEventListener('mousedown', (e) => onMouseDown(e, 'start'));
+            handleEnd.addEventListener('mousedown', (e) => onMouseDown(e, 'end'));
+
+            function handleGlobalDrag(e) {
+                if (!ctxGlobal.dragState.isDragging) return;
+                
+                const rect = ctxGlobal.canvas.getBoundingClientRect();
+                const totalDuration = frameController.track_Duration;
+                
+                const deltaPx = e.clientX - ctxGlobal.dragState.startX;
+                const deltaSeconds = (deltaPx / rect.width) * totalDuration;
+                
+                let newStart = ctxGlobal.dragState.initialStart;
+                let newEnd = ctxGlobal.dragState.initialEnd;
+
+                if (ctxGlobal.dragState.target === 'body') {
+                    newStart += deltaSeconds;
+                    newEnd += deltaSeconds;
+                } else if (ctxGlobal.dragState.target === 'start') {
+                    newStart += deltaSeconds;
+                } else if (ctxGlobal.dragState.target === 'end') {
+                    newEnd += deltaSeconds;
+                }
+                
+                // Constraints
+                if (ctxGlobal.dragState.target === 'body') {
+                    // Clamp to bounds while maintaining duration
+                    if (newStart < 0) {
+                        const duration = newEnd - newStart;
+                        newStart = 0;
+                        newEnd = duration;
+                    }
+                    if (newEnd > totalDuration) {
+                        const duration = newEnd - newStart;
+                        newEnd = totalDuration;
+                        newStart = totalDuration - duration;
+                    }
+                } else {
+                    // Clamp individual markers
+                    newStart = Math.max(0, Math.min(newStart, totalDuration));
+                    newEnd = Math.max(0, Math.min(newEnd, totalDuration));
+                    
+                    // Prevent crossover
+                    if (newStart > newEnd) {
+                        if (ctxGlobal.dragState.target === 'start') newStart = newEnd - 0.1;
+                        if (ctxGlobal.dragState.target === 'end') newEnd = newStart + 0.1;
+                    }
+                }
+                
+                // Update FrameController View Window
+                frameController.start_pos_visualframe = newStart;
+                frameController.end_pos_visualframe = newEnd;
+                
+                // Sync Segment with View (Lock Visual Position)
+                if (ctxGlobal.dragState.target === 'body') {
+                    const actualShift = newStart - ctxGlobal.dragState.initialStart;
+                    frameController.start_pos_audioframe = ctxGlobal.dragState.initialSegmentStart + actualShift;
+                    frameController.end_pos_audioframe = ctxGlobal.dragState.initialSegmentEnd + actualShift;
+                    
+                    // Update inputs
+                    context2.inputStart.value = frameController.start_pos_audioframe.toFixed(2);
+                    context2.inputEnd.value = frameController.end_pos_audioframe.toFixed(2);
+                }
+                
+                // Trigger updates
+                updateGlobalHighlight(ctxGlobal); // Update Global Highlight
+                handleUpdateMarkers(context2, false); // Update Frame 2 visuals
+            }
+            
+            function stopGlobalDrag() {
+                ctxGlobal.dragState.isDragging = false;
+                window.removeEventListener('mousemove', handleGlobalDrag);
+                window.removeEventListener('mouseup', stopGlobalDrag);
+                
+                handleUpdateMarkers(context2, false); // Sync Frame 2 UI after drag completes
+                
+                const start = frameController.start_pos_visualframe.toFixed(2);
+                const end = frameController.end_pos_visualframe.toFixed(2);
+                log(`[Frame 1] Action: ${ctxGlobal.dragState.target}. New View Window: ${start}s - ${end}s`);
+            }
+        }
+
+        function handleUpdateMarkers(ctx, readInputs = true) {
+            if (ctx.id === 2 && ctx.segmentHighlight) {
+                // Context 2: Position relative to View Window
+                // Sync inputs to FrameController (or vice versa? Inputs are source of truth for user edit)
+                // Let's assume inputs update FrameController first
+                if (readInputs) {
+                    frameController.start_pos_audioframe = parseFloat(ctx.inputStart.value);
+                    frameController.end_pos_audioframe = parseFloat(ctx.inputEnd.value);
+                }
+
+                const start = frameController.start_pos_audioframe;
+                const end = frameController.end_pos_audioframe;
+                const viewStart = frameController.start_pos_visualframe;
+                const viewEnd = frameController.end_pos_visualframe;
+                const duration = viewEnd - viewStart;
+                
+                if (duration > 0) {
+                    const rawStartPct = ((start - viewStart) / duration) * 100;
+                    const rawEndPct = ((end - viewStart) / duration) * 100;
+                    
+                    // Visual Clamp to ensure the box stays within the container visually
+                    const visStartPct = Math.max(0, Math.min(100, rawStartPct));
+                    const visEndPct = Math.max(0, Math.min(100, rawEndPct));
+                    const visWidthPct = visEndPct - visStartPct;
+                    
+                    ctx.segmentHighlight.style.left = visStartPct + '%';
+                    ctx.segmentHighlight.style.width = visWidthPct + '%';
+                    
+                    // Hide if fully out of view to prevent artifacts
+                    ctx.segmentHighlight.style.display = visWidthPct > 0 ? 'block' : 'none';
+                }
+                
+                // Sync Global Highlight whenever markers update
+                updateGlobalHighlight(context1);
+            } else if (ctx.markerStart && ctx.markerEnd) {
+                // Context 1: Fixed 0-100% (if it had markers)
+                updateRangeMarkers(ctx.markerStart, ctx.markerEnd);
+            }
+        }
+
+        function handleUpdateCurrentMarker(ctx) {
+            if (!ctx.markerCurrent) return;
+
+            // Update FrameController
+            frameController.current_time = ctx.audio.currentTime;
+
+            const start = frameController.start_pos_audioframe;
+            const end = frameController.end_pos_audioframe;
+            const current = frameController.current_time;
+            
+            if (ctx.id === 2) {
+                 const viewStart = frameController.start_pos_visualframe;
+                 const viewEnd = frameController.end_pos_visualframe;
+                 const duration = viewEnd - viewStart;
+                 if (duration > 0) {
+                     const pct = ((current - viewStart) / duration) * 100;
+                     ctx.markerCurrent.style.left = Math.max(0, Math.min(100, pct)) + '%';
+                 }
+            } else {
+                const duration = end - start;
+                updateProgressMarker(ctx.markerCurrent, current, start, duration);
+            }
+        }
+
+        function handleResizeCanvas(ctx) {
+            if (ctx.canvas) {
+                resizeCanvas(ctx.canvas);
+                // Update FrameController canvas dimensions if needed (though we have 2 canvases)
+                if (ctx.id === 2) {
+                    frameController.canvas_width = ctx.canvas.width;
+                    frameController.canvas_height = ctx.canvas.height;
+                }
+            }
+        }
+
+        function handleStopPlayback(ctx) {
+            stopPlayback(ctx.audio, ctx.checkSeekInterval);
+            ctx.checkSeekInterval = null;
+            frameController.is_playing = false;
+            log(`[Frame ${ctx.id}] Playback stopped.`);
+        }
+
+        function handlePlaySegment(ctx) {
+            // Sync inputs to FrameController
+            frameController.start_pos_audioframe = parseFloat(ctx.inputStart.value);
+            frameController.end_pos_audioframe = parseFloat(ctx.inputEnd.value);
+
+            const start = frameController.start_pos_audioframe;
+            const end = frameController.end_pos_audioframe;
+
+            log(`[Frame ${ctx.id}] Requesting playback: ${start}s -> ${end}s`);
+            
+            handleStopPlayback(ctx);
+
+            frameController.is_playing = true;
+            ctx.checkSeekInterval = playSegment(ctx.audio, start, end);
+            
+            if (ctx.checkSeekInterval) {
+                 log(`[Frame ${ctx.id}] Seek initiated...`);
+            }
+        }
+
+        function handleNextInterval(ctx, shouldPlay) {
+            if (!soundIntervals || soundIntervals.length === 0) {
+                log(`[Frame ${ctx.id}] No intervals loaded.`);
+                return;
+            }
+
+            const currentStart = frameController.start_pos_audioframe;
+            const epsilon = 0.01; // Small buffer to ensure we move forward
+
+            // Find the first interval that starts after the current start time AND is a sound interval (label == 1)
+            const nextInterval = soundIntervals.find(interval => interval[0] > currentStart + epsilon && interval[2] === 1);
+
+            if (nextInterval) {
+                const [start, end, label] = nextInterval;
+                
+                // Update FrameController
+                frameController.start_pos_audioframe = start;
+                frameController.end_pos_audioframe = end;
+                
+                // Update Inputs
+                ctx.inputStart.value = start.toFixed(3);
+                ctx.inputEnd.value = end.toFixed(3);
+
+                // Check if new segment is out of view
+                const viewStart = frameController.start_pos_visualframe;
+                const viewEnd = frameController.end_pos_visualframe;
+                
+                if (start < viewStart || end > viewEnd) {
+                     const duration = frameController.track_Duration;
+                     const windowSize = viewEnd - viewStart; // Keep current zoom level
+                     const center = (start + end) / 2;
+                     
+                     let newViewStart = center - windowSize / 2;
+                     let newViewEnd = center + windowSize / 2;
+                     
+                     // Clamp to track bounds
+                     if (newViewStart < 0) {
+                         newViewStart = 0;
+                         newViewEnd = Math.min(duration, windowSize);
+                     }
+                     if (newViewEnd > duration) {
+                         newViewEnd = duration;
+                         newViewStart = Math.max(0, duration - windowSize);
+                     }
+                     
+                     frameController.start_pos_visualframe = newViewStart;
+                     frameController.end_pos_visualframe = newViewEnd;
+                     
+                     log(`[Frame ${ctx.id}] Auto-scrolled view to ${newViewStart.toFixed(2)}s - ${newViewEnd.toFixed(2)}s`);
+                }
+                
+                // Update Visuals
+                handleUpdateMarkers(ctx);
+                
+                log(`[Frame ${ctx.id}] Jumped to next interval: ${start.toFixed(3)}s - ${end.toFixed(3)}s (Label: ${label})`);
+
+                if (shouldPlay) {
+                    handlePlaySegment(ctx);
+                }
+            } else {
+                log(`[Frame ${ctx.id}] No next interval found.`);
+            }
+        }
+
+        // Animation Loop (Handles all contexts)
+        function animate() {
+            contexts.forEach(ctx => {
+                if (ctx.isWaveformReady && ctx.audioBuffer && ctx.canvas) {
+                    let start, end;
+                    
+                    if (ctx.id === 1) {
+                        // Global View: Entire File
+                        start = 0;
+                        end = frameController.track_Duration;
+                    } else if (ctx.id === 2) {
+                        // Draw View Window
+                        start = frameController.start_pos_visualframe;
+                        end = frameController.end_pos_visualframe;
+                    } else {
+                        // Fallback
+                        start = 0;
+                        end = frameController.track_Duration;
+                    }
+                    
+                    // For Context 1, we don't have a player attached usually, or we can use context2's player time
+                    const current = frameController.current_time;
+                    
+                    drawWaveform(ctx.canvas, ctx.audioBuffer, start, end, current);
+                    drawIntervals(ctx.canvas, soundIntervals, start, end);
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // Drag Logic for Context 2
+        function initDragHandlers(ctx) {
+            if (ctx.id !== 2) return;
+
+            const timeline = ctx.timeline;
+            const overlay = ctx.segmentHighlight;
+            const handleStart = ctx.handleStart;
+            const handleEnd = ctx.handleEnd;
+
+            const onMouseDown = (e, target) => {
+                e.stopPropagation();
+                ctx.dragState.isDragging = true;
+                ctx.dragState.target = target;
+                ctx.dragState.startX = e.clientX;
+                // Store initial state from FrameController
+                ctx.dragState.initialStart = frameController.start_pos_audioframe;
+                ctx.dragState.initialEnd = frameController.end_pos_audioframe;
+                
+                window.addEventListener('mousemove', handleDrag);
+                window.addEventListener('mouseup', stopDrag);
+            };
+
+            overlay.addEventListener('mousedown', (e) => onMouseDown(e, 'body'));
+            handleStart.addEventListener('mousedown', (e) => onMouseDown(e, 'start'));
+            handleEnd.addEventListener('mousedown', (e) => onMouseDown(e, 'end'));
+
+            function handleDrag(e) {
+                if (!ctx.dragState.isDragging) return;
+
+                const rect = timeline.getBoundingClientRect();
+                const deltaPixels = e.clientX - ctx.dragState.startX;
+                const viewDuration = frameController.end_pos_visualframe - frameController.start_pos_visualframe;
+                const deltaSeconds = (deltaPixels / rect.width) * viewDuration;
+                
+                let newStart = ctx.dragState.initialStart;
+                let newEnd = ctx.dragState.initialEnd;
+                
+                if (ctx.dragState.target === 'body') {
+                    newStart += deltaSeconds;
+                    newEnd += deltaSeconds;
+                } else if (ctx.dragState.target === 'start') {
+                    newStart += deltaSeconds;
+                } else if (ctx.dragState.target === 'end') {
+                    newEnd += deltaSeconds;
+                }
+
+                // Constraints
+                const currentStart = frameController.start_pos_audioframe;
+                const currentEnd = frameController.end_pos_audioframe;
+                const viewStart = frameController.start_pos_visualframe;
+                const viewEnd = frameController.end_pos_visualframe;
+                
+                // Boundary Constraints (Recalculation)
+                if (ctx.dragState.target === 'body') {
+                    // Calculate duration from the proposed new values to ensure consistency
+                    const duration = newEnd - newStart;
+                    
+                    // Clamp Start
+                    if (newStart < viewStart) {
+                        newStart = viewStart;
+                        newEnd = newStart + duration;
+                    }
+                    
+                    // Clamp End
+                    if (newEnd > viewEnd) {
+                        newEnd = viewEnd;
+                        newStart = newEnd - duration;
+                    }
+                    
+                    // Double-check Start (in case duration > viewWidth)
+                    if (newStart < viewStart) {
+                        newStart = viewStart;
+                    }
+                } else {
+                    // Clamp individual markers
+                    if (ctx.dragState.target === 'start') {
+                        newStart = Math.min(newStart, currentEnd - 0.1);
+                        newStart = Math.max(newStart, viewStart);
+                    } else {
+                        newEnd = Math.max(newEnd, currentStart + 0.1);
+                        newEnd = Math.min(newEnd, viewEnd);
+                    }
+                }
+                
+                // Update Inputs and FrameController
+                ctx.inputStart.value = newStart.toFixed(2);
+                ctx.inputEnd.value = newEnd.toFixed(2);
+                frameController.start_pos_audioframe = newStart;
+                frameController.end_pos_audioframe = newEnd;
+                
+                handleUpdateMarkers(ctx);
+            }
+
+            function stopDrag() {
+                if (ctx.dragState.isDragging) {
+                    ctx.dragState.isDragging = false;
+                    window.removeEventListener('mousemove', handleDrag);
+                    window.removeEventListener('mouseup', stopDrag);
+                    log(`[Frame ${ctx.id}] Drag complete. New range: ${frameController.start_pos_audioframe.toFixed(2)} - ${frameController.end_pos_audioframe.toFixed(2)}`);
+                }
+            }
+        }
+
+        // Initialization
+        async function loadSharedData(audioUrl, jsonUrl) {
+            try {
+                // 0. Load Intervals
+                if (jsonUrl) {
+                    log(`[System] Fetching JSON ${jsonUrl}...`);
+                    const response = await fetch(jsonUrl);
+                    if (response.ok) {
+                        const data = await response.json();
+                        soundIntervals = data.sound_intervals;
+                        log(`[System] Loaded ${soundIntervals.length} intervals.`);
+                    } else {
+                        log(`[Error] JSON fetch failed: ${response.status}`);
+                    }
+                }
+
+                // 1. Fetch and Decode Once
+                log(`[System] Fetching ${audioUrl}...`);
+                const response = await fetch(audioUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const blob = await response.blob();
+                log(`[System] Blob loaded. Size: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+                
+                log(`[System] Decoding audio data...`);
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const arrayBuffer = await blob.arrayBuffer();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                log(`[System] Audio decoded. Duration: ${audioBuffer.duration.toFixed(2)}s`);
+
+                // Initialize FrameController Data
+                frameController.track_Duration = audioBuffer.duration;
+
+                // 2. Initialize Context 1 (Global)
+                context1.audioCtx = audioCtx;
+                context1.audioBuffer = audioBuffer;
+                context1.isWaveformReady = true;
+                context1.statusEl.textContent = "Ready";
+
+                // 3. Initialize Context 2 (Segment Editor)
+                context2.audioCtx = audioCtx;
+                context2.audioBuffer = audioBuffer;
+                context2.isWaveformReady = true;
+                
+                // Setup Audio Element for Playback (Context 2 only)
+                const blobUrl = URL.createObjectURL(blob);
+                context2.audio.src = blobUrl;
+                context2.statusEl.textContent = "Ready";
+
+                // Setup View Window for Context 2
+                const segmentStart = parseFloat(context2.inputStart.value);
+                const segmentEnd = parseFloat(context2.inputEnd.value);
+                
+                // Initialize FrameController Segment Data
+                frameController.start_pos_audioframe = segmentStart;
+                frameController.end_pos_audioframe = segmentEnd;
+
+                const duration = audioBuffer.duration;
+                const windowSize = 60; // 60 seconds window
+                const center = (segmentStart + segmentEnd) / 2;
+                
+                // Initialize FrameController View Window Data
+                frameController.start_pos_visualframe = Math.max(0, center - windowSize / 2);
+                frameController.end_pos_visualframe = Math.min(duration, center + windowSize / 2);
+                
+                log(`[Frame 2] View Window set: ${frameController.start_pos_visualframe.toFixed(2)}s - ${frameController.end_pos_visualframe.toFixed(2)}s`);
+                
+                initDragHandlers(context2);
+                
+                // Setup Global Drag Interaction
+                setupGlobalDragInteraction(context1);
+                
+                // Sync Global Highlight
+                updateGlobalHighlight(context1);
+                log(`[Frame 1] Global Highlight initialized.`);
+
+                // 4. Initial Draw
+                handleResizeCanvas(context1);
+                handleResizeCanvas(context2);
+                handleUpdateMarkers(context2);
+
+            } catch (e) {
+                log(`[Error] ${e.message}`);
+                if (context1.statusEl) context1.statusEl.textContent = "Error";
+                if (context2.statusEl) context2.statusEl.textContent = "Error";
+            }
+        }
+
+        // 3. Bind Event Listeners
+        contexts.forEach(ctx => {
+            if (ctx.btnPlay) ctx.btnPlay.addEventListener('click', () => handlePlaySegment(ctx));
+            if (ctx.btnStop) ctx.btnStop.addEventListener('click', () => handleStopPlayback(ctx));
+            if (ctx.btnNext) ctx.btnNext.addEventListener('click', () => handleNextInterval(ctx, false));
+            if (ctx.btnNextPlay) ctx.btnNextPlay.addEventListener('click', () => handleNextInterval(ctx, true));
+            
+            if (ctx.inputStart) ctx.inputStart.addEventListener('input', () => handleUpdateMarkers(ctx));
+            if (ctx.inputEnd) ctx.inputEnd.addEventListener('input', () => handleUpdateMarkers(ctx));
+            
+            if (ctx.audio) {
+                ctx.audio.addEventListener('loadedmetadata', () => handleUpdateMarkers(ctx));
+                ctx.audio.addEventListener('timeupdate', () => handleUpdateCurrentMarker(ctx));
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            contexts.forEach(ctx => handleResizeCanvas(ctx));
+        });
+
+        // Start Animation Loop
+        animate();
+
+        // Start
+        loadSharedData('../phrase_audio/SW_Learn_Day_1-5.mp3', 'json/SW_Learn_Day_1-5_librosa.json');
+    </script>
+</body>
+</html>
