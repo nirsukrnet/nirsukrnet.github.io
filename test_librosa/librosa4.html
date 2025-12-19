@@ -1045,6 +1045,20 @@
         // Initialization
         async function loadSharedData(audioUrl, jsonUrl) {
             try {
+                // Reset State
+                soundIntervals = [];
+                context1.isWaveformReady = false;
+                context2.isWaveformReady = false;
+                
+                if (context1.canvas) {
+                    const ctx = context1.canvas.getContext('2d');
+                    ctx.clearRect(0, 0, context1.canvas.width, context1.canvas.height);
+                }
+                if (context2.canvas) {
+                    const ctx = context2.canvas.getContext('2d');
+                    ctx.clearRect(0, 0, context2.canvas.width, context2.canvas.height);
+                }
+
                 // 0. Load Intervals
                 if (jsonUrl) {
                     log(`[System] Fetching JSON ${jsonUrl}...`);

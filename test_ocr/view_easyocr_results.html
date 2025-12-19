@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyOCR Results</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; overflow: hidden; }
+        .container { display: flex; height: 100%; }
+        .sidebar { width: 15%; background-color: #333; color: #fff; overflow-y: auto; border-right: 1px solid #555; }
+        .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #444; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-item:hover { background-color: #555; }
+        .sidebar-item.active { background-color: #007acc; }
+        .main-area { flex: 1; position: relative; background-color: #f0f0f0; overflow: auto; display: flex; justify-content: center; align-items: center; }
+        #image-container { position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #target-image { display: block; max-width: 100%; max-height: 95vh; }
+        .box { position: absolute; border: 2px solid red; background-color: rgba(255, 0, 0, 0.1); cursor: help; }
+        .box:hover { border-color: yellow; background-color: rgba(255, 255, 0, 0.2); z-index: 10; }
+        .box-label { display: none; position: absolute; top: -20px; left: 0; background: black; color: white; font-size: 12px; padding: 2px 5px; white-space: nowrap; z-index: 20; }
+        .box:hover .box-label { display: block; }
+        .united-text-box {
+            position: absolute;
+            background-color: rgba(0, 122, 204, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            z-index: 30;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main-area">
+        <div id="image-container">
+            <img id="target-image" src="" alt="Select an image">
+        </div>
+    </div>
+</div>
+<script src="detected_boxes.js"></script>
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const imageContainer = document.getElementById('image-container');
+    const targetImage = document.getElementById('target-image');
+
+    if (typeof detectedData === 'undefined') {
+        alert("Error: detected_boxes.js not found. Run the Python script first.");
+    } else {
+        init(detectedData);
+    }
+
+    function init(data) {
+        data.files.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'sidebar-item';
+            item.textContent = file.filename;
+            item.onclick = () => loadFile(file, item);
+            sidebar.appendChild(item);
+            if (index === 0) loadFile(file, item);
+        });
+    }
+
+    function loadFile(fileData, itemElement) {
+        document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+        itemElement.classList.add('active');
+        targetImage.src = fileData.path;
+        
+        // Remove old boxes
+        document.querySelectorAll('.box').forEach(box => box.remove());
+        document.querySelectorAll('.united-text-box').forEach(box => box.remove());
+
+        targetImage.onload = () => {
+            const nw = targetImage.naturalWidth;
+            const nh = targetImage.naturalHeight;
+            
+            let minY = Infinity;
+            let minX = Infinity;
+            let allText = [];
+
+            // Sort boxes by Y then X to get reading order roughly right
+            const sortedBoxes = [...fileData.boxes].sort((a, b) => {
+                if (Math.abs(a.y - b.y) < 20) return a.x - b.x; // Same line (approx)
+                return a.y - b.y;
+            });
+
+            sortedBoxes.forEach(box => {
+                // Track top-most box position
+                if (box.y < minY) {
+                    minY = box.y;
+                    minX = box.x;
+                }
+                allText.push(box.text);
+
+                const div = document.createElement('div');
+                div.className = 'box';
+                div.style.left = (box.x / nw * 100) + '%';
+                div.style.top = (box.y / nh * 100) + '%';
+                div.style.width = (box.w / nw * 100) + '%';
+                div.style.height = (box.h / nh * 100) + '%';
+                
+                const label = document.createElement('div');
+                label.className = 'box-label';
+                label.textContent = `${box.text} (${(box.conf*100).toFixed(0)}%)`;
+                div.appendChild(label);
+                
+                imageContainer.appendChild(div);
+            });
+
+            // Add United Text Box
+            if (allText.length > 0) {
+                const unitedDiv = document.createElement('div');
+                unitedDiv.className = 'united-text-box';
+                unitedDiv.textContent = allText.join(' ');
+                
+                // Position 40px above the top-most box
+                // Using calc() to mix percentage (for image position) and pixels (for offset)
+                unitedDiv.style.left = (minX / nw * 100) + '%';
+                unitedDiv.style.top = `calc(${(minY / nh * 100)}% - 40px)`;
+                
+                imageContainer.appendChild(unitedDiv);
+            }
+        };
+    }
+</script>
+</body>
+</html>

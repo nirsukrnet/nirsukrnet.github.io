@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librosa + Whisper Alignment Viewer</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 95%; margin: 0 auto; }
+        .control-group { margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        
+        label { font-weight: bold; margin-right: 5px; }
+        button { padding: 8px 16px; cursor: pointer; font-size: 16px; background: #333; color: #fff; border: none; border-radius: 4px; }
+        button:hover { background: #555; }
+
+        .timeline-container { margin-bottom: 30px; overflow-x: auto; border: 1px solid #ccc; background: #fff; }
+        .timeline-label { font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; padding: 5px; background: #eee; position: sticky; left: 0; }
+        
+        /* Wrapper for scrolling content */
+        .timeline-scroll-area { position: relative; height: 80px; background: #fafafa; }
+        
+        canvas { height: 100%; display: block; position: absolute; top: 0; left: 0; }
+        
+        .ruler { position: absolute; bottom: 0; left: 0; width: 100%; height: 20px; font-size: 10px; color: #666; pointer-events: none; }
+        .ruler-mark { position: absolute; bottom: 0; border-left: 1px solid #ccc; height: 5px; padding-left: 2px; }
+
+        .legend { font-size: 12px; color: #666; }
+        .legend span { display: inline-block; width: 12px; height: 12px; margin-right: 5px; vertical-align: middle; }
+
+        #detailsPanel {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            min-height: 100px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .file-status { font-style: italic; color: #666; margin-left: 10px; }
+        .file-status.loaded { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Librosa + Whisper Alignment Viewer</h1>
+    <p>Load both the Librosa JSON (structure) and the Aligned Whisper JSON (content) to visualize synchronization.</p>
+
+    <div class="control-group">
+        <div>
+            <label for="fileInputLibrosa">1. Load Librosa JSON:</label>
+            <input type="file" id="fileInputLibrosa" accept=".json">
+            <span id="statusLibrosa" class="file-status">Not loaded</span>
+        </div>
+        <div>
+            <label for="fileInputAligned">2. Load Aligned JSON:</label>
+            <input type="file" id="fileInputAligned" accept=".json">
+            <span id="statusAligned" class="file-status">Not loaded</span>
+        </div>
+        <div>
+            <label for="zoomInput">Zoom (px/s):</label>
+            <input type="number" id="zoomInput" value="50" min="10" max="500" step="10" style="width: 60px;">
+        </div>
+    </div>
+
+    <div id="visualizationArea" style="display: none;">
+        
+        <!-- Layer 1: Raw -->
+        <div class="timeline-label">
+            <span>Layer 1: Raw Detection (Librosa)</span>
+            <span class="legend"><span style="background: rgba(0, 0, 255, 0.5);"></span>Raw Intervals</span>
+        </div>
+        <div class="timeline-container">
+            <div class="timeline-scroll-area" id="scrollAreaRaw">
+                <canvas id="canvasRaw"></canvas>
+                <div class="ruler" id="rulerRaw"></div>
+            </div>
+        </div>
+
+        <!-- Layer 2: Merged -->
+        <div class="timeline-label">
+            <span>Layer 2: Merged (Librosa)</span>
+            <span class="legend"><span style="background: rgba(128, 0, 128, 0.5);"></span>Merged Intervals</span>
+        </div>
+        <div class="timeline-container">
+            <div class="timeline-scroll-area" id="scrollAreaMerged">
+                <canvas id="canvasMerged"></canvas>
+                <div class="ruler" id="rulerMerged"></div>
+            </div>
+        </div>
+
+        <!-- Layer 3: Rejected -->
+        <div class="timeline-label">
+            <span>Layer 3: Rejected (Marked Silence)</span>
+            <span class="legend"><span style="background: rgba(255, 0, 0, 0.5);"></span>Rejected Intervals</span>
+        </div>
+        <div class="timeline-container">
+            <div class="timeline-scroll-area" id="scrollAreaRejected">
+                <canvas id="canvasRejected"></canvas>
+                <div class="ruler" id="rulerRejected"></div>
+            </div>
+        </div>
+
+        <!-- Layer 4: Final -->
+        <div class="timeline-label">
+            <span>Layer 4: Final Output (Librosa)</span>
+            <span class="legend"><span style="background: rgba(0, 128, 0, 0.5);"></span>Final Sound</span>
+        </div>
+        <div class="timeline-container">
+            <div class="timeline-scroll-area" id="scrollAreaFinal">
+                <canvas id="canvasFinal"></canvas>
+                <div class="ruler" id="rulerFinal"></div>
+            </div>
+        </div>
+
+        <!-- Layer 5: Aligned Whisper -->
+        <div class="timeline-label">
+            <span>Layer 5: Aligned Whisper (Final Text)</span>
+            <span class="legend">
+                <span style="background: rgba(0, 128, 0, 0.4);"></span>Good
+                <span style="background: rgba(255, 165, 0, 0.4); margin-left: 10px;"></span>Time Overlap
+                <span style="background: rgba(255, 0, 0, 0.4); margin-left: 10px;"></span>High Silence Overlap (>50%)
+            </span>
+        </div>
+        <div class="timeline-container">
+            <div class="timeline-scroll-area" id="scrollAreaAligned" style="height: 120px;"> <!-- Taller for text -->
+                <canvas id="canvasAligned"></canvas>
+                <div class="ruler" id="rulerAligned"></div>
+            </div>
+        </div>
+
+        <h3>Selected Interval Details</h3>
+        <div id="detailsPanel">Click on an interval to see details...</div>
+    </div>
+
+    <script>
+        // ==========================================
+        // STATE
+        // ==========================================
+        let appData = {
+            librosa: null,
+            aligned: null,
+            duration: 0
+        };
+        let PIXELS_PER_SECOND = 50; // Default Zoom
+
+        // ==========================================
+        // DATA PARSING
+        // ==========================================
+
+        function parseCompactData(schema, rows) {
+            if (!rows || !schema) return [];
+            return rows.map(row => {
+                let obj = {};
+                schema.forEach((key, index) => {
+                    obj[key] = row[index];
+                });
+                return obj;
+            });
+        }
+
+        function updateDuration() {
+            let d1 = 0, d2 = 0;
+            
+            // Get duration from Librosa Final
+            if (appData.librosa && appData.librosa.final && appData.librosa.final.length > 0) {
+                d1 = appData.librosa.final[appData.librosa.final.length - 1].end;
+            }
+            
+            // Get duration from Aligned
+            if (appData.aligned && appData.aligned.length > 0) {
+                d2 = appData.aligned[appData.aligned.length - 1].end;
+            }
+
+            appData.duration = Math.max(d1, d2, 10); // Min 10s
+            
+            // Auto-adjust zoom if huge
+            if (appData.duration * PIXELS_PER_SECOND > 30000) {
+                PIXELS_PER_SECOND = Math.max(10, Math.floor(30000 / appData.duration));
+                document.getElementById('zoomInput').value = PIXELS_PER_SECOND;
+            }
+        }
+
+        function loadLibrosaData(json) {
+            try {
+                const meta = json.meta;
+                const data = json.data;
+                
+                // Parse Raw
+                let rawIntervals = parseCompactData(meta.sound_intervals_raw_schema, data.sound_intervals_raw) || [];
+                rawIntervals = rawIntervals.map(i => {
+                    if (i.type === undefined && i.type_int !== undefined) i.type = i.type_int;
+                    return i;
+                });
+                
+                // Parse Merged
+                const mergedIntervals = (data.sound_intervals_merged || []).map(row => ({
+                    ids: row[0],
+                    start: row[1],
+                    end: row[2]
+                }));
+
+                // Parse Rejected
+                const rejectedIntervals = (data.marked_silence || []).map(row => ({
+                    ids: row[0],
+                    start: row[1],
+                    end: row[2],
+                    reason: row[3]
+                }));
+
+                // Parse Final
+                const finalIntervals = (data.final_intervals || []).map(row => ({
+                    start: row[0],
+                    end: row[1],
+                    type: row[2]
+                }));
+
+                appData.librosa = {
+                    raw: rawIntervals,
+                    merged: mergedIntervals,
+                    rejected: rejectedIntervals,
+                    final: finalIntervals,
+                    config: json.config
+                };
+
+                document.getElementById('statusLibrosa').innerText = "Loaded";
+                document.getElementById('statusLibrosa').classList.add('loaded');
+                
+                updateDuration();
+                document.getElementById('visualizationArea').style.display = 'block';
+                renderAll();
+
+            } catch (e) {
+                console.error(e);
+                alert("Error parsing Librosa JSON: " + e.message);
+            }
+        }
+
+        function loadAlignedData(json) {
+            try {
+                let segments = [];
+                if (Array.isArray(json)) {
+                    segments = json;
+                } else if (json.aligned_segments && Array.isArray(json.aligned_segments)) {
+                    segments = json.aligned_segments;
+                } else if (json.librosa_intervals_with_text && Array.isArray(json.librosa_intervals_with_text)) {
+                    // Support for the new "Final Text" format
+                    segments = json.librosa_intervals_with_text;
+                } else {
+                    throw new Error("Invalid format: Root must be array or have 'aligned_segments' or 'librosa_intervals_with_text' key");
+                }
+                
+                // Pre-process for time overlaps (just for info)
+                // Sort by start time
+                segments.sort((a, b) => a.start - b.start);
+
+                let prevEnd = -1;
+                segments.forEach(item => {
+                    if (item.start < prevEnd) {
+                        item.isTimeOverlap = true;
+                    } else {
+                        item.isTimeOverlap = false;
+                    }
+                    prevEnd = Math.max(prevEnd, item.end);
+                });
+
+                appData.aligned = segments;
+
+                document.getElementById('statusAligned').innerText = "Loaded (" + segments.length + " segments)";
+                document.getElementById('statusAligned').classList.add('loaded');
+
+                updateDuration();
+                document.getElementById('visualizationArea').style.display = 'block';
+                renderAll();
+
+            } catch (e) {
+                console.error(e);
+                alert("Error parsing Aligned JSON: " + e.message);
+            }
+        }
+
+        // ==========================================
+        // VISUALIZATION
+        // ==========================================
+
+        function setupCanvas(canvasId, containerId, duration) {
+            const canvas = document.getElementById(canvasId);
+            const container = document.getElementById(containerId);
+            
+            const width = Math.ceil(duration * PIXELS_PER_SECOND);
+            const height = container.clientHeight;
+            
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            container.style.width = width + 'px'; // Expand scroll area
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            
+            return { ctx, width, height };
+        }
+
+        let selectedSelection = null; // { start, end, layer }
+
+        function drawTimeline(canvasId, containerId, intervals, color, type) {
+            if (!appData.duration) return;
+            
+            const { ctx, width, height } = setupCanvas(canvasId, containerId, appData.duration);
+            ctx.clearRect(0, 0, width, height);
+
+            if (!intervals) return;
+
+            intervals.forEach(interval => {
+                // Filter for Final and Raw layers (only draw sound=1)
+                if ((type === 'final' || type === 'raw') && interval.type === 0) return;
+
+                const start = interval.start;
+                const end = interval.end;
+                
+                const x = start * PIXELS_PER_SECOND;
+                const w = Math.max(1, (end - start) * PIXELS_PER_SECOND);
+                
+                // Determine Color
+                let fillStyle = color;
+                if (type === 'aligned') {
+                    // Priority: High Silence Overlap > Time Overlap > Good
+                    // Note: In final_text format, silence_overlap might not be present directly if it's a merged interval
+                    // But if we load the intermediate aligned file, it is there.
+                    // Let's handle both.
+                    
+                    let isHighSilence = false;
+                    if (interval.silence_overlap !== undefined) {
+                        isHighSilence = interval.silence_overlap > 0.5;
+                    }
+                    
+                    if (isHighSilence) {
+                        fillStyle = 'rgba(255, 0, 0, 0.4)'; // Red (High Silence Overlap)
+                    } else if (interval.isTimeOverlap) {
+                        fillStyle = 'rgba(255, 165, 0, 0.4)'; // Orange (Time Overlap)
+                    } else {
+                        fillStyle = 'rgba(0, 128, 0, 0.4)'; // Green (Good)
+                    }
+                }
+
+                ctx.fillStyle = fillStyle;
+                ctx.fillRect(x, 0, w, height);
+                
+                // Border
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                ctx.strokeRect(x, 0, w, height);
+
+                // Text Label
+                ctx.fillStyle = '#000';
+                ctx.font = '10px sans-serif';
+                
+                if (type === 'aligned') {
+                    // Draw text for aligned
+                    if (w > 10) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.rect(x, 0, w, height);
+                        ctx.clip();
+                        ctx.fillText(interval.text || "", x + 2, 12);
+                        ctx.fillText(`[${interval.start.toFixed(1)}-${interval.end.toFixed(1)}]`, x + 2, 24);
+                        ctx.restore();
+                    }
+                } else {
+                    // Draw ID for others
+                    if (w > 20 && interval.id) {
+                        ctx.fillText(interval.id, x + 2, 12);
+                    }
+                }
+            });
+
+            // Draw Selection Highlight
+            if (selectedSelection && selectedSelection.layer === type) {
+                const s = selectedSelection.start * PIXELS_PER_SECOND;
+                const e = selectedSelection.end * PIXELS_PER_SECOND;
+                const w = e - s;
+                
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.4)'; // Yellow highlight
+                ctx.fillRect(s, 0, w, height);
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(s, 0, w, height);
+            }
+
+            // Draw Ruler
+            const rulerId = containerId.replace('scrollArea', 'ruler');
+            drawRuler(rulerId, appData.duration);
+        }
+
+        function drawRuler(rulerId, duration) {
+            const container = document.getElementById(rulerId);
+            container.innerHTML = '';
+            
+            // Mark every second
+            for (let i = 0; i <= duration; i++) {
+                const mark = document.createElement('div');
+                mark.className = 'ruler-mark';
+                mark.style.left = (i * PIXELS_PER_SECOND) + 'px';
+                if (i % 5 === 0) {
+                    mark.innerText = i + 's';
+                    mark.style.height = '10px';
+                    mark.style.fontWeight = 'bold';
+                }
+                container.appendChild(mark);
+            }
+        }
+
+        function renderAll() {
+            if (appData.librosa) {
+                drawTimeline('canvasRaw', 'scrollAreaRaw', appData.librosa.raw, 'rgba(0, 0, 255, 0.5)', 'raw');
+                drawTimeline('canvasMerged', 'scrollAreaMerged', appData.librosa.merged, 'rgba(128, 0, 128, 0.5)', 'merged');
+                drawTimeline('canvasRejected', 'scrollAreaRejected', appData.librosa.rejected, 'rgba(255, 0, 0, 0.5)', 'rejected');
+                drawTimeline('canvasFinal', 'scrollAreaFinal', appData.librosa.final, 'rgba(0, 128, 0, 0.5)', 'final');
+            }
+            if (appData.aligned) {
+                drawTimeline('canvasAligned', 'scrollAreaAligned', appData.aligned, null, 'aligned');
+            }
+        }
+
+        // ==========================================
+        // SYNCHRONIZATION
+        // ==========================================
+        
+        const scrollContainers = [
+            'scrollAreaRaw', 'scrollAreaMerged', 'scrollAreaRejected', 'scrollAreaFinal', 'scrollAreaAligned'
+        ];
+
+        let isSyncing = false;
+
+        scrollContainers.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            
+            // The scroll event is on the parent usually if overflow is there, 
+            // but here .timeline-container has overflow-x: auto.
+            // Wait, in HTML structure: .timeline-container { overflow-x: auto }
+            // Inside is .timeline-scroll-area.
+            // So we need to attach to .timeline-container.
+            
+            const container = el.parentElement; 
+            
+            container.addEventListener('scroll', function(e) {
+                if (isSyncing) return;
+                isSyncing = true;
+                
+                const scrollLeft = e.target.scrollLeft;
+                
+                scrollContainers.forEach(otherId => {
+                    const otherEl = document.getElementById(otherId);
+                    if (otherEl && otherEl.parentElement !== e.target) {
+                        otherEl.parentElement.scrollLeft = scrollLeft;
+                    }
+                });
+                
+                isSyncing = false;
+            });
+        });
+
+        // ==========================================
+        // INTERACTION
+        // ==========================================
+
+        document.getElementById('fileInputLibrosa').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) { loadLibrosaData(JSON.parse(e.target.result)); };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('fileInputAligned').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) { loadAlignedData(JSON.parse(e.target.result)); };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('zoomInput').addEventListener('change', function(e) {
+            const val = parseInt(e.target.value);
+            if (val && val > 0) {
+                PIXELS_PER_SECOND = val;
+                renderAll();
+            }
+        });
+
+        // Click Handler
+        function handleCanvasClick(e, type) {
+            if (!appData.duration) return;
+            
+            const clickX = e.offsetX;
+            const clickTime = clickX / PIXELS_PER_SECOND;
+
+            let dataset = [];
+            
+            if (type === 'raw' && appData.librosa) dataset = appData.librosa.raw;
+            else if (type === 'merged' && appData.librosa) dataset = appData.librosa.merged;
+            else if (type === 'rejected' && appData.librosa) dataset = appData.librosa.rejected;
+            else if (type === 'final' && appData.librosa) dataset = appData.librosa.final;
+            else if (type === 'aligned' && appData.aligned) dataset = appData.aligned;
+
+            // Find interval
+            let found = dataset.find(i => clickTime >= i.start && clickTime <= i.end);
+            
+            const panel = document.getElementById('detailsPanel');
+            if (found) {
+                selectedSelection = { start: found.start, end: found.end, layer: type };
+                
+                let info = `Layer: ${type.toUpperCase()}\n` +
+                           `Time: ${found.start.toFixed(3)}s - ${found.end.toFixed(3)}s\n` +
+                           `Duration: ${(found.end - found.start).toFixed(3)}s\n`;
+                
+                if (type === 'aligned') {
+                    if (found.silence_overlap !== undefined) {
+                        info += `Silence Overlap: ${(found.silence_overlap * 100).toFixed(1)}%\n`;
+                    }
+                    info += `Time Overlap: ${found.isTimeOverlap ? 'YES' : 'NO'}\n` +
+                            `Text: "${found.text}"\n`;
+                    
+                    if (found.assigned_segments) {
+                        info += `\nAssigned Segments (${found.assigned_segments.length}):\n`;
+                        found.assigned_segments.forEach((seg, idx) => {
+                            info += `  ${idx+1}. [${seg.start.toFixed(2)}-${seg.end.toFixed(2)}] "${seg.text}"\n`;
+                        });
+                    }
+                }
+                
+                info += `\nData:\n${JSON.stringify(found, null, 2)}`;
+                panel.innerText = info;
+                renderAll();
+            } else {
+                selectedSelection = null;
+                renderAll();
+                panel.innerText = `Clicked at ${clickTime.toFixed(3)}s (No interval found in ${type})`;
+            }
+        }
+
+        document.getElementById('canvasRaw').addEventListener('click', (e) => handleCanvasClick(e, 'raw'));
+        document.getElementById('canvasMerged').addEventListener('click', (e) => handleCanvasClick(e, 'merged'));
+        document.getElementById('canvasRejected').addEventListener('click', (e) => handleCanvasClick(e, 'rejected'));
+        document.getElementById('canvasFinal').addEventListener('click', (e) => handleCanvasClick(e, 'final'));
+        document.getElementById('canvasAligned').addEventListener('click', (e) => handleCanvasClick(e, 'aligned'));
+
+    </script>
+</body>
+</html>

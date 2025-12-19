@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Librosa Audio Player</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            min-width: 200px;
+        }
+
+        #audio-container {
+            background: #fff;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        audio {
+            width: 100%;
+            outline: none;
+        }
+
+        #transcription-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        .text-block {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .text-block:hover {
+            background-color: #eef2f7;
+            border-left-color: #cbd5e0;
+        }
+
+        .text-block.active {
+            background-color: #d1fae5; /* Light green */
+            border-left-color: #10b981; /* Green */
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+
+        .text-block .time {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .text-block .content {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .error-msg {
+            color: #e53e3e;
+            padding: 20px;
+            text-align: center;
+            background: #fff;
+            border-radius: 8px;
+            margin: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Audio Transcription Player</h1>
+        <div class="controls">
+            <select id="trackSelect">
+                <option value="" disabled selected>Select a track...</option>
+            </select>
+        </div>
+    </header>
+
+    <div id="audio-container">
+        <audio id="audioPlayer" controls></audio>
+    </div>
+
+    <div id="transcription-container">
+        <div class="loading">Please select a track to begin.</div>
+    </div>
+
+    <script>
+        const trackSelect = document.getElementById('trackSelect');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const transcriptionContainer = document.getElementById('transcription-container');
+        
+        let intervals = [];
+
+        // 1. Load Menu List
+        async function loadMenu() {
+            try {
+                const response = await fetch('json/menu_list.json');
+                if (!response.ok) throw new Error('Failed to load menu list');
+                
+                const data = await response.json();
+                const menuList = data.menu_list;
+
+                menuList.forEach(track => {
+                    const option = document.createElement('option');
+                    option.value = track.id;
+                    option.textContent = track.name;
+                    option.dataset.mp3 = track.path_mp3;
+                    option.dataset.name = track.name;
+                    trackSelect.appendChild(option);
+                });
+
+                // Restore selection if needed, or just wait for user
+            } catch (err) {
+                console.error(err);
+                transcriptionContainer.innerHTML = `<div class="error-msg">Error loading menu: ${err.message}</div>`;
+            }
+        }
+
+        // 2. Load Track Data
+        async function loadTrack(trackName, mp3Path) {
+            transcriptionContainer.innerHTML = '<div class="loading">Loading transcription...</div>';
+            intervals = []; // Clear current intervals
+
+            // Set Audio Source
+            audioPlayer.src = mp3Path;
+            audioPlayer.load();
+
+            // Construct JSON Path
+            // Convention: transcr_json/[name]_final_text.json
+            const jsonPath = `transcr_json/${trackName}_final_text.json`;
+
+            try {
+                const response = await fetch(jsonPath);
+                if (!response.ok) throw new Error(`Failed to load transcription file: ${jsonPath}`);
+                
+                const data = await response.json();
+                
+                // Parse intervals
+                if (data.librosa_intervals_with_text) {
+                    intervals = data.librosa_intervals_with_text;
+                } else {
+                    throw new Error("Invalid JSON format: Missing 'librosa_intervals_with_text'");
+                }
+
+                renderTranscription();
+
+            } catch (err) {
+                console.error(err);
+                transcriptionContainer.innerHTML = `<div class="error-msg">Error loading transcription: ${err.message}</div>`;
+            }
+        }
+
+        // 3. Render Transcription
+        function renderTranscription() {
+            transcriptionContainer.innerHTML = '';
+
+            if (intervals.length === 0) {
+                transcriptionContainer.innerHTML = '<div class="loading">No transcription data available.</div>';
+                return;
+            }
+
+            intervals.forEach((interval, index) => {
+                const div = document.createElement('div');
+                div.className = 'text-block';
+                div.id = `interval-${index}`;
+                div.dataset.start = interval.start;
+                div.dataset.end = interval.end;
+                
+                // Click to seek
+                div.addEventListener('click', () => {
+                    audioPlayer.currentTime = interval.start;
+                    audioPlayer.play();
+                });
+
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'time';
+                timeSpan.textContent = `${formatTime(interval.start)} - ${formatTime(interval.end)}`;
+
+                const contentSpan = document.createElement('div');
+                contentSpan.className = 'content';
+                contentSpan.textContent = interval.text || "(No text)";
+
+                div.appendChild(timeSpan);
+                div.appendChild(contentSpan);
+                transcriptionContainer.appendChild(div);
+            });
+        }
+
+        // Helper: Format time
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 10);
+            return `${m}:${s.toString().padStart(2, '0')}.${ms}`;
+        }
+
+        // 4. Synchronization Logic
+        let activeIndex = -1;
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            const currentTime = audioPlayer.currentTime;
+            
+            // Find active interval
+            // We can optimize this since intervals are sorted, but linear search is fine for typical lengths
+            let newActiveIndex = -1;
+            
+            for (let i = 0; i < intervals.length; i++) {
+                if (currentTime >= intervals[i].start && currentTime < intervals[i].end) {
+                    newActiveIndex = i;
+                    break;
+                }
+            }
+
+            if (newActiveIndex !== activeIndex) {
+                // Remove old active class
+                if (activeIndex !== -1) {
+                    const oldEl = document.getElementById(`interval-${activeIndex}`);
+                    if (oldEl) oldEl.classList.remove('active');
+                }
+
+                // Add new active class
+                if (newActiveIndex !== -1) {
+                    const newEl = document.getElementById(`interval-${newActiveIndex}`);
+                    if (newEl) {
+                        newEl.classList.add('active');
+                        scrollToActive(newEl);
+                    }
+                }
+
+                activeIndex = newActiveIndex;
+            }
+        });
+
+        function scrollToActive(element) {
+            // Smooth scroll to keep element in view
+            // We want it roughly in the middle or top third
+            const container = transcriptionContainer;
+            const elementTop = element.offsetTop;
+            const containerTop = container.scrollTop;
+            const containerHeight = container.clientHeight;
+            
+            // Simple logic: if out of view, scroll
+            // Better logic: Center it
+            const targetScroll = elementTop - container.offsetTop - (containerHeight / 3);
+            
+            container.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+            });
+        }
+
+        // Event Listeners
+        trackSelect.addEventListener('change', (e) => {
+            const selectedOption = e.target.selectedOptions[0];
+            const mp3Path = selectedOption.dataset.mp3;
+            const name = selectedOption.dataset.name;
+            
+            if (mp3Path && name) {
+                loadTrack(name, mp3Path);
+            }
+        });
+
+        // Initialize
+        loadMenu();
+
+    </script>
+</body>
+</html>
