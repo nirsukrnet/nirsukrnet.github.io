@@ -1,0 +1,40 @@
+{
+  "menu_list": [
+    {
+      "id": 1,
+      "name": "SW_Learn_Day_1-5",
+      "path_mp3": "../out_audio/SW_Learn_Day_1-5.mp3",      
+      "path_json": "json/SW_Learn_Day_1-5_librosa_imgtxt.json"
+    },    
+    {
+      "id": 2,
+      "name": "SW_Learn_Day_7-10",
+      "path_mp3": "../out_audio/SW_Learn_Day_7-10.mp3",
+      "path_json": "json/SW_Learn_Day_7-10_librosa.json"
+    },
+    {
+      "id": 3,
+      "name": "Meeting_New_People_in_the_Park_A2_B1",
+      "path_mp3": "../out_audio/Meeting_New_People_in_the_Park_A2_B1.mp3",
+      "path_json": "json/Meeting_New_People_in_the_Park_A2_B1_librosa_imgtxt.json"
+    },
+    {
+      "id": 4,
+      "name": "SW_Learn_Day_11-15",
+      "path_mp3": "../out_audio/SW_Learn_Day_11-15.mp3",
+      "path_json": "json/SW_Learn_Day_11-15_librosa.json"
+    },
+    {
+      "id": 5,
+      "name": "SW_Learn_Day_16-20",
+      "path_mp3": "../out_audio/SW_Learn_Day_16-20.mp3",
+      "path_json": "json/SW_Learn_Day_16-20_librosa.json"
+    },
+    {
+      "id": 6,
+      "name": "Learn_Swedish_Day_21_25",
+      "path_mp3": "../out_audio/Learn_Swedish_Day_21_25.mp3",
+      "path_json": "json/Learn_Swedish_Day_21_25_librosa.json"
+    }
+  ]
+}

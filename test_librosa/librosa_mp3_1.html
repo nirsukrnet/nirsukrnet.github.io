@@ -195,6 +195,10 @@
             <label for="endTime2">End Time:</label>
             <input type="number" id="endTime2" value="25.00" step="0.01"> sec
         </div>
+        <div style="margin-top: 10px;">
+            <label>Duration:</label>
+            <span id="durationDisplay" style="font-weight: bold; margin-left: 5px;">5.00</span> sec
+        </div>
     </div>
 
     <div class="control-group-btns2">
@@ -285,9 +289,47 @@
 
         /**
          * 1. Visualization
-         * 1.1) Renders the waveform, time ruler, and playhead cursor onto the provided canvas.
+         * 1.3) Generates pre-computed peaks for fast rendering.
          */
-        function drawWaveform(canvas, audioBuffer, start, end, currentTime) {
+        function generatePeaks(audioBuffer, samplesPerPixel) {
+            const rawData = audioBuffer.getChannelData(0);
+            const sampleRate = audioBuffer.sampleRate;
+            const totalSamples = rawData.length;
+            
+            // We want roughly 'samplesPerPixel' resolution
+            // For a 4 min song (10M samples), if we want to support zooming out to 1000px,
+            // we need at least 1000 peaks. But we might zoom in.
+            // Let's pick a fixed resolution, e.g., 100 samples per peak (441 peaks/sec).
+            // For 4 mins: 4 * 60 * 441 = ~100k peaks. Fast to iterate.
+            
+            const step = samplesPerPixel || 100; 
+            const numPeaks = Math.ceil(totalSamples / step);
+            const peaks = new Float32Array(numPeaks * 2); // Interleaved min, max
+            
+            for (let i = 0; i < numPeaks; i++) {
+                const start = i * step;
+                const end = Math.min(start + step, totalSamples);
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = start; j < end; j++) {
+                    const val = rawData[j];
+                    if (val < min) min = val;
+                    if (val > max) max = val;
+                }
+                peaks[i * 2] = min;
+                peaks[i * 2 + 1] = max;
+            }
+            
+            return { peaks, step, length: numPeaks };
+        }
+
+        /**
+         * 1. Visualization
+         * 1.1) Renders the waveform, time ruler, and playhead cursor onto the provided canvas.
+         * Optimized to use pre-computed peaks if available and appropriate.
+         */
+        function drawWaveform(canvas, audioBuffer, start, end, currentTime, precomputedPeaks) {
             if (!audioBuffer) return canvas;
             
             const canvasCtx = canvas.getContext('2d');
@@ -303,10 +345,7 @@
             canvasCtx.fillStyle = '#1a1a1a'; // Darker background
             canvasCtx.fillRect(0, 0, width, height);
 
-            // Get data
-            const rawData = audioBuffer.getChannelData(0); // Use channel 0
             const sampleRate = audioBuffer.sampleRate;
-            
             const startSample = Math.floor(start * sampleRate);
             const endSample = Math.floor(end * sampleRate);
             const totalSamples = endSample - startSample;
@@ -316,38 +355,117 @@
             canvasCtx.fillStyle = '#ff5252'; // Filled shape color
             canvasCtx.beginPath();
 
-            const step = Math.ceil(totalSamples / width);
             const amp = height / 2;
+            const samplesPerPixel = totalSamples / width;
 
-            // Draw top half
-            canvasCtx.moveTo(0, amp);
-            for (let i = 0; i < width; i++) {
-                let min = 1.0;
-                let max = -1.0;
+            // DECISION: Use Peaks or Raw Data?
+            // If we have peaks AND the view is zoomed out enough that 1 pixel covers more samples than our peak resolution
+            if (precomputedPeaks && samplesPerPixel > precomputedPeaks.step) {
+                // USE PEAKS
+                const peaks = precomputedPeaks.peaks;
+                const peakStep = precomputedPeaks.step;
                 
-                for (let j = 0; j < step; j++) {
-                    const datum = rawData[startSample + (i * step) + j];
-                    if (datum < min) min = datum;
-                    if (datum > max) max = datum;
-                }
+                // Map time range to peak indices
+                const startPeakIdx = Math.floor(startSample / peakStep);
+                const endPeakIdx = Math.ceil(endSample / peakStep);
+                const totalPeaksInRange = endPeakIdx - startPeakIdx;
                 
-                // Draw to the max point
-                canvasCtx.lineTo(i, (1 - max) * amp);
-            }
+                const peaksPerPixel = totalPeaksInRange / width;
+                
+                // Draw top half
+                canvasCtx.moveTo(0, amp);
+                for (let i = 0; i < width; i++) {
+                    let min = 1.0;
+                    let max = -1.0;
+                    
+                    const pStart = startPeakIdx + Math.floor(i * peaksPerPixel);
+                    const pEnd = startPeakIdx + Math.floor((i + 1) * peaksPerPixel);
+                    
+                    // Iterate over the relevant peaks for this pixel
+                    for (let j = pStart; j < pEnd; j++) {
+                        if (j >= 0 && j < precomputedPeaks.length) {
+                            const pMin = peaks[j * 2];
+                            const pMax = peaks[j * 2 + 1];
+                            if (pMin < min) min = pMin;
+                            if (pMax > max) max = pMax;
+                        }
+                    }
+                    
+                    // If we didn't find any peaks (zoomed in too much relative to peaks but logic failed), fallback
+                    if (min > max) { min = 0; max = 0; }
 
-            // Draw bottom half (mirror)
-            for (let i = width - 1; i >= 0; i--) {
-                let min = 1.0;
-                let max = -1.0;
-                
-                for (let j = 0; j < step; j++) {
-                    const datum = rawData[startSample + (i * step) + j];
-                    if (datum < min) min = datum;
-                    if (datum > max) max = datum;
+                    canvasCtx.lineTo(i, (1 - max) * amp);
                 }
-                
-                // Draw to the min point
-                canvasCtx.lineTo(i, (1 - min) * amp);
+
+                // Draw bottom half (mirror)
+                for (let i = width - 1; i >= 0; i--) {
+                    let min = 1.0;
+                    let max = -1.0;
+                    
+                    const pStart = startPeakIdx + Math.floor(i * peaksPerPixel);
+                    const pEnd = startPeakIdx + Math.floor((i + 1) * peaksPerPixel);
+                    
+                    for (let j = pStart; j < pEnd; j++) {
+                        if (j >= 0 && j < precomputedPeaks.length) {
+                            const pMin = peaks[j * 2];
+                            const pMax = peaks[j * 2 + 1];
+                            if (pMin < min) min = pMin;
+                            if (pMax > max) max = pMax;
+                        }
+                    }
+                    if (min > max) { min = 0; max = 0; }
+
+                    canvasCtx.lineTo(i, (1 - min) * amp);
+                }
+
+            } else {
+                // USE RAW DATA (Zoomed in or no peaks)
+                const rawData = audioBuffer.getChannelData(0);
+                const step = Math.ceil(samplesPerPixel);
+
+                // Draw top half
+                canvasCtx.moveTo(0, amp);
+                for (let i = 0; i < width; i++) {
+                    let min = 1.0;
+                    let max = -1.0;
+                    
+                    const currentStartSample = startSample + Math.floor(i * samplesPerPixel);
+                    
+                    // Optimization: If step is huge (shouldn't happen if peaks logic works, but safety), skip
+                    // But here we are in "Raw Data" mode, so step should be small.
+                    
+                    for (let j = 0; j < step; j++) {
+                        const idx = currentStartSample + j;
+                        if (idx < rawData.length) {
+                            const datum = rawData[idx];
+                            if (datum < min) min = datum;
+                            if (datum > max) max = datum;
+                        }
+                    }
+                    if (min > max) { min = 0; max = 0; }
+                    
+                    canvasCtx.lineTo(i, (1 - max) * amp);
+                }
+
+                // Draw bottom half
+                for (let i = width - 1; i >= 0; i--) {
+                    let min = 1.0;
+                    let max = -1.0;
+                    
+                    const currentStartSample = startSample + Math.floor(i * samplesPerPixel);
+                    
+                    for (let j = 0; j < step; j++) {
+                        const idx = currentStartSample + j;
+                        if (idx < rawData.length) {
+                            const datum = rawData[idx];
+                            if (datum < min) min = datum;
+                            if (datum > max) max = datum;
+                        }
+                    }
+                    if (min > max) { min = 0; max = 0; }
+                    
+                    canvasCtx.lineTo(i, (1 - min) * amp);
+                }
             }
             
             canvasCtx.closePath();
@@ -578,6 +696,12 @@
                  * Height of the visualization canvas (in pixels).
                  */
                 this.canvas_height = 0;
+
+                /**
+                 * Pre-computed peaks for fast rendering.
+                 * Object { peaks: Float32Array, step: number, length: number }
+                 */
+                this.precomputedPeaks = null;
             }
         }
 
@@ -615,6 +739,7 @@
             btnNextPlay: document.getElementById('btnNextPlay2'),
             inputStart: document.getElementById('startTime2'),
             inputEnd: document.getElementById('endTime2'),
+            durationDisplay: document.getElementById('durationDisplay'),
             canvas: document.getElementById('spectrum2'),
             segmentHighlight: document.getElementById('segmentHighlight'),
             handleStart: document.querySelector('#segmentHighlight .handle-start'),
@@ -773,6 +898,13 @@
 
                 const start = frameController.start_pos_audioframe;
                 const end = frameController.end_pos_audioframe;
+
+                // Update Duration Display
+                if (ctx.durationDisplay) {
+                    const segDuration = Math.max(0, end - start);
+                    ctx.durationDisplay.textContent = segDuration.toFixed(2);
+                }
+
                 const viewStart = frameController.start_pos_visualframe;
                 const viewEnd = frameController.end_pos_visualframe;
                 const duration = viewEnd - viewStart;
@@ -974,7 +1106,7 @@
                     // For Context 1, we don't have a player attached usually, or we can use context2's player time
                     const current = frameController.current_time;
                     
-                    drawWaveform(ctx.canvas, ctx.audioBuffer, start, end, current);
+                    drawWaveform(ctx.canvas, ctx.audioBuffer, start, end, current, frameController.precomputedPeaks);
                     drawIntervals(ctx.canvas, soundIntervals, start, end);
                 }
             });
@@ -1131,6 +1263,11 @@
 
                 // Initialize FrameController Data
                 frameController.track_Duration = audioBuffer.duration;
+                
+                log(`[System] Generating waveform peaks...`);
+                // Generate peaks with step 200 (approx 220 peaks/sec at 44.1kHz)
+                frameController.precomputedPeaks = generatePeaks(audioBuffer, 200);
+                log(`[System] Peaks generated. Count: ${frameController.precomputedPeaks.length}`);
 
                 // 2. Initialize Context 1 (Global)
                 context1.audioCtx = audioCtx;
