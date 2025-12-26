@@ -41,6 +41,8 @@ function transformData() {
 
     const rows = (window.gv && window.gv.sts && Array.isArray(window.gv.sts.audio_phrases)) ? window.gv.sts.audio_phrases : [];
     const selected_lesson_id = window.gv && window.gv.sts ? window.gv.sts.selected_lesson_id : null;
+    
+    console.log(`[trans] loadContentData called. Rows: ${rows.length}, Selected Lesson: ${selected_lesson_id}`);
 
     let filtered = rows;
 
@@ -51,6 +53,7 @@ function transformData() {
 
         if (matches.length > 0) {
             filtered = matches;
+            console.log(`[trans] Filtered to ${filtered.length} rows for lesson ${sel}`);
         } else {
             console.warn('[trans] selected_lesson_id', sel, 'did not match any lesson_id; using all rows. Total rows:', rows.length);
             filtered = rows;

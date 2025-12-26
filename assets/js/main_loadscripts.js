@@ -54,8 +54,8 @@ async function loadStyle(href) {
     "./assets/js/global_var.js",  // must be first to define global_var class used in other scripts    
     "./assets/js/db_connswmp3.js",
     "./assets/js/output_audio_phrase/oap_styles.js",
-    "./assets/js/output_audio_phrase/oap_controlbuttons.js",
-    "./assets/js/output_audio_phrase/output_audio_text.js",
+    "./assets/js/output_oneaudio/oneaudio_controlbuttons.js",
+    "./assets/js/output_oneaudio/oneaudio_text.js",
     "./assets/js/output_audio_phrase/oap_menu_less.js"
   ];
 

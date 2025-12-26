@@ -65,7 +65,7 @@ async function Get_Rows_All_Tables() {
 // New function to fetch all data from data_base3
 async function Get_DB3_All_Data() {
     // Fetch lessons metadata
-    const lessonsData = await requestByPath('../data_base3/lessons_audio_phrases', 'GET');
+    const lessonsData = await requestByPath('../data_base3/ref_lessons_audio_phrases', 'GET');
     gv.sts.lessons_audio_phrases = lessonsData || [];
 
     // Fetch mp3 files metadata (if needed, but maybe not strictly for phrases list if we iterate audio_phrases)
@@ -83,16 +83,30 @@ async function Get_DB3_All_Data() {
 
 // Load phrases for a specific lesson
 window.Load_DB3_Lesson_Phrases = async function(lessonId) {
+    console.log(`[Load_DB3] Loading phrases for lessonId: ${lessonId}`);
     if (!lessonId) return;
     
     // Find lessonKey
     let lessonKey = null;
     if (gv.sts.lessons_audio_phrases) {
-        // Handle array with potential nulls
-        const lessonObj = Array.isArray(gv.sts.lessons_audio_phrases) 
-            ? gv.sts.lessons_audio_phrases.find(l => l && String(l.rec_id) === String(lessonId))
-            : null;
-        if (lessonObj) lessonKey = lessonObj.json_key_item;
+        // Handle array or object (dictionary)
+        let list = [];
+        if (Array.isArray(gv.sts.lessons_audio_phrases)) {
+            list = gv.sts.lessons_audio_phrases;
+        } else if (typeof gv.sts.lessons_audio_phrases === 'object') {
+            list = Object.values(gv.sts.lessons_audio_phrases);
+        }
+        console.log(`[Load_DB3] Searching in lessons list (len=${list.length})`);
+
+        const lessonObj = list.find(l => l && String(l.rec_id) === String(lessonId));
+        if (lessonObj) {
+            lessonKey = lessonObj.json_key_item;
+            console.log(`[Load_DB3] Found lessonKey: ${lessonKey}`);
+        } else {
+            console.warn(`[Load_DB3] Lesson object not found for id ${lessonId}`);
+        }
+    } else {
+        console.warn('[Load_DB3] gv.sts.lessons_audio_phrases is missing/empty');
     }
     
     if (!lessonKey) {
@@ -101,8 +115,39 @@ window.Load_DB3_Lesson_Phrases = async function(lessonId) {
     }
 
     // Fetch phrases for this lesson
+    console.log(`[Load_DB3] Fetching phrases from ../data_base3/audio_phrases/${lessonKey}`);
     const lessonPhrases = await requestByPath(`../data_base3/audio_phrases/${lessonKey}`, 'GET');
+    console.log(`[Load_DB3] Fetched phrases raw:`, lessonPhrases);
+    console.log(`[Load_DB3] Fetched phrases keys:`, lessonPhrases ? Object.keys(lessonPhrases) : 'null');
     
+    if (lessonPhrases) {
+        const fileKey = Object.keys(lessonPhrases)[0]; // Assuming one file per lesson
+        if (fileKey && gv.sts.ref_mp3_files) {
+             // Handle array or object for ref_mp3_files
+            let mp3List = [];
+            if (Array.isArray(gv.sts.ref_mp3_files)) {
+                mp3List = gv.sts.ref_mp3_files;
+            } else if (typeof gv.sts.ref_mp3_files === 'object') {
+                mp3List = Object.values(gv.sts.ref_mp3_files);
+            }
+
+            const fileMeta = mp3List.find(f => f && f.json_key_item === fileKey);
+            if (fileMeta) {
+                // Use url_path from Firebase if available and valid, otherwise fallback to local phrase_audio/filename
+                const audioUrl = (fileMeta.url_path && fileMeta.url_path.trim()) 
+                                ? fileMeta.url_path 
+                                : `phrase_audio/${fileMeta.file_name}`;
+
+                console.log(`[Load_DB3] Initializing audio controller with: ${audioUrl}`);
+                if (window._oapAudioController && typeof window._oapAudioController.init === 'function') {
+                    window._oapAudioController.init(audioUrl);
+                }
+            } else {
+                 console.warn(`[Load_DB3] No file metadata found for fileKey: ${fileKey}`);
+            }
+        }
+    }
+
     // Fetch translations for this lesson
     let lessonTransPhrases = null;
     try {
@@ -117,6 +162,7 @@ window.Load_DB3_Lesson_Phrases = async function(lessonId) {
     if (lessonPhrases) {
         for (const fileKey in lessonPhrases) {
             const phrases = lessonPhrases[fileKey];
+            console.log(`[Load_DB3] Processing fileKey: ${fileKey}, isArray: ${Array.isArray(phrases)}, length: ${phrases ? phrases.length : 0}`);
             const transPhrases = (lessonTransPhrases && lessonTransPhrases[fileKey]) ? lessonTransPhrases[fileKey] : [];
 
             if (Array.isArray(phrases)) {
@@ -151,7 +197,7 @@ window.Load_DB3_Lesson_Phrases = async function(lessonId) {
             }
         }
     }
-    console.log(`Loaded ${gv.sts.audio_phrases.length} phrases for lesson ${lessonId}`);
+    console.log(`[Load_DB3] Loaded ${gv.sts.audio_phrases.length} phrases for lesson ${lessonId}`);
 };
 
 

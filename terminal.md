@@ -11,14 +11,16 @@ https://nirsukrnet.github.io/voicestorage/mp3.html
 
 # GIT
 
-PS C:\Python\AuTr\html> git branch                   
+# PS C:\Python\AuTr\html> git branch                   
   main
 * main202512
 
+# PS C:\Python\AuTr\html> git push -u origin main202512
+Enumerating objects: 24, done.
+Counting objects: 100% (24/24), done.
 
 
 
-echo "# audio_transcription" >> README.md
 git init
 git add README.md
 git commit -m "first commit"

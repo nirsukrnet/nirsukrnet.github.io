@@ -11,24 +11,36 @@
   }
 
   async function setSelectedId(id){
-    if (!window.gv || !window.gv.sts) return;
+    console.log('[oap_menu] setSelectedId called with:', id);
+    if (!window.gv || !window.gv.sts) {
+        console.error('[oap_menu] Global vars (gv.sts) not found');
+        return;
+    }
     window.gv.sts.selected_lesson_id = id;
     try { localStorage.setItem('oap:selected_lesson_id', String(id)); } catch {}
     
     // Load data for the selected lesson if needed
     if (typeof window.Load_DB3_Lesson_Phrases === 'function') {
         try {
+            console.log('[oap_menu] Calling Load_DB3_Lesson_Phrases...');
             await window.Load_DB3_Lesson_Phrases(id);
+            console.log('[oap_menu] Load_DB3_Lesson_Phrases completed');
         } catch(e) {
             console.error('[oap] Load_DB3_Lesson_Phrases failed', e);
         }
+    } else {
+        console.warn('[oap_menu] window.Load_DB3_Lesson_Phrases is not a function');
     }
 
     // Re-render content
     if (typeof window.loadContentData === 'function') {
-      try { window.loadContentData(); } catch(e){ console.error('[oap] reload failed', e); }
+      try { 
+          console.log('[oap_menu] Calling loadContentData...');
+          window.loadContentData(); 
+      } catch(e){ console.error('[oap] reload failed', e); }
     }
     // Dispatch event for other listeners (e.g. translation tool)
+    console.log('[oap_menu] Dispatching oap:lesson-selected');
     window.dispatchEvent(new CustomEvent('oap:lesson-selected', { detail: { id } }));
     
     // Update active item highlight
@@ -92,28 +104,22 @@
   }
 
   function buildListData(){
-    // Prefer lesson_id list; fall back to lessons_audio_phrases if structure differs.
-    // const phrases = Array.isArray(window.gv?.sts?.audio_phrases) ? window.gv.sts.audio_phrases : [];
-    // const map = new Map();
-    // for (const p of phrases){
-    //   if (p && p.lesson_id != null){
-    //     const id = String(p.lesson_id);
-    //     if (!map.has(id)){          
-    //       //const label = p.title || p.name || p.file_name || `Lesson ${id}`;
-    //       const label = p.title;
-    //       map.set(id, { lesson_id: id, label });
-    //     }
-    //   }
-    // }
-    // If none discovered, fall back to original lessons_audio_phrases array
-//    if (map.size === 0){
-      const les_list1 = Array.isArray(window.gv?.sts?.lessons_audio_phrases) ? window.gv.sts.lessons_audio_phrases : [];
-      // Filter out nulls before mapping
-      return les_list1
-        .filter(x => x !== null && x !== undefined)
-        .map(x => ({ lesson_id: String(x.lesson_id ?? x.rec_id), label: x.title || x.name || `Lesson ${x.lesson_id ?? x.rec_id}` }));
-  //  }
-    return Array.from(map.values());
+    let rawData = window.gv?.sts?.lessons_audio_phrases;
+    if (!rawData) return [];
+
+    let les_list1 = [];
+    if (Array.isArray(rawData)) {
+        les_list1 = rawData;
+    } else if (typeof rawData === 'object') {
+        les_list1 = Object.values(rawData);
+    }
+
+    return les_list1
+      .filter(x => x !== null && x !== undefined)
+      .map(x => ({ 
+          lesson_id: String(x.lesson_id ?? x.rec_id), 
+          label: x.title || x.name || `Lesson ${x.lesson_id ?? x.rec_id}` 
+      }));
   }
 
   function createMenuDom(){

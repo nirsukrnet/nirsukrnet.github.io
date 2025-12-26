@@ -5,16 +5,35 @@ window._oapAudioController = window._oapAudioController || {
     timeUpdateHandler: null,
     
     async init(src) {
-        if (!this.audio) {
+        // Stop existing playback if any
+        if (this.audio) {
+            this.audio.pause();
+            if (this.timeUpdateHandler) {
+                this.audio.removeEventListener('timeupdate', this.timeUpdateHandler);
+                this.timeUpdateHandler = null;
+            }
+            // Revoke old blob URL to free memory
+            if (this.audio.src && this.audio.src.startsWith('blob:')) {
+                URL.revokeObjectURL(this.audio.src);
+            }
+            this.audio.removeAttribute('src');
+            this.audio.load();
+        } else {
             this.audio = new Audio();
             this.audio.preload = 'auto';
+            this.audio.onerror = (e) => {
+                console.error("[OneAudio] Audio element error:", this.audio.error);
+            };
         }
         
         try {
-            console.log("[OneAudio] Fetching audio file into memory...");
+            console.log(`[OneAudio] Fetching audio file into memory: ${src}`);
             const response = await fetch(src);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const blob = await response.blob();
-            const blobUrl = URL.createObjectURL(blob);
+            // Force MIME type to ensure browser recognizes it as MP3
+            const audioBlob = new Blob([blob], { type: 'audio/mpeg' });
+            const blobUrl = URL.createObjectURL(audioBlob);
             this.audio.src = blobUrl;
             console.log("[OneAudio] Audio loaded into memory. Ready for playback.");
         } catch (e) {
@@ -74,7 +93,7 @@ window._oapAudioController = window._oapAudioController || {
 };
 
 // Initialize with the single MP3 file
-window._oapAudioController.init('phrase_audio/SW_Learn_Day_1-5.mp3');
+// window._oapAudioController.init('phrase_audio/SW_Learn_Day_1-5.mp3');
 
 
 function addButtonsPlay_oap(playEl, segmentData, index1) {
@@ -86,12 +105,12 @@ function addButtonsPlay_oap(playEl, segmentData, index1) {
     
     btn_play.addEventListener('click', () => {
         // Use start/end from segment data directly
-        const startTime = segmentData.start;
-        const endTime = segmentData.end;
+        let startTime = parseFloat(segmentData.start);
+        let endTime = parseFloat(segmentData.end);
         
         console.log(`Button P${index1} clicked. Start: ${startTime}, End: ${endTime}`);
 
-        if (typeof startTime === 'number' && !isNaN(startTime) && typeof endTime === 'number' && !isNaN(endTime)) {
+        if (!isNaN(startTime) && !isNaN(endTime)) {
              window._oapAudioController.playSegment(startTime, endTime);
         } else {
              console.warn('Invalid timestamps for segment:', segmentData);
