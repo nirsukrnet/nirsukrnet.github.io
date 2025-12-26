@@ -64,7 +64,7 @@
     try {
       if (window.gv && typeof gv.SignIn_User === 'function'){
         await gv.SignIn_User();
-        if (typeof window.Get_All_Tables_Meta === 'function') await Get_All_Tables_Meta();
+        // if (typeof window.Get_All_Tables_Meta === 'function') await Get_All_Tables_Meta(); // Not needed for data_base3
         if (typeof window.Get_Rows_All_Tables === 'function') await Get_Rows_All_Tables();
       }
     } catch(e){ console.error('[trans] Firebase init failed', e); }

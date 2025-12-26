@@ -9,6 +9,14 @@ git remote add origin https://github.com/nirsukrnet/voicestorage.git
 https://nirsukrnet.github.io/voicestorage/mp3.html
 
 
+# GIT
+
+PS C:\Python\AuTr\html> git branch                   
+  main
+* main202512
+
+
+
 
 echo "# audio_transcription" >> README.md
 git init

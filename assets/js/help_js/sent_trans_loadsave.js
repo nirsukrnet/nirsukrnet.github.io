@@ -537,8 +537,8 @@ async function SaveTransReadyDataToFireBase(dataToSave) {
         }
     }
 
-    const tableIndex = (typeof window.Get_IndexOf_Table_By_Name === 'function') ? Get_IndexOf_Table_By_Name('audio_phrases') : -1;
-    if (tableIndex < 0) { console.error('audio_phrases table not available'); return; }
+    // const tableIndex = (typeof window.Get_IndexOf_Table_By_Name === 'function') ? Get_IndexOf_Table_By_Name('audio_phrases') : -1;
+    // if (tableIndex < 0) { console.error('audio_phrases table not available'); return; }
 
     const rows = (window.gv && window.gv.sts && Array.isArray(window.gv.sts.audio_phrases)) ? window.gv.sts.audio_phrases : [];
 
@@ -558,11 +558,10 @@ async function SaveTransReadyDataToFireBase(dataToSave) {
         updatedRow.datetimetrans = new Date().toISOString();
 
         try {
-            if (typeof window.SaveToFB_Table_Row_Item_By_Index === 'function') {
-                SaveToFB_Table_Row_Item_By_Index(tableIndex, srcIndex, updatedRow);
+            if (typeof window.Update_And_Save_Audio_Phrase_ItemByIndex === 'function') {
+                Update_And_Save_Audio_Phrase_ItemByIndex(updatedRow, srcIndex);
             } else {
-                const addurl = `tables_rows/${tableIndex}/rows/${srcIndex}`;
-                await requestByPath(addurl, 'PUT', updatedRow);
+                console.error('Update_And_Save_Audio_Phrase_ItemByIndex not available');
             }
             // Update local cache so UI reflects immediately
             try { window.gv.sts.audio_phrases[srcIndex] = updatedRow; } catch {}

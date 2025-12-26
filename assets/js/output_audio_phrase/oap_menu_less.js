@@ -10,10 +10,20 @@
     try { return window.gv?.sts?.selected_lesson_id; } catch { return null; }
   }
 
-  function setSelectedId(id){
+  async function setSelectedId(id){
     if (!window.gv || !window.gv.sts) return;
     window.gv.sts.selected_lesson_id = id;
     try { localStorage.setItem('oap:selected_lesson_id', String(id)); } catch {}
+    
+    // Load data for the selected lesson if needed
+    if (typeof window.Load_DB3_Lesson_Phrases === 'function') {
+        try {
+            await window.Load_DB3_Lesson_Phrases(id);
+        } catch(e) {
+            console.error('[oap] Load_DB3_Lesson_Phrases failed', e);
+        }
+    }
+
     // Re-render content
     if (typeof window.loadContentData === 'function') {
       try { window.loadContentData(); } catch(e){ console.error('[oap] reload failed', e); }
@@ -98,7 +108,10 @@
     // If none discovered, fall back to original lessons_audio_phrases array
 //    if (map.size === 0){
       const les_list1 = Array.isArray(window.gv?.sts?.lessons_audio_phrases) ? window.gv.sts.lessons_audio_phrases : [];
-      return les_list1.map(x => ({ lesson_id: String(x.lesson_id ?? x.rec_id), label: x.title || x.name || `Lesson ${x.lesson_id ?? x.rec_id}` }));
+      // Filter out nulls before mapping
+      return les_list1
+        .filter(x => x !== null && x !== undefined)
+        .map(x => ({ lesson_id: String(x.lesson_id ?? x.rec_id), label: x.title || x.name || `Lesson ${x.lesson_id ?? x.rec_id}` }));
   //  }
     return Array.from(map.values());
   }
