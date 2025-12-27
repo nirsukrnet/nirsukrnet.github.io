@@ -1,7 +1,7 @@
 function MainFunc() {  
   build_ExpImpForTrans_MainUI();
   ExpImpForTrans_loadDataToHTML();  
-  ensureLessonMenu();
+  ensurePartsMenu();
 }
 
 
@@ -62,21 +62,21 @@ function build_ExpImpForTrans_MainUI(){
   infoDiv.id = 'info_div';
   document.body.appendChild(infoDiv);
 
-  // Add lessons menu after base UI
-  ensureLessonMenu();
+  // Add parts menu after base UI
+  ensurePartsMenu();
 
 
   //build_forall_MainUI(document.body);
 }
 
-// --- Lessons menu integration (reuses oap_menu_less.js) ---
-function ensureLessonMenu(){
+// --- Parts menu integration ---
+function ensurePartsMenu(){
   // If menu already present, just refresh
-  if (window.oapMenuLess && typeof window.oapMenuLess.refresh === 'function') {
-    try { window.oapMenuLess.refresh(); } catch {}
+  if (window.oapMenuParts && typeof window.oapMenuParts.refresh === 'function') {
+    try { window.oapMenuParts.refresh(); } catch {}
     return;
   }
-  // Inject CSS if missing
+  // Inject CSS if missing (reuse oap_menu_less.css)
   const cssHref = './assets/css/oap_menu_less.css';
   if (!document.querySelector(`link[rel="stylesheet"][href="${cssHref}"]`)) {
     const l = document.createElement('link');
@@ -85,22 +85,22 @@ function ensureLessonMenu(){
     document.head.appendChild(l);
   }
   // Dynamically load the menu script
-  const jsSrc = './assets/js/output_audio_phrase/oap_menu_less.js';
+  const jsSrc = './assets/js/help_js/trans_menu_parts.js';
   if (!document.querySelector(`script[src="${jsSrc}"]`)) {
     const s = document.createElement('script');
     s.src = jsSrc;
     s.onload = () => {
-      if (window.oapMenuLess && window.oapMenuLess.refresh) {
-        try { window.oapMenuLess.refresh(); } catch {}
+      if (window.oapMenuParts && window.oapMenuParts.refresh) {
+        try { window.oapMenuParts.refresh(); } catch {}
       }
     };
     document.head.appendChild(s);
   }
 }
 
-// Refresh menu when phrase/lesson data arrives
+// Refresh menu when data arrives
 window.addEventListener('oap:data-loaded', () => {
-  ensureLessonMenu();
+  ensurePartsMenu();
 });
 
 

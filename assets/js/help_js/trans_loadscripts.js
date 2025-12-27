@@ -47,8 +47,8 @@
     './assets/js/help_js/sent_data_json.js',
     './assets/js/help_js/trans_ui.js',
     './assets/js/help_js/sent_trans_loadsave.js',
-    // Lessons menu
-    './assets/js/output_audio_phrase/oap_menu_less.js'
+    // Parts menu
+    './assets/js/help_js/trans_menu_parts.js'
   ];
 
   for (const href of styles){ await loadStyle(href); }

@@ -65,12 +65,17 @@ async function Get_Rows_All_Tables() {
 // New function to fetch all data from data_base3
 async function Get_DB3_All_Data() {
     // Fetch lessons metadata
-    const lessonsData = await requestByPath('../data_base3/ref_lessons_audio_phrases', 'GET');
+    const lessonsData = await requestByPath('../ref_lessons_audio_phrases', 'GET');
     gv.sts.lessons_audio_phrases = lessonsData || [];
 
     // Fetch mp3 files metadata (if needed, but maybe not strictly for phrases list if we iterate audio_phrases)
-    const mp3FilesData = await requestByPath('../data_base3/ref_mp3_files', 'GET');
+    const mp3FilesData = await requestByPath('../ref_mp3_files', 'GET');
     gv.sts.ref_mp3_files = mp3FilesData || [];
+
+    // Fetch parts list from text_trans_phrases
+    const partsData = await requestByPath('../data_base3/text_trans_phrases', 'GET');
+    gv.sts.parts_list = partsData ? Object.keys(partsData) : [];
+    console.log('[Get_DB3_All_Data] Loaded parts list:', gv.sts.parts_list);
 
     // Initialize empty audio_phrases
     gv.sts.audio_phrases = [];
@@ -81,123 +86,82 @@ async function Get_DB3_All_Data() {
     }
 }
 
-// Load phrases for a specific lesson
-window.Load_DB3_Lesson_Phrases = async function(lessonId) {
-    console.log(`[Load_DB3] Loading phrases for lessonId: ${lessonId}`);
-    if (!lessonId) return;
+// Load phrases for a specific lesson (now interpreted as a PART)
+window.Load_DB3_Lesson_Phrases = async function(partKey) {
+    console.log(`[Load_DB3] Loading phrases for partKey: ${partKey}`);
+    if (!partKey) return;
     
-    // Find lessonKey
-    let lessonKey = null;
-    if (gv.sts.lessons_audio_phrases) {
-        // Handle array or object (dictionary)
-        let list = [];
-        if (Array.isArray(gv.sts.lessons_audio_phrases)) {
-            list = gv.sts.lessons_audio_phrases;
-        } else if (typeof gv.sts.lessons_audio_phrases === 'object') {
-            list = Object.values(gv.sts.lessons_audio_phrases);
-        }
-        console.log(`[Load_DB3] Searching in lessons list (len=${list.length})`);
-
-        const lessonObj = list.find(l => l && String(l.rec_id) === String(lessonId));
-        if (lessonObj) {
-            lessonKey = lessonObj.json_key_item;
-            console.log(`[Load_DB3] Found lessonKey: ${lessonKey}`);
-        } else {
-            console.warn(`[Load_DB3] Lesson object not found for id ${lessonId}`);
-        }
-    } else {
-        console.warn('[Load_DB3] gv.sts.lessons_audio_phrases is missing/empty');
-    }
+    // In the new "parts" mode, the ID passed in IS the part key (e.g., "parttxt_1")
+    // We don't need to look up a lesson object anymore.
     
-    if (!lessonKey) {
-        console.warn(`Lesson key not found for id ${lessonId}`);
-        return;
-    }
-
-    // Fetch phrases for this lesson
-    console.log(`[Load_DB3] Fetching phrases from ../data_base3/audio_phrases/${lessonKey}`);
-    const lessonPhrases = await requestByPath(`../data_base3/audio_phrases/${lessonKey}`, 'GET');
-    console.log(`[Load_DB3] Fetched phrases raw:`, lessonPhrases);
-    console.log(`[Load_DB3] Fetched phrases keys:`, lessonPhrases ? Object.keys(lessonPhrases) : 'null');
-    
-    if (lessonPhrases) {
-        const fileKey = Object.keys(lessonPhrases)[0]; // Assuming one file per lesson
-        if (fileKey && gv.sts.ref_mp3_files) {
-             // Handle array or object for ref_mp3_files
-            let mp3List = [];
-            if (Array.isArray(gv.sts.ref_mp3_files)) {
-                mp3List = gv.sts.ref_mp3_files;
-            } else if (typeof gv.sts.ref_mp3_files === 'object') {
-                mp3List = Object.values(gv.sts.ref_mp3_files);
-            }
-
-            const fileMeta = mp3List.find(f => f && f.json_key_item === fileKey);
-            if (fileMeta) {
-                // Use url_path from Firebase if available and valid, otherwise fallback to local phrase_audio/filename
-                const audioUrl = (fileMeta.url_path && fileMeta.url_path.trim()) 
-                                ? fileMeta.url_path 
-                                : `phrase_audio/${fileMeta.file_name}`;
-
-                console.log(`[Load_DB3] Initializing audio controller with: ${audioUrl}`);
-                if (window._oapAudioController && typeof window._oapAudioController.init === 'function') {
-                    window._oapAudioController.init(audioUrl);
-                }
-            } else {
-                 console.warn(`[Load_DB3] No file metadata found for fileKey: ${fileKey}`);
-            }
-        }
-    }
-
-    // Fetch translations for this lesson
+    // Fetch translations (which are now the primary source) from the selected part
     let lessonTransPhrases = null;
     try {
-        lessonTransPhrases = await requestByPath(`../data_base3/audio_trans_phrases/${lessonKey}`, 'GET');
+        lessonTransPhrases = await requestByPath(`../data_base3/text_trans_phrases/${partKey}`, 'GET');
+        console.log(`[Load_DB3] Loaded translations from text_trans_phrases/${partKey}`);
     } catch (e) {
-        console.warn(`[Load_DB3] Translation fetch failed for ${lessonKey} (or none exist)`, e);
+        console.warn(`[Load_DB3] Translation fetch failed for ${partKey}`, e);
     }
     
-    // Flatten into gv.sts.audio_phrases (replacing previous content)
+    // Flatten into gv.sts.audio_phrases
     gv.sts.audio_phrases = [];
     
-    if (lessonPhrases) {
-        for (const fileKey in lessonPhrases) {
-            const phrases = lessonPhrases[fileKey];
-            console.log(`[Load_DB3] Processing fileKey: ${fileKey}, isArray: ${Array.isArray(phrases)}, length: ${phrases ? phrases.length : 0}`);
-            const transPhrases = (lessonTransPhrases && lessonTransPhrases[fileKey]) ? lessonTransPhrases[fileKey] : [];
+    // We need to construct "phrases" from the translation data since that's our source now.
+    // The structure of lessonTransPhrases is expected to be: { fileKey: [ { ...phrase... }, ... ] }
+    
+    if (lessonTransPhrases) {
+        // Sort keys naturally (txt1, txt2, ... txt10)
+        const sortedKeys = Object.keys(lessonTransPhrases).sort((a, b) => {
+            const numA = parseInt((a.match(/\d+/) || [0])[0], 10);
+            const numB = parseInt((b.match(/\d+/) || [0])[0], 10);
+            return numA - numB;
+        });
+        console.log('[Load_DB3] Sorted keys:', sortedKeys);
+
+        for (const fileKey of sortedKeys) {
+            const phrases = lessonTransPhrases[fileKey];
+            console.log(`[Load_DB3] Processing fileKey: ${fileKey}, type: ${typeof phrases}, isArray: ${Array.isArray(phrases)}`);
+
+            const processPhrase = (phrase, index) => {
+                if (phrase) {
+                    // Ensure metadata is present
+                    phrase._lesson_key = partKey; // Using partKey as lesson_key for saving
+                    phrase._file_key = fileKey;
+                    phrase._index = index;
+                    phrase.lesson_id = partKey; // For filtering in UI
+                    
+                    // Ensure text fields exist
+                    if (!phrase.text_sv) phrase.text_sv = '';
+                    if (!phrase.text_en) phrase.text_en = '';
+                    if (!phrase.text_uk) phrase.text_uk = '';
+
+                    gv.sts.audio_phrases.push(phrase);
+                }
+            };
 
             if (Array.isArray(phrases)) {
-                phrases.forEach((phrase, index) => {
-                    if (phrase) {
-                        // Capture source text_sv
-                        const sourceSv = phrase.text_sv;
-
-                        // Clear translation fields from source to ensure we only rely on audio_trans_phrases
-                        phrase.text_en = '';
-                        phrase.text_uk = '';
-                        phrase.datetimetrans = '';
-
-                        // Merge translation if available
-                        if (transPhrases[index]) {
-                            Object.assign(phrase, transPhrases[index]);
-                        }
-
-                        // Restore source text_sv to ensure consistency with audio_phrases
-                        if (sourceSv !== undefined) {
-                            phrase.text_sv = sourceSv;
-                        }
-
-                        // Add metadata for saving back
-                        phrase._lesson_key = lessonKey;
-                        phrase._file_key = fileKey;
-                        phrase._index = index;
-                        phrase.lesson_id = lessonId; // For filtering
-                        gv.sts.audio_phrases.push(phrase);
+                phrases.forEach(processPhrase);
+            } else if (typeof phrases === 'object' && phrases !== null) {
+                // Check if it looks like a single phrase (has text fields directly)
+                if (phrases.text_sv !== undefined || phrases.text_en !== undefined || phrases.text_uk !== undefined) {
+                     // It's a single phrase object
+                     processPhrase(phrases, null);
+                } else if (phrases['0'] && (phrases['0'].text_sv !== undefined || phrases['0'].text_en !== undefined)) {
+                     // DETECTED BAD STRUCTURE: Parent lacks fields, but child '0' has them.
+                     // Promote '0' content to root by passing null index. 
+                     // Next save will overwrite parent with this content, fixing the structure.
+                     console.warn(`[Load_DB3] Detected nested '0' for ${fileKey}, promoting to root.`);
+                     processPhrase(phrases['0'], null);
+                } else {
+                    // Handle object-based arrays (Firebase sparse arrays) or map of phrases
+                    for (const key in phrases) {
+                        processPhrase(phrases[key], key);
                     }
-                });
+                }
             }
         }
     }
-    console.log(`[Load_DB3] Loaded ${gv.sts.audio_phrases.length} phrases for lesson ${lessonId}`);
+    console.log(`[Load_DB3] Loaded ${gv.sts.audio_phrases.length} phrases for part ${partKey}`);
 };
 
 
@@ -221,7 +185,8 @@ function Update_And_Save_Audio_Phrase_ItemByIndex(item_data, itemindex) {
 }
 
 function SaveToFB_DB3(lessonKey, fileKey, index, item_data) {
-    // Construct path: ../data_base3/audio_trans_phrases/{lessonKey}/{fileKey}/{index}
+    // Construct path: ../data_base3/text_trans_phrases/{lessonKey}/{fileKey}/{index}
+    // lessonKey here is actually the partKey (e.g., parttxt_1)
     
     // Clean the object to be saved
     // We want to save: text_sv, text_en (or target), start, end, intervals_id, datetimetrans
@@ -236,13 +201,17 @@ function SaveToFB_DB3(lessonKey, fileKey, index, item_data) {
         }
     });
 
-    let addurl = `../data_base3/audio_trans_phrases/${lessonKey}/${fileKey}/${index}`;
+    // Use lessonKey (which is partKey) for the save path
+    let addurl = `../data_base3/text_trans_phrases/${lessonKey}/${fileKey}`;
+    if (index !== null) {
+        addurl += `/${index}`;
+    }
     let ObjRequest = gv.URL_DS.GetObjForRequest();
     ObjRequest.vobj = dataToSave;
     ObjRequest.ametod = 'PUT';
     ObjRequest.addUrl = addurl;      
     ObjRequest.CallBackFunction = function(vdata, ametod) {        
-        console.log("Saved to DB3 (trans):", vdata);
+        console.log("Saved to DB3 (trans) part:", vdata);
     };
     gv.URL_DS.requestData_By_URL_Path(ObjRequest);
 }
