@@ -1,62 +1,43 @@
-lets consider this instr
+## Data Architecture & Snapshot Purpose
 
-C:\Python\AuTr\AudioTranscr\instr\inst_4.md
+### Context
+*   **Source of Truth**: The real, dynamic data resides in **Firebase**.
+*   **Generator**: The Python script `C:\Python\AuTr\AudioTranscr\db_scripts\manage_fbdb.py` is responsible for fetching data from Firebase and serializing it.
+*   **Artifact**: The snapshot file (e.g., `snapshot_all_data_bases_20251227_224339.json`) is the output of this process.
 
-and this implementation
-
-C:\Python\AuTr\AudioTranscr\db_scripts\fb_load_data.py
-
-then you need to understand translation need to store only only in
-
-      "text_en": "",
-
-  "parttxt_1": {
-    "txt1": {
-      "text_sv": "Lyssna och säg efter.",
-      "text_en": "",
-      "text_uk": ""
-    },
+### Purpose of the Snapshot
+The snapshot serves as a **reference for development**. Its primary purpose is:
+1.  **Documentation**: It provides a concrete example of the database structure and content schema, allowing developers (and AI assistants) to understand the data model without needing direct access to the live Firebase database.
 
 
-this type of storage is error/issue:
+## Goal: Standardize Menu in `transl.html` with Part Filtering
 
+We need to replace the current `trans_menu_parts.js` with a new script `trans_menu_filtered.js`. This script will:
+1.  **Adopt the UI/UX** of `oap_menu_less.js` (standard dropdown menu).
+2.  **Implement Part Filtering**: When a lesson is selected, it must identify the corresponding "parts" (sub-sections of data) and load the relevant text items.
+
+### Data Structure & Filtering Logic
+
+When a `lesson_id` is selected via the menu:
+1.  The script identifies associated parts using `getPartsForLesson(lesson_id)`.
+2.  It loads the data for the identified part (e.g., via `Load_DB3_Lesson_Phrases`).
+3.  **Expected Output**: The loaded data will be an array/object of text items specific to that lesson/part. Each item typically contains a `text_id` (e.g., `parttxt_j_txti`) and translation fields.
+
+**Example Data Format:**
+```json
 {
-  "txt1": {
-    "0": {
-      "datetimetrans": "2025-12-27T22:10:36.545Z",
-      "text_en": "Listen and repeat.",
-      "text_sv": "Lyssna och säg efter.",
-      "text_uk": ""
-    },
-    "text_en": "",
+  "parttxt_j_txti": {
     "text_sv": "Lyssna och säg efter.",
-    "text_uk": ""
-  },
-  "txt10": {
-    "0": {
-      "datetimetrans": "2025-12-27T22:10:36.550Z",
-      "text_en": "see you",
-      "text_sv": "syns",
-      "text_uk": ""
-    },
-    "text_en": "",
-    "text_sv": "syns",
-    "text_uk": ""
-  },
-
-
-right way is:
-
-
-{
-  "txt1": {
     "text_en": "Listen and repeat.",
-    "text_sv": "Lyssna och säg efter.",
-    "text_uk": ""
-  },
-  "txt10": {
-    "text_en": "see you",
-    "text_sv": "syns",
-    "text_uk": ""
-  },
+    "text_uk": "..."
+  }
+}
+```
+*Only items belonging to the selected lesson/part should be loaded.*
+
+### Implementation Steps
+
+#### 1. Create `assets/js/help_js/trans_menu_filtered.js`
+
+Use the following code, which merges the `oap_menu_less.js` UI with the `trans_menu_parts.js` filtering logic.
 

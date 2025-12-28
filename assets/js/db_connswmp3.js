@@ -77,6 +77,19 @@ async function Get_DB3_All_Data() {
     gv.sts.parts_list = partsData ? Object.keys(partsData) : [];
     console.log('[Get_DB3_All_Data] Loaded parts list:', gv.sts.parts_list);
 
+    // Build txt_to_part_map
+    gv.sts.txt_to_part_map = {};
+    if (partsData) {
+        for (const [partKey, partContent] of Object.entries(partsData)) {
+            if (partContent && typeof partContent === 'object') {
+                Object.keys(partContent).forEach(txtKey => {
+                    gv.sts.txt_to_part_map[txtKey] = partKey;
+                });
+            }
+        }
+    }
+    console.log('[Get_DB3_All_Data] Built txt_to_part_map with entries:', Object.keys(gv.sts.txt_to_part_map).length);
+
     // Initialize empty audio_phrases
     gv.sts.audio_phrases = [];
     

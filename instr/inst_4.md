@@ -1,73 +1,265 @@
-# Migration Guide: Multi-File to Single-File Audio Player (with DataBase 3)
+let gv = new GlobalVars();
+window.gv = gv;
 
-This document outlines the necessary changes to convert the application from using multiple small MP3 files to a single large MP3 file per lesson, utilizing the new `data_base3` structure.
 
-## 1. Architecture Shift
-
-| Feature | Current (Multi-File) | Target (Single-File) |
-| :--- | :--- | :--- |
-| **Audio Source** | Individual MP3s per phrase | One Master MP3 per lesson |
-| **Playback** | HTML5 `<audio>` tag per row | Global `Audio` object with seeking |
-| **Data Source** | `db_connswmp3.js` (Firebase) | `db_connswmp3.js` (Firebase) + URL Resolution |
-| **UI Renderer** | `output_audio_text.js` | `oneaudio_text.js` |
-| **Controller** | `oap_controlbuttons.js` | `oneaudio_controlbuttons.js` |
-
-## 2. Required File Changes
-
-### A. Script Loader (`html/assets/js/main_loadscripts.js`)
-**Goal:** Swap the UI/Controller scripts while keeping the Firebase data connection.
-
-**Change:** Update the `scripts` array.
-```javascript
-   const scripts = [
-    "./assets/js/global_var.js",
-    "./assets/js/db_connswmp3.js",                  // Keep: Firebase Data Logic
-    "./assets/js/output_audio_phrase/oap_styles.js",
-    "./assets/js/output_oneaudio/oneaudio_controlbuttons.js", // New: Single Audio Controller
-    "./assets/js/output_oneaudio/oneaudio_text.js",           // New: Single Audio Renderer
-    "./assets/js/output_audio_phrase/oap_menu_less.js"
-  ];
-```
-
-### B. Data Manager (`html/assets/js/db_connswmp3.js`)
-**Goal:** Resolve the Master MP3 URL for the selected lesson and initialize the audio controller.
-
-**Change:** Modify `Load_DB3_Lesson_Phrases` function.
-1.  **Identify File Key:** After fetching `lessonPhrases`, extract the `file_key`. (Assumes 1 file per lesson).
-2.  **Lookup URL:** Use `gv.sts.ref_mp3_files` to find the `url_path` or `file_name` associated with that `file_key`.
-3.  **Init Controller:** Call the global controller with the found URL.
-
-```javascript
-// Pseudo-code insertion in Load_DB3_Lesson_Phrases
-const fileKey = Object.keys(lessonPhrases)[0]; // Assuming one file
-const fileMeta = gv.sts.ref_mp3_files.find(f => f.json_key_item === fileKey);
-if (fileMeta && window._oapAudioController) {
-    const audioUrl = fileMeta.url_path || `phrase_audio/${fileMeta.file_name}`;
-    window._oapAudioController.init(audioUrl);
+function MainFunc() {  
+  init().then(() => {
+    console.log("MainFunc() complete.");
+  }).catch(error => {
+    console.error("Error during MainFunc() initialization:", error);
+  });
 }
-```
 
-### C. Audio Controller (`html/assets/js/output_oneaudio/oneaudio_controlbuttons.js`)
-**Goal:** Support dynamic re-initialization when switching lessons.
 
-**Change:**
-1.  **Remove Hardcoded Init:** Delete the line `window._oapAudioController.init('phrase_audio/SW_Learn_Day_1-5.mp3');` at the bottom.
-2.  **Enhance `init`:** Ensure calling `init(newUrl)` properly stops the old audio and loads the new one.
+// Promise wrapper around the callback-style request
+function requestByPath(addurl, method = 'GET', body = null) {
+  return new Promise((resolve, reject) => {
+    const ObjRequest = gv.URL_DS.GetObjForRequest();
+    ObjRequest.addUrl = addurl;
+    ObjRequest.ametod = method;
+    ObjRequest.vobj = body;
+    ObjRequest.CallBackFunction = function(vdata, ametod) {
+      resolve(vdata);
+    };
+    ObjRequest.ErrorCallback = function(err) {
+      reject(err || new Error('requestData_By_URL_Path failed'));
+    };
+    gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+  });
+}
 
-### D. UI Renderer (`html/assets/js/output_oneaudio/oneaudio_text.js`)
-**Goal:** Ensure compatibility with `db_connswmp3.js` data format.
+async function init() {    
+  try {
+    await gv.SignIn_User();    
+    // await Get_All_Tables_Meta(); // Not needed for data_base3
+    await Get_Rows_All_Tables();
+  } catch (error) {
+    console.error("Error during initialization:", error);
+  }
+}
 
-**Change:**
-*   Verify that `makeRow` correctly reads `start` and `end` properties from the phrase object.
-*   `db_connswmp3.js` populates `gv.sts.audio_phrases`. Ensure the field names match what `oneaudio_text.js` expects (e.g., `start` vs `start_time`).
+async function Get_Rows_All_Tables() {
+   // Fetch data from data_base3
+   await Get_DB3_All_Data();
 
-## 3. Database Structure (`data_base3`) Usage
+   try {
+     if (typeof window.loadContentData === 'function') {
+       loadContentData();
+     }
+   } catch (e) {
+     console.warn('loadContentData() unavailable on this page');
+   }
+   try {
+     // Notify UI components (like the lessons menu) that data is ready
+     const detail = {
+       lessons: gv.sts.lessons_audio_phrases,
+       phrases: gv.sts.audio_phrases,
+       selected_lesson_id: gv.sts.selected_lesson_id
+     };
+     window.dispatchEvent(new CustomEvent('oap:data-loaded', { detail }));
+   } catch (e) {
+     console.warn('oap:data-loaded dispatch failed', e);
+   }
+}
 
-The `data_base3` structure supports this approach natively:
-*   **`lessons_audio_phrases`**: Selects the lesson.
-*   **`ref_mp3_files`**: Holds the URL for the single master MP3.
-*   **`audio_phrases`**: Contains the segmentation data (`start`, `end`) needed by the Single-File Player to seek correctly.
+// New function to fetch all data from data_base3
+async function Get_DB3_All_Data() {
+    // Fetch lessons metadata
+    const lessonsData = await requestByPath('../data_base3/ref_lessons_audio_phrases', 'GET');
+    gv.sts.lessons_audio_phrases = lessonsData || [];
 
-No changes to the database structure are required, only to how the application consumes the `ref_mp3_files` table to drive the audio controller.
+    // Fetch mp3 files metadata (if needed, but maybe not strictly for phrases list if we iterate audio_phrases)
+    const mp3FilesData = await requestByPath('../data_base3/ref_mp3_files', 'GET');
+    gv.sts.ref_mp3_files = mp3FilesData || [];
+
+    // Initialize empty audio_phrases
+    gv.sts.audio_phrases = [];
+    
+    // If a lesson is already selected, load it
+    if (gv.sts.selected_lesson_id) {
+        await Load_DB3_Lesson_Phrases(gv.sts.selected_lesson_id);
+    }
+}
+
+// Load phrases for a specific lesson
+window.Load_DB3_Lesson_Phrases = async function(lessonId) {
+    console.log(`[Load_DB3] Loading phrases for lessonId: ${lessonId}`);
+    if (!lessonId) return;
+    
+    // Find lessonKey
+    let lessonKey = null;
+    if (gv.sts.lessons_audio_phrases) {
+        // Handle array or object (dictionary)
+        let list = [];
+        if (Array.isArray(gv.sts.lessons_audio_phrases)) {
+            list = gv.sts.lessons_audio_phrases;
+        } else if (typeof gv.sts.lessons_audio_phrases === 'object') {
+            list = Object.values(gv.sts.lessons_audio_phrases);
+        }
+        console.log(`[Load_DB3] Searching in lessons list (len=${list.length})`);
+
+        const lessonObj = list.find(l => l && String(l.rec_id) === String(lessonId));
+        if (lessonObj) {
+            lessonKey = lessonObj.json_key_item;
+            console.log(`[Load_DB3] Found lessonKey: ${lessonKey}`);
+        } else {
+            console.warn(`[Load_DB3] Lesson object not found for id ${lessonId}`);
+        }
+    } else {
+        console.warn('[Load_DB3] gv.sts.lessons_audio_phrases is missing/empty');
+    }
+    
+    if (!lessonKey) {
+        console.warn(`Lesson key not found for id ${lessonId}`);
+        return;
+    }
+
+    // Fetch phrases for this lesson
+    console.log(`[Load_DB3] Fetching phrases from ../data_base3/audio_phrases/${lessonKey}`);
+    const lessonPhrases = await requestByPath(`../data_base3/audio_phrases/${lessonKey}`, 'GET');
+    console.log(`[Load_DB3] Fetched phrases raw:`, lessonPhrases);
+    console.log(`[Load_DB3] Fetched phrases keys:`, lessonPhrases ? Object.keys(lessonPhrases) : 'null');
+    
+    if (lessonPhrases) {
+        const fileKey = Object.keys(lessonPhrases)[0]; // Assuming one file per lesson
+        if (fileKey && gv.sts.ref_mp3_files) {
+             // Handle array or object for ref_mp3_files
+            let mp3List = [];
+            if (Array.isArray(gv.sts.ref_mp3_files)) {
+                mp3List = gv.sts.ref_mp3_files;
+            } else if (typeof gv.sts.ref_mp3_files === 'object') {
+                mp3List = Object.values(gv.sts.ref_mp3_files);
+            }
+
+            const fileMeta = mp3List.find(f => f && f.json_key_item === fileKey);
+            if (fileMeta) {
+                // Use url_path from Firebase if available and valid, otherwise fallback to local phrase_audio/filename
+                const audioUrl = (fileMeta.url_path && fileMeta.url_path.trim()) 
+                                ? fileMeta.url_path 
+                                : `phrase_audio/${fileMeta.file_name}`;
+
+                console.log(`[Load_DB3] Initializing audio controller with: ${audioUrl}`);
+                if (window._oapAudioController && typeof window._oapAudioController.init === 'function') {
+                    window._oapAudioController.init(audioUrl);
+                }
+            } else {
+                 console.warn(`[Load_DB3] No file metadata found for fileKey: ${fileKey}`);
+            }
+        }
+    }
+
+    // Fetch translations for this lesson
+    let lessonTransPhrases = null;
+    try {
+        lessonTransPhrases = await requestByPath(`../data_base3/audio_trans_phrases/${lessonKey}`, 'GET');
+    } catch (e) {
+        console.warn(`[Load_DB3] Translation fetch failed for ${lessonKey} (or none exist)`, e);
+    }
+    
+    // Flatten into gv.sts.audio_phrases (replacing previous content)
+    gv.sts.audio_phrases = [];
+    
+    if (lessonPhrases) {
+        for (const fileKey in lessonPhrases) {
+            const phrases = lessonPhrases[fileKey];
+            console.log(`[Load_DB3] Processing fileKey: ${fileKey}, isArray: ${Array.isArray(phrases)}, length: ${phrases ? phrases.length : 0}`);
+            const transPhrases = (lessonTransPhrases && lessonTransPhrases[fileKey]) ? lessonTransPhrases[fileKey] : [];
+
+            if (Array.isArray(phrases)) {
+                phrases.forEach((phrase, index) => {
+                    if (phrase) {
+                        // Capture source text_sv
+                        const sourceSv = phrase.text_sv;
+
+                        // Clear translation fields from source to ensure we only rely on audio_trans_phrases
+                        phrase.text_en = '';
+                        phrase.text_uk = '';
+                        phrase.datetimetrans = '';
+
+                        // Merge translation if available
+                        if (transPhrases[index]) {
+                            Object.assign(phrase, transPhrases[index]);
+                        }
+
+                        // Restore source text_sv to ensure consistency with audio_phrases
+                        if (sourceSv !== undefined) {
+                            phrase.text_sv = sourceSv;
+                        }
+
+                        // Add metadata for saving back
+                        phrase._lesson_key = lessonKey;
+                        phrase._file_key = fileKey;
+                        phrase._index = index;
+                        phrase.lesson_id = lessonId; // For filtering
+                        gv.sts.audio_phrases.push(phrase);
+                    }
+                });
+            }
+        }
+    }
+    console.log(`[Load_DB3] Loaded ${gv.sts.audio_phrases.length} phrases for lesson ${lessonId}`);
+};
+
+
+function Update_And_Save_Audio_Phrase_ItemByIndex(item_data, itemindex) {  
+  let rows_audio_phrases = gv.sts.audio_phrases;
+  if (!rows_audio_phrases || !Array.isArray(rows_audio_phrases)) return;
+  
+  if (itemindex !== -1 && itemindex < rows_audio_phrases.length) {
+      const originalItem = rows_audio_phrases[itemindex];
+      
+      // Merge new data into original item to keep metadata
+      Object.assign(originalItem, item_data);
+
+      // Save to DB3
+      if (originalItem._lesson_key && originalItem._file_key && originalItem._index !== undefined) {
+          SaveToFB_DB3(originalItem._lesson_key, originalItem._file_key, originalItem._index, item_data);
+      } else {
+          console.error("Missing metadata for saving item", originalItem);
+      }
+  }  
+}
+
+function SaveToFB_DB3(lessonKey, fileKey, index, item_data) {
+    // Construct path: ../data_base3/audio_trans_phrases/{lessonKey}/{fileKey}/{index}
+    
+    // Clean the object to be saved
+    // We want to save: text_sv, text_en (or target), start, end, intervals_id, datetimetrans
+    const dataToSave = {};
+    
+    // Fields to explicitly save
+    const fieldsToSave = ['text_sv', 'text_en', 'text_uk', 'start', 'end', 'intervals_id', 'datetimetrans'];
+    
+    fieldsToSave.forEach(field => {
+        if (item_data[field] !== undefined) {
+            dataToSave[field] = item_data[field];
+        }
+    });
+
+    let addurl = `../data_base3/audio_trans_phrases/${lessonKey}/${fileKey}/${index}`;
+    let ObjRequest = gv.URL_DS.GetObjForRequest();
+    ObjRequest.vobj = dataToSave;
+    ObjRequest.ametod = 'PUT';
+    ObjRequest.addUrl = addurl;      
+    ObjRequest.CallBackFunction = function(vdata, ametod) {        
+        console.log("Saved to DB3 (trans):", vdata);
+    };
+    gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+
+async function Get_All_Tables_Meta() {  
+  // Deprecated for data_base3, but kept for compatibility if needed
+  // const addurl = "tables_meta";
+  // const vdata = await requestByPath(addurl, 'GET');
+  // gv.sts.tables_meta = vdata || [];  
+}
+
+function Get_IndexOf_Table_By_Name(table_name) {  
+  // Deprecated
+  return -1;
+}
 
 

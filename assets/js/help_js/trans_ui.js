@@ -72,8 +72,8 @@ function build_ExpImpForTrans_MainUI(){
 // --- Parts menu integration ---
 function ensurePartsMenu(){
   // If menu already present, just refresh
-  if (window.oapMenuParts && typeof window.oapMenuParts.refresh === 'function') {
-    try { window.oapMenuParts.refresh(); } catch {}
+  if (window.oapMenuLess && typeof window.oapMenuLess.refresh === 'function') {
+    try { window.oapMenuLess.refresh(); } catch {}
     return;
   }
   // Inject CSS if missing (reuse oap_menu_less.css)
@@ -85,13 +85,13 @@ function ensurePartsMenu(){
     document.head.appendChild(l);
   }
   // Dynamically load the menu script
-  const jsSrc = './assets/js/help_js/trans_menu_parts.js';
+  const jsSrc = './assets/js/output_audio_phrase/oap_menu_less.js';
   if (!document.querySelector(`script[src="${jsSrc}"]`)) {
     const s = document.createElement('script');
     s.src = jsSrc;
     s.onload = () => {
-      if (window.oapMenuParts && window.oapMenuParts.refresh) {
-        try { window.oapMenuParts.refresh(); } catch {}
+      if (window.oapMenuLess && window.oapMenuLess.refresh) {
+        try { window.oapMenuLess.refresh(); } catch {}
       }
     };
     document.head.appendChild(s);
