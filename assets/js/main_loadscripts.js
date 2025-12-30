@@ -39,7 +39,7 @@ async function loadStyle(href) {
 (async function loadAppScripts() {   
   // Use relative paths unless explicitly hosting on localhost:8080
   //const USE_ABSOLUTE = location.origin.includes('localhost:8080');
-  const USE_ABSOLUTE = location.origin.includes('nirsukrnet.github.io');
+  //const USE_ABSOLUTE = location.origin.includes('nirsukrnet.github.io');
   const base = USE_ABSOLUTE ? location.origin : '';
 
 
@@ -156,6 +156,7 @@ async function loadStyle(href) {
     }
   } catch(e){ console.error('Post-load MainFunc invocation failed', e); }
   // Real MainFunc will run via body onload; optional second call safe if replaced
+  console.log('Ver 2025-12-30', base);
 })();
 
 
