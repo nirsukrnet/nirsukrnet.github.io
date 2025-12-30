@@ -1,0 +1,14 @@
+# Normalize text files to LF in the repository
+* text=auto eol=lf
+
+# Common binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.mp3 binary
+*.wav binary
+*.zip binary
