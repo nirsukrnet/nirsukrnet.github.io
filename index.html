@@ -1,19 +1,62 @@
-lets create simple html with pointing by link into other html file in this project.
+<!-- lets create simple html with pointing by link into other html file in this project. -->
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Learn Language Audio Tools 2025-12-30</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            line-height: 1.4;
+        }
+
+        h1 {
+            margin: 20px 0 12px;
+            font-size: 22px;
+        }
+
+        p {
+            margin: 0 0 12px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 12px;
+            display: grid;
+            gap: 12px;
+            max-width: 520px;
+        }
+
+        a {
+            display: block;
+            padding: 14px 16px;
+            border: 1px solid currentColor;
+            border-radius: 12px;
+            text-decoration: none;
+            min-height: 44px;
+            box-sizing: border-box;
+        }
+
+        a:active {
+            transform: translateY(1px);
+        }
+
+        a:focus-visible {
+            outline: 2px solid currentColor;
+            outline-offset: 3px;
+        }
+    </style>
 </head>
 <body>
     <h1>Welcome to Learn Language Audio Tools</h1>
     <p>Explore our audio player for language learning:</p>
     <ul>
         <li><a href="mp3.html">Phrase Audio Player</a></li>        
-        <li><a href="transl.html">Translation Tools</a></li>
-
-        
+        <li><a href="transl.html">Translation Tools</a></li>        
     </ul>
 
     <h1>Debuging TOOLS</h1>    
