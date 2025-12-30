@@ -1,25 +1,29 @@
 async function loadScript(src) {
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = src;
+
+    // Resolve relative path against the current document URL (works on localhost + GitHub Pages)
+    s.src = new URL(src, document.baseURI).href;
+
     s.onload = resolve;
     s.onerror = reject;
-    // optional: s.defer = true; // order is controlled by awaiting, not defer
     document.head.appendChild(s);
   });
-  
 }
 
 async function loadStyle(href) {
   return new Promise((resolve, reject) => {
-    // avoid duplicates by href
-    if (document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) {
+    const absHref = new URL(href, document.baseURI).href;
+
+    // avoid duplicates by absolute href
+    if (document.querySelector(`link[rel="stylesheet"][href="${absHref}"]`)) {
       resolve();
       return;
     }
+
     const l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = href;
+    l.href = absHref;
     l.onload = resolve;
     l.onerror = reject;
     document.head.appendChild(l);
@@ -36,12 +40,9 @@ async function loadStyle(href) {
   }
 })();
 
-(async function loadAppScripts() {   
-  // Use relative paths unless explicitly hosting on localhost:8080
-  //const USE_ABSOLUTE = location.origin.includes('localhost:8080');
-  //const USE_ABSOLUTE = location.origin.includes('nirsukrnet.github.io');
-  const base = USE_ABSOLUTE ? location.origin : '';
-
+(async function loadAppScripts() {
+  // REMOVE USE_ABSOLUTE/base logic entirely (it caused the crash)
+  // const base = USE_ABSOLUTE ? location.origin : '';
 
    // 1) Styles to load (in order)
    const styles = [
@@ -112,37 +113,21 @@ async function loadStyle(href) {
 
   // Skip extra clearing here; time-gated clear above prevents repeated reloads
 
-  // Load styles first with fallback
+  // Load styles first
   for (const href of styles) {
     try {
-      await loadStyle(base ? (base + href.slice(1)) : href);
+      await loadStyle(href);
     } catch (e) {
-      if (base) { // fallback to relative
-        try { await loadStyle(href); } catch(e2){ console.error('Style load failed', href, e2); }
-      } else {
-        console.error('Style load failed', href, e);
-      }
+      console.error('Style load failed', href, e);
     }
   }
 
-  // Provide stub for MainFunc so body onload doesn't error prematurely
-  // If body onload already fired the early stub, we'll call the real MainFunc after scripts load.
-  if (typeof window.MainFunc !== 'function') {
-    const stub = function(){ window._mainFuncRanViaBody = true; };
-    window._earlyMainFuncStub = stub;
-    window.MainFunc = stub;
-  }
-
-  // Then load scripts with fallback
+  // Then load scripts
   for (const src of scripts) {
     try {
-      await loadScript(base ? (base + src.slice(1)) : src);
+      await loadScript(src);
     } catch (e) {
-      if (base) {
-        try { await loadScript(src); } catch(e2){ console.error('Script load failed', src, e2); }
-      } else {
-        console.error('Script load failed', src, e);
-      }
+      console.error('Script load failed', src, e);
     }
   }
   // After scripts loaded, if the early stub ran we need to invoke the real MainFunc now.
@@ -156,9 +141,8 @@ async function loadStyle(href) {
     }
   } catch(e){ console.error('Post-load MainFunc invocation failed', e); }
   // Real MainFunc will run via body onload; optional second call safe if replaced
-  console.log('Ver 2025-12-30', base);
+  console.log('Ver 2025-12-30', document.baseURI);
 })();
-
 
 // Removed older clearAppOriginData variant to avoid conflicts; using the time-gated version below
 
