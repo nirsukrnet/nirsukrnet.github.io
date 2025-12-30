@@ -1,5 +1,12 @@
-function ExpImpForTrans_loadDataToHTML() {
-   ExpImpForTrans_Sentence_loadDataToHTML();  
+window.ExpImpForTrans_loadDataToHTML = async function() {
+   const selected_lesson_id = window.gv && window.gv.sts ? window.gv.sts.selected_lesson_id : null;
+   if (selected_lesson_id) {
+       const data = await window.CollectLessonData(selected_lesson_id);
+       ExpImpForTrans_Sentence_loadDataToHTML(data);
+   } else {
+       console.warn("No lesson selected");
+       ExpImpForTrans_Sentence_loadDataToHTML([]);
+   }
 }
 
 function Click_SetModeCollectedWords(athis) {
@@ -34,58 +41,38 @@ function testOnSwedishLanguage(sentence1) {
 }
 
 
-function transformData() {
-    // Use Firebase data (gv.sts.audio_phrases) instead of hardcoded JSON
+function transformData(inputData) {
     const translationFrom = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationFrom) || 'uk';
     const translationTo = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
 
-    const rows = (window.gv && window.gv.sts && Array.isArray(window.gv.sts.audio_phrases)) ? window.gv.sts.audio_phrases : [];
-    const selected_lesson_id = window.gv && window.gv.sts ? window.gv.sts.selected_lesson_id : null;
+    // Use inputData if provided, otherwise fallback to empty array
+    const rows = Array.isArray(inputData) ? inputData : [];
     
-    console.log(`[trans] loadContentData called. Rows: ${rows.length}, Selected Lesson: ${selected_lesson_id}`);
-
-    let filtered = rows;
-
-    // Strict filtering by lesson_id (string comparison)
-    if (selected_lesson_id !== null && selected_lesson_id !== undefined && String(selected_lesson_id) !== '') {
-        const sel = String(selected_lesson_id);
-        const matches = rows.filter(r => String(r.lesson_id) === sel);
-
-        if (matches.length > 0) {
-            filtered = matches;
-            console.log(`[trans] Filtered to ${filtered.length} rows for lesson ${sel}`);
-        } else {
-            console.warn('[trans] selected_lesson_id', sel, 'did not match any lesson_id; using all rows. Total rows:', rows.length);
-            filtered = rows;
-        }
-    }
+    console.log(`[trans] transformData called. Rows: ${rows.length}`);
 
     const output_data = [];
-    for (let i = 0; i < filtered.length; i++) {
-        const seg = filtered[i] || {};
-        const srcIndex = rows.indexOf(seg);
-        const idSentence = (typeof seg.index === 'number') ? seg.index : (i + 1);
-
-        const pickText = (lang) => {
-            if (lang === 'uk') return seg.text_uk || '';
-            if (lang === 'en') return seg.text_en || '';
-            if (lang === 'sv') return seg.text_sv || '';
-            return '';
-        };
-        const sentence_from = pickText(translationFrom) || '';
-        const sentence_to = pickText(translationTo) || '';
-        // needs_translation when target is empty OR translationFrom === translationTo (force review scenario)
+    for (let i = 0; i < rows.length; i++) {
+        const seg = rows[i] || {};
+        
+        // Map fields based on instruction
+        // text_sv -> source_text
+        // text_en -> target_text
+        // _partid + _txtid -> id (d_uuid)
+        
+        const sentence_from = seg.text_sv || '';
+        const sentence_to = seg.text_en || '';
+        
         const needs_translation = translationFrom === translationTo
             ? true
             : !(String(sentence_to || '').trim().length > 0);
 
         output_data.push({
-            idsentence: idSentence,
-            d_uuid: seg.glob_id || seg.file_name || '',
+            idsentence: i + 1,
+            d_uuid: `${seg._partid}_${seg._txtid}`,
             sentence_from: String(sentence_from || ''),
             sentence_to: String(sentence_to || ''),
             needs_translation,
-            _srcIndex: srcIndex < 0 ? null : srcIndex
+            _srcIndex: i
         });
     }
     return output_data;
@@ -176,9 +163,17 @@ function hideAllBlocksInFrame(id_block){
 }
 
 
-function ExpImpForTrans_Sentence_loadDataToHTML() {
+function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
 
-    window.for_trans_data = transformData();   
+    // Store raw data if provided, or use existing
+    if (inputData) {
+        window.raw_trans_data = inputData;
+    }
+    
+    // Use stored data if inputData is not provided (e.g. re-render)
+    const dataToTransform = inputData || window.raw_trans_data || [];
+
+    window.for_trans_data = transformData(dataToTransform);   
 
     const countSentences = 25;
 
@@ -470,8 +465,13 @@ function Save_1Block_ToBase_Sent_TransTo(id_block) {
 
     // Save to Firebase or any other database
     if (dataToSave.length > 0) {
-        // Call your save function here, e.g., SaveSentencesToFirebase(dataToSave);
-        SaveTransReadyDataToFireBase(dataToSave);
+        // Save to DB3 text_trans_phrases
+        if (typeof window.SaveTransReadyDataToFireBaseTo_text_trans_phrases === 'function') {
+            window.SaveTransReadyDataToFireBaseTo_text_trans_phrases(dataToSave);
+        } else {
+            console.warn('[trans] SaveTransReadyDataToFireBaseTo_text_trans_phrases is not available, falling back to audio saver');
+            SaveTransReadyDataToFireBase(dataToSave);
+        }
         console.log('Sentences saved successfully!');
     } else {
         alert('No valid sentences to save.');
@@ -506,8 +506,13 @@ function SaveAllFramesToDatabase(dataToSave) {
 
        // Save to Firebase or any other database
        if (dataToSave.length > 0) {
-           // Call your save function here, e.g., SaveSentencesToFirebase(dataToSave);
-           SaveTransReadyDataToFireBase(dataToSave);           
+           // Save to DB3 text_trans_phrases
+           if (typeof window.SaveTransReadyDataToFireBaseTo_text_trans_phrases === 'function') {
+               window.SaveTransReadyDataToFireBaseTo_text_trans_phrases(dataToSave);
+           } else {
+               console.warn('[trans] SaveTransReadyDataToFireBaseTo_text_trans_phrases is not available, falling back to audio saver');
+               SaveTransReadyDataToFireBase(dataToSave);
+           }
            console.log('Sentences saved successfully for one block!');
        } else {
            alert('No valid sentences to save.');
@@ -573,6 +578,181 @@ async function SaveTransReadyDataToFireBase(dataToSave) {
         }
     }
 }
+
+
+// Save translations into DB3: ../data_base3/text_trans_phrases/{partid}/{txtid}
+// Uses d_uuid format confirmed by snapshots: parttxt_<n>_txt<m>
+window.SaveTransReadyDataToFireBaseTo_text_trans_phrases = async function (dataToSave) {
+    const translationTo = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
+    const targetField = translationTo === 'uk' ? 'text_uk' : (translationTo === 'sv' ? 'text_sv' : 'text_en');
+
+    const list = Array.isArray(dataToSave) ? dataToSave : [];
+    const uiList = Array.isArray(window.for_trans_data) ? window.for_trans_data : [];
+
+    // Update in-memory (so UI reflects immediately)
+    for (let i = 0; i < list.length; i++) {
+        const row = list[i] || {};
+        const idsentence = row.idsentence;
+        const sentence_to = row.sentence_to;
+        const existingSentence = uiList.find(item => item && item.idsentence == idsentence);
+        if (existingSentence) {
+            existingSentence.sentence_to = sentence_to;
+            existingSentence.datetimetrans = new Date().toISOString();
+        }
+    }
+
+    const items = [];
+
+    for (const row of list) {
+        const idsentence = row && row.idsentence;
+        const sentenceTo = row && row.sentence_to;
+        if (idsentence == null) continue;
+
+        const uiItem = uiList.find(x => x && x.idsentence == idsentence);
+        const d_uuid = uiItem && uiItem.d_uuid;
+        if (!d_uuid || typeof d_uuid !== 'string') continue;
+
+        const parts = d_uuid.split('_');
+        if (parts.length < 3) {
+            console.warn('[trans] Could not parse d_uuid (need parttxt_N_txtM):', d_uuid);
+            continue;
+        }
+
+        const partid = parts[0] + '_' + parts[1];
+        const txtid = parts.slice(2).join('_');
+
+        const payload = {
+            [targetField]: sentenceTo,
+            datetimetrans: new Date().toISOString()
+        };
+
+        items.push({ partid, txtid, payload, _uiItem: uiItem, _newText: sentenceTo });
+    }
+
+    if (!items.length) return;
+
+    if (typeof window.FB_Patch_text_trans_phrases !== 'function') {
+        console.error('[trans] FB_Patch_text_trans_phrases is not available');
+        return;
+    }
+
+    await window.FB_Patch_text_trans_phrases(items);
+    //await window.FB_Download_text_trans_phrases(items);
+};
+
+
+window.FB_Patch_text_trans_phrases = async function (items) {
+    if (typeof requestByPath !== 'function') {
+        console.error('[trans] requestByPath is not available');
+        return;
+    }
+
+    if (typeof window.Load_DB3_Part_Phrases !== 'function') {
+        console.error('[trans] Load_DB3_Part_Phrases is not available');
+        return;
+    }
+
+    const list = Array.isArray(items) ? items : [];
+
+    // Group items by partid
+    const byPart = new Map();
+    for (const it of list) {
+        const partid = it && it.partid;
+        const txtid = it && it.txtid;
+        const payload = it && it.payload;
+        if (!partid || !txtid || !payload) continue;
+
+        if (!byPart.has(partid)) byPart.set(partid, []);
+        byPart.get(partid).push(it);
+    }
+
+    for (const [partid, partItems] of byPart.entries()) {
+        const path = `../data_base3/text_trans_phrases/${partid}`;
+
+        try {
+            const loaded = await window.Load_DB3_Part_Phrases(partid);
+            const partDB = (loaded && typeof loaded === 'object') ? loaded : {};
+
+            // Build a PATCH object that updates only the touched txtids.
+            // IMPORTANT: each txtid value must include existing sibling fields
+            // (text_sv/text_uk/...) to avoid erasing them.
+            const patchPayload = {};
+
+            for (const it of partItems) {
+                const txtid = it && it.txtid;
+                const payload = it && it.payload;
+                if (!txtid || !payload) continue;
+
+                const prev = (partDB[txtid] && typeof partDB[txtid] === 'object') ? partDB[txtid] : {};
+                patchPayload[txtid] = { ...prev, ...payload };
+            }
+
+            const changedCount = Object.keys(patchPayload).length;
+            if (!changedCount) continue;
+
+            await requestByPath(path, 'PATCH', patchPayload);
+            console.log('[trans] Saved part:', path, `(${changedCount} items)`);
+
+            // Update UI only after successful write
+            for (const it of partItems) {
+                const { _uiItem, _newText } = it || {};
+                if (_uiItem) _uiItem.sentence_to = _newText;
+            }
+        } catch (e) {
+            console.error('[trans] Failed to save part:', path, e);
+        }
+    }
+};
+
+
+// Testing helper: download prepared patch items into a JSON file.
+window.FB_Download_text_trans_phrases = async function (items, options) {
+    const list = Array.isArray(items) ? items : [];
+    const format = (options && options.format) ? String(options.format) : 'firebase-export';
+
+    const clean = list.map(it => {
+        const partid = it && it.partid;
+        const txtid = it && it.txtid;
+        const payload = it && it.payload;
+        return { partid, txtid, payload };
+    }).filter(x => x.partid && x.txtid && x.payload);
+
+    // Default: match Firebase export shape
+    // {
+    //   "parttxt_1": { "txt989": { ...payload }, ... },
+    //   "parttxt_2": { "txt1": { ...payload }, ... }
+    // }
+    let out;
+    let filePrefix;
+
+    if (format === 'patch-list') {
+        out = {
+            exportedAt: new Date().toISOString(),
+            count: clean.length,
+            items: clean
+        };
+        filePrefix = 'text_trans_phrases_patch_items';
+    } else {
+        out = {};
+        for (const it of clean) {
+            if (!out[it.partid]) out[it.partid] = {};
+            out[it.partid][it.txtid] = it.payload;
+        }
+        filePrefix = 'text_trans_phrases_export_like';
+    }
+
+    const json = JSON.stringify(out, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filePrefix}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+};
 
 async function ensureTableExists(tableName){
     try {
@@ -736,12 +916,107 @@ window.ExpImpForTrans_createStyles = ExpImpForTrans_createStyles;
 // Listen for lesson selection events from the menu to update the view
 window.addEventListener('oap:lesson-selected', () => {
     console.log('[trans] Lesson selected, refreshing view...');
-    ExpImpForTrans_Sentence_loadDataToHTML();
+    window.ExpImpForTrans_loadDataToHTML();
 });
 
 // Listen for data loaded event to trigger initial render
 window.addEventListener('oap:data-loaded', () => {
     console.log('[trans] Data loaded, refreshing view...');
-    ExpImpForTrans_Sentence_loadDataToHTML();
+    window.ExpImpForTrans_loadDataToHTML();
 });
+
+
+window.CollectLessonData = async function(lessonId) {
+    function extractpartid(text_id) {
+        const parts = text_id.split('_');
+        return parts.length >= 2 ? parts[0] + '_' + parts[1] : null;
+    }
+    function extracttxtid(text_id) {
+        const parts = text_id.split('_');
+        return parts.length >= 3 ? parts.slice(2).join('_') : null;
+    }
+
+    // Normalize to canonical lesson key (json_key_item like "lesson_1") so filtering works.
+    const lessonIdStr = String(lessonId ?? '');
+    let lessonKey = null;
+    if (/^lesson_\d+$/i.test(lessonIdStr)) {
+        lessonKey = lessonIdStr;
+    } else {
+        try {
+            const lessonsRaw = window.gv?.sts?.lessons_audio_phrases;
+            const list = Array.isArray(lessonsRaw)
+                ? lessonsRaw
+                : (lessonsRaw && typeof lessonsRaw === 'object')
+                    ? Object.values(lessonsRaw)
+                    : [];
+            const found = list.find(l => l && (
+                String(l.rec_id) === lessonIdStr ||
+                String(l.json_key_item) === lessonIdStr
+            ));
+            if (found) lessonKey = String(found.json_key_item);
+        } catch {}
+    }
+    if (!lessonKey) lessonKey = lessonIdStr;
+
+    if (window.Load_DB3_Lesson_Phrases) {
+        await window.Load_DB3_Lesson_Phrases(lessonKey);
+    }
+
+    const phrasesAll = window.gv && window.gv.sts ? window.gv.sts.audio_phrases : [];
+    const hasLessonTag = Array.isArray(phrasesAll) && phrasesAll.some(p => p && p.lesson_id !== undefined);
+    const phrases = hasLessonTag
+        ? phrasesAll.filter(p => p && String(p.lesson_id) === String(lessonKey))
+        : phrasesAll;
+
+    if (!Array.isArray(phrases) || phrases.length === 0) {
+        console.warn('[trans] CollectLessonData: no phrases found for lesson', { lessonId, lessonKey });
+        return [];
+    }
+    let Set_Txt = new Set();
+    phrases.forEach((item) => {
+        if (item.text_id && !Set_Txt.has(item.text_id)) {            
+            Set_Txt.add(item.text_id);            
+        }
+    });
+
+    let List_Txt = [];
+    Set_Txt.forEach((text_id) => {
+        const partid = extractpartid(text_id);
+        const txtid = extracttxtid(text_id);
+        if (partid && txtid) {
+            List_Txt.push({ partid, txtid });
+        }
+    });
+
+    let PartsObj = {};
+    List_Txt.forEach((item) => {
+        if (!PartsObj[item.partid]) {
+            PartsObj[item.partid] = [];
+        }
+        PartsObj[item.partid].push(item.txtid);
+    });
+
+    let FilteredItems = [];
+    const partKeys = Object.keys(PartsObj);
+
+    for (const partid of partKeys) {
+        const txtIds = PartsObj[partid];
+        if (typeof window.Load_DB3_Part_Phrases !== 'function') {
+            console.error('[trans] CollectLessonData: Load_DB3_Part_Phrases is not available');
+            return [];
+        }
+
+        const partDB = await window.Load_DB3_Part_Phrases(partid);
+
+        if (partDB) {
+            txtIds.forEach((txtid) => {
+                if (partDB[txtid]) {
+                    const item = partDB[txtid];
+                    FilteredItems.push({ ...item, _partid: partid, _txtid: txtid });
+                }
+            });
+        }
+    }
+    return FilteredItems;
+};
 

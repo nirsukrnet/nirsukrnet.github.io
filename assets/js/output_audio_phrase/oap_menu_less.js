@@ -10,20 +10,92 @@
     try { return window.gv?.sts?.selected_lesson_id; } catch { return null; }
   }
 
-  async function setSelectedId(id){
+  function getOwner(){
+    try {
+      if (typeof window.OAP_OWNER === 'string' && window.OAP_OWNER.trim()) return window.OAP_OWNER.trim();
+    } catch {}
+    try {
+      const p = (location && location.pathname) ? String(location.pathname).toLowerCase() : '';
+      if (p.includes('transl.html')) return 'trans_block';
+      if (p.includes('mp3.html')) return 'mp3_playing';
+    } catch {}
+    return 'mp3_playing';
+  }
+
+  function isAuthReady(){
+    try {
+      const tok = window.gv?.URL_DS?.idToken;
+      return typeof tok === 'string' && tok.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  function getLessonsList(){
+    try {
+      const raw = window.gv?.sts?.lessons_audio_phrases;
+      if (Array.isArray(raw)) return raw;
+      if (raw && typeof raw === 'object') return Object.values(raw);
+    } catch {}
+    return [];
+  }
+
+  // Resolve a lesson identifier to the canonical DB3 key (json_key_item like "lesson_3") when possible.
+  // This keeps menu selection, loader, and Firebase storage consistent even if legacy data stores numeric rec_id.
+  function resolveLessonKey(id){
+    if (id === null || id === undefined) return null;
+    const s = String(id).trim();
+    if (!s) return null;
+    if (/^lesson_\d+$/i.test(s)) return s.toLowerCase();
+
+    const list = getLessonsList();
+    if (list.length > 0) {
+      const found = list.find(l => l && (
+        String(l.json_key_item ?? '') === s ||
+        String(l.rec_id ?? '') === s ||
+        String(l.lesson_id ?? '') === s
+      ));
+      if (found && (found.json_key_item || found.lesson_id || found.rec_id)) {
+        return String(found.json_key_item ?? found.lesson_id ?? found.rec_id).trim();
+      }
+    }
+
+    // No metadata yet; keep original so we can retry later.
+    return s;
+  }
+
+  async function setSelectedId(id, opts){
+    const options = opts && typeof opts === 'object' ? opts : {};
+    const persist = options.persist !== false;
     console.log('[oap_menu] setSelectedId called with:', id);
     if (!window.gv || !window.gv.sts) {
         console.error('[oap_menu] Global vars (gv.sts) not found');
         return;
     }
-    window.gv.sts.selected_lesson_id = id;
-    try { localStorage.setItem('oap:selected_lesson_id', String(id)); } catch {}
+
+    const resolvedId = resolveLessonKey(id);
+    if (!resolvedId) return;
+    window.gv.sts.selected_lesson_id = resolvedId;
+
+    // Persist selection into Firebase settings instead of localStorage.
+    if (persist && typeof window.Save_To_FBDB_Current_Lesson === 'function') {
+      try {
+        if (!isAuthReady()) {
+          // Auth not ready yet; skip persisting now (it will persist on the next user action).
+          // This avoids noisy console warnings about missing idToken.
+          return;
+        }
+        await window.Save_To_FBDB_Current_Lesson(String(resolvedId), getOwner());
+      } catch (e) {
+        console.warn('[oap_menu] Save_To_FBDB_Current_Lesson failed', e);
+      }
+    }
     
     // Load data for the selected lesson if needed
     if (typeof window.Load_DB3_Lesson_Phrases === 'function') {
         try {
             console.log('[oap_menu] Calling Load_DB3_Lesson_Phrases...');
-            await window.Load_DB3_Lesson_Phrases(id);
+        await window.Load_DB3_Lesson_Phrases(resolvedId);
             console.log('[oap_menu] Load_DB3_Lesson_Phrases completed');
         } catch(e) {
             console.error('[oap] Load_DB3_Lesson_Phrases failed', e);
@@ -41,7 +113,7 @@
     }
     // Dispatch event for other listeners (e.g. translation tool)
     console.log('[oap_menu] Dispatching oap:lesson-selected');
-    window.dispatchEvent(new CustomEvent('oap:lesson-selected', { detail: { id } }));
+    window.dispatchEvent(new CustomEvent('oap:lesson-selected', { detail: { id: resolvedId } }));
     
     // Update active item highlight
     highlightActive();
@@ -117,8 +189,9 @@
     return les_list1
       .filter(x => x !== null && x !== undefined)
       .map(x => ({ 
-          lesson_id: String(x.lesson_id ?? x.rec_id), 
-          label: x.title || x.name || `Lesson ${x.lesson_id ?? x.rec_id}` 
+        // Use DB3 key (json_key_item like "lesson_1") as the canonical lesson id.
+        lesson_id: String(x.json_key_item ?? x.lesson_id ?? x.rec_id), 
+        label: x.title || x.name || `Lesson ${x.json_key_item ?? x.lesson_id ?? x.rec_id}` 
       }));
   }
 
@@ -209,16 +282,52 @@
   };
 
   // Initial render when DOM ready
-  function boot(){
-    // Restore persisted selected id if present
+  const restoreState = { inFlight: false, done: false };
+
+  async function restoreSelectedIdFromFirebase(reason){
+    if (restoreState.done || restoreState.inFlight) return;
+    restoreState.inFlight = true;
     try {
-      const saved = localStorage.getItem('oap:selected_lesson_id');
-      if (saved != null && window.gv?.sts){
-        const savedParsed = /^\d+$/.test(saved) ? Number(saved) : saved;
-        window.gv.sts.selected_lesson_id = savedParsed;
+      if (!window.gv?.sts) return;
+      if (typeof window.Load_From_FBDB_Current_Lesson !== 'function') return;
+
+      // Avoid calling Firebase before SignIn_User() has populated idToken.
+      // We will retry automatically on 'oap:data-loaded'.
+      if (!isAuthReady()) return;
+
+      const owner = getOwner();
+      const saved = await window.Load_From_FBDB_Current_Lesson(owner);
+      if (!saved) { restoreState.done = true; return; }
+
+      const resolvedSaved = resolveLessonKey(saved);
+
+      // If we only have a legacy numeric rec_id and lessons metadata isn't loaded yet,
+      // allow a retry on the next 'oap:data-loaded'.
+      if (!resolvedSaved) { restoreState.done = true; return; }
+      if (/^\d+$/.test(String(saved).trim()) && getLessonsList().length === 0) {
+        console.log('[oap_menu] Firebase restore deferred until lessons metadata is loaded', { owner, saved, reason });
+        return;
       }
-    } catch {}
+
+      const current = String(currentSelectedId() ?? '');
+      if (String(resolvedSaved) !== current) {
+        console.log('[oap_menu] Restoring selected lesson from Firebase', { owner, saved: resolvedSaved, reason });
+        await setSelectedId(String(resolvedSaved), { persist: false });
+      }
+
+      restoreState.done = true;
+    } catch (e) {
+      // Do not mark done; we can retry later (e.g. after auth/data loaded).
+      console.warn('[oap_menu] restoreSelectedIdFromFirebase failed', e);
+    } finally {
+      restoreState.inFlight = false;
+    }
+  }
+
+  function boot(){
     renderMenu();
+    // Try early restore only if auth is already ready; otherwise we'll restore on 'oap:data-loaded'.
+    if (isAuthReady()) restoreSelectedIdFromFirebase('boot');
   }
   if (document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', boot);
@@ -229,5 +338,7 @@
   // Re-render when data loads
   window.addEventListener('oap:data-loaded', () => {
     renderMenu();
+    // Retry restore after Firebase data/auth is likely ready.
+    restoreSelectedIdFromFirebase('oap:data-loaded');
   });
 })();

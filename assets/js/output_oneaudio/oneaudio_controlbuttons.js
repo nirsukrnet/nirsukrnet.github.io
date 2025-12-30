@@ -131,18 +131,39 @@ function parseTime(timeStr) {
 }
 
 function addButtonsTrans_oap(playBlockEl, index1){
+    const _cdbgCtx = (window.cdebug && typeof window.cdebug.ctx === 'function')
+        ? window.cdebug.ctx('oneaudio_controlbuttons.js', 'addButtonsTrans_oap')
+        : null;
+
     const btn_trans1 = document.createElement('button');
     btn_trans1.id = `btn-trans1-${index1}`;
-    const transPref = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
+    const transPref = (typeof window.getTranslationTo === 'function') ? window.getTranslationTo() : ((window.gv?.sts?.translationTo) || (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en');
     const labelMap = { en: 'Trans EN', uk: 'Trans UK', sv: 'Trans SV' };
     btn_trans1.textContent = labelMap[transPref] || 'Trans';
+    // Copy text_id onto the button for easier debugging.
+    let _textId = '';
+    try {
+        const tid = playBlockEl && playBlockEl.getAttribute('data-text-id');
+        if (tid) {
+            _textId = tid;
+            btn_trans1.setAttribute('data-text-id', tid);
+        }
+    } catch {}
     playBlockEl.appendChild(btn_trans1);
     btn_trans1.addEventListener('click', () => {
+        try {
+            const tid = btn_trans1.getAttribute('data-text-id') || (playBlockEl && playBlockEl.getAttribute('data-text-id'));
+            console.log('[Trans] click idx=', index1, 'text_id=', tid || '(missing)');
+        } catch {}
         const textEnEl = document.getElementById(`text-en-${index1}`);
         if (textEnEl) {
             textEnEl.classList.toggle('is-visible');
         }
     });
+    
+    if (_cdbgCtx) {
+        _cdbgCtx.log('addedTransButton', { index: index1, translationTo: transPref, text_id: _textId || null });
+    };
 }
 
 function HideOtherTrans_oap(playBlockEl, index1){

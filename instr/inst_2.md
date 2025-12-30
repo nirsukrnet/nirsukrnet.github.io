@@ -1,58 +1,144 @@
-# Project Migration: Database Restructuring & Web App Update
+## Store/restore selected lesson (Firebase, per app Owner)
 
-**Context:**
-We are migrating our data storage from a relational-style structure (`data_base2`) to a hierarchical, document-oriented structure (`data_base3`). This requires analyzing the new database schema and updating the web application (`transl.html`) to interact with it.
+### Why (replace localStorage)
+We do **not** use `localStorage` for the “last selected lesson” because some loaders clear localStorage (time‑gated clear). That makes the menu forget the selection.
 
-**Input:**
-- Database Snapshot: `AudioTranscr/db/snapshot_all_data_bases_*.json`
-- Web App Entry Point: `html/transl.html`
-- Script Loader: `html/assets/js/help_js/trans_loadscripts.js`
-- Logic Scripts: `html/assets/js/help_js/` (specifically `sent_trans_loadsave.js`, `sent_data_json.js`)
+Instead, we persist the last selected lesson into Firebase under `data_base3/settings/...`.
 
----
+### Data structure in Firebase
+Location:
 
-## Part 1: Database Structure Analysis (`data_base2` -> `data_base3`)
+`data_base3/settings/default_user/settingsData/lastLessonId`
 
-**Objective:**
-Define the schema and relationships for the new `data_base3` structure based on the provided snapshot.
+Structure (per app Owner):
 
-**Tasks:**
-1.  **Analyze `data_base3` Root Keys:**
-    *   **`lessons_audio_phrases`**: Contains metadata for lessons (e.g., `rec_id`, `title`, `json_key_item`).
-    *   **`ref_mp3_files`**: Contains references to audio files (e.g., `file_name`, `url_path`, `json_key_item`).
-    *   **`audio_phrases`**: The core data container. It is nested by lesson key (from `lessons_audio_phrases`) and then by file key (from `ref_mp3_files`).
-2.  **Map Relationships:**
-    *   Identify how `json_key_item` in `lessons_audio_phrases` (e.g., `"lesson_1"`) maps to keys in `audio_phrases`.
-    *   Identify how `json_key_item` in `ref_mp3_files` (e.g., `"mp3_file_0001"`) maps to sub-keys in `audio_phrases`.
-3.  **Document the Schema:**
-    *   Create a JSON schema representation or a detailed Markdown table describing the fields in `data_base3`.
+```json
+{
+  "data_base3": {
+    "settings": {
+      "default_user": {
+        "settingsData": {
+          "lastLessonId": {
+            "mp3_playing": "lesson_1",
+            "trans_block": "lesson_2"
+          },
+          "playbackSpeed": 1,
+          "theme": "dark"
+        }
+      }
+    }
+  }
+}
+```
 
----
+Notes:
+- Value is stored as a **string** and should be the DB3 lesson key (`json_key_item`), e.g. `"lesson_1"`.
+- This must match what the lessons menu uses as `data-lesson-id`, and what `Load_DB3_Lesson_Phrases(id)` can load.
 
-## Part 2: Web Application Update (`transl.html`)
+### Owner (which app is writing)
+Each page defines its Owner so the same user can have different “last lesson” per app.
 
-**Objective:**
-Update the data fetching and saving logic in the web application to support `data_base3`.
+Examples:
+- `mp3.html` → `window.OAP_OWNER = "mp3_playing"`
+- `transl.html` → `window.OAP_OWNER = "trans_block"`
 
-**Constraints:**
-*   **Scope:** Modify ONLY the logic related to data migration and persistence.
-*   **No UI Changes:** Do not modify the user interface or unrelated scripts.
-*   **Target Files:** Primarily `html/assets/js/help_js/` and `html/assets/js/db_connswmp3.js` (if applicable).
+### Functions
+Implemented in [assets/js/db_connswmp3.js](assets/js/db_connswmp3.js):
 
-**Tasks:**
-1.  **Update Data Loading (`trans_loadscripts.js` / `db_connswmp3.js`):**
-    *   Review `initFirebaseDataForTrans`.
-    *   Replace calls to `Get_All_Tables_Meta` and `Get_Rows_All_Tables` (which fetch `data_base2`) with new functions to fetch `data_base3`.
-    *   Implement fetching of `lessons_audio_phrases`, `ref_mp3_files`, and the relevant `audio_phrases`.
+- `Save_To_FBDB_Current_Lesson(Lesson_ID, Owner)`
+  - Writes: `../data_base3/settings/default_user/settingsData/lastLessonId/{Owner}` (PUT)
+  - Payload: `String(Lesson_ID)`
 
-2.  **Update Data Management (`sent_trans_loadsave.js`):**
-    *   Update the logic that populates the UI with data. Instead of iterating over rows/tables, iterate over the nested `audio_phrases` structure.
-    *   Ensure the application can correctly identify the current lesson and audio file from the new metadata structures.
+- `Load_From_FBDB_Current_Lesson(Owner)`
+  - Reads: `../data_base3/settings/default_user/settingsData/lastLessonId/{Owner}` (GET)
+  - Returns: lesson id as string, or `null`
 
-3.  **Update Data Saving:**
-    *   Modify the save function to write updates back to the specific path in `data_base3/audio_phrases/...` instead of the old table structure.
+### UI flow (menu)
+Implemented in [assets/js/output_audio_phrase/oap_menu_less.js](assets/js/output_audio_phrase/oap_menu_less.js).
 
-4.  **Verification:**
-    *   Ensure the application loads without errors.
-    *   Verify that data is correctly read from `data_base3`.
+1) **On click lesson in menu**
+- `setSelectedId(id)` updates `gv.sts.selected_lesson_id`.
+- Saves it to Firebase via `Save_To_FBDB_Current_Lesson(id, Owner)`.
+- Calls `Load_DB3_Lesson_Phrases(id)` where `id` is the DB3 lesson key (e.g. `"lesson_1"`).
+- Calls `loadContentData()` to re-render UI.
 
+2) **On page load (restore)**
+- Menu renders first.
+- Then it tries to restore `selected_lesson_id` from Firebase using `Load_From_FBDB_Current_Lesson(Owner)`.
+- If restored id differs from current, it calls `setSelectedId(saved, { persist: false })`.
+- It retries once more after `oap:data-loaded` (useful if Firebase auth/data wasn’t ready on the first attempt).
+
+### DB3 structure: `audio_phrases` is nested (no `lesson_id` per item)
+In Firebase DB3, phrases are stored **grouped**, not duplicated.
+
+Location:
+
+`data_base3/audio_phrases/{lessonKey}/{mp3FileKey}[]`
+
+Example:
+
+```json
+{
+  "data_base3": {
+    "audio_phrases": {
+      "lesson_1": {
+        "mp3_file_0001": [
+          {
+            "start": 4.598,
+            "end": 6.664,
+            "intervals_id": 2,
+            "text_id": "parttxt_1_txt1",
+            "text_sv": "Lyssna och säg efter.",
+            "text_en": "",
+            "datetimetrans": ""
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+This means:
+- **Lesson is defined by the path**: `lesson_1` (this is `json_key_item` from `ref_lessons_audio_phrases`).
+- **MP3 file is defined by the path**: `mp3_file_0001` (key from `ref_mp3_files`).
+- Each phrase item inside the array does **not** need a `lesson_id` field, because it’s already “inside” its lesson.
+
+### Why this approach is better than storing `lesson_id` in every item
+- No duplication: we don’t repeat `lesson_id: "lesson_1"` on every row.
+- Safer keys: the DB path is the source of truth (avoids mismatches).
+- Easy batching: loading one lesson is a single `GET` on `audio_phrases/lesson_1`.
+
+### In-memory flattening (UI convenience)
+In the browser we still create a flat list for rendering:
+
+- `Load_DB3_Lesson_Phrases(lessonKey)` loads `data_base3/audio_phrases/{lessonKey}`.
+- It selects the `mp3FileKey` (usually one file per lesson) and flattens the array into `gv.sts.audio_phrases`.
+- During flattening, we add runtime fields for the UI:
+  - `phrase.lesson_id = lessonKey` (used for filtering/highlight)
+  - `phrase._lesson_key`, `phrase._file_key`, `phrase._index` (used when saving)
+
+Important: these runtime fields are **not** part of the stored DB structure; they are only added on the client.
+
+### Script load order (must be like this)
+For “restore last lesson from Firebase” to work, the page must load scripts in this order:
+
+1) `./assets/js/global_var.js`
+- Defines `GlobalVars`, creates `window.gv`, and initializes `gv.sts`.
+
+2) `./assets/js/db_connswmp3.js`
+- Defines `Load_DB3_Lesson_Phrases()` (accepts `lesson_#` keys).
+- Defines `Save_To_FBDB_Current_Lesson()` and `Load_From_FBDB_Current_Lesson()`.
+- Loads DB3 lessons/phrases and dispatches `oap:data-loaded`.
+
+3) UI scripts (render + controls)
+- Any renderers that read `gv.sts.selected_lesson_id` / `gv.sts.audio_phrases_with_trans`.
+
+4) `./assets/js/output_audio_phrase/oap_menu_less.js`
+- Builds the lessons menu.
+- Restores last selected lesson using `Load_From_FBDB_Current_Lesson(Owner)`.
+- On selection, saves using `Save_To_FBDB_Current_Lesson(id, Owner)`.
+
+Where this order is implemented:
+- `mp3.html` / `oneaudio.html` use `./assets/js/main_loadscripts.js`.
+- `transl.html` uses `./assets/js/help_js/trans_loadscripts.js` (adds translation UI scripts too, but still keeps `global_var.js` and `db_connswmp3.js` first).

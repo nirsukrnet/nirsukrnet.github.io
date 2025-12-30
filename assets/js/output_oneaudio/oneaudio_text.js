@@ -1,5 +1,7 @@
 function loadContentData() {
-    const rows_phrases = gv.sts.audio_phrases;
+    const rows_phrases = (gv.sts.audio_phrases_with_trans && Array.isArray(gv.sts.audio_phrases_with_trans))
+        ? gv.sts.audio_phrases_with_trans
+        : gv.sts.audio_phrases;
     const selected_lesson_id = gv.sts.selected_lesson_id;
     if (!rows_phrases || !Array.isArray(rows_phrases)) return;
 
@@ -87,7 +89,7 @@ function loadContentData() {
     function makeRow(seg, idx) {
         const text_sv = (seg.text_sv || '').trim();
         // Prefer a user-selected translation target if provided; fall back smartly to a non-SV text
-        const transPref = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
+        const transPref = (typeof window.getTranslationTo === 'function') ? window.getTranslationTo() : ((window.gv?.sts?.translationTo) || (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en');
         const pickText = (lang) => {
             if (!lang) return '';
             const key = `text_${lang}`;
@@ -119,10 +121,15 @@ function loadContentData() {
         const textEl_EN = document.createElement('div');
         textEl_EN.className = 'seg-row text trans';
         textEl_EN.id = `text-en-${idx}`;
-        textEl_EN.textContent = text_en || '(no translation)';
+        textEl_EN.textContent = text_en || '(no____translation)';
         // Row 2: controls
         const playBlockEl = document.createElement('div');
         playBlockEl.className = 'seg-row seg-controls';
+        // Keep the source text_id available for click handlers (e.g., Trans EN).
+        try {
+            const tid = (seg && (seg.text_id || seg.d_uuid)) ? String(seg.text_id || seg.d_uuid) : '';
+            playBlockEl.setAttribute('data-text-id', tid);
+        } catch {}
         
         // Row 3: audio element (kept hidden by CSS class)
         const audioCell = document.createElement('div');

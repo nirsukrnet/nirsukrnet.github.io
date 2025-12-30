@@ -1,20 +1,6 @@
 let gv = new GlobalVars();
 window.gv = gv;
 
-// UI language preference (which translation field to display)
-// Note: this does NOT load translations; it only selects text_en/text_uk/text_sv already merged into phrases.
-window.getTranslationTo = window.getTranslationTo || function () {
-  try {
-    const v1 = window.gv && window.gv.sts ? window.gv.sts.translationTo : null;
-    if (typeof v1 === 'string' && v1.trim()) return v1.trim();
-  } catch {}
-  try {
-    const v2 = window.CONTENT_DATA_JSON ? window.CONTENT_DATA_JSON.translationTo : null;
-    if (typeof v2 === 'string' && v2.trim()) return v2.trim();
-  } catch {}
-  return 'en';
-};
-
 
 function MainFunc() {  
   init().then(() => {
@@ -64,13 +50,10 @@ window.Save_To_FBDB_Current_Lesson = window.Save_To_FBDB_Current_Lesson || async
       console.warn('[settings] Save_To_FBDB_Current_Lesson: missing Owner');
       return null;
     }
-    const lessonIdStr = normalizeLessonKeyString(Lesson_ID);
 
-    // Backward-compatible storage:
-    // - Legacy: settingsData/lastLessonId is a string
-    // - New:    settingsData/lastLessonId is an object keyed by Owner
-    // We read current root and migrate on write if needed.
+    const lessonIdStr = normalizeLessonKeyString(Lesson_ID);
     const rootPath = `../data_base3/settings/default_user/settingsData/lastLessonId`;
+
     let current = null;
     try {
       current = await requestByPath(rootPath, 'GET');
@@ -82,7 +65,6 @@ window.Save_To_FBDB_Current_Lesson = window.Save_To_FBDB_Current_Lesson || async
     if (current && typeof current === 'object' && !Array.isArray(current)) {
       nextObj = { ...current };
     } else if (current !== null && current !== undefined && current !== '') {
-      // Migrate legacy primitive -> object for both known owners.
       const legacy = normalizeLessonKeyString(current);
       nextObj = { mp3_playing: legacy, trans_block: legacy };
     } else {
@@ -102,6 +84,7 @@ window.Load_From_FBDB_Current_Lesson = window.Load_From_FBDB_Current_Lesson || a
     const owner = (Owner == null) ? '' : String(Owner).trim();
     if (!owner) return null;
     const rootPath = `../data_base3/settings/default_user/settingsData/lastLessonId`;
+
     const v = await requestByPath(rootPath, 'GET');
     if (v === null || v === undefined) return null;
 
@@ -112,15 +95,13 @@ window.Load_From_FBDB_Current_Lesson = window.Load_From_FBDB_Current_Lesson || a
       return normalizeLessonKeyString(vv);
     }
 
-    // Legacy shape: primitive string/number.
-    // Auto-migrate it to the new object shape so snapshots/tests stop flagging it.
+    // Legacy shape: primitive string/number. Auto-migrate.
     const legacy = normalizeLessonKeyString(v);
     if (legacy) {
       try {
         const migrated = { mp3_playing: legacy, trans_block: legacy };
         await requestByPath(rootPath, 'PUT', migrated);
       } catch (e) {
-        // Migration failure should not break reads.
         console.warn('[settings] Load_From_FBDB_Current_Lesson migration PUT failed', e);
       }
     }
@@ -132,7 +113,7 @@ window.Load_From_FBDB_Current_Lesson = window.Load_From_FBDB_Current_Lesson || a
 };
 
 // ------------------------------
-// text_trans_phrases helpers
+// text_trans_phrases helpers (service_test)
 // ------------------------------
 function getPhraseTextId(phrase) {
   if (!phrase || typeof phrase !== 'object') return '';
@@ -153,7 +134,6 @@ function parseTextId(textId) {
   };
 }
 
-// In-memory cache for loaded parts during the session
 window._db3_text_trans_part_cache = window._db3_text_trans_part_cache || new Map();
 
 async function loadPartCached(partid) {
@@ -162,7 +142,6 @@ async function loadPartCached(partid) {
     if (cache && cache.has(partid)) return cache.get(partid);
     if (typeof window.Load_DB3_Part_Phrases !== 'function') return null;
     const partDB = await window.Load_DB3_Part_Phrases(partid);
-    // Do not cache failures/nulls; otherwise one transient error would permanently disable this part.
     if (cache && partDB && typeof partDB === 'object') cache.set(partid, partDB);
     return partDB;
   } catch (e) {
@@ -173,15 +152,11 @@ async function loadPartCached(partid) {
 
 async function buildTextTransMapFromLessonPhrases(phrases) {
   const list = Array.isArray(phrases) ? phrases : [];
-
   const ids = new Set();
   for (const p of list) {
     const id = getPhraseTextId(p);
     if (id) ids.add(id);
   }
-
-  // Diagnostics: if ids is empty, translations cannot be joined.
-  // Keep this log lightweight; it helps confirm whether the current deployed JS includes the new text_trans flow.
   if (ids.size === 0) {
     console.warn('[Load_DB3] No phrase.text_id found; cannot join text_trans_phrases. Example phrase:', list && list[0]);
   }
@@ -194,45 +169,22 @@ async function buildTextTransMapFromLessonPhrases(phrases) {
     byPart.get(parsed.partid).push({ fullId: id, txtid: parsed.txtid });
   }
 
-  if (ids.size > 0) {
-    const partids = Array.from(byPart.keys());
-    console.log('[Load_DB3] text_trans join: phrases=', list.length,
-      'withTextId=', ids.size,
-      'parts=', partids.length,
-      'sampleParts=', partids.slice(0, 5));
-  }
-
   const map = {};
   for (const [partid, arr] of byPart.entries()) {
-    const partDB = await loadPartCached(partid); // GET ../data_base3/text_trans_phrases/{partid}
+    const partDB = await loadPartCached(partid);
     const partObj = (partDB && typeof partDB === 'object') ? partDB : {};
-
-    // If part is missing, it usually means this partid does not exist in DB.
-    if (!partDB) {
-      console.warn('[Load_DB3] text_trans part missing:', partid);
-    }
-
+    if (!partDB) console.warn('[Load_DB3] text_trans part missing:', partid);
     for (const it of arr) {
       const row = partObj[it.txtid];
-      if (row && typeof row === 'object') {
-        map[it.fullId] = row;
-      }
+      if (row && typeof row === 'object') map[it.fullId] = row;
     }
   }
-
-  if (ids.size > 0 && Object.keys(map).length === 0) {
-    const sample = Array.from(ids)[0];
-    const parsed = parseTextId(sample);
-    console.warn('[Load_DB3] text_trans join produced 0 rows. Sample text_id=', sample, 'parsed=', parsed);
-  }
-
   return map;
 }
 
 function applyTextTranslationsToPhrases(phrases, transMap) {
   const list = Array.isArray(phrases) ? phrases : [];
   const map = (transMap && typeof transMap === 'object') ? transMap : {};
-
   let applied = 0;
   let missingTextId = 0;
   let invalidFormat = 0;
@@ -240,49 +192,26 @@ function applyTextTranslationsToPhrases(phrases, transMap) {
 
   for (const p of list) {
     const idRaw = getPhraseTextId(p);
-    if (!idRaw) {
-      missingTextId++;
-      continue;
-    }
-
-    // Normalize + keep it consistent on the object
-    if (p && typeof p === 'object' && typeof p.text_id === 'string' && p.text_id !== idRaw) {
-      p.text_id = idRaw;
-    }
-
-    if (!re.test(idRaw)) {
-      invalidFormat++;
-      continue;
-    }
-
+    if (!idRaw) { missingTextId++; continue; }
+    if (p && typeof p === 'object' && typeof p.text_id === 'string' && p.text_id !== idRaw) p.text_id = idRaw;
+    if (!re.test(idRaw)) { invalidFormat++; continue; }
     const row = map[idRaw];
     if (!row) continue;
-
     const sourceSv = p.text_sv;
-    // Merge translations (keep source text_sv from audio_phrases)
     Object.assign(p, row);
     if (sourceSv !== undefined) p.text_sv = sourceSv;
     applied++;
   }
 
   if (missingTextId > 0 || invalidFormat > 0) {
-    console.warn('[Load_DB3] text_id validation:', {
-      total: list.length,
-      missingTextId,
-      invalidFormat
-    });
+    console.warn('[Load_DB3] text_id validation:', { total: list.length, missingTextId, invalidFormat });
   }
-
   return applied;
 }
 
 async function init() {    
   try {
     await gv.SignIn_User();    
-    // Keep a stable preference value available for renderers/buttons.
-    try {
-      if (gv && gv.sts) gv.sts.translationTo = window.getTranslationTo();
-    } catch {}
     // await Get_All_Tables_Meta(); // Not needed for data_base3
     await Get_Rows_All_Tables();
   } catch (error) {
@@ -326,42 +255,6 @@ async function Get_DB3_All_Data() {
 
     // Initialize empty audio_phrases
     gv.sts.audio_phrases = [];
-
-    // Prefer restoring last selected lesson from Firebase (if available) BEFORE choosing a default.
-    // This avoids loading the default lesson and then immediately overriding it from the menu restore.
-    if (!gv.sts.selected_lesson_id && typeof window.Load_From_FBDB_Current_Lesson === 'function') {
-      try {
-        const owner = (typeof window.OAP_OWNER === 'string' && window.OAP_OWNER.trim())
-          ? window.OAP_OWNER.trim()
-          : (String(location?.pathname ?? '').toLowerCase().includes('transl.html') ? 'trans_block' : 'mp3_playing');
-        const saved = await window.Load_From_FBDB_Current_Lesson(owner);
-        if (saved) {
-          gv.sts.selected_lesson_id = normalizeLessonKeyString(saved);
-          console.log('[Load_DB3] Restored selected_lesson_id from Firebase:', gv.sts.selected_lesson_id);
-        }
-      } catch (e) {
-        console.warn('[Load_DB3] Unable to restore selected_lesson_id from Firebase', e);
-      }
-    }
-
-    // If nothing selected yet, pick the first lesson key (json_key_item) as a default.
-    // This keeps UI usable on first load before the user has any saved lastLessonId.
-    if (!gv.sts.selected_lesson_id) {
-      try {
-        const list = Array.isArray(gv.sts.lessons_audio_phrases)
-          ? gv.sts.lessons_audio_phrases
-          : (gv.sts.lessons_audio_phrases && typeof gv.sts.lessons_audio_phrases === 'object')
-            ? Object.values(gv.sts.lessons_audio_phrases)
-            : [];
-        const first = list.find(x => x && (x.json_key_item || x.lesson_id || x.rec_id));
-        if (first) {
-          gv.sts.selected_lesson_id = String(first.json_key_item ?? first.lesson_id ?? first.rec_id);
-          console.log('[Load_DB3] Default selected_lesson_id set to', gv.sts.selected_lesson_id);
-        }
-      } catch (e) {
-        console.warn('[Load_DB3] Unable to set default selected_lesson_id', e);
-      }
-    }
     
     // If a lesson is already selected, load it
     if (gv.sts.selected_lesson_id) {
@@ -373,17 +266,9 @@ async function Get_DB3_All_Data() {
 window.Load_DB3_Lesson_Phrases = async function(lessonId) {
     console.log(`[Load_DB3] Loading phrases for lessonId: ${lessonId}`);
     if (!lessonId) return;
-
-  const lessonIdStr = normalizeLessonKeyString(lessonId);
     
     // Find lessonKey
     let lessonKey = null;
-
-  // If caller already passed DB3 lesson key (json_key_item), use it directly.
-  if (/^lesson_\d+$/i.test(lessonIdStr)) {
-    lessonKey = lessonIdStr;
-  }
-
     if (gv.sts.lessons_audio_phrases) {
         // Handle array or object (dictionary)
         let list = [];
@@ -394,19 +279,13 @@ window.Load_DB3_Lesson_Phrases = async function(lessonId) {
         }
         console.log(`[Load_DB3] Searching in lessons list (len=${list.length})`);
 
-    // If we don't have lessonKey yet, try to resolve from rec_id OR json_key_item.
-    if (!lessonKey) {
-      const lessonObj = list.find(l => l && (
-        String(l.rec_id) === lessonIdStr ||
-        String(l.json_key_item) === lessonIdStr
-      ));
-      if (lessonObj) {
-        lessonKey = lessonObj.json_key_item;
-        console.log(`[Load_DB3] Found lessonKey: ${lessonKey}`);
-      } else {
-        console.warn(`[Load_DB3] Lesson object not found for id ${lessonId}`);
-      }
-    }
+        const lessonObj = list.find(l => l && String(l.rec_id) === String(lessonId));
+        if (lessonObj) {
+            lessonKey = lessonObj.json_key_item;
+            console.log(`[Load_DB3] Found lessonKey: ${lessonKey}`);
+        } else {
+            console.warn(`[Load_DB3] Lesson object not found for id ${lessonId}`);
+        }
     } else {
         console.warn('[Load_DB3] gv.sts.lessons_audio_phrases is missing/empty');
     }
@@ -422,14 +301,9 @@ window.Load_DB3_Lesson_Phrases = async function(lessonId) {
     console.log(`[Load_DB3] Fetched phrases raw:`, lessonPhrases);
     console.log(`[Load_DB3] Fetched phrases keys:`, lessonPhrases ? Object.keys(lessonPhrases) : 'null');
     
-    let selectedFileKey = null;
     if (lessonPhrases) {
-      const keys = Object.keys(lessonPhrases);
-      selectedFileKey = keys && keys.length ? keys[0] : null; // Assuming one file per lesson
-      if (keys && keys.length > 1) {
-        console.warn('[Load_DB3] lessonPhrases contains multiple file keys; using first only:', keys);
-      }
-      if (selectedFileKey && gv.sts.ref_mp3_files) {
+        const fileKey = Object.keys(lessonPhrases)[0]; // Assuming one file per lesson
+        if (fileKey && gv.sts.ref_mp3_files) {
              // Handle array or object for ref_mp3_files
             let mp3List = [];
             if (Array.isArray(gv.sts.ref_mp3_files)) {
@@ -438,7 +312,7 @@ window.Load_DB3_Lesson_Phrases = async function(lessonId) {
                 mp3List = Object.values(gv.sts.ref_mp3_files);
             }
 
-        const fileMeta = mp3List.find(f => f && f.json_key_item === selectedFileKey);
+            const fileMeta = mp3List.find(f => f && f.json_key_item === fileKey);
             if (fileMeta) {
                 // Use url_path from Firebase if available and valid, otherwise fallback to local phrase_audio/filename
                 const audioUrl = (fileMeta.url_path && fileMeta.url_path.trim()) 
@@ -450,67 +324,54 @@ window.Load_DB3_Lesson_Phrases = async function(lessonId) {
                     window._oapAudioController.init(audioUrl);
                 }
             } else {
-                console.warn(`[Load_DB3] No file metadata found for fileKey: ${selectedFileKey}`);
+                 console.warn(`[Load_DB3] No file metadata found for fileKey: ${fileKey}`);
             }
         }
     }
 
-    // Translations are sourced only from text_trans_phrases via phrase.text_id (see below).
-    
     // Flatten into gv.sts.audio_phrases (replacing previous content)
     gv.sts.audio_phrases = [];
     
-    if (lessonPhrases && selectedFileKey && Object.prototype.hasOwnProperty.call(lessonPhrases, selectedFileKey)) {
-      const fileKey = selectedFileKey;
-      const phrases = lessonPhrases[fileKey];
-      console.log(`[Load_DB3] Processing fileKey: ${fileKey}, isArray: ${Array.isArray(phrases)}, length: ${phrases ? phrases.length : 0}`);
+    if (lessonPhrases) {
+        for (const fileKey in lessonPhrases) {
+            const phrases = lessonPhrases[fileKey];
+            console.log(`[Load_DB3] Processing fileKey: ${fileKey}, isArray: ${Array.isArray(phrases)}, length: ${phrases ? phrases.length : 0}`);
+            if (Array.isArray(phrases)) {
+                phrases.forEach((phrase, index) => {
+                    if (phrase) {
+                        // Capture source text_sv
+                        const sourceSv = phrase.text_sv;
 
-      if (Array.isArray(phrases)) {
-        phrases.forEach((phrase, index) => {
-          if (phrase) {
-            // Capture source text_sv
-            const sourceSv = phrase.text_sv;
+                        // Restore source text_sv to ensure consistency with audio_phrases
+                        if (sourceSv !== undefined) {
+                            phrase.text_sv = sourceSv;
+                        }
 
-            // Restore source text_sv to ensure consistency with audio_phrases
-            if (sourceSv !== undefined) {
-              phrase.text_sv = sourceSv;
+                        // Add metadata for saving back
+                        phrase._lesson_key = lessonKey;
+                        phrase._file_key = fileKey;
+                        phrase._index = index;
+                        phrase.lesson_id = lessonId; // For filtering
+                        gv.sts.audio_phrases.push(phrase);
+                    }
+                });
             }
-
-            // Add metadata for saving back
-            phrase._lesson_key = lessonKey;
-            phrase._file_key = fileKey;
-            phrase._index = index;
-            // For filtering in UI menus (must match selected_lesson_id)
-            phrase.lesson_id = lessonKey;
-            gv.sts.audio_phrases.push(phrase);
-          }
-        });
-      }
-    } else if (lessonPhrases) {
-      console.warn('[Load_DB3] selectedFileKey not found in lessonPhrases; nothing to flatten', { selectedFileKey });
+        }
     }
-
-    // Create a separate view-model list that contains translations merged from text_trans_phrases.
-    // UI should render from gv.sts.audio_phrases_with_trans.
-    gv.sts.audio_phrases_with_trans = Array.isArray(gv.sts.audio_phrases)
-      ? gv.sts.audio_phrases.map(p => (p && typeof p === 'object') ? { ...p } : p)
-      : [];
 
               // New translations source: text_trans_phrases (parts-based) via phrase.text_id
               try {
-                const map = await buildTextTransMapFromLessonPhrases(gv.sts.audio_phrases_with_trans);
-                const appliedCount = applyTextTranslationsToPhrases(gv.sts.audio_phrases_with_trans, map);
+                const map = await buildTextTransMapFromLessonPhrases(gv.sts.audio_phrases);
+                const appliedCount = applyTextTranslationsToPhrases(gv.sts.audio_phrases, map);
                 console.log('[Load_DB3] Applied text_trans_phrases translations:', appliedCount);
-                if (appliedCount === 0 && gv.sts.audio_phrases_with_trans && gv.sts.audio_phrases_with_trans.length) {
-                  // This is the most common user-facing symptom: UI shows “(no translation)”.
-                  // Either DB has no translations for these ids, or the site is running an older build.
-                  console.warn('[Load_DB3] No translations applied from text_trans_phrases. If you do not see the earlier "text_trans join" log, you are likely running an older deployed JS build.');
+                if (appliedCount === 0 && gv.sts.audio_phrases && gv.sts.audio_phrases.length) {
+                  console.warn('[Load_DB3] No translations applied from text_trans_phrases. Check text_id format and DB path.');
                 }
               } catch (e) {
                 console.warn('[Load_DB3] Applying text_trans_phrases translations failed', e);
               }
 
-    console.log(`[Load_DB3] Loaded ${gv.sts.audio_phrases.length} phrases for lesson ${lessonKey}`);
+    console.log(`[Load_DB3] Loaded ${gv.sts.audio_phrases.length} phrases for lesson ${lessonId}`);
 };
 
 
@@ -526,7 +387,7 @@ function Update_And_Save_Audio_Phrase_ItemByIndex(item_data, itemindex) {
 
       // Save to DB3
       if (originalItem._lesson_key && originalItem._file_key && originalItem._index !== undefined) {
-          SaveToFB_DB3_TextTrans(originalItem, item_data);
+          SaveToFB_DB3(originalItem._lesson_key, originalItem._file_key, originalItem._index, item_data);
       } else {
           console.error("Missing metadata for saving item", originalItem);
       }
@@ -545,52 +406,30 @@ window.Load_DB3_Part_Phrases = async function(Key_Parts) {
     
 
 function SaveToFB_DB3(lessonKey, fileKey, index, item_data) {
-  // Deprecated legacy writer. Keep it as a no-op to avoid accidental writes.
-  console.warn('SaveToFB_DB3() is deprecated; translations are stored in text_trans_phrases by phrase.text_id.');
-}
-
-function SaveToFB_DB3_TextTrans(phrase, item_data) {
-  const textId = getPhraseTextId(phrase) || getPhraseTextId(item_data);
-  const parsed = parseTextId(textId);
-  if (!parsed) {
-    console.error('SaveToFB_DB3_TextTrans: invalid/missing text_id', { textId, phrase });
-    return;
-  }
-
-  // Save only translation fields into text_trans_phrases
-  const dataToSave = {};
-  const fieldsToSave = ['text_en', 'text_uk', 'datetimetrans'];
-  for (const field of fieldsToSave) {
-    if (item_data && item_data[field] !== undefined) {
-      dataToSave[field] = item_data[field];
-    }
-  }
-  if (dataToSave.datetimetrans === undefined) {
-    dataToSave.datetimetrans = new Date().toISOString();
-  }
-
-  const addurl = `../data_base3/text_trans_phrases/${parsed.partid}/${parsed.txtid}`;
-  const ObjRequest = gv.URL_DS.GetObjForRequest();
-  ObjRequest.vobj = dataToSave;
-  ObjRequest.ametod = 'PUT';
-  ObjRequest.addUrl = addurl;
-  ObjRequest.CallBackFunction = function(vdata, ametod) {
-    try {
-      const cache = window._db3_text_trans_part_cache;
-      if (cache && cache.has(parsed.partid)) {
-        const partObj = cache.get(parsed.partid);
-        if (partObj && typeof partObj === 'object') {
-          const prev = (partObj[parsed.txtid] && typeof partObj[parsed.txtid] === 'object') ? partObj[parsed.txtid] : {};
-          partObj[parsed.txtid] = { ...prev, ...dataToSave };
+    // Construct path: ../data_base3/audio_trans_phrases/{lessonKey}/{fileKey}/{index}
+    
+    // Clean the object to be saved
+    // We want to save: text_sv, text_en (or target), start, end, intervals_id, datetimetrans
+    const dataToSave = {};
+    
+    // Fields to explicitly save
+    const fieldsToSave = ['text_sv', 'text_en', 'text_uk', 'start', 'end', 'intervals_id', 'datetimetrans'];
+    
+    fieldsToSave.forEach(field => {
+        if (item_data[field] !== undefined) {
+            dataToSave[field] = item_data[field];
         }
-      }
-    } catch {}
-    console.log('Saved to DB3 (text_trans_phrases):', { textId, url: addurl, vdata });
-  };
-  ObjRequest.ErrorCallback = function(err) {
-    console.error('SaveToFB_DB3_TextTrans failed:', err);
-  };
-  gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+    });
+
+    let addurl = `../data_base3/audio_trans_phrases/${lessonKey}/${fileKey}/${index}`;
+    let ObjRequest = gv.URL_DS.GetObjForRequest();
+    ObjRequest.vobj = dataToSave;
+    ObjRequest.ametod = 'PUT';
+    ObjRequest.addUrl = addurl;      
+    ObjRequest.CallBackFunction = function(vdata, ametod) {        
+        console.log("Saved to DB3 (trans):", vdata);
+    };
+    gv.URL_DS.requestData_By_URL_Path(ObjRequest);
 }
 
 

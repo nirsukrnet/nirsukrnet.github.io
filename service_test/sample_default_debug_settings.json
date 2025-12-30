@@ -1,0 +1,11 @@
+{
+  "debug": {
+    "output": {
+      "sink": "console"
+    },
+    "enabledIdentsPlain": [
+      "cdebug.js::selftest::ping",
+      "oneaudio_controlbuttons.js::addButtonsTrans_oap::addedTransButton"
+    ]
+  }
+}

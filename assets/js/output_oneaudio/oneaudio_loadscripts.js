@@ -45,7 +45,8 @@ async function loadStyle(href) {
    // Modified script list for OneAudio player
    const scripts = [
     "./assets/js/global_var.js",      
-    "./assets/js/output_oneaudio/db_conns_oneaudio.js",
+    // Use the same Firebase-backed loader as mp3.html
+    "./assets/js/db_connswmp3.js",
     "./assets/js/output_audio_phrase/oap_styles.js",
     "./assets/js/output_oneaudio/oneaudio_controlbuttons.js",
     "./assets/js/output_oneaudio/oneaudio_text.js",

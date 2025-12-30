@@ -38,28 +38,23 @@ async function loadStyle(href) {
 
 (async function loadAppScripts() {   
   // Use relative paths unless explicitly hosting on localhost:8080
-  const USE_ABSOLUTE = location.origin.includes('localhost:8080');
-  //const USE_ABSOLUTE = location.origin.includes('nirsukrnet.github.io');
+  //const USE_ABSOLUTE = location.origin.includes('localhost:8080');
+  const USE_ABSOLUTE = location.origin.includes('nirsukrnet.github.io');
   const base = USE_ABSOLUTE ? location.origin : '';
 
    // 1) Styles to load (in order)
    const styles = [
-    "./assets/css/oap.css",
-	  "./assets/css/oap_buttons.css",
-	  "./assets/css/oap_menu_less.css"
+    "../assets/css/oap.css",
+	  "../assets/css/oap_buttons.css",
+	  "../assets/css/oap_menu_less.css"
    ];
 
    // 2) Scripts to load (in order)
    const scripts = [
-    "./assets/js/global_var.js",  // must be first to define global_var class used in other scripts    
-    "./assets/js/settings_store.js",
-    "./assets/js/cdebug.js",
-    "./assets/js/db_connswmp3.js",
-    "./assets/js/output_audio_phrase/oap_styles.js",
-    "./assets/js/output_oneaudio/oneaudio_controlbuttons.js",
-    "./assets/js/output_oneaudio/oneaudio_text.js",
-//    "./assets/js/output_audio_phrase/output_audio_text.js",
-    "./assets/js/output_audio_phrase/oap_menu_less.js"
+    "./js/global_var.js",  // must be first to define global_var class used in other scripts    
+    "./js/db_connswmp3.js",
+//    "./js/output_audio_phrase/oap_styles.js",
+    "./js/test_service/test_output.js"
   ];
 
   // Time‑gated clear: make this resilient when cookies/storage are disabled (iOS Private mode)

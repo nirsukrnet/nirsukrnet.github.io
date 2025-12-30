@@ -1,52 +1,143 @@
-# VARS
 
-# Instruction: Refactor State Management with FrameController
+# Instruction: How “Trans EN” works (mp3.html)
 
-## Goal
-Refactor the Audio Segment Tester to use a centralized **State Management Class** (`FrameController`) to decouple logic from the UI. This class will serve as the single source of truth for all timing and positioning data. Additionally, implement synchronized dragging behavior where the audio segment moves relative to the global view window.
+This doc explains (short, step-by-step) what happens in the app when you click the translation button like:
 
-## Files
-*   **Target File**: `html/edit_test7.html` (Start from `html/edit_test6.html`)
+`<button id="btn-trans1-0">Trans EN</button>`
 
-## Core Requirements
+and how the translation text is loaded and shown.
 
-### 1. FrameController Class
-Create a simple class `FrameController` to hold the application state. It should contain **only variables (properties)** and no business logic methods.
+## Key idea
+Clicking **Trans EN** does **not** fetch translation from Firebase.
 
-**Properties:**
-*   `track_Duration`: Total duration of the audio file.
-*   `start_pos_audioframe`: Start time of the selected audio segment (Yellow Highlight representing the visible time range).
-*   `end_pos_audioframe`: End time of the selected audio segment. (Yellow Highlight representing the visible time range).
-*   `start_pos_visual_selection`: The start position of the **View Window (Green Highlight)** in canvas coordinates (pixels).
-*   `end_pos_visual_selection`: The end position of the **View Window (Green Highlight)** in canvas coordinates (pixels).
-*   `start_pos_audio_selection`: The start time (in seconds) of the **View Window**, representing the visible time range.
-*   `end_pos_audio_selection`: The end time (in seconds) of the **View Window**, representing the visible time range. 
-*   `current_time`: Current playback cursor position.
-*   `is_playing`: Boolean state of playback.
-*   `canvas_width`: Width of the visualization canvas.
-*   `canvas_height`: Height of the visualization canvas.
+Translations are loaded earlier (during lesson load) into `gv.sts.audio_phrases`. The click only toggles visibility of an already-rendered DOM element `#text-en-{index}`.
 
-### 2. Global Timeline Behavior (Rule 1)
-*   **View Window Dragging**:
-    *   When the user drags the "View Window" (Yellow Highlight) in the Global Timeline, update `start_pos_visualframe` and `end_pos_visualframe`.
-    *   **Synchronized Segment Move**: The Audio Segment (Green Highlight) must move **in sync** with the View Window.
-    *   *Logic*: Calculate the time shift (`delta`) of the View Window and apply the exact same `delta` to `start_pos_audioframe` and `end_pos_audioframe`.
-    *   *Result*: The Green Segment appears "locked" visually inside the Yellow Window while dragging, effectively changing its actual audio start/end times.
+---
 
-### 3. Segment Timeline Behavior (Rule 2)
-*   **Segment Dragging**:
-    *   Dragging the Green Highlight in the zoomed view updates `start_pos_audioframe` and `end_pos_audioframe`.
-    *   **Constraints**: The segment cannot be dragged outside the bounds of the current View Window (`start_pos_visualframe` / `end_pos_visualframe`).
+## 1) Which scripts are involved (mp3.html)
 
-### 4. Visualization & UI
-*   All rendering functions (`drawWaveform`, `updateMarkers`) must read values directly from the `FrameController` instance.
-*   Input fields (Start Time, End Time) should update the `FrameController` state, which then triggers a UI refresh.
+### Entry HTML
+- Page: [mp3.html](mp3.html)
+	- Loads: `./assets/js/main_loadscripts.js` (defer)
+	- On `DOMContentLoaded` calls `MainFunc()`.
 
-## Implementation Steps
-1.  Define the `FrameController` class.
-2.  Instantiate a global `frameController` object.
-3.  Refactor existing event listeners (drag, input, playback) to read/write to `frameController`.
-4.  Implement the "Synchronized Segment Move" logic in the Global Drag handler.
+### Loader
+- [assets/js/main_loadscripts.js](assets/js/main_loadscripts.js)
+	- Loads CSS: `oap.css`, `oap_buttons.css`, `oap_menu_less.css`
+	- Loads JS (in order):
+		1) [assets/js/global_var.js](assets/js/global_var.js)
+		2) [assets/js/db_connswmp3.js](assets/js/db_connswmp3.js)
+		3) [assets/js/output_audio_phrase/oap_styles.js](assets/js/output_audio_phrase/oap_styles.js)
+		4) [assets/js/output_oneaudio/oneaudio_controlbuttons.js](assets/js/output_oneaudio/oneaudio_controlbuttons.js)
+		5) [assets/js/output_oneaudio/oneaudio_text.js](assets/js/output_oneaudio/oneaudio_text.js)
+		6) [assets/js/output_audio_phrase/oap_menu_less.js](assets/js/output_audio_phrase/oap_menu_less.js)
+
+---
+
+## 2) Data load (where translation comes from)
+
+### Main initialization
+- `MainFunc()` is defined in [assets/js/db_connswmp3.js](assets/js/db_connswmp3.js)
+	- Calls `init()`
+		- `gv.SignIn_User()` authenticates (Firebase REST)
+		- `Get_Rows_All_Tables()` → `Get_DB3_All_Data()`
+
+### Lesson load + merge translations
+- [assets/js/db_connswmp3.js](assets/js/db_connswmp3.js)
+	- `Load_DB3_Lesson_Phrases(lessonId)` does:
+		1) Finds `lessonKey` from `gv.sts.lessons_audio_phrases`
+		2) GET `../data_base3/audio_phrases/{lessonKey}` (source phrases)
+		3) Builds a translation map from `../data_base3/text_trans_phrases/{partid}` using each phrase `text_id`
+		4) Applies translations into each phrase object (keeps source `text_sv`)
+		5) Stores flattened result in `gv.sts.audio_phrases`
+
+### Main Firebase source point (translations)
+
+#### Current source used by mp3.html
+The “main source of translations” is:
+
+- `../data_base3/text_trans_phrases/{partid}/{txtid}`
+
+To collect these translations you can reuse the proven logic from:
+
+- Function: `window.CollectLessonData(lessonId)` in [assets/js/help_js/sent_trans_loadsave.js](assets/js/help_js/sent_trans_loadsave.js)
+
+What `CollectLessonData(lessonId)` does (high level):
+1) Reads lesson phrases from `gv.sts.audio_phrases` (already loaded for the selected lesson)
+2) Extracts unique `text_id` values (format: `parttxt_<n>_txt<m>`)
+3) Groups ids by `partid` (`parttxt_1`, `parttxt_2`, ...)
+4) For each `partid` loads the part dictionary:
+   - `window.Load_DB3_Part_Phrases(partid)` → GET `../data_base3/text_trans_phrases/{partid}`
+5) Joins part translations back to each text id and returns enriched rows (with `_partid/_txtid`)
+
+Practical outcome for mp3.html refactor:
+- Instead of loading `audio_trans_phrases/{lessonKey}`, build translations by looking up each phrase `text_id` in `text_trans_phrases` and fill `seg.text_en/text_uk/text_sv` before calling `loadContentData()`.
+
+Quick runtime check (DevTools console):
+- You should see logs like:
+	- `[Load_DB3] text_trans join: ...`
+	- `[Load_DB3] Applied text_trans_phrases translations: <N>`
+- If you do NOT see these logs on the site, you are likely running an older deployed JS build (not updated on GitHub Pages yet).
 
 
+
+
+
+
+Result: each phrase in `gv.sts.audio_phrases` contains:
+- `text_sv` (source)
+- `text_en` / `text_uk` (from `audio_trans_phrases`, if exists)
+- metadata (`_lesson_key`, `_file_key`, `_index`, `lesson_id`, ...)
+
+---
+
+## 3) Render (where the button and translation element are created)
+
+### Building DOM rows
+- [assets/js/output_oneaudio/oneaudio_text.js](assets/js/output_oneaudio/oneaudio_text.js)
+	- Exposes `loadContentData()` which renders the list into `#list`.
+	- For each phrase (`seg`) it creates:
+		- Source row: `div#text-sv-{idx}`
+		- Translation row: `div#text-en-{idx}` (initially contains translation or “(no translation)”)
+		- Controls row (buttons)
+
+### Choosing which translation to display
+Inside `makeRow(seg, idx)` in `loadContentData()`:
+- Reads `transPref = window.CONTENT_DATA_JSON.translationTo || 'en'`
+- Picks `seg['text_' + transPref]` (fallbacks to `en/uk/sv` when missing)
+- Writes that chosen string into `div#text-en-{idx}`
+
+So the translation is already in the DOM before any click happens.
+
+---
+
+## 4) Click “Trans EN” (what actually happens)
+
+### Button creation
+- [assets/js/output_oneaudio/oneaudio_controlbuttons.js](assets/js/output_oneaudio/oneaudio_controlbuttons.js)
+	- `addButtonsTrans_oap(playBlockEl, index1)` creates:
+		- `button#btn-trans1-{index1}` with text `Trans EN` / `Trans UK` / `Trans SV`
+		- Label depends on `window.CONTENT_DATA_JSON.translationTo`.
+
+### Click handler
+On click, it runs:
+1) `const textEnEl = document.getElementById('text-en-{index1}')`
+2) `textEnEl.classList.toggle('is-visible')`
+
+That’s it.
+
+**No Firebase call happens on click.**
+The click only shows/hides the translation row that was already created and filled in step (3).
+
+---
+
+## 5) (Related) Changing lesson in the menu
+
+- [assets/js/output_audio_phrase/oap_menu_less.js](assets/js/output_audio_phrase/oap_menu_less.js)
+	- When a lesson is selected:
+		1) sets `gv.sts.selected_lesson_id`
+		2) calls `Load_DB3_Lesson_Phrases(id)` (loads phrases + translations)
+		3) calls `loadContentData()` (re-renders)
+
+So translations change when you change lesson because the underlying `gv.sts.audio_phrases` is reloaded.
 

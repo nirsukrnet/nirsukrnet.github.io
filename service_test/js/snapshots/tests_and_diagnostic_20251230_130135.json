@@ -1,0 +1,57 @@
+{
+  "snapshot_diagnostic": {
+    "snapshot": {
+      "path": "data_base3/settings/default_user/settingsData",
+      "fetched_at": "2025-12-30T13:01:35",
+      "data": {
+        "lastLessonId": "lesson_01",
+        "playbackSpeed": 1,
+        "theme": "dark"
+      },
+      "expected_data": {
+        "lastLessonId": {
+          "mp3_playing": "lesson_1",
+          "trans_block": "lesson_2"
+        },
+        "playbackSpeed": 1,
+        "theme": "dark"
+      }
+    },
+    "errors": {
+      "warnings": [
+        "settingsData.lastLessonId is not an object (legacy format: primitive string/number); expected an object keyed by Owner (mp3_playing/trans_block)"
+      ],
+      "received_top_level_keys": [
+        "lastLessonId",
+        "playbackSpeed",
+        "theme"
+      ]
+    },
+    "scripts": {
+      "python": {
+        "script_path": "C:\\Python\\AuTr\\html\\service_test\\python\\snapshot_db3_settings.py",
+        "entry": "main(argv)",
+        "purpose": "Download DB3 snapshots and emit a diagnostic JSON report"
+      },
+      "js": [
+        {
+          "path": "C:\\Python\\AuTr\\html\\assets\\js\\db_connswmp3.js",
+          "functions": [
+            "Save_To_FBDB_Current_Lesson(Lesson_ID, Owner)",
+            "Load_From_FBDB_Current_Lesson(Owner)",
+            "Load_DB3_Lesson_Phrases(lessonId)"
+          ],
+          "purpose": "Persist/restore last lesson and load lesson phrases"
+        },
+        {
+          "path": "C:\\Python\\AuTr\\html\\assets\\js\\output_audio_phrase\\oap_menu_less.js",
+          "functions": [
+            "setSelectedId(id, opts)",
+            "restoreSelectedIdFromFirebase(reason)"
+          ],
+          "purpose": "Lesson menu UI; saves/restores selection"
+        }
+      ]
+    }
+  }
+}

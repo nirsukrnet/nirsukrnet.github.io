@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Service - Firebase Data Demo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #output { margin-top: 20px; border: 1px solid #ccc; padding: 10px; min-height: 200px; }
+        .item { margin-bottom: 5px; padding: 5px; background: #f9f9f9; border-bottom: 1px solid #eee; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+
+    <!-- Load the script with 'defer' so it doesn't block page rendering -->
+    <script src="./js/test_service/main_test_loadscripts.js" defer></script>	
+
+    <!-- Initialize after the DOM is ready -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            MainFunc();
+        });
+    </script>	
+</head>
+<body>
+
+    <h1>Firebase Data Demonstration</h1>
+    
+    <button id="btnStartDemo">Start Demonstration (Lesson 1)</button>
+    <button id="btn_S1">Create Settings S1</button>
+    
+    <div id="output">Output will appear here...</div>
+
+    <script>
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const btn = document.getElementById('btnStartDemo');
+            const btn_s1 = document.getElementById('btn_S1');
+            const outputDiv = document.getElementById('output');
+
+
+            // Initialize connection on load
+            // db_connswmp3.js defines MainFunc which calls init() -> SignIn_User
+            if (typeof MainFunc === 'function') {
+                MainFunc(); 
+            }
+
+            btn_s1.addEventListener('click', () => {                
+                if (typeof Create_FB_DB3_Settings_s1 === 'function') {
+                    Create_FB_DB3_Settings_s1();
+                } else {
+                    outputDiv.innerHTML = 'Error: Create_FB_DB3_Settings_s1 function not found. Check test_output.js';
+                }
+            });
+
+            btn.addEventListener('click', async () => {
+               // window.TestServ_OutputLesson(outputDiv, 1);
+               window.TestServ_OutputPartsFilter(outputDiv, 1);
+            });
+
+        });
+    </script>
+</body>
+</html>

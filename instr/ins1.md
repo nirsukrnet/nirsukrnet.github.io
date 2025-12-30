@@ -1,94 +1,44 @@
-# Web App Specification: Translation Tool Update
+explain what the differences between this
+to aproaches
+   "./assets/js/output_oneaudio/oneaudio_text.js",
+    "./assets/js/output_audio_phrase/output_audio_text.js",
 
-**Goal:** Update the web application (`transl.html`) and its JavaScript modules to support the new Firebase data structure. The tool allows users to view Swedish phrases and input English translations.
+for each function in short 1=4 lines for each function.
 
-## 1. Data Structure
+and put it explanation into this file bellow
 
-### Read Path: `audio_phrases`
-The app should read source data from:
-`data_base3/audio_phrases/{lesson_id}/{mp3_file_id}`
+---
 
-**Structure:**
-```json
-{
-  "0": {
-    "text_sv": "hej",
-    "text_en": "", 
-    "start": 8.266,
-    "end": 8.916,
-    "intervals_id": 4
-  },
-  "1": { ... }
-}
-```
+## Differences: `oneaudio_text.js` vs `output_audio_text.js`
 
-### Write Path: `audio_trans_phrases`
-The app should save translations to:
-`data_base3/audio_trans_phrases/{lesson_id}/{mp3_file_id}`
+### `loadContentData()`
+- **oneaudio_text.js**: Renders from `gv.sts.audio_phrases` (no `audio_phrases_with_trans` support). Audio is handled “globally” (no `<audio>` element per row); play buttons get the whole `seg` object.
+- **output_audio_text.js**: Prefers `gv.sts.audio_phrases_with_trans` (falls back to `audio_phrases`). Creates a real `<audio>` element per row with `src = phrase_audio/<file_name>` and play buttons receive that audio element.
 
-**Structure (Mirror of Source):**
-```json
-{
-  "0": {
-    "text_sv": "hej",
-    "text_en": "hello",  <-- User Input
-    "start": 8.266,
-    "end": 8.916,
-    "intervals_id": 4,
-    "datetimetrans": "2025-12-25T12:00:00Z" <-- Timestamp of translation
-  }
-}
-```
+### `applyFilter()` (inner function)
+- **Both**: Same filter behavior: supports `p123` jump-to-row by button text, otherwise substring search across `sv + translation`.
+- **Difference**: None significant; only the rendered row content differs because audio rendering differs.
 
-## 2. File Specifications
+### `render(list)` (inner function)
+- **Both**: Clears `#list` and appends each row element.
+- **Difference**: None; it just renders whatever rows were built.
 
-### HTML: `C:\Python\AuTr\html\transl.html`
-*   **Layout:**
-    *   Header with Title.
-    *   Controls:
-        *   Input for `Lesson ID` (default: "lesson_1").
-        *   Input for `MP3 File ID` (default: "mp3_file_0001").
-        *   "Load" button.
-        *   "Save All" button.
-    *   Container for the list of phrases.
-    *   Each phrase row:
-        *   ID/Index.
-        *   Swedish Text (Read-only).
-        *   English Text (Input field).
-        *   Time range (Display).
+### `makeRow(seg, idx)` (inner function)
+- **oneaudio_text.js**: Does NOT create `<audio>`; keeps an empty “audio row” container. Calls `addButtonsPlay_oap(playBlockEl, seg, idx)` and uses `(no____translation)` placeholder.
+- **output_audio_text.js**: Creates `<audio controls preload="none">` with encoded file name; calls `addButtonsPlay_oap(playBlockEl, audioEl, idx)` and uses `(no translation)` placeholder.
 
-### JavaScript Modules: `C:\Python\AuTr\html\assets\js\help_js\`
+---
 
-#### 1. `trans_loadscripts.js`
-*   **Role:** Entry point.
-*   **Task:** Load necessary Firebase SDKs (v8 or v9 compat) and other modules (`trans_ui.js`, `sent_trans_loadsave.js`).
+## Make `oneaudio_text.js` use `audio_phrases_with_trans`
 
-#### 2. `sent_trans_loadsave.js`
-*   **Role:** Firebase Interaction.
-*   **Functions:**
-    *   `initFirebase()`: Initialize app.
-    *   `loadPhrases(lessonId, mp3Id)`: Fetch data from `audio_phrases`.
-    *   `loadExistingTranslations(lessonId, mp3Id)`: Fetch data from `audio_trans_phrases` (to pre-fill if exists).
-    *   `saveTranslations(lessonId, mp3Id, dataObj)`: Write data to `audio_trans_phrases`.
+### Goal
+Use the OneAudio (single track) UI, but show translations from `text_trans_phrases` via `gv.sts.audio_phrases_with_trans`.
 
-#### 3. `trans_ui.js`
-*   **Role:** UI Rendering & Event Handling.
-*   **Functions:**
-    *   `renderPhrases(phrasesData, translationsData)`: Generate HTML table/list.
-    *   `collectData()`: Scrape inputs to prepare for saving.
-    *   `handleLoad()`: Trigger load functions.
-    *   `handleSave()`: Trigger save functions.
+### Change
+- In `loadContentData()`, set `rows_phrases` to prefer `gv.sts.audio_phrases_with_trans` when it exists; fallback to `gv.sts.audio_phrases`.
 
-## 3. Implementation Steps
-1.  **Update HTML**: Add the control inputs and container.
-2.  **Update JS**: Refactor existing scripts to handle the nested JSON structure (`lesson -> mp3 -> index -> object`).
-3.  **Firebase Config**: Ensure the correct Firebase config is used (same as in `firebase_load.yaml` but for JS client).
+### Requirement
+- The loader must populate `gv.sts.audio_phrases_with_trans` (in this repo that happens in `db_connswmp3.js` after `Load_DB3_Lesson_Phrases`).
 
-## 4. Example Data Flow
-1.  User enters "lesson_1", "mp3_file_0001" and clicks Load.
-2.  App fetches `audio_phrases/lesson_1/mp3_file_0001`.
-3.  App fetches `audio_trans_phrases/lesson_1/mp3_file_0001`.
-4.  UI displays rows. If translation exists, fill input; otherwise empty.
-5.  User types "Hello" for "Hej".
-6.  User clicks Save.
-7.  App constructs object and saves to `audio_trans_phrases/lesson_1/mp3_file_0001`.
+
+

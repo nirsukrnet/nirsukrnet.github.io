@@ -170,9 +170,7 @@ class GlobalVars {
     };
     this.sts = {
       vdata1: null,
-            // Canonical lesson id is DB3 json_key_item like "lesson_1".
-            // Keep null by default; loaders/menu will restore from Firebase or choose a default lesson.
-            selected_lesson_id: null,
+      selected_lesson_id: 2,  // Default selected lesson ID
       tables_meta: [],
       audio_phrases: [],
       lessons_audio_phrases: [],
