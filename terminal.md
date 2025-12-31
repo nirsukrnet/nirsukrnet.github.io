@@ -11,7 +11,7 @@ https://nirsukrnet.github.io/voicestorage/mp3.html
 
 # GIT
 
-# PS C:\Python\AuTr\html> git branch                   
+# PS C:\Python\AuTr\html> git branch
   main
 * main202512
 

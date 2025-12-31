@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube Player + Transcript (yout_pl1)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    h1 { margin: 0 0 12px; font-size: 20px; }
+
+    #playerWrap { max-width: 980px; }
+    #player { aspect-ratio: 16 / 9; width: 100%; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+      align-items: center;
+    }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    #t {
+      font-variant-numeric: tabular-nums;
+      min-width: 72px;
+      display: inline-block;
+    }
+
+    #transWrap {
+      display: none;
+      max-width: 980px;
+      margin-top: 10px;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 10px;
+      /* Fixed-height, scrollable transcript panel (prevents active line “disappearing”) */
+      height: 60vh;
+      max-height: 520px;
+      min-height: 320px;
+      overflow-y: auto;
+    }
+
+    #transList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 6px;
+      /* Give some breathing room so borders are not clipped at edges */
+      padding-top: 8px;
+      padding-bottom: 24px;
+    }
+
+    #transList li {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #transList li[data-active="1"] {
+      border-color: currentColor;
+    }
+
+    #transList small {
+      opacity: 0.75;
+      margin-right: 8px;
+    }
+
+    dialog {
+      width: min(980px, calc(100vw - 24px));
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .muted { opacity: 0.75; }
+  </style>
+</head>
+<body> 
+
+  <div id="playerWrap">
+    <div id="player"></div>
+  </div>
+
+  <div class="row">
+    <button id="btnPlay">Play</button>
+    <button id="btnPause">Pause</button>
+    <button id="btnBack">-5s</button>
+    <button id="btnFwd">+5s</button>
+    <span>Time: <span id="t">0.00</span>s</span>
+  </div>
+
+  <div class="row">
+    <button id="btnToggleTrans">Transcription</button>
+    <button id="btnPasteTrans">Paste transcript</button>
+    <button id="btnPrev" disabled>Prev</button>
+    <button id="btnNext" disabled>Next</button>
+  </div>
+
+  <div id="transWrap">
+    <ul id="transList"></ul>
+  </div>
+
+  <dialog id="dlgTrans">
+    <form method="dialog">
+      <h3 style="margin:0 0 8px; font-size:16px;">Paste transcript text</h3>
+      <div class="muted" style="margin-bottom:8px;">
+        Paste lines like <code>0:04</code> then the text line(s). This will be parsed into {t,text} items and stored for this video.
+      </div>
+      <textarea id="taTrans" rows="14" placeholder="0:01
+[Music]
+0:04
+Hi everyone. Welcome back...
+0:06
+English Channel..."></textarea>
+      <div class="row" style="margin:10px 0 0;">
+        <button id="btnApplyTrans" value="cancel">Apply</button>
+        <button id="btnSaveTrans" value="cancel">Save to Firebase</button>
+        <button value="cancel">Close</button>
+        <span id="transStatus" class="muted"></span>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Firebase auth + RTDB request helper (defines GlobalVars / URL_DataSet) -->
+  <script src="./assets/js/global_var.js"></script>
+  <script src="./assets/js/youtube_transcript_store.js"></script>
+
+  <script>
+    // 1) Load YouTube IFrame API
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+
+    // Target video
+    const VIDEO_ID = 'maKy1pRdcDw';
+
+    // Transcript items: { t: seconds, text: string }
+    let transcript = [];
+
+    let player = null;
+    let activeIndex = -1;
+
+    function setStatus(msg) {
+      const el = document.getElementById('transStatus');
+      if (!el) return;
+      el.textContent = msg || '';
+    }
+
+    function parseTimeToSeconds(s) {
+      const raw = (s == null) ? '' : String(s).trim();
+      if (!raw) return null;
+      // Accept: m:ss, mm:ss, h:mm:ss
+      const m = /^(\d+):(\d{2})(?::(\d{2}))?$/.exec(raw);
+      if (!m) return null;
+      const a = Number(m[1]);
+      const b = Number(m[2]);
+      const c = (m[3] != null) ? Number(m[3]) : null;
+      if (Number.isNaN(a) || Number.isNaN(b) || (c != null && Number.isNaN(c))) return null;
+      if (c == null) return (a * 60) + b;
+      return (a * 3600) + (b * 60) + c;
+    }
+
+    function parseTranscriptText(rawText) {
+      const raw = (rawText == null) ? '' : String(rawText);
+      const lines = raw.split(/\r?\n/).map(l => l.trim());
+      const items = [];
+      let cur = null;
+      for (const line of lines) {
+        if (!line) continue;
+        const t = parseTimeToSeconds(line);
+        if (t != null) {
+          cur = { t, text: '' };
+          items.push(cur);
+          continue;
+        }
+        if (!cur) continue;
+        // append text to current timestamp
+        cur.text = cur.text ? (cur.text + ' ' + line) : line;
+      }
+
+      // Normalize: drop empty entries, sort, merge duplicates
+      const cleaned = items
+        .filter(it => it && typeof it.t === 'number' && isFinite(it.t) && String(it.text || '').trim())
+        .map(it => ({ t: Number(it.t), text: String(it.text || '').trim() }))
+        .sort((a, b) => a.t - b.t);
+
+      const merged = [];
+      for (const it of cleaned) {
+        const last = merged[merged.length - 1];
+        if (last && last.t === it.t) {
+          last.text = (last.text + ' ' + it.text).trim();
+        } else {
+          merged.push(it);
+        }
+      }
+      return merged;
+    }
+
+    function setTranscript(items) {
+      transcript = Array.isArray(items) ? items : [];
+      // if transcript panel already rendered, re-render
+      const wrap = document.getElementById('transWrap');
+      if (wrap && wrap.dataset.rendered) {
+        renderTranscript();
+      }
+      if (transcript.length > 0) {
+        setActiveIndex(0);
+      } else {
+        activeIndex = -1;
+        updateNavButtons();
+      }
+    }
+
+    function fmtTimestamp(seconds) {
+      const total = Math.max(0, Math.floor(Number(seconds || 0)));
+      if (!isFinite(total)) return '0:00';
+      const s = total % 60;
+      const totalMin = Math.floor(total / 60);
+      const m = totalMin % 60;
+      const h = Math.floor(totalMin / 60);
+      const s2 = String(s).padStart(2, '0');
+      if (h > 0) {
+        const m2 = String(m).padStart(2, '0');
+        return `${h}:${m2}:${s2}`;
+      }
+      return `${totalMin}:${s2}`;
+    }
+
+    function setActiveIndex(idx) {
+      if (!Array.isArray(transcript) || transcript.length === 0) {
+        activeIndex = -1;
+        updateNavButtons();
+        updateActiveRow();
+        return;
+      }
+      const next = Math.max(0, Math.min(transcript.length - 1, idx));
+      activeIndex = next;
+      updateNavButtons();
+      updateActiveRow();
+    }
+
+    function updateNavButtons() {
+      const has = Array.isArray(transcript) && transcript.length > 0;
+      document.getElementById('btnPrev').disabled = !has || activeIndex <= 0;
+      document.getElementById('btnNext').disabled = !has || activeIndex < 0 || activeIndex >= transcript.length - 1;
+    }
+
+    function updateActiveRow() {
+      const list = document.getElementById('transList');
+      const wrap = document.getElementById('transWrap');
+      const items = list.querySelectorAll('li');
+      items.forEach((li, i) => {
+        li.dataset.active = (i === activeIndex) ? '1' : '0';
+      });
+      if (!wrap) return;
+      if (wrap.style.display !== 'block') return;
+      if (activeIndex < 0 || !items[activeIndex]) return;
+
+      // Keep current line around “line 3” (near top) to avoid it drifting to the bottom.
+      try {
+        const activeEl = items[activeIndex];
+        const wrapRect = wrap.getBoundingClientRect();
+        const activeRect = activeEl.getBoundingClientRect();
+
+        // Approximate one “line height” including spacing.
+        const lineStep = Math.max(1, activeEl.offsetHeight + 6);
+
+        // Where the active line should appear: after ~2 lines from the top.
+        const desiredTopPx = wrapRect.top + (2 * lineStep);
+
+        const delta = activeRect.top - desiredTopPx;
+        // Adjust scrollTop by delta (positive delta means active is too low).
+        const nextTop = Math.max(0, wrap.scrollTop + delta);
+        wrap.scrollTo({ top: nextTop, behavior: 'auto' });
+      } catch {}
+    }
+
+    function findActiveByTime(t) {
+      if (!Array.isArray(transcript) || transcript.length === 0) return -1;
+      let idx = 0;
+      for (let i = 0; i < transcript.length; i++) {
+        const cur = transcript[i];
+        const next = transcript[i + 1];
+        const start = Number(cur.t || 0);
+        const end = next ? Number(next.t || 0) : Number.POSITIVE_INFINITY;
+        if (t >= start && t < end) {
+          idx = i;
+          break;
+        }
+      }
+      return idx;
+    }
+
+    function seekToTranscriptIndex(idx) {
+      if (!player || typeof player.seekTo !== 'function') return;
+      const row = transcript[idx];
+      if (!row) return;
+      const t = Number(row.t || 0);
+      player.seekTo(Math.max(0, t), true);
+      setActiveIndex(idx);
+    }
+
+    function renderTranscript() {
+      const list = document.getElementById('transList');
+      list.innerHTML = '';
+      if (!Array.isArray(transcript) || transcript.length === 0) {
+        const li = document.createElement('li');
+        li.dataset.active = '0';
+        li.className = 'muted';
+        li.textContent = 'No transcript loaded yet. Use “Paste transcript”.';
+        list.appendChild(li);
+        activeIndex = -1;
+        updateNavButtons();
+        return;
+      }
+      transcript.forEach((row, idx) => {
+        const li = document.createElement('li');
+        li.dataset.idx = String(idx);
+        li.dataset.active = '0';
+        li.innerHTML = `<small>${fmtTimestamp(row.t)}</small>${String(row.text || '')}`;
+        li.addEventListener('click', () => seekToTranscriptIndex(idx));
+        list.appendChild(li);
+      });
+      setActiveIndex(0);
+    }
+
+    function toggleTranscript() {
+      const wrap = document.getElementById('transWrap');
+      const isOpen = wrap.style.display === 'block';
+      wrap.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) {
+        // Lazy render
+        if (!wrap.dataset.rendered) {
+          renderTranscript();
+          wrap.dataset.rendered = '1';
+        }
+      }
+    }
+
+    function openPasteModal() {
+      setStatus('');
+      const dlg = document.getElementById('dlgTrans');
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    async function saveTranscriptToFirebase(rawText, items) {
+      if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.save !== 'function') {
+        throw new Error('YouTubeTranscriptStore not available');
+      }
+      await window.YouTubeTranscriptStore.save(VIDEO_ID, items, rawText);
+    }
+
+    async function tryLoadTranscriptFromFirebase() {
+      if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.load !== 'function') return;
+      try {
+        const data = await window.YouTubeTranscriptStore.load(VIDEO_ID);
+        const items = (data && Array.isArray(data.items)) ? data.items : [];
+        if (items && items.length) {
+          setTranscript(items);
+        }
+      } catch {
+        // silent; page should work without firebase
+      }
+    }
+
+    function wireControls() {
+      document.getElementById('btnPlay').onclick = () => player && player.playVideo && player.playVideo();
+      document.getElementById('btnPause').onclick = () => player && player.pauseVideo && player.pauseVideo();
+      document.getElementById('btnBack').onclick = () => {
+        if (!player || !player.getCurrentTime) return;
+        player.seekTo(Math.max(0, player.getCurrentTime() - 5), true);
+      };
+      document.getElementById('btnFwd').onclick = () => {
+        if (!player || !player.getCurrentTime) return;
+        player.seekTo(player.getCurrentTime() + 5, true);
+      };
+
+      document.getElementById('btnToggleTrans').onclick = () => toggleTranscript();
+      document.getElementById('btnPasteTrans').onclick = () => openPasteModal();
+      document.getElementById('btnPrev').onclick = () => seekToTranscriptIndex(activeIndex - 1);
+      document.getElementById('btnNext').onclick = () => seekToTranscriptIndex(activeIndex + 1);
+
+      document.getElementById('btnApplyTrans').onclick = (e) => {
+        try {
+          e.preventDefault();
+          const raw = document.getElementById('taTrans').value;
+          const items = parseTranscriptText(raw);
+          setTranscript(items);
+          setStatus(`Applied: ${items.length} items`);
+        } catch (err) {
+          setStatus('Parse failed');
+        }
+      };
+
+      document.getElementById('btnSaveTrans').onclick = async (e) => {
+        e.preventDefault();
+        try {
+          const raw = document.getElementById('taTrans').value;
+          const items = parseTranscriptText(raw);
+          setTranscript(items);
+          setStatus('Saving...');
+          await saveTranscriptToFirebase(raw, items);
+          setStatus(`Saved to Firebase: ${items.length} items`);
+        } catch (err) {
+          setStatus('Save failed (check console)');
+          try { console.warn('Save transcript failed', err); } catch {}
+        }
+      };
+
+      // time + highlight loop
+      setInterval(() => {
+        if (!player || typeof player.getCurrentTime !== 'function') return;
+        const t = player.getCurrentTime();
+        // Keep seconds precision for the main time indicator (not the transcript timestamps)
+        try { document.getElementById('t').textContent = Number(t || 0).toFixed(2); } catch {}
+
+        const wrap = document.getElementById('transWrap');
+        const isShown = wrap.style.display === 'block';
+        if (!isShown) return;
+
+        const idx = findActiveByTime(t);
+        if (idx !== activeIndex) {
+          activeIndex = idx;
+          updateNavButtons();
+          updateActiveRow();
+        }
+      }, 250);
+
+      // Attempt to load transcript from Firebase (optional)
+      Promise.resolve().then(() => tryLoadTranscriptFromFirebase()).catch(() => {});
+    }
+
+    // 2) YouTube calls this global when API is ready
+    window.onYouTubeIframeAPIReady = function () {
+      player = new YT.Player('player', {
+        videoId: VIDEO_ID,
+        playerVars: { rel: 0, modestbranding: 1, origin: location.origin },
+        events: {
+          onReady: () => {
+            wireControls();
+          }
+        }
+      });
+    };
+  </script>
+</body>
+</html>

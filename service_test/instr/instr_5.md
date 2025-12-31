@@ -125,5 +125,28 @@ Optionally override via env vars (so you don’t edit committed files):
 - `FIREBASE_EMAIL`
 - `FIREBASE_PASSWORD`
 
+---
 
+## Sink "both": console + buffered DB (manual save)
+If you set:
+```json
+{
+	"debug": {
+		"output": { "sink": "both" }
+	}
+}
+```
 
+Behavior:
+- Logs still go to the browser console immediately.
+- DB writes do NOT happen per log call.
+- Instead, `cdebug` keeps DB log records in memory.
+- A bottom-right button `sav_deb` appears.
+- Clicking `sav_deb` flushes the buffered records into Firebase under `debug/logs`.
+
+Notes:
+- If you set sink to `db`, DB logging is immediate (no buffering).
+- You can also flush manually from DevTools:
+```js
+await cdebug.flushToFirebase();
+```

@@ -27,11 +27,13 @@ class FirebaseConfig:
 # This is equivalent to service_test/sample_default_debug_settings.json (debug-only).
 DEFAULT_DEBUG_SETTINGS: dict[str, Any] = {
     "debug": {
-        "output": {"sink": "console"},
+        # "output": {"sink": "console"},
+        "output": {"sink": "both"},
         # Human-friendly list; this script will encode these into Firebase-safe keys.
         "enabledIdentsPlain": [
             "cdebug.js::selftest::ping",
             # "oneaudio_controlbuttons.js::addButtonsTrans_oap::addedTransButton",
+            "oneaudio_controlbuttons.js::_oapAudioController.init::audioLoaded",
         ],
     }
 }

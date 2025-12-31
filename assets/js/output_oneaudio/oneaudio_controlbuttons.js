@@ -5,6 +5,10 @@ window._oapAudioController = window._oapAudioController || {
     timeUpdateHandler: null,
     
     async init(src) {
+        const _cdbgCtx = (window.cdebug && typeof window.cdebug.ctx === 'function')
+            ? window.cdebug.ctx('oneaudio_controlbuttons.js', '_oapAudioController.init')
+            : null;
+
         // Stop existing playback if any
         if (this.audio) {
             this.audio.pause();
@@ -35,7 +39,9 @@ window._oapAudioController = window._oapAudioController || {
             const audioBlob = new Blob([blob], { type: 'audio/mpeg' });
             const blobUrl = URL.createObjectURL(audioBlob);
             this.audio.src = blobUrl;
-            console.log("[OneAudio] Audio loaded into memory. Ready for playback.");
+            if (_cdbgCtx) {
+                _cdbgCtx.log('audioLoaded', { src });
+            }
         } catch (e) {
             console.error("[OneAudio] Failed to load audio file:", e);
             alert("Failed to load audio file. Check console.");

@@ -46,8 +46,58 @@
 
   const state = {
     enabledKeys: {},
-    sink: 'console' // console | db | both
+    sink: 'console', // console | db | both
+    buffer: [],
+    isFlushing: false
   };
+
+  const ui = {
+    saveBtn: null
+  };
+
+  function ensureSaveButton() {
+    if (ui.saveBtn && document && document.body && document.body.contains(ui.saveBtn)) return ui.saveBtn;
+    if (!document || !document.body) return null;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'sav_deb';
+    btn.setAttribute('aria-label', 'Save debug logs');
+    btn.style.position = 'fixed';
+    btn.style.right = '12px';
+    btn.style.bottom = '12px';
+    btn.style.zIndex = '2147483647';
+    btn.style.padding = '10px 12px';
+    btn.style.border = '1px solid currentColor';
+    btn.style.borderRadius = '10px';
+    btn.style.background = 'transparent';
+    btn.style.cursor = 'pointer';
+    btn.style.fontSize = '14px';
+    btn.style.lineHeight = '1';
+
+    btn.addEventListener('click', async () => {
+      try {
+        await flushToFirebase();
+      } catch {}
+    });
+
+    document.body.appendChild(btn);
+    ui.saveBtn = btn;
+    return btn;
+  }
+
+  function updateSaveButtonVisibility() {
+    const sink = getSink();
+    const shouldShow = sink === 'both';
+    if (!shouldShow) {
+      if (ui.saveBtn && ui.saveBtn.parentNode) {
+        ui.saveBtn.parentNode.removeChild(ui.saveBtn);
+      }
+      ui.saveBtn = null;
+      return;
+    }
+    ensureSaveButton();
+  }
 
   function identKey(ident) {
     // Firebase RTDB keys cannot contain: . $ # [ ] / (and cannot be empty).
@@ -97,6 +147,7 @@
 
         state.enabledKeys = (enabled && typeof enabled === 'object' && !Array.isArray(enabled)) ? enabled : {};
         state.sink = sink || 'console';
+        updateSaveButtonVisibility();
         return;
       }
     } catch (e) {
@@ -113,6 +164,7 @@
 
     state.enabledKeys = (enabled && typeof enabled === 'object' && !Array.isArray(enabled)) ? enabled : {};
     state.sink = sink || 'console';
+    updateSaveButtonVisibility();
   }
 
   function consoleEmit(level, ident, msg, extra) {
@@ -136,6 +188,48 @@
     await requestByPath(`${SETTINGS_ROOT_PATH}/debug/logs`, 'POST', record);
   }
 
+  function buildRecord(level, ident, msg, extra) {
+    const record = {
+      ts: nowIso(),
+      level: safeLevel(level),
+      ident: String(ident),
+      msg: (msg == null) ? '' : String(msg)
+    };
+    if (extra !== undefined) record.extra = extra;
+    return record;
+  }
+
+  async function flushToFirebase() {
+    if (state.isFlushing) return;
+    if (!state.buffer || state.buffer.length === 0) return;
+
+    state.isFlushing = true;
+    const btn = ui.saveBtn;
+    const prevText = btn ? btn.textContent : '';
+
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'sav_deb...';
+      }
+
+      await ensureSignedIn();
+
+      // Flush in FIFO order. If a write fails, keep remaining records in memory.
+      while (state.buffer.length > 0) {
+        const record = state.buffer[0];
+        await requestByPath(`${SETTINGS_ROOT_PATH}/debug/logs`, 'POST', record);
+        state.buffer.shift();
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = prevText || 'sav_deb';
+      }
+      state.isFlushing = false;
+    }
+  }
+
   function emit(level, msg, ident, extra) {
     if (!isEnabled(ident)) return;
 
@@ -146,10 +240,16 @@
     }
 
     if (sink === 'db' || sink === 'both') {
-      // Do not block UI on DB writes.
-      Promise.resolve().then(() => dbEmit(level, ident, msg, extra)).catch((e) => {
-        try { console.warn('[cdebug] dbEmit failed', e); } catch {}
-      });
+      if (sink === 'both') {
+        // In "both" mode we buffer DB records in memory and write them only when user clicks "sav_deb".
+        try { state.buffer.push(buildRecord(level, ident, msg, extra)); } catch {}
+      } else {
+        // In "db" mode we write immediately.
+        // Do not block UI on DB writes.
+        Promise.resolve().then(() => dbEmit(level, ident, msg, extra)).catch((e) => {
+          try { console.warn('[cdebug] dbEmit failed', e); } catch {}
+        });
+      }
     }
   }
 
@@ -173,6 +273,7 @@
   const cdebug = {
     isEnabled,
     refreshFromFirebase,
+    flushToFirebase,
     log(msg, ident, extra) { emit('log', msg, ident, extra); },
     warn(msg, ident, extra) { emit('warn', msg, ident, extra); },
     error(msg, ident, extra) { emit('error', msg, ident, extra); },
