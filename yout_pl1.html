@@ -36,6 +36,14 @@
       text-align: center;
     }
 
+    /* Top-right main menu button */
+    #btnMainMenu {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 50;
+    }
+
     button {
       padding: 10px 12px;
       min-height: 44px;
@@ -132,6 +140,8 @@
 </head>
 <body> 
 
+  <button id="btnMainMenu">Menu</button>
+
   <div id="playerWrap">
     <div id="player"></div>
   </div>
@@ -184,6 +194,57 @@ English Channel..."></textarea>
   <!-- Firebase auth + RTDB request helper (defines GlobalVars / URL_DataSet) -->
   <script src="./assets/js/global_var.js"></script>
   <script src="./assets/js/youtube_transcript_store.js"></script>
+  <script src="./assets/js/youtube_ref_videos_store.js"></script>
+
+  <dialog id="dlgMainMenu">
+    <form method="dialog">
+      <h3 style="margin:0 0 8px; font-size:16px;">YouTube menu</h3>
+      <div class="row" style="margin:8px 0 0;">
+        <button id="btnAddVideo" value="cancel">Add YouTube link</button>
+        <button value="cancel">Close</button>
+      </div>
+      <div class="muted" style="margin-top:6px;">First 5 videos (sorted by order)</div>
+      <ul id="refVideosList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
+      <div id="refVideosStatus" class="muted" style="margin-top:8px;"></div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgAddVideo">
+    <form method="dialog" id="frmAddVideo">
+      <h3 style="margin:0 0 8px; font-size:16px;">Add YouTube link</h3>
+      <div class="muted" style="margin-bottom:8px;">Fill URL; indent_id (videoId) can be auto-detected.</div>
+
+      <div style="display:grid; gap:8px;">
+        <label>indent_id (optional)
+          <input id="inIndentId" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+        </label>
+        <label>url
+          <input id="inUrl" placeholder="https://youtu.be/maKy1pRdcDw" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" required />
+        </label>
+        <label>short_name (optional)
+          <input id="inShortName" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+        </label>
+        <label>title (optional)
+          <input id="inTitle" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+        </label>
+        <label>tag (optional)
+          <input id="inTag" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+        </label>
+        <label>order (number)
+          <input id="inOrder" type="number" value="9999" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+        </label>
+        <label>description (optional)
+          <textarea id="inDesc" rows="3" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;"></textarea>
+        </label>
+      </div>
+
+      <div class="row" style="margin:10px 0 0;">
+        <button id="btnSaveVideo" value="cancel">Save</button>
+        <button value="cancel">Close</button>
+        <span id="addVideoStatus" class="muted"></span>
+      </div>
+    </form>
+  </dialog>
 
   <script>
     // 1) Load YouTube IFrame API
@@ -191,8 +252,8 @@ English Channel..."></textarea>
     tag.src = 'https://www.youtube.com/iframe_api';
     document.head.appendChild(tag);
 
-    // Target video
-    const VIDEO_ID = 'maKy1pRdcDw';
+    // Current video
+    let currentVideoId = 'maKy1pRdcDw';
 
     // Transcript items: { t: seconds, text: string }
     let transcript = [];
@@ -207,6 +268,18 @@ English Channel..."></textarea>
 
     function setStatus(msg) {
       const el = document.getElementById('transStatus');
+      if (!el) return;
+      el.textContent = msg || '';
+    }
+
+    function setRefStatus(msg) {
+      const el = document.getElementById('refVideosStatus');
+      if (!el) return;
+      el.textContent = msg || '';
+    }
+
+    function setAddVideoStatus(msg) {
+      const el = document.getElementById('addVideoStatus');
       if (!el) return;
       el.textContent = msg || '';
     }
@@ -448,13 +521,13 @@ English Channel..."></textarea>
       if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.save !== 'function') {
         throw new Error('YouTubeTranscriptStore not available');
       }
-      await window.YouTubeTranscriptStore.save(VIDEO_ID, items, rawText);
+      await window.YouTubeTranscriptStore.save(currentVideoId, items, rawText);
     }
 
     async function tryLoadTranscriptFromFirebase() {
       if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.load !== 'function') return;
       try {
-        const data = await window.YouTubeTranscriptStore.load(VIDEO_ID);
+        const data = await window.YouTubeTranscriptStore.load(currentVideoId);
         const items = (data && Array.isArray(data.items)) ? data.items : [];
         transcriptRawText = (data && typeof data.rawText === 'string') ? data.rawText : '';
         if (items && items.length) {
@@ -525,6 +598,218 @@ English Channel..."></textarea>
       updateMenuLabels();
       if (typeof dlg.showModal === 'function') dlg.showModal();
       else dlg.setAttribute('open', 'open');
+    }
+
+    function openMainMenu() {
+      const dlg = document.getElementById('dlgMainMenu');
+      if (!dlg) return;
+      setRefStatus('Loading...');
+      Promise.resolve().then(() => loadRefVideos()).catch(() => setRefStatus('Load failed'));
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    function openAddVideoDialog() {
+      setAddVideoStatus('');
+      const dlg = document.getElementById('dlgAddVideo');
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    function closeDialogById(id) {
+      const dlg = document.getElementById(id);
+      if (!dlg) return;
+      try {
+        if (typeof dlg.close === 'function') dlg.close();
+        else dlg.removeAttribute('open');
+      } catch {}
+    }
+
+    function looksLikeYouTubeVideoId(s) {
+      const x = cleanStr(s);
+      return /^[a-zA-Z0-9_-]{11}$/.test(x);
+    }
+
+    function getVideoIdFromRefVideo(v) {
+      const byIndent = cleanStr(v && v.indent_id);
+      if (looksLikeYouTubeVideoId(byIndent)) return byIndent;
+      const url = cleanStr(v && v.url);
+      if (url && window.YouTubeRefVideosStore && typeof window.YouTubeRefVideosStore.extractVideoIdFromUrl === 'function') {
+        const vid = cleanStr(window.YouTubeRefVideosStore.extractVideoIdFromUrl(url));
+        if (vid) return vid;
+      }
+      // Fallback: allow indent_id even if it's not strictly 11 chars.
+      return byIndent;
+    }
+
+    async function switchToVideoId(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) return;
+
+      currentVideoId = vid;
+      transcriptRawText = '';
+      setTranscript([]);
+
+      // Update the embedded player (no new window/tab)
+      try {
+        if (player && typeof player.cueVideoById === 'function') player.cueVideoById(vid);
+        else if (player && typeof player.loadVideoById === 'function') player.loadVideoById(vid);
+      } catch {}
+
+      // Load transcript for this videoId
+      setMainStatus('Loading transcript...');
+      try {
+        if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.load !== 'function') {
+          setMainStatus('Transcript store not available');
+          return;
+        }
+
+        const data = await window.YouTubeTranscriptStore.load(vid);
+        const items = (data && Array.isArray(data.items)) ? data.items : [];
+        transcriptRawText = (data && typeof data.rawText === 'string') ? data.rawText : '';
+        if (items && items.length) {
+          setTranscript(items);
+          setMainStatus(`Transcript loaded: ${items.length} items`);
+        } else {
+          setMainStatus('No transcript loaded');
+        }
+      } catch (err) {
+        setMainStatus('Transcript load failed (check console)');
+        try { console.warn('Load transcript failed', err); } catch {}
+      }
+    }
+
+    async function loadRefVideos() {
+      const list = document.getElementById('refVideosList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.listAll !== 'function') {
+        setRefStatus('YouTubeRefVideosStore not available');
+        return;
+      }
+
+      const all = await window.YouTubeRefVideosStore.listAll();
+      const sorted = (Array.isArray(all) ? all : [])
+        .filter(Boolean)
+        .map(v => ({
+          indent_id: String(v.indent_id || '').trim(),
+          url: String(v.url || '').trim(),
+          short_name: String(v.short_name || '').trim(),
+          title: String(v.title || '').trim(),
+          order: Number.isFinite(Number(v.order)) ? Number(v.order) : 9999
+        }))
+        .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
+
+      const top = sorted.slice(0, 5);
+      if (top.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'No saved videos yet.';
+        list.appendChild(li);
+        setRefStatus('');
+        return;
+      }
+
+      top.forEach(v => {
+        const li = document.createElement('li');
+        li.style.padding = '10px';
+        li.style.border = '1px solid currentColor';
+        li.style.borderRadius = '10px';
+        li.style.cursor = 'pointer';
+        const label = v.short_name || v.title || v.indent_id || v.url;
+        li.textContent = label;
+        li.onclick = () => {
+          Promise.resolve().then(async () => {
+            const vid = getVideoIdFromRefVideo(v);
+            if (!vid) {
+              setMainStatus('Bad video id');
+              return;
+            }
+            closeDialogById('dlgMainMenu');
+            await switchToVideoId(vid);
+          }).catch(() => setMainStatus('Switch failed'));
+        };
+        list.appendChild(li);
+      });
+      setRefStatus('');
+    }
+
+    async function saveRefVideoFromForm() {
+      if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.save !== 'function') {
+        throw new Error('YouTubeRefVideosStore not available');
+      }
+
+      const indent_id = document.getElementById('inIndentId')?.value;
+      const url = document.getElementById('inUrl')?.value;
+      const short_name = document.getElementById('inShortName')?.value;
+      const title = document.getElementById('inTitle')?.value;
+      const tag = document.getElementById('inTag')?.value;
+      const order = document.getElementById('inOrder')?.value;
+      const description = document.getElementById('inDesc')?.value;
+
+      await window.YouTubeRefVideosStore.save({
+        indent_id,
+        url,
+        short_name,
+        title,
+        tag,
+        order,
+        description
+      });
+    }
+
+    function cleanStr(x) {
+      return (x == null) ? '' : String(x).trim();
+    }
+
+    function makeShortNameFromTitle(title) {
+      const t = cleanStr(title);
+      if (!t) return '';
+      const maxLen = 40;
+      if (t.length <= maxLen) return t;
+      return t.slice(0, maxLen - 1).trimEnd() + '…';
+    }
+
+    async function tryAutofillFromUrl() {
+      const inUrl = document.getElementById('inUrl');
+      if (!inUrl) return;
+      const url = cleanStr(inUrl.value);
+      if (!url) return;
+
+      const inIndent = document.getElementById('inIndentId');
+      const inTitle = document.getElementById('inTitle');
+      const inShort = document.getElementById('inShortName');
+
+      // Auto-detect indent_id (videoId) if empty
+      if (inIndent && !cleanStr(inIndent.value) && window.YouTubeRefVideosStore && typeof window.YouTubeRefVideosStore.extractVideoIdFromUrl === 'function') {
+        const vid = cleanStr(window.YouTubeRefVideosStore.extractVideoIdFromUrl(url));
+        if (vid) inIndent.value = vid;
+      }
+
+      // Only fill if user didn't already type these fields
+      const needTitle = !inTitle || !cleanStr(inTitle.value);
+      const needShort = !inShort || !cleanStr(inShort.value);
+      if (!needTitle && !needShort) return;
+
+      setAddVideoStatus('Autofill...');
+      try {
+        const oembedUrl = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`;
+        const resp = await fetch(oembedUrl, { method: 'GET' });
+        if (!resp.ok) throw new Error(`oEmbed HTTP ${resp.status}`);
+        const data = await resp.json();
+        const title = cleanStr(data && data.title);
+        if (needTitle && inTitle && title) inTitle.value = title;
+        if (needShort && inShort) {
+          const shortTitle = makeShortNameFromTitle(title || (inTitle ? inTitle.value : ''));
+          if (shortTitle) inShort.value = shortTitle;
+        }
+        setAddVideoStatus('Autofill done');
+      } catch (err) {
+        setAddVideoStatus('Autofill failed (manual)');
+        try { console.warn('oEmbed autofill failed', err); } catch {}
+      }
     }
 
     function wireControls() {
@@ -609,12 +894,42 @@ English Channel..."></textarea>
       setTimeVisible(false);
       setTranscriptVisible(true);
       updateMenuLabels();
+
+      // Main menu (reference videos)
+      const btnMain = document.getElementById('btnMainMenu');
+      if (btnMain) btnMain.onclick = () => openMainMenu();
+
+      const btnAdd = document.getElementById('btnAddVideo');
+      if (btnAdd) btnAdd.onclick = (e) => { e.preventDefault(); openAddVideoDialog(); };
+
+      const btnSaveVid = document.getElementById('btnSaveVideo');
+      if (btnSaveVid) btnSaveVid.onclick = async (e) => {
+        e.preventDefault();
+        try {
+          setAddVideoStatus('Saving...');
+          await saveRefVideoFromForm();
+          setAddVideoStatus('Saved');
+          // Refresh list if menu is open
+          Promise.resolve().then(() => loadRefVideos()).catch(() => {});
+        } catch (err) {
+          setAddVideoStatus('Save failed (check console)');
+          try { console.warn('Save ref video failed', err); } catch {}
+        }
+      };
+
+      // Autofill when user leaves the URL field (switches to another field)
+      const inUrl = document.getElementById('inUrl');
+      if (inUrl) {
+        inUrl.addEventListener('blur', () => {
+          Promise.resolve().then(() => tryAutofillFromUrl()).catch(() => {});
+        });
+      }
     }
 
     // 2) YouTube calls this global when API is ready
     window.onYouTubeIframeAPIReady = function () {
       player = new YT.Player('player', {
-        videoId: VIDEO_ID,
+        videoId: currentVideoId,
         playerVars: { rel: 0, modestbranding: 1, origin: location.origin },
         events: {
           onReady: () => {
