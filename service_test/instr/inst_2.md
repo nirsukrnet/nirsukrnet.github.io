@@ -76,3 +76,20 @@ Planned idea:
 When we implement it, we can either:
 - Extend each item to `{ t, text1, text2 }`, or
 - Use `{ t, lines: ["...", "..."] }` so it can support more languages later.
+
+
+  <div class="row">
+    <button id="btnPlay">Play</button>
+    <button id="btnPause">Pause</button>
+    <button id="btnBack">-5s</button>
+    <button id="btnFwd">+5s</button>
+    <span>Time: <span id="t">0.00</span>s</span>
+  </div>
+
+  <div class="row">
+    <button id="btnToggleTrans">Transcription</button>
+    <button id="btnPasteTrans">Paste transcript</button>
+    <button id="btnPrev" disabled>Prev</button>
+    <button id="btnNext" disabled>Next</button>
+  </div>
+

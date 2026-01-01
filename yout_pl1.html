@@ -25,6 +25,17 @@
       align-items: center;
     }
 
+    /* Main control row: keep all buttons on one line */
+    .row.controls {
+      flex-wrap: nowrap;
+    }
+
+    /* Fixed width to prevent layout jump when label changes Play <-> Pause */
+    #btnPlay {
+      width: 92px;
+      text-align: center;
+    }
+
     button {
       padding: 10px 12px;
       min-height: 44px;
@@ -76,7 +87,17 @@
     }
 
     #transList li[data-active="1"] {
-      border-color: currentColor;
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    /* Mark1 highlighting (visible after load from Firebase too) */
+    #transList li[data-mark1="1"] {
+      background-color: color-mix(in srgb, currentColor 9%, transparent);
+    }
+
+    /* Active + Mark1: slightly stronger tint */
+    #transList li[data-active="1"][data-mark1="1"] {
+      background-color: color-mix(in srgb, currentColor 18%, transparent);
     }
 
     #transList small {
@@ -115,24 +136,29 @@
     <div id="player"></div>
   </div>
 
-  <div class="row">
+  <div class="row controls">
     <button id="btnPlay">Play</button>
-    <button id="btnPause">Pause</button>
-    <button id="btnBack">-5s</button>
-    <button id="btnFwd">+5s</button>
-    <span>Time: <span id="t">0.00</span>s</span>
-  </div>
-
-  <div class="row">
-    <button id="btnToggleTrans">Transcription</button>
-    <button id="btnPasteTrans">Paste transcript</button>
-    <button id="btnPrev" disabled>Prev</button>
-    <button id="btnNext" disabled>Next</button>
+    <button id="btnMark1">Mark1</button>
+    <button id="btnMrkOff">MrkOFF</button>
+    <span id="timeWrap" style="display:none;">Time: <span id="t">0.00</span>s</span>
+    <button id="btnMenu" style="margin-left:auto;">Menu</button>
   </div>
 
   <div id="transWrap">
     <ul id="transList"></ul>
   </div>
+
+  <dialog id="dlgMenu">
+    <form method="dialog">
+      <h3 style="margin:0 0 8px; font-size:16px;">Menu</h3>
+      <div class="row" style="margin:8px 0 0;">
+        <button id="btnMenuPaste" value="cancel">Paste transcript</button>
+        <button id="btnMenuToggleTrans" value="cancel">Hide transcription</button>
+        <button id="btnMenuToggleTime" value="cancel">Show time</button>
+        <button value="cancel">Close</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="dlgTrans">
     <form method="dialog">
@@ -171,13 +197,24 @@ English Channel..."></textarea>
     // Transcript items: { t: seconds, text: string }
     let transcript = [];
 
+    // Keep rawText if loaded from Firebase (so Mark1 updates can be saved without losing rawText)
+    let transcriptRawText = '';
+
     let player = null;
     let activeIndex = -1;
+
+    let isPlaying = false;
 
     function setStatus(msg) {
       const el = document.getElementById('transStatus');
       if (!el) return;
       el.textContent = msg || '';
+    }
+
+    function setMainStatus(msg) {
+      // Keep it minimal: reuse the status field in the transcript paste dialog if available.
+      // (No new UI elements requested.)
+      setStatus(msg);
     }
 
     function parseTimeToSeconds(s) {
@@ -241,7 +278,7 @@ English Channel..."></textarea>
         setActiveIndex(0);
       } else {
         activeIndex = -1;
-        updateNavButtons();
+        updateActiveRow();
       }
     }
 
@@ -263,20 +300,12 @@ English Channel..."></textarea>
     function setActiveIndex(idx) {
       if (!Array.isArray(transcript) || transcript.length === 0) {
         activeIndex = -1;
-        updateNavButtons();
         updateActiveRow();
         return;
       }
       const next = Math.max(0, Math.min(transcript.length - 1, idx));
       activeIndex = next;
-      updateNavButtons();
       updateActiveRow();
-    }
-
-    function updateNavButtons() {
-      const has = Array.isArray(transcript) && transcript.length > 0;
-      document.getElementById('btnPrev').disabled = !has || activeIndex <= 0;
-      document.getElementById('btnNext').disabled = !has || activeIndex < 0 || activeIndex >= transcript.length - 1;
     }
 
     function updateActiveRow() {
@@ -340,35 +369,71 @@ English Channel..."></textarea>
       if (!Array.isArray(transcript) || transcript.length === 0) {
         const li = document.createElement('li');
         li.dataset.active = '0';
+        li.dataset.mark1 = '0';
         li.className = 'muted';
         li.textContent = 'No transcript loaded yet. Use “Paste transcript”.';
         list.appendChild(li);
         activeIndex = -1;
-        updateNavButtons();
+        updateActiveRow();
         return;
       }
+
+      // Preserve active index across re-renders when possible.
+      const prevActive = activeIndex;
+
       transcript.forEach((row, idx) => {
         const li = document.createElement('li');
         li.dataset.idx = String(idx);
         li.dataset.active = '0';
+        li.dataset.mark1 = row && row.Mark1 ? '1' : '0';
         li.innerHTML = `<small>${fmtTimestamp(row.t)}</small>${String(row.text || '')}`;
         li.addEventListener('click', () => seekToTranscriptIndex(idx));
         list.appendChild(li);
       });
-      setActiveIndex(0);
+
+      if (typeof prevActive === 'number' && prevActive >= 0 && prevActive < transcript.length) {
+        setActiveIndex(prevActive);
+      } else {
+        setActiveIndex(0);
+      }
     }
 
-    function toggleTranscript() {
+    function setTranscriptVisible(isVisible) {
       const wrap = document.getElementById('transWrap');
-      const isOpen = wrap.style.display === 'block';
-      wrap.style.display = isOpen ? 'none' : 'block';
-      if (!isOpen) {
+      wrap.style.display = isVisible ? 'block' : 'none';
+      if (isVisible) {
         // Lazy render
         if (!wrap.dataset.rendered) {
           renderTranscript();
           wrap.dataset.rendered = '1';
         }
       }
+    }
+
+    function toggleTranscript() {
+      const wrap = document.getElementById('transWrap');
+      const isOpen = wrap.style.display === 'block';
+      setTranscriptVisible(!isOpen);
+    }
+
+    function setTimeVisible(isVisible) {
+      const el = document.getElementById('timeWrap');
+      if (!el) return;
+      el.style.display = isVisible ? 'inline' : 'none';
+    }
+
+    function isTimeVisible() {
+      const el = document.getElementById('timeWrap');
+      return !!el && el.style.display !== 'none';
+    }
+
+    function updateMenuLabels() {
+      const btnTrans = document.getElementById('btnMenuToggleTrans');
+      const btnTime = document.getElementById('btnMenuToggleTime');
+      const wrap = document.getElementById('transWrap');
+      const transVisible = wrap && wrap.style.display === 'block';
+      if (btnTrans) btnTrans.textContent = transVisible ? 'Hide transcription' : 'Show transcription';
+      if (btnTime) btnTime.textContent = isTimeVisible() ? 'Hide time' : 'Show time';
     }
 
     function openPasteModal() {
@@ -391,6 +456,7 @@ English Channel..."></textarea>
       try {
         const data = await window.YouTubeTranscriptStore.load(VIDEO_ID);
         const items = (data && Array.isArray(data.items)) ? data.items : [];
+        transcriptRawText = (data && typeof data.rawText === 'string') ? data.rawText : '';
         if (items && items.length) {
           setTranscript(items);
         }
@@ -399,28 +465,100 @@ English Channel..."></textarea>
       }
     }
 
+    function updatePlayButtonLabel() {
+      const btn = document.getElementById('btnPlay');
+      if (!btn) return;
+      btn.textContent = isPlaying ? 'Pause' : 'Play';
+    }
+
+    function togglePlayPause() {
+      if (!player) return;
+      if (isPlaying && typeof player.pauseVideo === 'function') player.pauseVideo();
+      else if (!isPlaying && typeof player.playVideo === 'function') player.playVideo();
+    }
+
+    async function setMark1OnActive(nextValue) {
+      if (!Array.isArray(transcript) || transcript.length === 0) {
+        setMainStatus('No transcript loaded');
+        return;
+      }
+      if (activeIndex < 0 || activeIndex >= transcript.length) {
+        setMainStatus('No active line');
+        return;
+      }
+
+      const row = transcript[activeIndex];
+      if (!row) return;
+
+      row.Mark1 = !!nextValue;
+      renderTranscript();
+      setActiveIndex(activeIndex);
+
+      // Persist immediately so the flag is not lost.
+      try {
+        setMainStatus('Saving Mark1...');
+        await saveTranscriptToFirebase(transcriptRawText, transcript);
+        setMainStatus(row.Mark1 ? 'Mark1 saved (true)' : 'Mark1 saved (false)');
+      } catch (e) {
+        setMainStatus('Mark1 save failed (check console)');
+        try { console.warn('Mark1 save failed', e); } catch {}
+      }
+    }
+
+    async function toggleMark1OnActive() {
+      if (!Array.isArray(transcript) || transcript.length === 0) {
+        setMainStatus('No transcript loaded');
+        return;
+      }
+      if (activeIndex < 0 || activeIndex >= transcript.length) {
+        setMainStatus('No active line');
+        return;
+      }
+      const row = transcript[activeIndex];
+      if (!row) return;
+      await setMark1OnActive(!row.Mark1);
+    }
+
+    function openMenuModal() {
+      const dlg = document.getElementById('dlgMenu');
+      if (!dlg) return;
+      updateMenuLabels();
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
     function wireControls() {
-      document.getElementById('btnPlay').onclick = () => player && player.playVideo && player.playVideo();
-      document.getElementById('btnPause').onclick = () => player && player.pauseVideo && player.pauseVideo();
-      document.getElementById('btnBack').onclick = () => {
-        if (!player || !player.getCurrentTime) return;
-        player.seekTo(Math.max(0, player.getCurrentTime() - 5), true);
-      };
-      document.getElementById('btnFwd').onclick = () => {
-        if (!player || !player.getCurrentTime) return;
-        player.seekTo(player.getCurrentTime() + 5, true);
+      document.getElementById('btnPlay').onclick = () => togglePlayPause();
+      document.getElementById('btnMark1').onclick = () => {
+        Promise.resolve().then(() => toggleMark1OnActive()).catch(() => {});
       };
 
-      document.getElementById('btnToggleTrans').onclick = () => toggleTranscript();
-      document.getElementById('btnPasteTrans').onclick = () => openPasteModal();
-      document.getElementById('btnPrev').onclick = () => seekToTranscriptIndex(activeIndex - 1);
-      document.getElementById('btnNext').onclick = () => seekToTranscriptIndex(activeIndex + 1);
+      document.getElementById('btnMrkOff').onclick = () => {
+        Promise.resolve().then(() => setMark1OnActive(false)).catch(() => {});
+      };
+
+      document.getElementById('btnMenu').onclick = () => openMenuModal();
+      document.getElementById('btnMenuPaste').onclick = (e) => {
+        e.preventDefault();
+        openPasteModal();
+      };
+      document.getElementById('btnMenuToggleTrans').onclick = (e) => {
+        e.preventDefault();
+        toggleTranscript();
+        updateMenuLabels();
+      };
+      document.getElementById('btnMenuToggleTime').onclick = (e) => {
+        e.preventDefault();
+        setTimeVisible(!isTimeVisible());
+        updateMenuLabels();
+      };
 
       document.getElementById('btnApplyTrans').onclick = (e) => {
         try {
           e.preventDefault();
           const raw = document.getElementById('taTrans').value;
           const items = parseTranscriptText(raw);
+          transcriptRawText = raw;
           setTranscript(items);
           setStatus(`Applied: ${items.length} items`);
         } catch (err) {
@@ -433,6 +571,7 @@ English Channel..."></textarea>
         try {
           const raw = document.getElementById('taTrans').value;
           const items = parseTranscriptText(raw);
+          transcriptRawText = raw;
           setTranscript(items);
           setStatus('Saving...');
           await saveTranscriptToFirebase(raw, items);
@@ -448,7 +587,9 @@ English Channel..."></textarea>
         if (!player || typeof player.getCurrentTime !== 'function') return;
         const t = player.getCurrentTime();
         // Keep seconds precision for the main time indicator (not the transcript timestamps)
-        try { document.getElementById('t').textContent = Number(t || 0).toFixed(2); } catch {}
+        if (isTimeVisible()) {
+          try { document.getElementById('t').textContent = Number(t || 0).toFixed(2); } catch {}
+        }
 
         const wrap = document.getElementById('transWrap');
         const isShown = wrap.style.display === 'block';
@@ -457,13 +598,17 @@ English Channel..."></textarea>
         const idx = findActiveByTime(t);
         if (idx !== activeIndex) {
           activeIndex = idx;
-          updateNavButtons();
           updateActiveRow();
         }
       }, 250);
 
       // Attempt to load transcript from Firebase (optional)
       Promise.resolve().then(() => tryLoadTranscriptFromFirebase()).catch(() => {});
+
+      // Defaults from spec
+      setTimeVisible(false);
+      setTranscriptVisible(true);
+      updateMenuLabels();
     }
 
     // 2) YouTube calls this global when API is ready
@@ -474,6 +619,13 @@ English Channel..."></textarea>
         events: {
           onReady: () => {
             wireControls();
+          },
+          onStateChange: (e) => {
+            try {
+              // 1 = playing
+              isPlaying = (e && e.data === 1);
+              updatePlayButtonLabel();
+            } catch {}
           }
         }
       });
