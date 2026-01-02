@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>YouTube Player + Transcript (yout_pl1)</title>
+  <title>YouTube Player + Transcript (yout_pl2)</title>
   <style>
     body {
       margin: 0;
@@ -113,6 +113,22 @@
       margin-right: 8px;
     }
 
+    /* Two-line transcript layout (lang1 + lang2) */
+    #transList .trLine {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    #transList .trLine2 {
+      margin-left: 40px; /* visually align under the text, not under timestamp */
+    }
+
+    /* Language selector (Menu header row) */
+    #langRow button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
     dialog {
       width: min(980px, calc(100vw - 24px));
       border: 1px solid currentColor;
@@ -161,6 +177,7 @@
   <dialog id="dlgMenu">
     <form method="dialog">
       <h3 style="margin:0 0 8px; font-size:16px;">Menu</h3>
+      <div id="langRow" class="row" style="margin:0 0 8px;"></div>
       <div class="row" style="margin:8px 0 0;">
         <button id="btnMenuPaste" value="cancel">Paste transcript</button>
         <button id="btnMenuToggleTrans" value="cancel">Hide transcription</button>
@@ -173,6 +190,7 @@
   <dialog id="dlgTrans">
     <form method="dialog">
       <h3 style="margin:0 0 8px; font-size:16px;">Paste transcript text</h3>
+      <div id="transLangInfo" class="muted" style="margin-bottom:6px;"></div>
       <div class="muted" style="margin-bottom:8px;">
         Paste lines like <code>0:04</code> then the text line(s). This will be parsed into {t,text} items and stored for this video.
       </div>
@@ -193,9 +211,9 @@ English Channel..."></textarea>
 
   <!-- Firebase auth + RTDB request helper (defines GlobalVars / URL_DataSet) -->
    
-  <script src="./yout_pl1/yu1_global_var.js"></script>
-  <script src="./yout_pl1/youtube_transcript_store.js"></script>
-  <script src="./yout_pl1/youtube_ref_videos_store.js"></script>
+  <script src="./yout_pl2/yu2_global_var.js"></script>
+  <script src="./yout_pl2/youtube_transcript_store.js"></script>
+  <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
 
   <dialog id="dlgMainMenu">
     <form method="dialog">
@@ -256,11 +274,20 @@ English Channel..."></textarea>
     // Current video
     let currentVideoId = 'maKy1pRdcDw';
 
-    // Transcript items: { t: seconds, text: string }
+    // Transcript items:
+    // - legacy: { t: seconds, text: string }
+    // - multi-lang: { t: seconds, text_sv/text_en/text_uk..., Mark1?: boolean }
     let transcript = [];
 
     // Keep rawText if loaded from Firebase (so Mark1 updates can be saved without losing rawText)
     let transcriptRawText = '';
+
+    // Multi-language transcript settings
+    const LANG_ROOT_PATH = '../db_youtube2/ref_languages_set';
+    const UI_STATE_PATH = '../db_youtube2/ui_state/yout_pl2';
+    let langEdit = 'sv';
+    let lang1Show = 'sv';
+    let lang2Show = 'en';
 
     let player = null;
     let activeIndex = -1;
@@ -289,6 +316,224 @@ English Channel..."></textarea>
       // Keep it minimal: reuse the status field in the transcript paste dialog if available.
       // (No new UI elements requested.)
       setStatus(msg);
+    }
+
+    function ytNowIso() {
+      try { return new Date().toISOString(); } catch { return String(Date.now()); }
+    }
+
+    function cleanLangCode(x) {
+      const s = cleanStr(x).toLowerCase();
+      if (!s) return '';
+      if (!/^[a-z0-9_-]{2,16}$/.test(s)) return '';
+      return s;
+    }
+
+    function ytEnsureGv() {
+      if (window.gv && window.gv.URL_DS) return window.gv;
+      const GVClass = (typeof GlobalVars === 'function')
+        ? GlobalVars
+        : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+          ? globalThis.GlobalVars
+          : (typeof window.GlobalVars === 'function')
+            ? window.GlobalVars
+            : null;
+      if (GVClass) {
+        const gv = new GVClass();
+        window.gv = gv;
+        return gv;
+      }
+      throw new Error('GlobalVars is not available (load ./yout_pl2/yu2_global_var.js first)');
+    }
+
+    async function ytEnsureSignedIn() {
+      const gv = ytEnsureGv();
+      if (gv.URL_DS && gv.URL_DS.idToken) return;
+      if (typeof gv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+      await gv.SignIn_User();
+    }
+
+    function ytRequestByPath(addurl, method = 'GET', body = null) {
+      return new Promise((resolve, reject) => {
+        try {
+          const gv = ytEnsureGv();
+          const ObjRequest = gv.URL_DS.GetObjForRequest();
+          ObjRequest.addUrl = addurl;
+          ObjRequest.ametod = method;
+          ObjRequest.vobj = body;
+          ObjRequest.CallBackFunction = function(vdata) { resolve(vdata); };
+          ObjRequest.ErrorCallback = function(err) { reject(err || new Error('request failed')); };
+          gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    function normalizeLanguagesSet(data) {
+      const rawLangs = (data && typeof data === 'object') ? data.languages : null;
+      const list = [];
+      if (rawLangs && typeof rawLangs === 'object') {
+        for (const [k, v] of Object.entries(rawLangs)) {
+          const code = cleanLangCode(v && v.code ? v.code : k);
+          if (!code) continue;
+          const label = cleanStr((v && v.label) || code.toUpperCase());
+          const order = Number.isFinite(Number(v && v.order)) ? Number(v.order) : 9999;
+          list.push({ code, label, order });
+        }
+      }
+      list.sort((a, b) => (a.order - b.order) || a.code.localeCompare(b.code));
+      return list;
+    }
+
+    async function loadOrSeedLanguagesSet() {
+      await ytEnsureSignedIn();
+      let data = null;
+      try {
+        data = await ytRequestByPath(LANG_ROOT_PATH, 'GET');
+      } catch {
+        data = null;
+      }
+
+      let list = normalizeLanguagesSet(data);
+      if (list.length === 0) {
+        const payload = {
+          updatedAt: ytNowIso(),
+          languages: {
+            sv: { code: 'sv', label: 'SV', order: 1 },
+            en: { code: 'en', label: 'EN', order: 2 },
+            uk: { code: 'uk', label: 'UK', order: 3 }
+          }
+        };
+        await ytRequestByPath(LANG_ROOT_PATH, 'PUT', payload);
+        list = normalizeLanguagesSet(payload);
+      }
+      return list;
+    }
+
+    async function saveLastSelectedVideoId(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) return;
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(`${UI_STATE_PATH}/last_selected_video`, 'PUT', {
+          videoId: vid,
+          updatedAt: ytNowIso()
+        });
+      } catch {
+        // ignore (page should work without firebase)
+      }
+    }
+
+    async function loadLastSelectedVideoId() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(`${UI_STATE_PATH}/last_selected_video`, 'GET');
+        const vid = cleanStr(data && data.videoId);
+        return vid || '';
+      } catch {
+        return '';
+      }
+    }
+
+    function setLangEdit(nextLang) {
+      const code = cleanLangCode(nextLang);
+      if (!code) return;
+      langEdit = code;
+      const row = document.getElementById('langRow');
+      if (!row) return;
+      row.querySelectorAll('button[data-lang]').forEach(btn => {
+        btn.dataset.selected = (btn.dataset.lang === langEdit) ? '1' : '0';
+      });
+
+      updateTransLangInfo();
+    }
+
+    function updateTransLangInfo() {
+      const el = document.getElementById('transLangInfo');
+      if (!el) return;
+      const edit = cleanLangCode(langEdit);
+      const l1 = cleanLangCode(lang1Show);
+      const l2 = cleanLangCode(lang2Show);
+      const show = l2 && l2 !== l1 ? `${(l1 || '').toUpperCase()} + ${(l2 || '').toUpperCase()}` : (l1 || '').toUpperCase();
+      el.textContent = `Edit language: ${(edit || '').toUpperCase()} | Show: ${show || '—'}`;
+    }
+
+    function renderLanguageButtons(list) {
+      const row = document.getElementById('langRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      if (!Array.isArray(list) || list.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'muted';
+        span.textContent = 'No languages set';
+        row.appendChild(span);
+        return;
+      }
+
+      list.forEach(l => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.lang = l.code;
+        btn.dataset.selected = (l.code === langEdit) ? '1' : '0';
+        btn.textContent = l.label || l.code.toUpperCase();
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          setLangEdit(l.code);
+        });
+        row.appendChild(btn);
+      });
+    }
+
+    function applyTranscriptMetaFromData(data) {
+      const l1 = cleanLangCode(data && data.lang1_show);
+      const l2 = cleanLangCode(data && data.lang2_show);
+      if (l1) lang1Show = l1;
+      if (l2) lang2Show = l2;
+
+      updateTransLangInfo();
+    }
+
+    function getRowText(row, langCode) {
+      const code = cleanLangCode(langCode);
+      if (row && code) {
+        const v = row[`text_${code}`];
+        if (typeof v === 'string' && v.trim()) return v.trim();
+      }
+      const legacy = row && row.text;
+      if (typeof legacy === 'string' && legacy.trim()) return legacy.trim();
+      return '';
+    }
+
+    function mergeTranscriptLanguage(existingItems, parsedItems, langCode) {
+      const code = cleanLangCode(langCode);
+      if (!code) return Array.isArray(existingItems) ? existingItems : [];
+
+      const base = Array.isArray(existingItems) ? existingItems.slice() : [];
+      const byT = new Map();
+      base.forEach(row => {
+        const t = Number(row && row.t);
+        if (Number.isFinite(t)) byT.set(t, row);
+      });
+
+      const parsed = Array.isArray(parsedItems) ? parsedItems : [];
+      parsed.forEach(p => {
+        const t = Number(p && p.t);
+        const text = cleanStr(p && p.text);
+        if (!Number.isFinite(t) || !text) return;
+
+        let row = byT.get(t);
+        if (!row) {
+          row = { t };
+          base.push(row);
+          byT.set(t, row);
+        }
+        row[`text_${code}`] = text;
+      });
+
+      base.sort((a, b) => Number(a.t || 0) - Number(b.t || 0));
+      return base;
     }
 
     function parseTimeToSeconds(s) {
@@ -460,7 +705,29 @@ English Channel..."></textarea>
         li.dataset.idx = String(idx);
         li.dataset.active = '0';
         li.dataset.mark1 = row && row.Mark1 ? '1' : '0';
-        li.innerHTML = `<small>${fmtTimestamp(row.t)}</small>${String(row.text || '')}`;
+
+        const line1 = getRowText(row, lang1Show);
+        const showSecond = !!cleanLangCode(lang2Show) && cleanLangCode(lang2Show) !== cleanLangCode(lang1Show);
+        const line2 = showSecond ? getRowText(row, lang2Show) : '';
+
+        const div1 = document.createElement('div');
+        div1.className = 'trLine';
+        const sm = document.createElement('small');
+        sm.textContent = fmtTimestamp(row.t);
+        const sp1 = document.createElement('span');
+        sp1.textContent = line1;
+        div1.appendChild(sm);
+        div1.appendChild(sp1);
+        li.appendChild(div1);
+
+        if (showSecond) {
+          const div2 = document.createElement('div');
+          div2.className = 'trLine trLine2';
+          const sp2 = document.createElement('span');
+          sp2.textContent = line2;
+          div2.appendChild(sp2);
+          li.appendChild(div2);
+        }
         li.addEventListener('click', () => seekToTranscriptIndex(idx));
         list.appendChild(li);
       });
@@ -514,6 +781,7 @@ English Channel..."></textarea>
       setStatus('');
       const dlg = document.getElementById('dlgTrans');
       if (!dlg) return;
+      updateTransLangInfo();
       if (typeof dlg.showModal === 'function') dlg.showModal();
       else dlg.setAttribute('open', 'open');
     }
@@ -522,7 +790,10 @@ English Channel..."></textarea>
       if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.save !== 'function') {
         throw new Error('YouTubeTranscriptStore not available');
       }
-      await window.YouTubeTranscriptStore.save(currentVideoId, items, rawText);
+      await window.YouTubeTranscriptStore.save(currentVideoId, items, rawText, {
+        lang1_show: lang1Show,
+        lang2_show: lang2Show
+      });
     }
 
     async function tryLoadTranscriptFromFirebase() {
@@ -531,6 +802,7 @@ English Channel..."></textarea>
         const data = await window.YouTubeTranscriptStore.load(currentVideoId);
         const items = (data && Array.isArray(data.items)) ? data.items : [];
         transcriptRawText = (data && typeof data.rawText === 'string') ? data.rawText : '';
+        applyTranscriptMetaFromData(data);
         if (items && items.length) {
           setTranscript(items);
         }
@@ -597,6 +869,18 @@ English Channel..."></textarea>
       const dlg = document.getElementById('dlgMenu');
       if (!dlg) return;
       updateMenuLabels();
+
+      // Load/seed languages set and render language buttons in the menu header.
+      Promise.resolve().then(async () => {
+        try {
+          const list = await loadOrSeedLanguagesSet();
+          renderLanguageButtons(list);
+          if (list.length && !list.some(l => l.code === langEdit)) setLangEdit(list[0].code);
+        } catch {
+          renderLanguageButtons([]);
+        }
+      }).catch(() => {});
+
       if (typeof dlg.showModal === 'function') dlg.showModal();
       else dlg.setAttribute('open', 'open');
     }
@@ -627,6 +911,10 @@ English Channel..."></textarea>
       } catch {}
     }
 
+    function cleanStr(x) {
+      return (x == null) ? '' : String(x).trim();
+    }
+
     function looksLikeYouTubeVideoId(s) {
       const x = cleanStr(s);
       return /^[a-zA-Z0-9_-]{11}$/.test(x);
@@ -649,6 +937,8 @@ English Channel..."></textarea>
       if (!vid) return;
 
       currentVideoId = vid;
+      // Persist the last selection (best-effort)
+      Promise.resolve().then(() => saveLastSelectedVideoId(vid)).catch(() => {});
       transcriptRawText = '';
       setTranscript([]);
 
@@ -669,6 +959,7 @@ English Channel..."></textarea>
         const data = await window.YouTubeTranscriptStore.load(vid);
         const items = (data && Array.isArray(data.items)) ? data.items : [];
         transcriptRawText = (data && typeof data.rawText === 'string') ? data.rawText : '';
+        applyTranscriptMetaFromData(data);
         if (items && items.length) {
           setTranscript(items);
           setMainStatus(`Transcript loaded: ${items.length} items`);
@@ -761,10 +1052,6 @@ English Channel..."></textarea>
       });
     }
 
-    function cleanStr(x) {
-      return (x == null) ? '' : String(x).trim();
-    }
-
     function makeShortNameFromTitle(title) {
       const t = cleanStr(title);
       if (!t) return '';
@@ -843,10 +1130,11 @@ English Channel..."></textarea>
         try {
           e.preventDefault();
           const raw = document.getElementById('taTrans').value;
-          const items = parseTranscriptText(raw);
+          const parsed = parseTranscriptText(raw);
           transcriptRawText = raw;
+          const items = mergeTranscriptLanguage(transcript, parsed, langEdit);
           setTranscript(items);
-          setStatus(`Applied: ${items.length} items`);
+          setStatus(`Applied (${langEdit.toUpperCase()}): ${parsed.length} items`);
         } catch (err) {
           setStatus('Parse failed');
         }
@@ -856,12 +1144,13 @@ English Channel..."></textarea>
         e.preventDefault();
         try {
           const raw = document.getElementById('taTrans').value;
-          const items = parseTranscriptText(raw);
+          const parsed = parseTranscriptText(raw);
           transcriptRawText = raw;
+          const items = mergeTranscriptLanguage(transcript, parsed, langEdit);
           setTranscript(items);
           setStatus('Saving...');
           await saveTranscriptToFirebase(raw, items);
-          setStatus(`Saved to Firebase: ${items.length} items`);
+          setStatus(`Saved (${langEdit.toUpperCase()}): ${parsed.length} items`);
         } catch (err) {
           setStatus('Save failed (check console)');
           try { console.warn('Save transcript failed', err); } catch {}
@@ -888,8 +1177,17 @@ English Channel..."></textarea>
         }
       }, 250);
 
-      // Attempt to load transcript from Firebase (optional)
-      Promise.resolve().then(() => tryLoadTranscriptFromFirebase()).catch(() => {});
+      // On startup: load last-selected videoId from Firebase (optional), else keep default.
+      Promise.resolve().then(async () => {
+        const lastVid = await loadLastSelectedVideoId();
+        if (lastVid && lastVid !== currentVideoId) {
+          await switchToVideoId(lastVid);
+          return;
+        }
+        await tryLoadTranscriptFromFirebase();
+      }).catch(() => {
+        Promise.resolve().then(() => tryLoadTranscriptFromFirebase()).catch(() => {});
+      });
 
       // Defaults from spec
       setTimeVisible(false);
@@ -927,7 +1225,7 @@ English Channel..."></textarea>
       }
     }
 
-    // 2) YouTube calls this global when API is ready
+    // 2) Load YouTube iframe
     window.onYouTubeIframeAPIReady = function () {
       player = new YT.Player('player', {
         videoId: currentVideoId,
