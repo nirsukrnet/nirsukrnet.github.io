@@ -19,3 +19,7 @@
 	- Seek the player to the saved time.
 	- Scroll the transcript panel to the last saved position.
 
+### UI setting (timestamps)
+- Add a Menu toggle to **show/hide timestamps** in the transcript panel.
+- Persist this setting in FB (UI state for yout_pl2) and apply it on startup.
+

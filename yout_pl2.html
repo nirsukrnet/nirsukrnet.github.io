@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>YouTube Player + Transcript (yout_pl2)</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 16px;
@@ -14,7 +16,7 @@
 
     h1 { margin: 0 0 12px; font-size: 20px; }
 
-    #playerWrap { max-width: 980px; }
+    #playerWrap { max-width: 980px; width: 100%; }
     #player { aspect-ratio: 16 / 9; width: 100%; }
 
     .row {
@@ -34,6 +36,15 @@
     #btnPlay {
       width: 92px;
       text-align: center;
+    }
+
+    /* Play button state color (time is shown on the button) */
+    #btnPlay[data-state="play"] {
+      background-color: color-mix(in srgb, #1a7f37 28%, transparent);
+    }
+
+    #btnPlay[data-state="pause"] {
+      background-color: color-mix(in srgb, #d4a72c 35%, transparent);
     }
 
     /* Top-right main menu button */
@@ -64,14 +75,15 @@
     #transWrap {
       display: none;
       max-width: 980px;
+      width: 100%;
       margin-top: 10px;
       border: 1px solid currentColor;
       border-radius: 12px;
       padding: 10px;
       /* Fixed-height, scrollable transcript panel (prevents active line “disappearing”) */
-      height: 60vh;
-      max-height: 520px;
-      min-height: 320px;
+      height: 90vh;
+      max-height: 720px;
+      min-height: 420px;
       overflow-y: auto;
     }
 
@@ -87,9 +99,9 @@
     }
 
     #transList li {
-      padding: 8px 10px;
-      border-radius: 10px;
-      border: 1px solid transparent;
+      padding: 0px 0px;
+      border-radius: 2px;
+      border: 0px solid transparent;
       cursor: pointer;
       user-select: none;
     }
@@ -113,6 +125,16 @@
       margin-right: 8px;
     }
 
+    /* Transcript timestamps visibility (stored in FB as a UI setting) */
+    #transWrap[data-ts="0"] #transList small {
+      display: none;
+    }
+
+    /* If timestamps are hidden, second line should not be indented */
+    #transWrap[data-ts="0"] #transList .trLine2 {
+      margin-left: 0;
+    }
+
     /* Two-line transcript layout (lang1 + lang2) */
     #transList .trLine {
       display: flex;
@@ -121,7 +143,9 @@
     }
 
     #transList .trLine2 {
-      margin-left: 40px; /* visually align under the text, not under timestamp */
+      /*margin-left: 40px; /* visually align under the text, not under timestamp */
+      margin-left: 1px;
+      color: darkolivegreen;
     }
 
     /* Language selector (Menu header row) */
@@ -152,6 +176,12 @@
     }
 
     .muted { opacity: 0.75; }
+
+    /* Use more horizontal space on small screens */
+    @media (max-width: 900px) {
+      body { padding: 0; }
+      #transWrap { border-radius: 0; margin-top: 0; }
+    }
   </style>
 </head>
 <body> 
@@ -182,6 +212,7 @@
         <button id="btnMenuPaste" value="cancel">Paste transcript</button>
         <button id="btnMenuToggleTrans" value="cancel">Hide transcription</button>
         <button id="btnMenuToggleTime" value="cancel">Show time</button>
+        <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
         <button value="cancel">Close</button>
       </div>
     </form>
@@ -288,6 +319,10 @@ English Channel..."></textarea>
     let langEdit = 'sv';
     let lang1Show = 'sv';
     let lang2Show = 'en';
+
+    // Auto-scroll behavior: keep the active transcript row this many pixels from the
+    // top edge of the transcript panel. Adjust this constant to tune the “top gap”.
+    const TRANS_ACTIVE_ROW_TOP_GAP_PX = 90;
 
     let player = null;
     let activeIndex = -1;
@@ -437,6 +472,63 @@ English Channel..."></textarea>
         return vid || '';
       } catch {
         return '';
+      }
+    }
+
+    // ------------------------------
+    // UI setting: transcript timestamps
+    // ------------------------------
+    // Stored under:
+    // ../db_youtube2/ui_state/yout_pl2/transcript_timestamps_visible
+    function setTranscriptTimestampsVisible(isVisible) {
+      const wrap = document.getElementById('transWrap');
+      if (!wrap) return;
+      wrap.dataset.ts = isVisible ? '1' : '0';
+    }
+
+    function isTranscriptTimestampsVisible() {
+      const wrap = document.getElementById('transWrap');
+      if (!wrap) return true;
+      return wrap.dataset.ts !== '0';
+    }
+
+    async function saveTranscriptTimestampsVisibleSetting(isVisible) {
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(`${UI_STATE_PATH}/transcript_timestamps_visible`, 'PUT', {
+          visible: !!isVisible,
+          updatedAt: ytNowIso()
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    async function loadTranscriptTimestampsVisibleSetting() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(`${UI_STATE_PATH}/transcript_timestamps_visible`, 'GET');
+        if (data == null) return null;
+        if (typeof data === 'boolean') return data;
+        if (typeof data === 'number') return data !== 0;
+        if (typeof data === 'string') {
+          const s = data.trim().toLowerCase();
+          if (s === 'true' || s === '1' || s === 'yes') return true;
+          if (s === 'false' || s === '0' || s === 'no') return false;
+          return null;
+        }
+        if (typeof data === 'object') {
+          if (typeof data.visible === 'boolean') return data.visible;
+          if (typeof data.visible === 'number') return data.visible !== 0;
+          if (typeof data.visible === 'string') {
+            const s = data.visible.trim().toLowerCase();
+            if (s === 'true' || s === '1' || s === 'yes') return true;
+            if (s === 'false' || s === '0' || s === 'no') return false;
+          }
+        }
+        return null;
+      } catch {
+        return null;
       }
     }
 
@@ -828,11 +920,8 @@ English Channel..."></textarea>
         const wrapRect = wrap.getBoundingClientRect();
         const activeRect = activeEl.getBoundingClientRect();
 
-        // Approximate one “line height” including spacing.
-        const lineStep = Math.max(1, activeEl.offsetHeight + 6);
-
-        // Where the active line should appear: after ~2 lines from the top.
-        const desiredTopPx = wrapRect.top + (2 * lineStep);
+        // Where the active line should appear: fixed px from the top.
+        const desiredTopPx = wrapRect.top + Math.max(0, Number(TRANS_ACTIVE_ROW_TOP_GAP_PX) || 0);
 
         const delta = activeRect.top - desiredTopPx;
         // Adjust scrollTop by delta (positive delta means active is too low).
@@ -958,10 +1047,12 @@ English Channel..."></textarea>
     function updateMenuLabels() {
       const btnTrans = document.getElementById('btnMenuToggleTrans');
       const btnTime = document.getElementById('btnMenuToggleTime');
+      const btnTransTime = document.getElementById('btnMenuToggleTransTime');
       const wrap = document.getElementById('transWrap');
       const transVisible = wrap && wrap.style.display === 'block';
       if (btnTrans) btnTrans.textContent = transVisible ? 'Hide transcription' : 'Show transcription';
       if (btnTime) btnTime.textContent = isTimeVisible() ? 'Hide time' : 'Show time';
+      if (btnTransTime) btnTransTime.textContent = isTranscriptTimestampsVisible() ? 'Hide transcript time' : 'Show transcript time';
     }
 
     function openPasteModal() {
@@ -998,10 +1089,22 @@ English Channel..."></textarea>
       }
     }
 
-    function updatePlayButtonLabel() {
+    function fmtMmSs(seconds) {
+      const total = Math.max(0, Math.floor(Number(seconds || 0)));
+      if (!Number.isFinite(total)) return '0:00';
+      const s = total % 60;
+      const m = Math.floor(total / 60);
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updatePlayButtonLabel(currentTimeSec = null) {
       const btn = document.getElementById('btnPlay');
       if (!btn) return;
-      btn.textContent = isPlaying ? 'Pause' : 'Play';
+      const t = (currentTimeSec == null)
+        ? (player && typeof player.getCurrentTime === 'function' ? player.getCurrentTime() : 0)
+        : currentTimeSec;
+      btn.textContent = fmtMmSs(t);
+      btn.dataset.state = isPlaying ? 'play' : 'pause';
     }
 
     function togglePlayPause() {
@@ -1320,6 +1423,15 @@ English Channel..."></textarea>
         updateMenuLabels();
       };
 
+      const btnTransTime = document.getElementById('btnMenuToggleTransTime');
+      if (btnTransTime) btnTransTime.onclick = (e) => {
+        e.preventDefault();
+        const next = !isTranscriptTimestampsVisible();
+        setTranscriptTimestampsVisible(next);
+        updateMenuLabels();
+        Promise.resolve().then(() => saveTranscriptTimestampsVisibleSetting(next)).catch(() => {});
+      };
+
       document.getElementById('btnApplyTrans').onclick = (e) => {
         try {
           e.preventDefault();
@@ -1355,6 +1467,10 @@ English Channel..."></textarea>
       setInterval(() => {
         if (!player || typeof player.getCurrentTime !== 'function') return;
         const t = player.getCurrentTime();
+
+        // Always show time on the Play/Pause button.
+        updatePlayButtonLabel(t);
+
         // Keep seconds precision for the main time indicator (not the transcript timestamps)
         if (isTimeVisible()) {
           try { document.getElementById('t').textContent = Number(t || 0).toFixed(2); } catch {}
@@ -1378,6 +1494,10 @@ English Channel..."></textarea>
 
       // On startup: load last-selected videoId from Firebase (optional), else keep default.
       Promise.resolve().then(async () => {
+        // Load UI setting: transcript timestamps (best-effort)
+        const tsVisible = await loadTranscriptTimestampsVisibleSetting();
+        if (tsVisible != null) setTranscriptTimestampsVisible(!!tsVisible);
+
         const lastVid = await loadLastSelectedVideoId();
         if (lastVid && lastVid !== currentVideoId) {
           await switchToVideoId(lastVid);
@@ -1393,6 +1513,7 @@ English Channel..."></textarea>
 
       // Defaults from spec
       setTimeVisible(false);
+      setTranscriptTimestampsVisible(true);
       setTranscriptVisible(true);
       updateMenuLabels();
 
