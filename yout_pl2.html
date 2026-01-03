@@ -294,6 +294,10 @@ English Channel..."></textarea>
 
     let isPlaying = false;
 
+    // When restoring saved UI state, suppress auto-scroll briefly so updateActiveRow()
+    // does not override the restored scroll position.
+    let _suppressAutoScrollUntilMs = 0;
+
     function setStatus(msg) {
       const el = document.getElementById('transStatus');
       if (!el) return;
@@ -433,6 +437,181 @@ English Channel..."></textarea>
         return vid || '';
       } catch {
         return '';
+      }
+    }
+
+    // ------------------------------
+    // Transcript UI persistence (scroll + time)
+    // ------------------------------
+    // Store transcript scroll position and last playback time per selected videoId under:
+    // ../db_youtube2/ref_youtube_videos/<encodedVideoId>/transListScroll
+    //
+    // Note: the scroll container is #transWrap (not #transList) in the current UI.
+    // We still fallback to #transList if needed.
+    const TRANS_SCROLL_SAVE_MIN_MS = 30 * 1000;
+    let _lastScrollSavedAtMs = 0;
+    let _lastScrollSavedTop = null;
+    let _lastTimeSavedSec = null;
+
+    function getTranscriptScrollContainer() {
+      return document.getElementById('transWrap') || document.getElementById('transList');
+    }
+
+    function getRefVideosRootPath() {
+      return (window.YouTubeRefVideosStore && window.YouTubeRefVideosStore.ROOT_PATH)
+        ? window.YouTubeRefVideosStore.ROOT_PATH
+        : '../db_youtube2/ref_youtube_videos';
+    }
+
+    function encodeRefVideoKey(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) return '';
+      if (window.YouTubeRefVideosStore && typeof window.YouTubeRefVideosStore.encodeKey === 'function') {
+        try { return window.YouTubeRefVideosStore.encodeKey(vid); } catch { return ''; }
+      }
+      // Fallback: store directly (less safe for special chars, but videoId is safe)
+      return vid;
+    }
+
+    function getPlayerTimeSec() {
+      try {
+        if (!player || typeof player.getCurrentTime !== 'function') return null;
+        const t = Number(player.getCurrentTime() || 0);
+        return Number.isFinite(t) ? Math.max(0, t) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function saveTranscriptScrollPosition() {
+      try {
+        const vid = cleanStr(currentVideoId);
+        if (!vid) return;
+
+        const el = getTranscriptScrollContainer();
+        if (!el) return;
+
+        const top = Number(el.scrollTop || 0);
+        if (!Number.isFinite(top)) return;
+
+  const tSec = getPlayerTimeSec();
+
+  // Save no more often than every 30s, and only if something changed.
+        const nowMs = Date.now();
+        if (_lastScrollSavedAtMs && (nowMs - _lastScrollSavedAtMs) < TRANS_SCROLL_SAVE_MIN_MS) return;
+
+  const topChanged = !(_lastScrollSavedTop != null && Math.abs(top - _lastScrollSavedTop) < 1);
+  const timeChanged = !(tSec != null && _lastTimeSavedSec != null && Math.abs(tSec - _lastTimeSavedSec) < 0.25);
+  if (!topChanged && !timeChanged) return;
+
+        const key = encodeRefVideoKey(vid);
+        if (!key) return;
+
+        await ytEnsureSignedIn();
+        const root = getRefVideosRootPath();
+        await ytRequestByPath(`${root}/${key}/transListScroll`, 'PUT', {
+          top: Math.max(0, Math.round(top)),
+          t: (tSec == null) ? null : Math.max(0, Number(tSec)),
+          updatedAt: ytNowIso()
+        });
+
+        _lastScrollSavedAtMs = nowMs;
+        _lastScrollSavedTop = top;
+        if (tSec != null) _lastTimeSavedSec = tSec;
+      } catch {
+        // ignore (page should work without firebase)
+      }
+    }
+
+    function parseScrollTopFromDbValue(v) {
+      if (v == null) return null;
+      if (typeof v === 'number' && Number.isFinite(v)) return Math.max(0, v);
+      if (typeof v === 'string') {
+        const n = Number(v);
+        if (Number.isFinite(n)) return Math.max(0, n);
+      }
+      if (typeof v === 'object') {
+        const n = Number(v.top ?? v.scrollTop ?? v.scroll_top);
+        if (Number.isFinite(n)) return Math.max(0, n);
+      }
+      return null;
+    }
+
+    function parseTimeSecFromDbValue(v) {
+      if (v == null) return null;
+      if (typeof v === 'number' && Number.isFinite(v)) return Math.max(0, v);
+      if (typeof v === 'string') {
+        const n = Number(v);
+        if (Number.isFinite(n)) return Math.max(0, n);
+      }
+      if (typeof v === 'object') {
+        const n = Number(v.t ?? v.time ?? v.timeSec ?? v.sec ?? v.seconds);
+        if (Number.isFinite(n)) return Math.max(0, n);
+      }
+      return null;
+    }
+
+    function sleepMs(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function seekPlayerToTimeSec(tSec) {
+      const t = Number(tSec);
+      if (!Number.isFinite(t)) return;
+      for (let i = 0; i < 20; i++) {
+        try {
+          if (player && typeof player.seekTo === 'function') {
+            player.seekTo(Math.max(0, t), true);
+            return;
+          }
+        } catch {}
+        await sleepMs(100);
+      }
+    }
+
+    async function restoreTranscriptScrollPosition(videoId) {
+      try {
+        const vid = cleanStr(videoId);
+        if (!vid) return;
+        const key = encodeRefVideoKey(vid);
+        if (!key) return;
+
+        await ytEnsureSignedIn();
+        const root = getRefVideosRootPath();
+        const data = await ytRequestByPath(`${root}/${key}/transListScroll`, 'GET');
+        const top = parseScrollTopFromDbValue(data);
+
+        const tSec = parseTimeSecFromDbValue(data);
+        if (tSec != null) {
+          await seekPlayerToTimeSec(tSec);
+          // If transcript exists, set active line to the saved time.
+          try {
+            const idx = findActiveByTime(tSec);
+            if (typeof idx === 'number' && idx >= 0) {
+              _suppressAutoScrollUntilMs = Date.now() + 5000;
+              setActiveIndex(idx);
+            }
+          } catch {}
+        }
+
+        if (top == null) return;
+
+        // Apply after transcript has been rendered; retry a few times in case
+        // render is delayed (lazy render or async transcript load).
+        for (let i = 0; i < 12; i++) {
+          const el = getTranscriptScrollContainer();
+          if (el) {
+            _suppressAutoScrollUntilMs = Date.now() + 5000;
+            try { el.scrollTo({ top, behavior: 'auto' }); } catch { try { el.scrollTop = top; } catch {} }
+            break;
+          }
+          await sleepMs(50);
+        }
+
+        _lastScrollSavedTop = top;
+        if (tSec != null) _lastTimeSavedSec = tSec;
+      } catch {
+        // ignore
       }
     }
 
@@ -638,6 +817,11 @@ English Channel..."></textarea>
       if (wrap.style.display !== 'block') return;
       if (activeIndex < 0 || !items[activeIndex]) return;
 
+      // Avoid fighting restored scroll state.
+      try {
+        if (_suppressAutoScrollUntilMs && Date.now() < _suppressAutoScrollUntilMs) return;
+      } catch {}
+
       // Keep current line around “line 3” (near top) to avoid it drifting to the bottom.
       try {
         const activeEl = items[activeIndex];
@@ -748,6 +932,9 @@ English Channel..."></textarea>
           renderTranscript();
           wrap.dataset.rendered = '1';
         }
+
+        // Best-effort: when opening transcript panel, restore last saved time + UI scroll.
+        Promise.resolve().then(() => restoreTranscriptScrollPosition(currentVideoId)).catch(() => {});
       }
     }
 
@@ -966,6 +1153,13 @@ English Channel..."></textarea>
         } else {
           setMainStatus('No transcript loaded');
         }
+
+        // Best-effort restore of transcript scroll position for this video.
+        // Delay to ensure renderTranscript + active-row positioning have run.
+        Promise.resolve().then(async () => {
+          await sleepMs(0);
+          await restoreTranscriptScrollPosition(vid);
+        }).catch(() => {});
       } catch (err) {
         setMainStatus('Transcript load failed (check console)');
         try { console.warn('Load transcript failed', err); } catch {}
@@ -1177,6 +1371,11 @@ English Channel..."></textarea>
         }
       }, 250);
 
+      // Persist transcript scroll position (best-effort; no more often than every 30s).
+      setInterval(() => {
+        Promise.resolve().then(() => saveTranscriptScrollPosition()).catch(() => {});
+      }, 5000);
+
       // On startup: load last-selected videoId from Firebase (optional), else keep default.
       Promise.resolve().then(async () => {
         const lastVid = await loadLastSelectedVideoId();
@@ -1185,6 +1384,9 @@ English Channel..."></textarea>
           return;
         }
         await tryLoadTranscriptFromFirebase();
+
+        // Best-effort restore of scroll for the default/current video.
+        await restoreTranscriptScrollPosition(currentVideoId);
       }).catch(() => {
         Promise.resolve().then(() => tryLoadTranscriptFromFirebase()).catch(() => {});
       });
