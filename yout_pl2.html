@@ -30,6 +30,24 @@
     /* Main control row: keep all buttons on one line */
     .row.controls {
       flex-wrap: nowrap;
+      background: transparent;
+    }
+
+    /* Keep control buttons transparent by default */
+    .row.controls button {
+      background: transparent;
+    }
+
+    /* Dock controls row to bottom when enabled */
+    body[data-controls-docked="1"] .row.controls {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: min(980px, calc(100vw - 24px));
+      margin: 0;
+      padding: 12px;
+      z-index: 45;
     }
 
     /* Fixed width to prevent layout jump when label changes Play <-> Pause */
@@ -188,6 +206,10 @@
       body { padding: 0; }
       #transWrap { border-radius: 0; margin-top: 0; }
 
+      body[data-controls-docked="1"] .row.controls {
+        width: calc(100vw - 2px);
+      }
+
       /* On narrow screens, force ~1px side gap for the main menu dialog */
       #dlgMainMenu {
         width: calc(100vw - 2px);
@@ -226,6 +248,7 @@
         <button id="btnMenuToggleTrans" value="cancel">Hide transcription</button>
         <button id="btnMenuToggleTime" value="cancel">Show time</button>
         <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
+        <button id="btnMenuToggleControlsDock" value="cancel">Dock controls bottom</button>
         <button value="cancel">Close</button>
       </div>
     </form>
@@ -538,6 +561,81 @@ English Channel..."></textarea>
           if (typeof data.visible === 'number') return data.visible !== 0;
           if (typeof data.visible === 'string') {
             const s = data.visible.trim().toLowerCase();
+            if (s === 'true' || s === '1' || s === 'yes') return true;
+            if (s === 'false' || s === '0' || s === 'no') return false;
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    // ------------------------------
+    // UI setting: controls docked to bottom
+    // ------------------------------
+    // Stored under:
+    // ../db_youtube2/ui_state/yout_pl2/controls_dock_bottom
+    function isControlsDocked() {
+      return !!document.body && document.body.dataset.controlsDocked === '1';
+    }
+
+    function updateControlsDockSpacer() {
+      const row = document.querySelector('.row.controls');
+      if (!row || !document.body) return;
+      if (!isControlsDocked()) {
+        document.body.style.paddingBottom = '';
+        return;
+      }
+      try {
+        const h = Math.ceil(row.getBoundingClientRect().height || 0);
+        document.body.style.paddingBottom = `${Math.max(0, h + 8)}px`;
+      } catch {
+        document.body.style.paddingBottom = '64px';
+      }
+    }
+
+    function setControlsDocked(isDocked) {
+      if (!document.body) return;
+      document.body.dataset.controlsDocked = isDocked ? '1' : '0';
+      try {
+        requestAnimationFrame(() => updateControlsDockSpacer());
+      } catch {
+        setTimeout(() => updateControlsDockSpacer(), 0);
+      }
+    }
+
+    async function saveControlsDockBottomSetting(isDocked) {
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(`${UI_STATE_PATH}/controls_dock_bottom`, 'PUT', {
+          docked: !!isDocked,
+          updatedAt: ytNowIso()
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    async function loadControlsDockBottomSetting() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(`${UI_STATE_PATH}/controls_dock_bottom`, 'GET');
+        if (data == null) return null;
+        if (typeof data === 'boolean') return data;
+        if (typeof data === 'number') return data !== 0;
+        if (typeof data === 'string') {
+          const s = data.trim().toLowerCase();
+          if (s === 'true' || s === '1' || s === 'yes') return true;
+          if (s === 'false' || s === '0' || s === 'no') return false;
+          return null;
+        }
+        if (typeof data === 'object') {
+          const v = (data && Object.prototype.hasOwnProperty.call(data, 'docked')) ? data.docked : null;
+          if (typeof v === 'boolean') return v;
+          if (typeof v === 'number') return v !== 0;
+          if (typeof v === 'string') {
+            const s = v.trim().toLowerCase();
             if (s === 'true' || s === '1' || s === 'yes') return true;
             if (s === 'false' || s === '0' || s === 'no') return false;
           }
@@ -1064,11 +1162,13 @@ English Channel..."></textarea>
       const btnTrans = document.getElementById('btnMenuToggleTrans');
       const btnTime = document.getElementById('btnMenuToggleTime');
       const btnTransTime = document.getElementById('btnMenuToggleTransTime');
+      const btnDock = document.getElementById('btnMenuToggleControlsDock');
       const wrap = document.getElementById('transWrap');
       const transVisible = wrap && wrap.style.display === 'block';
       if (btnTrans) btnTrans.textContent = transVisible ? 'Hide transcription' : 'Show transcription';
       if (btnTime) btnTime.textContent = isTimeVisible() ? 'Hide time' : 'Show time';
       if (btnTransTime) btnTransTime.textContent = isTranscriptTimestampsVisible() ? 'Hide transcript time' : 'Show transcript time';
+      if (btnDock) btnDock.textContent = isControlsDocked() ? 'Undock controls' : 'Dock controls bottom';
     }
 
     function openPasteModal() {
@@ -1468,6 +1568,15 @@ English Channel..."></textarea>
         Promise.resolve().then(() => saveTranscriptTimestampsVisibleSetting(next)).catch(() => {});
       };
 
+      const btnDock = document.getElementById('btnMenuToggleControlsDock');
+      if (btnDock) btnDock.onclick = (e) => {
+        e.preventDefault();
+        const next = !isControlsDocked();
+        setControlsDocked(next);
+        updateMenuLabels();
+        Promise.resolve().then(() => saveControlsDockBottomSetting(next)).catch(() => {});
+      };
+
       document.getElementById('btnApplyTrans').onclick = (e) => {
         try {
           e.preventDefault();
@@ -1534,6 +1643,10 @@ English Channel..."></textarea>
         const tsVisible = await loadTranscriptTimestampsVisibleSetting();
         if (tsVisible != null) setTranscriptTimestampsVisible(!!tsVisible);
 
+        // Load UI setting: controls docked to bottom (best-effort)
+        const docked = await loadControlsDockBottomSetting();
+        if (docked != null) setControlsDocked(!!docked);
+
         const lastVid = await loadLastSelectedVideoId();
         if (lastVid && lastVid !== currentVideoId) {
           await switchToVideoId(lastVid);
@@ -1551,7 +1664,15 @@ English Channel..."></textarea>
       setTimeVisible(false);
       setTranscriptTimestampsVisible(true);
       setTranscriptVisible(true);
+      setControlsDocked(false);
       updateMenuLabels();
+
+      // Keep spacer correct on resize when docked.
+      try {
+        window.addEventListener('resize', () => {
+          if (isControlsDocked()) updateControlsDockSpacer();
+        });
+      } catch {}
 
       // Main menu (reference videos)
       const btnMain = document.getElementById('btnMainMenu');
