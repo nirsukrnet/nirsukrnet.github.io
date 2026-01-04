@@ -160,6 +160,12 @@
       padding: 12px;
     }
 
+    /* Wider main menu dialog */
+    #dlgMainMenu {
+      width: min(1200px, calc(100vw - 2px));
+      margin: 1px auto;
+    }
+
     dialog::backdrop {
       background: rgba(0, 0, 0, 0.4);
     }
@@ -181,6 +187,13 @@
     @media (max-width: 900px) {
       body { padding: 0; }
       #transWrap { border-radius: 0; margin-top: 0; }
+
+      /* On narrow screens, force ~1px side gap for the main menu dialog */
+      #dlgMainMenu {
+        width: calc(100vw - 2px);
+        max-width: calc(100vw - 2px);
+        margin: 1px;
+      }
     }
   </style>
 </head>
@@ -253,7 +266,7 @@ English Channel..."></textarea>
         <button id="btnAddVideo" value="cancel">Add YouTube link</button>
         <button value="cancel">Close</button>
       </div>
-      <div class="muted" style="margin-top:6px;">First 5 videos (sorted by order)</div>
+      <div id="refVideosLimitInfo" class="muted" style="margin-top:6px;">First videos (sorted by order)</div>
       <ul id="refVideosList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
       <div id="refVideosStatus" class="muted" style="margin-top:8px;"></div>
     </form>
@@ -319,6 +332,9 @@ English Channel..."></textarea>
     let langEdit = 'sv';
     let lang1Show = 'sv';
     let lang2Show = 'en';
+
+    // Ref videos menu
+    const REF_VIDEOS_MENU_LIMIT = 9;
 
     // Auto-scroll behavior: keep the active transcript row this many pixels from the
     // top edge of the transcript panel. Adjust this constant to tune the “top gap”.
@@ -1287,6 +1303,12 @@ English Channel..."></textarea>
       if (!list) return;
       list.innerHTML = '';
 
+      const limitInfo = document.getElementById('refVideosLimitInfo');
+      if (limitInfo) {
+        const n = Math.max(0, Math.floor(Number(REF_VIDEOS_MENU_LIMIT) || 0));
+        limitInfo.textContent = `First ${n} videos (sorted by order)`;
+      }
+
       if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.listAll !== 'function') {
         setRefStatus('YouTubeRefVideosStore not available');
         return;
@@ -1304,7 +1326,8 @@ English Channel..."></textarea>
         }))
         .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
 
-      const top = sorted.slice(0, 5);
+      const limit = Math.max(0, Math.floor(Number(REF_VIDEOS_MENU_LIMIT) || 0));
+      const top = sorted.slice(0, limit);
       if (top.length === 0) {
         const li = document.createElement('li');
         li.className = 'muted';
