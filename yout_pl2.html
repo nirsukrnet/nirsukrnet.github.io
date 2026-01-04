@@ -1186,6 +1186,19 @@ English Channel..."></textarea>
 
     function openAddVideoDialog() {
       setAddVideoStatus('');
+
+      // Reset fields so each new "Add" starts clean.
+      try {
+        const ids = ['inIndentId', 'inUrl', 'inShortName', 'inTitle', 'inTag', 'inDesc'];
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+
+        const inOrder = document.getElementById('inOrder');
+        if (inOrder) inOrder.value = '9999';
+      } catch {}
+
       const dlg = document.getElementById('dlgAddVideo');
       if (!dlg) return;
       if (typeof dlg.showModal === 'function') dlg.showModal();
