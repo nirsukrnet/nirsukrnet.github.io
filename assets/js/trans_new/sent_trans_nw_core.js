@@ -331,9 +331,7 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
         saveToBaseButton.className = 'button_controlsentences';
         saveToBaseButton.id = `button-save-to-db-${id_block}`;
         saveToBaseButton.style.display = 'none'; // Initially hidden
-        saveToBaseButton.onclick = function() {
-            if ('Debug == true') { return; } // Disable in debug mode
-            return;  // Disable in debug mode
+        saveToBaseButton.onclick = async function() {
 
             let id_block = this.id.replace('button-save-to-db-', '');
             if (!id_block) {
@@ -343,7 +341,12 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
             // Call the function to save sentences to the database
             console.log(`Saving sentences for block ID: ${id_block}`);
             // Save current block to Firebase
-            Save_1Block_ToBase_Sent_TransTo(id_block);
+            try {
+                await Save_1Block_ToBase_Sent_TransTo(id_block);
+            } catch (e) {
+                console.error('Failed to save block', e);
+                return;
+            }
             hideAllBlocksInFrame(id_block);
             // Scroll to the next block if exists
             let nextBlock = document.getElementById(`frame_item-${parseInt(id_block) + 1}`);
@@ -359,14 +362,19 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
         clearToBaseButton.textContent = 'Clear Trans';
         clearToBaseButton.className = 'button_controlsentences button_clear_trans';
         clearToBaseButton.id = `button-clear-to-db-${id_block}`;
-        clearToBaseButton.onclick = function(){
+        clearToBaseButton.onclick = async function(){
             const ids = getIdsFromSentencesFromBlock(id_block);
             if (!ids.length){
                 alert('No sentence ids found in this block to clear.');
                 return;
             }
             const dataToSave = ids.map(id => ({ idsentence: id, sentence_to: '' }));
-            SaveTransReadyDataToFireBase(dataToSave);
+            try {
+                await SaveTransReadyDataToFireBase(dataToSave);
+            } catch (e) {
+                console.error('Failed to clear translations', e);
+                return;
+            }
             hideAllBlocksInFrame(id_block);
         };
 
@@ -686,59 +694,7 @@ function ParseButton_Onclick(id_block, tr_sentences) {
         i++;
     }
 
-    // Output rows are appended incrementally via appendParsedRow().
-
-    // Old parsing logic commented out
-
-    // for (let i = 0; i < filtered_tr_sentences.length; i++) {
-    //    let sent_tr1 = filtered_tr_sentences[i];
-    //    let begin_delimeter_sentences = sent_tr1.id_time_delim;
-    //    let begin_pos1 = text_1.indexOf(begin_delimeter_sentences);
-    //    let end_pos1 = text_1.length;
-    //    let next_begin_delimeter_sentences = '';
-    //    if (i + 1 < filtered_tr_sentences.length) {       
-    //       let next_sent_tr1 = filtered_tr_sentences[i + 1];
-    //       next_begin_delimeter_sentences = next_sent_tr1.id_time_delim;
-    //       end_pos1 = text_1.indexOf(next_begin_delimeter_sentences);
-    //    }
-       
-    //    let sent_ = text_1.substring(begin_pos1, end_pos1).trim();
-    //    console.log(' index loop ' + i);
-    //    console.log(sent_tr1.sentence_from); 
-    //    console.log(sent_); 
-    //    text_1 = text_1.replace(sent_, ''); // remove processed sentence from text_1
-    //    sent_ = sent_.replace(begin_delimeter_sentences, '').trim();
-    //    sent_ = sent_.replace(next_begin_delimeter_sentences, '').trim();                     
-    //    // debuging
-    //    if (i == 5) {
-    //       console.log('Begin Debug parse sentence 7'); 
-    //       console.log(sent_tr1.sentence_from); 
-    //       console.log(sent_); 
-    //       console.log('End Debug parse sentence 7'); 
-    //     }
-
-    //    let trimmedSent = sent_.trim();
-    //    trimmedSent = trimmedSent.replace('\n', '');
-    //    if (sent_) {          
-    //       const item_sentencesToBlock = document.createElement('div');
-    //       item_sentencesToBlock.className = 'item-sentences-to-block';
-    //       let sentenceDiv = document.createElement('div');
-    //       sentenceDiv.className = 'sentence-paste-to-item';
-    //       sentenceDiv.id = `sentence-paste-${sent_tr1.idsentence}`;
-    //       sentenceDiv.setAttribute('idsentence', sent_tr1.idsentence);
-    //       sentenceDiv.textContent = trimmedSent;
-    //       item_sentencesToBlock.appendChild(sentenceDiv);
-    //       let sentence_ToDiv = document.createElement('div');
-    //       sentence_ToDiv.className = 'sentence-paste-to-item_dest';
-    //       sentence_ToDiv.id = `sentence-paste-${sent_tr1.idsentence}`;
-    //       sentence_ToDiv.setAttribute('idsentence', sent_tr1.idsentence);        
-    //       const inx1 = tr_sentences.findIndex(p => p.idsentence == sent_tr1.idsentence);
-    //       const sentence_from = tr_sentences[inx1].sentence_from;
-    //       sentence_ToDiv.textContent = sentence_from;
-    //       item_sentencesToBlock.appendChild(sentence_ToDiv);
-    //       sentencesToBlock.appendChild(item_sentencesToBlock);          
-    //     }
-    // }
+   
 
 
     // Show the save button
@@ -775,7 +731,7 @@ function getIdsFromSentencesFromBlock(id_block){
     return ids;
 }
 
-function Save_1Block_ToBase_Sent_TransTo(id_block) {
+async function Save_1Block_ToBase_Sent_TransTo(id_block) {
     // Get all sentences in the block
     let sentencesToBlock = document.getElementById(`sentences-to-block-${id_block}`);
     if (!sentencesToBlock) {
@@ -806,10 +762,10 @@ function Save_1Block_ToBase_Sent_TransTo(id_block) {
     if (dataToSave.length > 0) {
         // Save to DB3 text_trans_phrases
         if (typeof window.SaveTransReadyDataToFireBaseTo_text_trans_phrases === 'function') {
-            window.SaveTransReadyDataToFireBaseTo_text_trans_phrases(dataToSave);
+            await window.SaveTransReadyDataToFireBaseTo_text_trans_phrases(dataToSave);
         } else {
             console.warn('[trans] SaveTransReadyDataToFireBaseTo_text_trans_phrases is not available, falling back to audio saver');
-            SaveTransReadyDataToFireBase(dataToSave);
+            await SaveTransReadyDataToFireBase(dataToSave);
         }
         console.log('Sentences saved successfully!');
     } else {
@@ -820,23 +776,23 @@ function Save_1Block_ToBase_Sent_TransTo(id_block) {
 }
 
 
-function SaveAllFramesToDatabase(dataToSave) {
+async function SaveAllFramesToDatabase() {
     const  infoDiv = document.getElementById('info_div');
-    let sentencesToBlocks = infoDiv.querySelectorAll('.sentences-to-block');
-    sentencesToBlocks.forEach(block => {
+    const sentencesToBlocks = infoDiv.querySelectorAll('.sentences-to-block');
+    for (const block of sentencesToBlocks) {
         let sentences = block.querySelectorAll('.sentence-paste-to-item');
         if (sentences.length === 0) {
             console.warn('No sentences to save in this block.');
-            return;
+            continue;
         }
         
         // Prepare data to save
-       let dataToSave = [];
+       const blockDataToSave = [];
        sentences.forEach(sentence => {
            let idsentence = sentence.getAttribute('idsentence');
            let sentenceText = sentence.innerText.trim();
            if (idsentence && sentenceText) {
-               dataToSave.push({
+               blockDataToSave.push({
                    idsentence: idsentence,
                    sentence_to: sentenceText
                });
@@ -844,19 +800,19 @@ function SaveAllFramesToDatabase(dataToSave) {
        });
 
        // Save to Firebase or any other database
-       if (dataToSave.length > 0) {
+       if (blockDataToSave.length > 0) {
            // Save to DB3 text_trans_phrases
            if (typeof window.SaveTransReadyDataToFireBaseTo_text_trans_phrases === 'function') {
-               window.SaveTransReadyDataToFireBaseTo_text_trans_phrases(dataToSave);
+               await window.SaveTransReadyDataToFireBaseTo_text_trans_phrases(blockDataToSave);
            } else {
                console.warn('[trans] SaveTransReadyDataToFireBaseTo_text_trans_phrases is not available, falling back to audio saver');
-               SaveTransReadyDataToFireBase(dataToSave);
+               await SaveTransReadyDataToFireBase(blockDataToSave);
            }
            console.log('Sentences saved successfully for one block!');
        } else {
            alert('No valid sentences to save.');
        }
-   });
+   }
     
    
     // Build downloadable JSON from current in-memory data instead of legacy content_data
@@ -1160,6 +1116,7 @@ window.SaveTransReadyDataToFireBaseTo_youtube_transcripts = async function (vide
 
     const items = (data && Array.isArray(data.items)) ? data.items.slice() : [];
     const key = `text_${langTo}`;
+    const srcKey = langFrom ? `text_${langFrom}` : '';
 
     // Apply updates
     for (const row of list) {
@@ -1174,11 +1131,38 @@ window.SaveTransReadyDataToFireBaseTo_youtube_transcripts = async function (vide
         if (idx < 0 || idx >= items.length) continue;
 
         const cur = (items[idx] && typeof items[idx] === 'object') ? items[idx] : {};
+
+        // Update destination translation field
         cur[key] = sentence_to;
+
+        // Backfill source language field when the transcript uses `text` but not `text_<fromLang>`.
+        // This makes persisted items look like: { t, text_en, text_uk, ... }.
+        const uiItem = uiList.find(x => x && x.idsentence == idsentence);
+        if (srcKey) {
+            const existingSrc = (cur[srcKey] != null) ? String(cur[srcKey]).trim() : '';
+            if (!existingSrc) {
+                const fromUi = (uiItem && uiItem.sentence_from != null) ? String(uiItem.sentence_from).trim() : '';
+                const fromText = (cur.text != null) ? String(cur.text).trim() : '';
+                const best = fromUi || fromText;
+                if (best) cur[srcKey] = best;
+            }
+        }
+
+        // If `t` is missing, try to infer from d_uuid like "yt_<vid>_t_<seconds>".
+        if (cur.t == null || !Number.isFinite(Number(cur.t))) {
+            const du = uiItem && uiItem.d_uuid;
+            if (typeof du === 'string') {
+                const m = /(?:^|_)t_([0-9]+(?:\.[0-9]+)?)/.exec(du);
+                if (m) {
+                    const tVal = Number(m[1]);
+                    if (Number.isFinite(tVal)) cur.t = tVal;
+                }
+            }
+        }
+
         items[idx] = cur;
 
         // Update UI cache immediately
-        const uiItem = uiList.find(x => x && x.idsentence == idsentence);
         if (uiItem) {
             uiItem.sentence_to = sentence_to;
             uiItem.datetimetrans = new Date().toISOString();

@@ -821,6 +821,7 @@ window.SaveTransReadyDataToFireBaseTo_youtube_transcripts = async function (vide
 
     const items = (data && Array.isArray(data.items)) ? data.items.slice() : [];
     const key = `text_${langTo}`;
+    const srcKey = langFrom ? `text_${langFrom}` : '';
 
     // Apply updates
     for (const row of list) {
@@ -835,11 +836,38 @@ window.SaveTransReadyDataToFireBaseTo_youtube_transcripts = async function (vide
         if (idx < 0 || idx >= items.length) continue;
 
         const cur = (items[idx] && typeof items[idx] === 'object') ? items[idx] : {};
+
+        // Update destination translation field
         cur[key] = sentence_to;
+
+        // Backfill source language field when the transcript uses `text` but not `text_<fromLang>`.
+        // This makes persisted items look like: { t, text_en, text_uk, ... }.
+        const uiItem = uiList.find(x => x && x.idsentence == idsentence);
+        if (srcKey) {
+            const existingSrc = (cur[srcKey] != null) ? String(cur[srcKey]).trim() : '';
+            if (!existingSrc) {
+                const fromUi = (uiItem && uiItem.sentence_from != null) ? String(uiItem.sentence_from).trim() : '';
+                const fromText = (cur.text != null) ? String(cur.text).trim() : '';
+                const best = fromUi || fromText;
+                if (best) cur[srcKey] = best;
+            }
+        }
+
+        // If `t` is missing, try to infer from d_uuid like "yt_<vid>_t_<seconds>".
+        if (cur.t == null || !Number.isFinite(Number(cur.t))) {
+            const du = uiItem && uiItem.d_uuid;
+            if (typeof du === 'string') {
+                const m = /(?:^|_)t_([0-9]+(?:\.[0-9]+)?)/.exec(du);
+                if (m) {
+                    const tVal = Number(m[1]);
+                    if (Number.isFinite(tVal)) cur.t = tVal;
+                }
+            }
+        }
+
         items[idx] = cur;
 
         // Update UI cache immediately
-        const uiItem = uiList.find(x => x && x.idsentence == idsentence);
         if (uiItem) {
             uiItem.sentence_to = sentence_to;
             uiItem.datetimetrans = new Date().toISOString();
