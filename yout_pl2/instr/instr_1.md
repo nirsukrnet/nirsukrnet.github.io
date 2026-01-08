@@ -1,71 +1,120 @@
-## Create yout_pl2 (clone of yout_pl1)
+## Goal
 
-Goal: create a second independent YouTube page based on `yout_pl1.html`, but using a new Firebase root `db_youtube2/`.
+File: `C:\Python\AuTr\html\assets\js\trans_new\sent_trans_nw_core.js`
 
-This keeps `yout_pl1` and `yout_pl2` data separated.
+In `ParseButton_Onclick(id_block, tr_sentences)` we parse pasted translation text back into sentence rows.
+The pasted text contains *time delimiters* (e.g. `81:80`) which we use to locate where each translated sentence begins in the big pasted text.
 
----
+Problem: sometimes a delimiter for a sentence id is missing (or not found by search), so that sentence cannot be extracted and we log:
 
-## 1) Files to create
+`-------Delimiter <time> not found id <n>.`
 
-Create a new HTML file:
-- `C:\Python\AuTr\html\yout_pl2.html`
+Example:
+- begin = `81:80`, end = `127:50`, added ids = `14 - 15 - 16 - 17`
+- but delimiters for ids `15`, `16`, `17` are not found
+- we still know the *segment bounds* (begin, end) that contains the translations for ids 14..17
 
-Create a new JS subfolder for page-specific modules:
-- `C:\Python\AuTr\html\yout_pl2\`
+We need a helper that can fill missing delimiters by splitting the text segment *proportionally* by the source sentence lengths.
 
-Inside `yout_pl2\` create these copies (start by copying from `yout_pl1\`):
-- `yout_pl2\yu2_global_var.js` (or reuse shared `assets/js/global_var.js` if you do NOT need per-page auth/config)
-- `yout_pl2\youtube_transcript_store.js`
-- `yout_pl2\youtube_ref_videos_store.js`
+## New function to implement
 
----
+Add a helper:
 
-## 2) HTML changes (yout_pl2.html)
-
-Start by copying `yout_pl1.html` → `yout_pl2.html`, then update only the local script paths to point to the new folder:
-
-```html
-<script src="./yout_pl2/yu2_global_var.js"></script>
-<script src="./yout_pl2/youtube_transcript_store.js"></script>
-<script src="./yout_pl2/youtube_ref_videos_store.js"></script>
+```js
+function ProccesMissedidTimeMark(idsent_begin, indx1, tr_sent_arr1, entire_text1)
 ```
 
-Note:
-- Keep the rest of the UI/logic the same (minimal clone).
+### Inputs
 
----
+- `idsent_begin` (number|string)
+	- the first sentence id in the problematic run (the id for which we DID find a delimiter / anchor)
+- `indx1` (number)
+	- index in `tr_sent_arr1` where `idsent_begin` sits
+- `tr_sent_arr1` (array)
+	- array of sentence objects for the current parse block
+	- each item has at least:
+		- `idsentence`
+		- `sentence_from`
+		- `id_time_delim` (expected delimiter string)
+- `entire_text1` (string)
+	- the full pasted text (or the current block text) that contains delimiters + translated content
 
-## 3) Firebase paths (db_youtube2)
+### Output
 
-In the new `yout_pl2` store modules, change the Firebase ROOT_PATH constants to use `db_youtube2`:
+Return a list of “recovered” items (or apply in-place), so caller can continue parse without losing sentences.
 
-Transcript store:
-- `../db_youtube2/youtube_transcripts`
+Recommended return shape (simple):
 
-Reference videos store:
-- `../db_youtube2/ref_youtube_videos`
+```js
+{
+	fixed: Array<{ idsentence, startIndex, endIndex, extractedText }>,
+	nextIndex: number // where the caller should continue scanning
+}
+```
 
-These are relative paths because the underlying Firebase client uses `data_base2` as its base root, so `../` escapes that.
+If you prefer in-place mutations, still return debug info to make it testable.
 
----
+## When to call it
 
-## 4) Expected Firebase structure
+Inside `ParseButton_Onclick` when:
 
-`db_youtube2/`
-- `youtube_transcripts/{videoId}`
-- `ref_youtube_videos/{base64url(indent_id)}`
+1) We successfully found a begin delimiter for some id (`idsent_begin`).
+2) We know we’re adding a run like `14 - 15 - 16 - 17`.
+3) One or more delimiters inside that run are missing (not found in `entire_text1`).
+4) We DO have an `end` boundary delimiter that exists (the delimiter after the run).
 
----
+This helper is only for the case “missing internal delimiters, but run begin and run end exist”.
 
-## 5) Quick checklist
+## Algorithm (proportional split)
 
-- Opening `yout_pl2.html` shows the player + transcript UI.
-- Adding a reference video writes under `db_youtube2/ref_youtube_videos/...`.
-- Saving transcript writes under `db_youtube2/youtube_transcripts/{videoId}`.
-- Clicking a reference video switches the embedded player and loads transcript in-page (same behavior as yout_pl1).
+Given a run of sentence ids: `run = tr_sent_arr1[indx1 ... indxEnd]`.
 
+1) Determine `beginDelim` and `endDelim`.
+	 - `beginDelim` = delimiter of `run[0]` (the one we found)
+	 - `endDelim` = delimiter of the sentence immediately after the run, OR the next delimiter found in the text after `beginDelim`.
+	 - If `endDelim` cannot be found, abort and return empty (don’t guess).
 
+2) Find indices in text:
+	 - `posBegin = entire_text1.indexOf(beginDelim)`
+	 - `posEnd = entire_text1.indexOf(endDelim, posBegin + beginDelim.length)`
+	 - `segment = entire_text1.slice(posBegin + beginDelim.length, posEnd)`
+
+3) Split `segment` into N parts, where N = run length.
+	 - Compute weights using `sentence_from` lengths:
+		 - `w_i = max(1, length(sentence_from_i))`
+		 - `W = sum(w_i)`
+	 - Allocate character boundaries:
+		 - `start_0 = 0`
+		 - `end_i = round((sum_{k<=i} w_k / W) * segment.length)`
+		 - `part_i = segment.slice(start_i, end_i)`
+	 - IMPORTANT: adjust each `end_i` to the nearest whitespace (space/newline/tab) near that index,
+	   so we don’t split in the middle of a word. Keep boundaries monotonic (`end_i >= start_i`).
+	 - Trim each `part_i` (spaces/newlines), but do not delete meaningful punctuation.
+
+4) Return extracted parts mapped to sentence ids.
+
+## Edge cases / safety rules
+
+- If `segment.length` is too small (< run length), do not split; return empty.
+- If any `sentence_from` is missing, treat its weight as 1.
+- Never allow overlapping or decreasing boundaries.
+- If `posBegin === -1` or `posEnd === -1` or `posEnd <= posBegin`, return empty.
+- Keep the original logging, but add one log line summarizing the recovery:
+	- beginDelim, endDelim, ids, segmentLen.
+
+## Acceptance checklist
+
+- For a run `14 - 15 - 16 - 17` where only `14` and the next delimiter exist:
+	- `ProccesMissedidTimeMark` returns 4 extracted strings
+	- the caller assigns them as `sentence_to` for ids 14..17
+	- no “Delimiter not found” logs for 15..17 in this case
+- For runs where end delimiter is missing:
+	- helper returns empty and caller keeps existing behavior (logs error)
+
+## Notes
+
+- This is a heuristic; it’s acceptable if splits are approximate, but it must be deterministic.
+- Keep changes isolated: only new helper + minimal integration in `ParseButton_Onclick`.
 
 
 

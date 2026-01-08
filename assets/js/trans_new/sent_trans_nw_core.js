@@ -1,25 +1,3 @@
-window.ExpImpForTrans_loadDataToHTML = async function() {
-   const selected_lesson_id = window.gv && window.gv.sts ? window.gv.sts.selected_lesson_id : null;
-   if (selected_lesson_id) {
-       const data = await window.CollectLessonData(selected_lesson_id);
-       ExpImpForTrans_Sentence_loadDataToHTML(data);
-   } else {
-       console.warn("No lesson selected");
-       ExpImpForTrans_Sentence_loadDataToHTML([]);
-   }
-}
-
-function Click_SetModeCollectedWords(athis) {
-  const mode1 = athis.className.includes('button_control_transl_on') ? true : false;
-  if (!mode1) {
-    athis.className = 'button_control_transl button_control_transl_on';
-  }
-  else {
-    athis.className = 'button_control_transl';
-  }
-  ExpImpForTrans_Sentence_loadDataToHTML(); 
-}
-
 
 function testOnUkrainianLanguage(sentence1) {
     // Check if the sentence contains any Ukrainian characters, if minimum one character then true
@@ -41,42 +19,6 @@ function testOnSwedishLanguage(sentence1) {
 }
 
 
-function transformData(inputData) {
-    const translationFrom = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationFrom) || 'uk';
-    const translationTo = (window.CONTENT_DATA_JSON && window.CONTENT_DATA_JSON.translationTo) || 'en';
-
-    // Use inputData if provided, otherwise fallback to empty array
-    const rows = Array.isArray(inputData) ? inputData : [];
-    
-    console.log(`[trans] transformData called. Rows: ${rows.length}`);
-
-    const output_data = [];
-    for (let i = 0; i < rows.length; i++) {
-        const seg = rows[i] || {};
-        
-        // Map fields based on instruction
-        // text_sv -> source_text
-        // text_en -> target_text
-        // _partid + _txtid -> id (d_uuid)
-        
-        const sentence_from = seg.text_sv || '';
-        const sentence_to = seg.text_en || '';
-        
-        const needs_translation = translationFrom === translationTo
-            ? true
-            : !(String(sentence_to || '').trim().length > 0);
-
-        output_data.push({
-            idsentence: i + 1,
-            d_uuid: `${seg._partid}_${seg._txtid}`,
-            sentence_from: String(sentence_from || ''),
-            sentence_to: String(sentence_to || ''),
-            needs_translation,
-            _srcIndex: i
-        });
-    }
-    return output_data;
-}
 
 function displayBigSmall_sentencesFromBlock(id_block, valSize) {
     let sentencesFromBlock = document.getElementById(`sentences-fromblock-${id_block}`);
@@ -163,9 +105,42 @@ function hideAllBlocksInFrame(id_block){
 }
 
 
-function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
+function GenerateTimeDelim_For_Sentence(BlockSentences1, sentence_str1, index_loop, prevTotalMillisec)  {
+    const length1 = sentence_str1.length;
+    const Per1CharMillisec = 10; // 10 milliseconds per character
+    //const Item_Millisec = index1 * length1 * Per1CharMillisec; 
+    function Get_Total_Millisec_For_Sentence(inx1, prevTotalMillisec_v) {            
+        const Item_Millisec = inx1 * length1 * Per1CharMillisec;
+        const totalMillisec = Item_Millisec + Number(prevTotalMillisec_v);
+        const milliseconds = totalMillisec - Math.floor(totalMillisec / 100)*100;
+        const totalSeconds = Math.floor(totalMillisec / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        //const timeDelim = `${String(minutes)}:${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(2, '0')}`;
+        let curtimeDelim = `${String(totalSeconds)}:${String(milliseconds).padStart(2, '0')}`;    
+        return [curtimeDelim, totalMillisec];
+    }  
+    let itemTimeDelimArr = Get_Total_Millisec_For_Sentence(index_loop, prevTotalMillisec);
+    let restimeDelim = '';
+    let prevTotalMillisecV1 = prevTotalMillisec;
+    for (let i = 0; restimeDelim !== itemTimeDelimArr[0]; i++) {
+        // if sentence_str1 contains curtimeDelim, choose another the next
+        if (BlockSentences1.indexOf(itemTimeDelimArr[0]) !== -1) {
+            prevTotalMillisecV1 = prevTotalMillisecV1 + 10; // add 10 milliseconds to avoid collision
+            itemTimeDelimArr = Get_Total_Millisec_For_Sentence(index_loop, prevTotalMillisecV1);
+        } else {
+            restimeDelim = itemTimeDelimArr[0];
+            prevTotalMillisecV1 = itemTimeDelimArr[1];
+            break;
+        }
+    }
 
-    // Store raw data if provided, or use existing
+    return [restimeDelim, prevTotalMillisecV1];
+}
+
+function FirstStagePreparation_InputData(inputData, countSentences) {
+
+        // Store raw data if provided, or use existing
     if (inputData) {
         window.raw_trans_data = inputData;
     }
@@ -173,22 +148,64 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
     // Use stored data if inputData is not provided (e.g. re-render)
     const dataToTransform = inputData || window.raw_trans_data || [];
 
-    window.for_trans_data = transformData(dataToTransform);   
-
-    const countSentences = 25;
+    window.for_trans_data = transformData(dataToTransform);       
 
     let tr_sentences = [];
+    let block_id1 = 0;    
+    let j = 0;
+    let BlockSentences = '';
+    let ArrBlockSents = [];
+
 
     for (let i = 0; i < window.for_trans_data.length; i++) {
         let sentence = window.for_trans_data[i];
+        block_id1 = Math.floor(i / countSentences);
+        j++;
+        if (i > 0 && i % countSentences === 0) {
+            ArrBlockSents.push(BlockSentences);
+            j = 0;
+            BlockSentences = '';            
+        }
         if (sentence.needs_translation) {
+            BlockSentences += sentence.sentence_from;
             tr_sentences.push({
                 idsentence: sentence.idsentence,
+                id_block: block_id1,
                 sentence_from: sentence.sentence_from,
                 sentence_to: sentence.sentence_to
             });
         }
     }
+     
+    block_id1 = -1;
+    let prevMillisec = 0;
+    j = 0;
+    for (let i = 0; i < tr_sentences.length; i++) {        
+        let sent_tr1 = tr_sentences[i];
+        if (block_id1 !== sent_tr1.id_block){
+            BlockSentences = ArrBlockSents[sent_tr1.id_block] || '';
+            prevMillisec = 0;
+            j = 0;
+        }
+        j++;
+        block_id1 = sent_tr1.id_block;        
+        const ArrtimeDelim = GenerateTimeDelim_For_Sentence(BlockSentences, sent_tr1.sentence_from, j, prevMillisec);
+        sent_tr1.id_time_delim = ArrtimeDelim[0];
+        sent_tr1.val_time_millisec = ArrtimeDelim[1];
+        prevMillisec = ArrtimeDelim[1];
+    }
+
+    //id_time_delim: sentence.id_time_delim,
+
+    return tr_sentences;
+
+}
+
+function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
+
+    const countSentences = 25;
+
+    let tr_sentences = FirstStagePreparation_InputData(inputData, countSentences);
 
     // Create the HTML structure
 
@@ -211,7 +228,9 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
         //containerUI_Block.className = 'containerUI_Block';
         //infoDiv.appendChild(containerUI_Block);
 
-        let id_block = Math.floor(i / countSentences);
+        let sent_tr = tr_sentences[i];
+
+        let id_block = sent_tr.id_block;
 
         let divFrame_item = document.createElement('div');
         divFrame_item.className = 'frame_item';
@@ -226,12 +245,13 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
             onclick_sentencesFromBlock(id_block);
         }
 
-
-
         for (let j = i; j < i + countSentences && j < tr_sentences.length; j++) {
             let sentence = tr_sentences[j];
-            let begin_delimeter_sentences = '352725_' + sentence.idsentence;
-            let end_delimeter_sentences = '973524_';
+            // let begin_delimeter_sentences = '352725_' + sentence.idsentence;
+            // let end_delimeter_sentences = '973524_';
+            let begin_delimeter_sentences = sentence.id_time_delim;
+            let end_delimeter_sentences = '';
+
             sentencesFromBlock.innerHTML += `
                 <div class="sentence-item" id="sentence-${sentence.idsentence}">                    
                     <span class="sentence-en">${begin_delimeter_sentences} ${sentence.sentence_from} ${end_delimeter_sentences}</span>
@@ -257,84 +277,47 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
                 return;
             }
             let TextToCopy1 = sentencesBlock1.innerText;
+            // replace multiple spaces and new lines with single space
+            TextToCopy1 = TextToCopy1.replace(/\s+/g, ' ').trim();
             // change button text to "Copied!" for 2 seconds
             this.textContent = 'Copied';
             TextArea_copyToClipboard(TextToCopy1);          
         };        
+
+
+        //==========================================================
+        //==========================================================
+        //==========================================================
+
 
         let parseButton = document.createElement('button');
         parseButton.textContent = 'Parse input';
         parseButton.setAttribute('to_valueid', `sentences-to-block-${id_block}`);
         parseButton.className = 'button_controlsentences';
         parseButton.onclick = function() {
-            let textareaB1 = document.getElementById(`textareaB1-${id_block}`);
-            textareaB1.style.display = 'block'; // Show the textarea
-            let sentencesToBlock = document.getElementById(this.getAttribute('to_valueid'));
-            if (!sentencesToBlock) {
-                console.error(`Element with id ${this.getAttribute('to_valueid')} not found.`);
-                return;
-            }
-            if (!textareaB1) {
-                console.error(`Textarea with id textareaB1-${id_block} not found.`);
-                return;
-            }
-            textareaB1.focus();             
-            textareaB1.select(); 
 
-            sentencesToBlock.innerHTML = ''; // Clear previous phrases
+            ParseButton_Onclick.call(this, id_block, tr_sentences);
 
-            let text_1 = textareaB1.value;
-            let sentences = text_1.split('973524_');
-            sentences.forEach(sentence => {
-                let trimmedSentence = sentence.trim();
-                trimmedSentence = trimmedSentence.replace('\n', '');
-                if (trimmedSentence) { // Check if sentence is not empty
-                    // extract the id from the sentence
-                    let idsentenceMatch = trimmedSentence.match(/352725_(\d+)/); // Match the id at the beginning
-                    const item_sentencesToBlock = document.createElement('div');
-                    item_sentencesToBlock.className = 'item-sentences-to-block';
+            // // Show the save button
+            // let saveToBaseButton = document.getElementById(`button-save-to-db-${id_block}`);
+            // if (saveToBaseButton) {
+            //     if (sentencesToBlock.childElementCount > 0) {
+            //        saveToBaseButton.style.display = 'block'; // Show the button
+            //        displayBigSmall_sentencesFromBlock(id_block, 0);
+            //     }
+            //     else {
+            //         saveToBaseButton.style.display = 'none'; // Hide the button if no phrases
+            //         displayBigSmall_sentencesFromBlock(id_block, 1); 
+            //     }
+            // } else {
+            //     console.error(`Save button with id button-save-to-db-${id_block} not found.`);
+            // }
 
-                    if (idsentenceMatch) {
-                        let idSentence = idsentenceMatch[1]; // Get the matched id
-                        trimmedSentence = trimmedSentence.replace(/352725_\d+ /, ''); // Remove the id from the sentence
 
-                        let sentenceDiv = document.createElement('div');
-                        sentenceDiv.className = 'sentence-paste-to-item';
-                        sentenceDiv.id = `sentence-paste-${idSentence}`;
-                        sentenceDiv.setAttribute('idsentence', idSentence);
-                        sentenceDiv.textContent = trimmedSentence;            
-                        item_sentencesToBlock.appendChild(sentenceDiv);
-
-                        let sentence_ToDiv = document.createElement('div');
-                        sentence_ToDiv.className = 'sentence-paste-to-item_dest';
-                        sentence_ToDiv.id = `sentence-paste-${idSentence}`;
-                        sentence_ToDiv.setAttribute('idsentence', idSentence);        
-                        const inx1 = tr_sentences.findIndex(p => p.idsentence == idSentence);
-                        const sentence_from = tr_sentences[inx1].sentence_from;
-                        sentence_ToDiv.textContent = sentence_from;
-                        item_sentencesToBlock.appendChild(sentence_ToDiv);
-
-                        sentencesToBlock.appendChild(item_sentencesToBlock);
-                    }
-
-                }
-            });
-
-            // Show the save button
-            let saveToBaseButton = document.getElementById(`button-save-to-db-${id_block}`);
-            if (saveToBaseButton) {
-                if (sentencesToBlock.childElementCount > 0) {
-                   saveToBaseButton.style.display = 'block'; // Show the button
-                   displayBigSmall_sentencesFromBlock(id_block, 0);
-                }
-                else {
-                    saveToBaseButton.style.display = 'none'; // Hide the button if no phrases
-                    displayBigSmall_sentencesFromBlock(id_block, 1); 
-                }
-            } else {
-                console.error(`Save button with id button-save-to-db-${id_block} not found.`);
-            }
         };
+        //==========================================================
+        //==========================================================
+        //==========================================================
 
         let sentencesToBlock1 = document.createElement('div');
         sentencesToBlock1.id = `sentences-to-block-${id_block}`;
@@ -343,12 +326,15 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
           onclick_sentencesToBlock(id_block);
         };
 
-        saveToBaseButton = document.createElement('button');
-    saveToBaseButton.textContent = 'Save Next';
+        const saveToBaseButton = document.createElement('button');
+        saveToBaseButton.textContent = 'Save Next';
         saveToBaseButton.className = 'button_controlsentences';
         saveToBaseButton.id = `button-save-to-db-${id_block}`;
         saveToBaseButton.style.display = 'none'; // Initially hidden
         saveToBaseButton.onclick = function() {
+            if ('Debug == true') { return; } // Disable in debug mode
+            return;  // Disable in debug mode
+
             let id_block = this.id.replace('button-save-to-db-', '');
             if (!id_block) {
                 console.error('ID block not found.');
@@ -415,12 +401,365 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
         divFrame_item.appendChild(div_block_portion_ui_ctrl);
         divFrame_item.appendChild(sentencesToBlock1);
         divFrame_item.appendChild(saveToBaseButton);
-    divFrame_item.appendChild(clearToBaseButton);
+        divFrame_item.appendChild(clearToBaseButton);
     }
-    downloadButton = document.createElement("button");
         // Removed Download JSON action; saving happens per block via the button above.
 
 }
+
+function ProccesMissedidTimeMark(idsent_begin, indx1, tr_sent_arr1, entire_text1) {
+    const leader = tr_sent_arr1 && tr_sent_arr1[indx1];
+    if (!leader) return null;
+
+    const addedIdsRaw = (leader.added_ids == null) ? '' : String(leader.added_ids);
+    const ids = addedIdsRaw
+        .split('-')
+        .map(s => String(s).trim())
+        .filter(Boolean);
+
+    // We only handle runs like "14 - 15 - 16" (>= 2 ids)
+    if (ids.length < 2) return null;
+
+    // Safety: ensure the run begins with the expected id
+    if (String(ids[0]) !== String(idsent_begin)) return null;
+
+    const beginDelim = (leader.to_begin_delim == null) ? leader.id_time_delim : leader.to_begin_delim;
+    const endDelim = (leader.to_end_delim == null) ? '' : String(leader.to_end_delim);
+
+    if (!beginDelim) return null;
+    if (typeof entire_text1 !== 'string' || entire_text1.length === 0) return null;
+
+    const posBegin = entire_text1.indexOf(beginDelim);
+    if (posBegin === -1) return null;
+
+    let posEnd = -1;
+    if (endDelim) {
+        posEnd = entire_text1.indexOf(endDelim, posBegin + beginDelim.length);
+    }
+    if (posEnd === -1) posEnd = entire_text1.length;
+    if (posEnd <= posBegin) return null;
+
+    const segment = entire_text1.substring(posBegin + beginDelim.length, posEnd);
+    if (segment.length < ids.length) return null;
+
+    // Prefer consecutive mapping starting at indx1, but fall back to lookup by id if mismatch.
+    const runSentences = [];
+    for (let k = 0; k < ids.length; k++) {
+        const expectedId = ids[k];
+        const s = tr_sent_arr1[indx1 + k];
+        if (s && String(s.idsentence) === String(expectedId)) {
+            runSentences.push(s);
+        } else {
+            const found = tr_sent_arr1.find(x => x && String(x.idsentence) === String(expectedId));
+            if (!found) return null;
+            runSentences.push(found);
+        }
+    }
+
+    const weights = runSentences.map(s => {
+        const t = (s && s.sentence_from != null) ? String(s.sentence_from) : '';
+        return Math.max(1, t.length);
+    });
+    const totalW = weights.reduce((a, b) => a + b, 0);
+    if (!Number.isFinite(totalW) || totalW <= 0) return null;
+
+    let start = 0;
+    let acc = 0;
+    const fixed = [];
+
+    function isWs(ch){
+        return ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t';
+    }
+
+    // Snap a suggested split point to a nearby whitespace so we don't cut words.
+    // Guarantees result in [minEnd, maxEnd] and tries to keep it close to suggested.
+    function snapToWhitespace(text, suggested, minEnd, maxEnd) {
+        const len = text.length;
+        let s = Math.max(0, Math.min(len, Math.floor(suggested)));
+        const minV = Math.max(0, Math.min(len, Math.floor(minEnd)));
+        const maxV = Math.max(minV, Math.min(len, Math.floor(maxEnd)));
+
+        if (s < minV) s = minV;
+        if (s > maxV) s = maxV;
+
+        // already at a boundary: ok
+        if (s === minV || s === maxV) return s;
+
+        const windowSize = Math.min(40, Math.max(6, Math.floor(len / 50)));
+        const leftLimit = Math.max(minV, s - windowSize);
+        const rightLimit = Math.min(maxV, s + windowSize);
+
+        // Prefer forward whitespace (keeps earlier parts shorter rather than longer)
+        for (let p = s; p <= rightLimit; p++) {
+            if (p === len) return p;
+            if (isWs(text[p])) return p;
+        }
+        for (let p = s; p >= leftLimit; p--) {
+            if (p === 0) return p;
+            if (isWs(text[p - 1])) return p;
+        }
+        return s;
+    }
+
+    for (let k = 0; k < runSentences.length; k++) {
+        acc += weights[k];
+        let end = (k === runSentences.length - 1)
+            ? segment.length
+            : Math.floor((acc / totalW) * segment.length);
+        if (end < start) end = start;
+
+        // snap end boundary to whitespace, but keep monotonic and never exceed segment length
+        if (k !== runSentences.length - 1) {
+            end = snapToWhitespace(segment, end, start, segment.length);
+        }
+        if (end < start) end = start;
+
+        const extractedText = segment.slice(start, end).trim();
+        fixed.push({
+            idsentence: runSentences[k].idsentence,
+            startIndex: start,
+            endIndex: end,
+            extractedText
+        });
+        start = end;
+    }
+
+    return {
+        fixed,
+        consumedTo: posEnd,
+        nextIndex: indx1 + ids.length,
+        beginDelim,
+        endDelim,
+        segmentLength: segment.length
+    };
+}
+
+function ParseButton_Onclick(id_block, tr_sentences) {    
+
+
+    let textareaB1 = document.getElementById(`textareaB1-${id_block}`);
+    textareaB1.style.display = 'block'; // Show the textarea
+    let sentencesToBlock = document.getElementById(this.getAttribute('to_valueid'));
+    if (!sentencesToBlock) {
+        console.error(`Element with id ${this.getAttribute('to_valueid')} not found.`);
+        return;
+    }
+    if (!textareaB1) {
+        console.error(`Textarea with id textareaB1-${id_block} not found.`);
+        return;
+    }
+    textareaB1.focus();             
+    textareaB1.select(); 
+
+    sentencesToBlock.innerHTML = ''; // Clear previous phrases
+
+    //let text_1 = textareaB1.value;
+    let text_1 = textareaB1.value;
+
+    // filter tr_sentences by id_block
+    const filtered_tr_sentences = Array.isArray(tr_sentences)
+        ? tr_sentences.filter(p => p && p.id_block == id_block)
+        : [];
+
+    // Build a stable id -> sentence_from map (used for UI display)
+    const idToFrom = new Map();
+    for (const it of filtered_tr_sentences) {
+        if (!it) continue;
+        idToFrom.set(String(it.idsentence), (it.sentence_from == null) ? '' : String(it.sentence_from));
+    }
+
+    function appendParsedRow(idsentence, sentence_to_text) {
+        const item_sentencesToBlock = document.createElement('div');
+        item_sentencesToBlock.className = 'item-sentences-to-block';
+
+        const sentenceDiv = document.createElement('div');
+        sentenceDiv.className = 'sentence-paste-to-item';
+        sentenceDiv.id = `sentence-paste-${idsentence}`;
+        sentenceDiv.setAttribute('idsentence', idsentence);
+        sentenceDiv.textContent = sentence_to_text;
+        item_sentencesToBlock.appendChild(sentenceDiv);
+
+        const sentence_ToDiv = document.createElement('div');
+        sentence_ToDiv.className = 'sentence-paste-to-item_dest';
+        sentence_ToDiv.id = `sentence-src-${idsentence}`;
+        sentence_ToDiv.setAttribute('idsentence', idsentence);
+        sentence_ToDiv.textContent = idToFrom.get(String(idsentence)) || '';
+        item_sentencesToBlock.appendChild(sentence_ToDiv);
+
+        sentencesToBlock.appendChild(item_sentencesToBlock);
+    }
+
+    // 1) Detect runs: leader sentence has begin/end delim and added ids
+    let prevLeaderIndex = -1;
+    let prevDelimVal = '';
+    let missingIds = [];
+
+    console.clear();
+    for (let i = 0; i < filtered_tr_sentences.length; i++) {
+        const sent_tr1 = filtered_tr_sentences[i];
+        const begin_delimeter_sentences = sent_tr1 && sent_tr1.id_time_delim;
+        if (!begin_delimeter_sentences || text_1.indexOf(begin_delimeter_sentences) === -1) {
+            missingIds.push(sent_tr1.idsentence);
+            console.log(`-------Delimiter ${begin_delimeter_sentences} not found id ${sent_tr1.idsentence}.`);
+            continue;
+        }
+
+        if (prevLeaderIndex >= 0) {
+            const leader = filtered_tr_sentences[prevLeaderIndex];
+            leader.to_begin_delim = prevDelimVal;
+            leader.to_end_delim = begin_delimeter_sentences;
+            leader.added_ids = [leader.idsentence, ...missingIds].join(' - ');
+
+            console.log(`begin: ${leader.to_begin_delim}`);
+            console.log(`end: ${leader.to_end_delim}`);
+            console.log(`added: ${leader.added_ids}`);
+            console.log(` - - - - - - - - - - - - - - - - - - - - - - - - - `);
+            missingIds = [];
+        }
+
+        prevLeaderIndex = i;
+        prevDelimVal = begin_delimeter_sentences;
+    }
+
+    // Finalize the last leader (end delimiter unknown => end of text)
+    if (prevLeaderIndex >= 0) {
+        const leader = filtered_tr_sentences[prevLeaderIndex];
+        leader.to_begin_delim = prevDelimVal;
+        leader.to_end_delim = '';
+        leader.added_ids = [leader.idsentence, ...missingIds].join(' - ');
+    }
+
+    // 2) Parse text into sentence_to rows
+    const fullText = String(text_1 || '');
+    let cursor = 0;
+
+    for (let i = 0; i < filtered_tr_sentences.length; ) {
+        const sent_tr1 = filtered_tr_sentences[i];
+        if (!sent_tr1) { i++; continue; }
+
+        const addedIdsStr = (sent_tr1.added_ids == null) ? '' : String(sent_tr1.added_ids);
+        const ids = addedIdsStr.split('-').map(s => String(s).trim()).filter(Boolean);
+
+        // Run recovery case
+        if (ids.length >= 2) {
+            const subText = fullText.substring(cursor);
+            const res = ProccesMissedidTimeMark(sent_tr1.idsentence, i, filtered_tr_sentences, subText);
+            if (res && Array.isArray(res.fixed) && res.fixed.length === ids.length) {
+                console.log('[parse] recovered run', { begin: res.beginDelim, end: res.endDelim, ids: addedIdsStr, segmentLen: res.segmentLength });
+                for (const row of res.fixed) {
+                    const cleaned = (row.extractedText == null) ? '' : String(row.extractedText).replace(/\r?\n/g, ' ').trim();
+                    // Keep parsed value on the sentence object as well (useful for debugging / downstream logic).
+                    const sObj = filtered_tr_sentences.find(x => x && String(x.idsentence) === String(row.idsentence));
+                    if (sObj) sObj.sentence_to = cleaned;
+                    appendParsedRow(row.idsentence, cleaned);
+                }
+                cursor += Number(res.consumedTo || 0);
+                i = Number.isFinite(res.nextIndex) ? res.nextIndex : (i + ids.length);
+                continue;
+            }
+            // If recovery fails, fall through and try single-sentence parsing
+        }
+
+        // Single sentence parsing using its delimiter and the next found delimiter after cursor
+        const beginDelim = sent_tr1.id_time_delim;
+        if (!beginDelim) { i++; continue; }
+
+        const posBegin = fullText.indexOf(beginDelim, cursor);
+        if (posBegin === -1) { i++; continue; }
+
+        let posEnd = fullText.length;
+        for (let j = i + 1; j < filtered_tr_sentences.length; j++) {
+            const nextDelim = filtered_tr_sentences[j] && filtered_tr_sentences[j].id_time_delim;
+            if (!nextDelim) continue;
+            const p = fullText.indexOf(nextDelim, posBegin + beginDelim.length);
+            if (p !== -1) { posEnd = p; break; }
+        }
+
+        const extracted = fullText.substring(posBegin + beginDelim.length, posEnd);
+        cursor = posEnd;
+
+        const cleaned = String(extracted || '').replace(/\r?\n/g, ' ').trim();
+        if (cleaned) {
+            sent_tr1.sentence_to = cleaned;
+            appendParsedRow(sent_tr1.idsentence, cleaned);
+        }
+        i++;
+    }
+
+    // Output rows are appended incrementally via appendParsedRow().
+
+    // Old parsing logic commented out
+
+    // for (let i = 0; i < filtered_tr_sentences.length; i++) {
+    //    let sent_tr1 = filtered_tr_sentences[i];
+    //    let begin_delimeter_sentences = sent_tr1.id_time_delim;
+    //    let begin_pos1 = text_1.indexOf(begin_delimeter_sentences);
+    //    let end_pos1 = text_1.length;
+    //    let next_begin_delimeter_sentences = '';
+    //    if (i + 1 < filtered_tr_sentences.length) {       
+    //       let next_sent_tr1 = filtered_tr_sentences[i + 1];
+    //       next_begin_delimeter_sentences = next_sent_tr1.id_time_delim;
+    //       end_pos1 = text_1.indexOf(next_begin_delimeter_sentences);
+    //    }
+       
+    //    let sent_ = text_1.substring(begin_pos1, end_pos1).trim();
+    //    console.log(' index loop ' + i);
+    //    console.log(sent_tr1.sentence_from); 
+    //    console.log(sent_); 
+    //    text_1 = text_1.replace(sent_, ''); // remove processed sentence from text_1
+    //    sent_ = sent_.replace(begin_delimeter_sentences, '').trim();
+    //    sent_ = sent_.replace(next_begin_delimeter_sentences, '').trim();                     
+    //    // debuging
+    //    if (i == 5) {
+    //       console.log('Begin Debug parse sentence 7'); 
+    //       console.log(sent_tr1.sentence_from); 
+    //       console.log(sent_); 
+    //       console.log('End Debug parse sentence 7'); 
+    //     }
+
+    //    let trimmedSent = sent_.trim();
+    //    trimmedSent = trimmedSent.replace('\n', '');
+    //    if (sent_) {          
+    //       const item_sentencesToBlock = document.createElement('div');
+    //       item_sentencesToBlock.className = 'item-sentences-to-block';
+    //       let sentenceDiv = document.createElement('div');
+    //       sentenceDiv.className = 'sentence-paste-to-item';
+    //       sentenceDiv.id = `sentence-paste-${sent_tr1.idsentence}`;
+    //       sentenceDiv.setAttribute('idsentence', sent_tr1.idsentence);
+    //       sentenceDiv.textContent = trimmedSent;
+    //       item_sentencesToBlock.appendChild(sentenceDiv);
+    //       let sentence_ToDiv = document.createElement('div');
+    //       sentence_ToDiv.className = 'sentence-paste-to-item_dest';
+    //       sentence_ToDiv.id = `sentence-paste-${sent_tr1.idsentence}`;
+    //       sentence_ToDiv.setAttribute('idsentence', sent_tr1.idsentence);        
+    //       const inx1 = tr_sentences.findIndex(p => p.idsentence == sent_tr1.idsentence);
+    //       const sentence_from = tr_sentences[inx1].sentence_from;
+    //       sentence_ToDiv.textContent = sentence_from;
+    //       item_sentencesToBlock.appendChild(sentence_ToDiv);
+    //       sentencesToBlock.appendChild(item_sentencesToBlock);          
+    //     }
+    // }
+
+
+    // Show the save button
+    let saveToBaseButton = document.getElementById(`button-save-to-db-${id_block}`);
+    if (saveToBaseButton) {
+        if (sentencesToBlock.childElementCount > 0) {
+            saveToBaseButton.style.display = 'block'; // Show the button
+            displayBigSmall_sentencesFromBlock(id_block, 0);
+        }
+        else {
+            saveToBaseButton.style.display = 'none'; // Hide the button if no phrases
+            displayBigSmall_sentencesFromBlock(id_block, 1); 
+        }
+    } else {
+        console.error(`Save button with id button-save-to-db-${id_block} not found.`);
+    }
+
+};
+
+
+
 
 // Extract all ids present in the source sentences block for a given block
 function getIdsFromSentencesFromBlock(id_block){

@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transcript Viewer (yout_pl2)</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: color-mix(in srgb, Canvas 90%, transparent);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+      padding: 12px 0;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 0;
+    }
+
+    label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      max-width: min(980px, 100%);
+    }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    .muted { opacity: 0.75; }
+
+    #langRow { margin-top: 10px; }
+
+    main {
+      margin-top: 12px;
+      max-width: 1200px;
+    }
+
+    .section_with_borders {
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .sectionHeader {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 10px;
+    }
+
+    .sectionTitle {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .sectionDesc {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+
+    #panes1,
+    #panes2 {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .pane {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .paneHeader {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .paneTitle {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .paneDesc {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+
+    #out,
+    #out2,
+    #out_index,
+    #out_index2 {
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 10px;
+      height: 70vh;
+      max-height: 720px;
+      min-height: 280px;
+      overflow-y: auto;
+    }
+
+    #out,
+    #out2 {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    #out_index,
+    #out_index2 {
+      font-size: 13px;
+    }
+
+    .idxRow {
+      padding: 8px 8px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .idxRow[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    .idxMeta {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      opacity: 0.9;
+    }
+
+    .idxMeta .idxI {
+      opacity: 0.8;
+      min-width: 42px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .idxMeta .idxT {
+      opacity: 0.8;
+      min-width: 56px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .idxLine {
+      margin-top: 4px;
+      opacity: 0.95;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chunkGrid {
+      display: grid;
+      grid-template-columns: 64px minmax(120px, 1fr) 92px minmax(180px, 2fr);
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .chunkId {
+      opacity: 0.8;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .chunkSrc {
+      opacity: 0.85;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chunkLen {
+      opacity: 0.8;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .chunkPreview {
+      opacity: 0.95;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .line {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    .line:last-child { border-bottom: 0; }
+
+    .ts {
+      opacity: 0.75;
+      min-width: 56px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 0; }
+      header { padding: 12px; }
+      main { padding: 0 12px 12px; }
+      .section_with_borders { border-radius: 0; padding: 12px; }
+      #out, #out2, #out_index, #out_index2 { border-radius: 0; height: 44vh; min-height: 220px; }
+      .chunkGrid { grid-template-columns: 56px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="row">
+      <label>
+        <span class="muted">Video</span>
+        <select id="videoSelect"></select>
+      </label>
+      <button id="btnToggleTimestamps" type="button">Hide time</button>
+      <button id="btnToggleViewMode" type="button">Show full text</button>
+      <span id="status" class="muted"></span>
+    </div>
+    <div id="langRow" class="row"></div>
+  </header>
+
+  <main>
+    <div class="section_with_borders">
+      <div class="sectionHeader">
+        <div id="sectionTitle1" class="sectionTitle"></div>
+        <div id="sectionDesc1" class="sectionDesc"></div>
+      </div>
+
+    <div id="panes1">
+
+      <div class="pane">
+
+        <div class="paneHeader">
+          <div id="outIndexTitle" class="paneTitle"></div>
+          <div id="outIndexDesc" class="paneDesc"></div>
+        </div>
+        <div id="out_index" class="muted">Loading…</div>
+
+      </div>
+
+      <div class="pane">
+
+        <div class="paneHeader">
+          <div id="outTitle" class="paneTitle"></div>
+          <div id="outDesc" class="paneDesc"></div>
+        </div>
+        <div id="out" class="muted">Loading…</div>
+
+      </div>
+
+    </div>
+
+    </div>
+
+    <div class="section_with_borders">
+      <div class="sectionHeader">
+        <div id="sectionTitle2" class="sectionTitle"></div>
+        <div id="sectionDesc2" class="sectionDesc"></div>
+      </div>
+
+    <div id="panes2">
+
+      <div class="pane">
+        <div class="paneHeader">
+          <div id="outIndexTitle2" class="paneTitle"></div>
+          <div id="outIndexDesc2" class="paneDesc"></div>
+        </div>
+        <div id="out_index2" class="muted">Loading…</div>
+      </div>
+
+      <div class="pane">
+        <div class="paneHeader">
+          <div id="outTitle2" class="paneTitle"></div>
+          <div id="outDesc2" class="paneDesc"></div>
+        </div>
+        <div id="out2" class="muted">Loading…</div>
+      </div>
+
+    </div>
+    
+
+    </div>
+
+  </main>
+
+  <!-- Firebase auth + RTDB request helper (defines GlobalVars / URL_DataSet) -->
+  <script src="./yout_pl2/yu2_global_var.js"></script>
+  <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
+  <script src="./yout_pl2/youtube_transcript_store.js"></script>
+
+  <script>
+    const LANG_ROOT_PATH = '../db_youtube2/ref_languages_set';
+
+    const FUNC3_MAX_LENCHARS = 100;
+
+    let refVideos = [];
+    let languages = [];
+    let selectedVideoId = '';
+    let selectedLang = '';
+    let transcriptItems = [];
+    let showTimestamps = true;
+    let viewMode = 'lines'; // 'lines' | 'full'
+    let _lastBuiltText = '';
+    let _lastBuiltIndex = [];
+    let _selectedItemI = null;
+
+    let _func3Chunks = [];
+    let _selectedChunkK = null;
+
+    function setStatus(msg) {
+      const el = document.getElementById('status');
+      if (!el) return;
+      el.textContent = msg || '';
+    }
+
+    function setOutLoading(msg) {
+      const el = document.getElementById('out');
+      if (!el) return;
+      el.classList.add('muted');
+      el.textContent = msg || '';
+
+      const elIdx = document.getElementById('out_index');
+      if (elIdx) {
+        elIdx.classList.add('muted');
+        elIdx.textContent = msg || '';
+      }
+
+      const el2 = document.getElementById('out2');
+      if (el2) {
+        el2.classList.add('muted');
+        el2.textContent = msg || '';
+      }
+
+      const elIdx2 = document.getElementById('out_index2');
+      if (elIdx2) {
+        elIdx2.classList.add('muted');
+        elIdx2.textContent = msg || '';
+      }
+    }
+
+    function setPaneHeader(titleId, descId, title, desc) {
+      const t = document.getElementById(titleId);
+      const d = document.getElementById(descId);
+      if (t) t.textContent = String(title || '');
+      if (d) d.textContent = String(desc || '');
+    }
+
+    function setSectionHeaderByIds(titleId, descId, title, desc) {
+      const t = document.getElementById(titleId);
+      const d = document.getElementById(descId);
+      if (t) t.textContent = String(title || '');
+      if (d) d.textContent = String(desc || '');
+    }
+
+    function setSectionHeader(title, desc) {
+      setSectionHeaderByIds('sectionTitle1', 'sectionDesc1', title, desc);
+    }
+
+    function ytNowIso() {
+      try { return new Date().toISOString(); } catch { return String(Date.now()); }
+    }
+
+    function cleanStr(x) {
+      return (x == null) ? '' : String(x).trim();
+    }
+
+    function cleanLangCode(x) {
+      const s = cleanStr(x).toLowerCase();
+      if (!s) return '';
+      if (!/^[a-z0-9_-]{2,16}$/.test(s)) return '';
+      return s;
+    }
+
+    function ytEnsureGv() {
+      if (window.gv && window.gv.URL_DS) return window.gv;
+      const GVClass = (typeof GlobalVars === 'function')
+        ? GlobalVars
+        : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+          ? globalThis.GlobalVars
+          : (typeof window.GlobalVars === 'function')
+            ? window.GlobalVars
+            : null;
+      if (GVClass) {
+        const gv = new GVClass();
+        window.gv = gv;
+        return gv;
+      }
+      throw new Error('GlobalVars is not available (load ./yout_pl2/yu2_global_var.js first)');
+    }
+
+    async function ytEnsureSignedIn() {
+      const gv = ytEnsureGv();
+      if (gv.URL_DS && gv.URL_DS.idToken) return;
+      if (typeof gv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+      await gv.SignIn_User();
+    }
+
+    function ytRequestByPath(addurl, method = 'GET', body = null) {
+      return new Promise((resolve, reject) => {
+        try {
+          const gv = ytEnsureGv();
+          const ObjRequest = gv.URL_DS.GetObjForRequest();
+          ObjRequest.addUrl = addurl;
+          ObjRequest.ametod = method;
+          ObjRequest.vobj = body;
+          ObjRequest.CallBackFunction = function(vdata) { resolve(vdata); };
+          ObjRequest.ErrorCallback = function(err) { reject(err || new Error('request failed')); };
+          gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    function normalizeLanguagesSet(data) {
+      const rawLangs = (data && typeof data === 'object') ? data.languages : null;
+      const list = [];
+      if (rawLangs && typeof rawLangs === 'object') {
+        for (const [k, v] of Object.entries(rawLangs)) {
+          const code = cleanLangCode(v && v.code ? v.code : k);
+          if (!code) continue;
+          const label = cleanStr((v && v.label) || code.toUpperCase());
+          const order = Number.isFinite(Number(v && v.order)) ? Number(v.order) : 9999;
+          list.push({ code, label, order });
+        }
+      }
+      list.sort((a, b) => (a.order - b.order) || a.code.localeCompare(b.code));
+      return list;
+    }
+
+    async function loadOrSeedLanguagesSet() {
+      await ytEnsureSignedIn();
+      let data = null;
+      try {
+        data = await ytRequestByPath(LANG_ROOT_PATH, 'GET');
+      } catch {
+        data = null;
+      }
+
+      let list = normalizeLanguagesSet(data);
+      if (list.length === 0) {
+        const payload = {
+          updatedAt: ytNowIso(),
+          languages: {
+            sv: { code: 'sv', label: 'SV', order: 1 },
+            en: { code: 'en', label: 'EN', order: 2 },
+            uk: { code: 'uk', label: 'UK', order: 3 }
+          }
+        };
+        await ytRequestByPath(LANG_ROOT_PATH, 'PUT', payload);
+        list = normalizeLanguagesSet(payload);
+      }
+      return list;
+    }
+
+    function labelForRefVideo(v) {
+      return cleanStr(v && (v.short_name || v.title || v.indent_id || v.url)) || '(unnamed)';
+    }
+
+    function getVideoIdFromRefVideo(v) {
+      const indent = cleanStr(v && v.indent_id);
+      if (indent) return indent;
+      const url = cleanStr(v && v.url);
+      if (url && window.YouTubeRefVideosStore && typeof window.YouTubeRefVideosStore.extractVideoIdFromUrl === 'function') {
+        return cleanStr(window.YouTubeRefVideosStore.extractVideoIdFromUrl(url));
+      }
+      return '';
+    }
+
+    function renderLanguageButtons() {
+      const row = document.getElementById('langRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      if (!Array.isArray(languages) || languages.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'muted';
+        span.textContent = 'No languages';
+        row.appendChild(span);
+        return;
+      }
+
+      languages.forEach((l) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = l.label || l.code.toUpperCase();
+        btn.dataset.selected = (l.code === selectedLang) ? '1' : '0';
+        btn.onclick = () => {
+          selectedLang = l.code;
+          renderLanguageButtons();
+          renderTranscript();
+        };
+        row.appendChild(btn);
+      });
+    }
+
+    function updateViewButtons() {
+      const btnTs = document.getElementById('btnToggleTimestamps');
+      const btnMode = document.getElementById('btnToggleViewMode');
+      if (btnTs) btnTs.textContent = showTimestamps ? 'Hide time' : 'Show time';
+      if (btnMode) btnMode.textContent = (viewMode === 'full') ? 'Show lines' : 'Show full text';
+    }
+
+    function renderVideosSelect() {
+      const sel = document.getElementById('videoSelect');
+      if (!sel) return;
+      sel.innerHTML = '';
+
+      refVideos.forEach((v) => {
+        const vid = getVideoIdFromRefVideo(v);
+        if (!vid) return;
+        const opt = document.createElement('option');
+        opt.value = vid;
+        opt.textContent = labelForRefVideo(v);
+        sel.appendChild(opt);
+      });
+
+      if (selectedVideoId) sel.value = selectedVideoId;
+
+      sel.onchange = () => {
+        selectedVideoId = sel.value;
+        Promise.resolve().then(() => loadTranscriptForSelectedVideo()).catch(() => {});
+      };
+    }
+
+    function fmtTimestamp(seconds) {
+      const total = Math.max(0, Math.floor(Number(seconds || 0)));
+      if (!Number.isFinite(total)) return '0:00';
+      const s = total % 60;
+      const m = Math.floor(total / 60);
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getItemText(item, lang) {
+      const l = cleanLangCode(lang);
+      if (!item || typeof item !== 'object') return '';
+      if (l) {
+        const k = `text_${l}`;
+        const v = item[k];
+        if (typeof v === 'string') return v;
+      }
+      return (typeof item.text === 'string') ? item.text : '';
+    }
+
+    async function loadTranscriptItemsByVideoId(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) return { items: [], meta: { error: true, reason: 'missing_videoId' } };
+
+      try {
+        if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.load !== 'function') {
+          return { items: [], meta: { error: true, reason: 'YouTubeTranscriptStore_not_available' } };
+        }
+
+        const data = await window.YouTubeTranscriptStore.load(vid);
+        const items = (data && Array.isArray(data.items)) ? data.items : [];
+        return { items, meta: data || {} };
+      } catch (e) {
+        return { items: [], meta: { error: true, exception: String(e && (e.message || e)) } };
+      }
+    }
+
+    function buildTranscriptText(items, options) {
+      const list = Array.isArray(items) ? items : [];
+      const opt = (options && typeof options === 'object') ? options : {};
+      const lang = cleanLangCode(opt.lang);
+      const showTime = !!opt.showTime;
+      const separator = (typeof opt.separator === 'string') ? opt.separator : '\n';
+
+      let text = '';
+      const index = [];
+
+      for (let i = 0; i < list.length; i++) {
+        const it = list[i];
+        const t = (it && typeof it === 'object' && Number.isFinite(Number(it.t))) ? Number(it.t) : null;
+        const body = getItemText(it, lang);
+        const prefix = showTime ? `${fmtTimestamp(t)} ` : '';
+        const line = (prefix + (body || '')).trimEnd();
+
+        const start = text.length;
+        text += line;
+        const end = text.length;
+
+        index.push({ i, t, start, end, line });
+
+        if (i !== list.length - 1) {
+          text += separator;
+        }
+      }
+
+      return { text, index };
+    }
+
+    // Function 3 (instr_7.md): split built transcript text into chunk-items (sentence aligned)
+    function splitTranscriptTextToChunks(built, max_lenchars) {
+      const text = (built && typeof built.text === 'string') ? built.text : '';
+      const index = (built && Array.isArray(built.index)) ? built.index : [];
+      const maxLen = Math.max(1, Math.floor(Number(max_lenchars || 0)));
+
+      function clampRange(a, b) {
+        const lo = Math.max(0, Math.min(Number(a || 0), text.length));
+        const hi = Math.max(lo, Math.min(Number(b || 0), text.length));
+        return { start: lo, end: hi };
+      }
+
+      function srcForRange(r) {
+        const src = [];
+        const start = Number(r && r.start);
+        const end = Number(r && r.end);
+        if (!Number.isFinite(start) || !Number.isFinite(end)) return src;
+        for (let k = 0; k < index.length; k++) {
+          const e = index[k] || {};
+          const es = Number(e.start);
+          const ee = Number(e.end);
+          if (!Number.isFinite(es) || !Number.isFinite(ee)) continue;
+          if (es < end && ee > start) {
+            const i = Number.isFinite(Number(e.i)) ? Number(e.i) : k;
+            src.push(i);
+          }
+        }
+        // de-dup while preserving order
+        const out = [];
+        const seen = new Set();
+        for (const v of src) {
+          if (seen.has(v)) continue;
+          seen.add(v);
+          out.push(v);
+        }
+        return out;
+      }
+
+      // Step 1: split built.text into sentence ranges
+      // Heuristic: sentence ends at . ! ? … possibly followed by closing quotes/brackets, then whitespace or end.
+      const sentences = [];
+      const re = /[.!?…]+[\)\]\}\"'”’]*?(?=\s|$)/g;
+      let last = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        const end = re.lastIndex;
+        const r = clampRange(last, end);
+        const s = text.slice(r.start, r.end).trim();
+        if (s) {
+          sentences.push({
+            text: s,
+            range: r,
+            src: srcForRange(r)
+          });
+        }
+        last = end;
+      }
+      // Tail without punctuation => one sentence
+      if (last < text.length) {
+        const r = clampRange(last, text.length);
+        const s = text.slice(r.start, r.end).trim();
+        if (s) {
+          sentences.push({
+            text: s,
+            range: r,
+            src: srcForRange(r)
+          });
+        }
+      }
+
+      // Step 2: pack sentences into chunks
+      const chunks = [];
+      let chunkSentTexts = [];
+      let chunkSrc = [];
+      let chunkStart = null;
+      let chunkEnd = null;
+      let chunkLen = 0;
+      let chunkSentenceCount = 0;
+
+      function finalizeChunk() {
+        if (!chunkSentTexts.length) return;
+        chunks.push({
+          text: chunkSentTexts.join('\n'),
+          src: chunkSrc.slice(),
+          range: {
+            start: Number.isFinite(chunkStart) ? chunkStart : 0,
+            end: Number.isFinite(chunkEnd) ? chunkEnd : 0
+          }
+        });
+        chunkSentTexts = [];
+        chunkSrc = [];
+        chunkStart = null;
+        chunkEnd = null;
+        chunkLen = 0;
+        chunkSentenceCount = 0;
+      }
+
+      for (let s = 0; s < sentences.length; s++) {
+        const sent = sentences[s];
+        const sentText = (sent && typeof sent.text === 'string') ? sent.text : '';
+        const sentSrcArr = (sent && Array.isArray(sent.src)) ? sent.src : [];
+        const sentRange = sent && sent.range ? sent.range : null;
+
+        const extraLen = (chunkSentTexts.length ? 1 : 0) + sentText.length;
+
+        // If adding would exceed maxLen, finalize current chunk first.
+        if (chunkSentTexts.length && (chunkLen + extraLen > maxLen)) {
+          finalizeChunk();
+        }
+
+        // Oversize single sentence: allow it as its own chunk.
+        if (!chunkSentTexts.length && sentText.length > maxLen) {
+          chunkSentTexts.push(sentText);
+          chunkSrc.push(...sentSrcArr);
+          chunkStart = sentRange && Number.isFinite(Number(sentRange.start)) ? Number(sentRange.start) : chunkStart;
+          chunkEnd = sentRange && Number.isFinite(Number(sentRange.end)) ? Number(sentRange.end) : chunkEnd;
+          chunkLen = sentText.length;
+          chunkSentenceCount = 1;
+          finalizeChunk();
+          continue;
+        }
+
+        if (!chunkSentTexts.length) {
+          chunkStart = sentRange && Number.isFinite(Number(sentRange.start)) ? Number(sentRange.start) : chunkStart;
+        }
+        chunkSentTexts.push(sentText);
+        chunkSrc.push(...sentSrcArr);
+        chunkEnd = sentRange && Number.isFinite(Number(sentRange.end)) ? Number(sentRange.end) : chunkEnd;
+        chunkLen += extraLen;
+        chunkSentenceCount += 1;
+      }
+      finalizeChunk();
+
+      return { text, chunks };
+    }
+
+    function renderFunc3ChunksPane() {
+      const elIdx = document.getElementById('out_index2');
+      const out2 = document.getElementById('out2');
+      if (!elIdx || !out2) return;
+
+      if (!selectedVideoId) {
+        elIdx.classList.add('muted');
+        elIdx.textContent = 'No video selected.';
+        out2.classList.add('muted');
+        out2.textContent = 'No video selected.';
+        return;
+      }
+
+      if (!Array.isArray(_func3Chunks) || _func3Chunks.length === 0) {
+        elIdx.classList.add('muted');
+        elIdx.textContent = 'No chunks.';
+        out2.classList.add('muted');
+        out2.textContent = 'No chunks.';
+        return;
+      }
+
+      elIdx.classList.remove('muted');
+      elIdx.innerHTML = '';
+
+      _func3Chunks.forEach((c, k) => {
+        const row = document.createElement('div');
+        row.className = 'idxRow';
+        row.dataset.k = String(k);
+        row.dataset.selected = (_selectedChunkK === k) ? '1' : '0';
+
+        const grid = document.createElement('div');
+        grid.className = 'chunkGrid';
+
+        const idCell = document.createElement('div');
+        idCell.className = 'chunkId';
+        idCell.textContent = `#${k}`;
+
+        const srcCell = document.createElement('div');
+        srcCell.className = 'chunkSrc';
+        const srcList = Array.isArray(c && c.src) ? c.src.map(v => String(v)).join(', ') : '';
+        srcCell.textContent = srcList;
+        if (srcList) srcCell.title = srcList;
+
+        const lenCell = document.createElement('div');
+        lenCell.className = 'chunkLen';
+        const raw = (c && typeof c.text === 'string') ? c.text : '';
+        lenCell.textContent = `${raw.length} ch`;
+
+        const previewCell = document.createElement('div');
+        previewCell.className = 'chunkPreview';
+        const preview = raw.replace(/\s+/g, ' ').trim().slice(0, 140);
+        previewCell.textContent = preview;
+        if (raw) previewCell.title = raw;
+
+        grid.appendChild(idCell);
+        grid.appendChild(srcCell);
+        grid.appendChild(lenCell);
+        grid.appendChild(previewCell);
+        row.appendChild(grid);
+
+        row.onclick = () => {
+          _selectedChunkK = k;
+          renderFunc3ChunksPane();
+        };
+
+        elIdx.appendChild(row);
+      });
+
+      const sel = (typeof _selectedChunkK === 'number') ? _func3Chunks[_selectedChunkK] : null;
+      out2.classList.remove('muted');
+      if (sel && typeof sel.text === 'string') {
+        out2.textContent = sel.text;
+      } else {
+        out2.textContent = _func3Chunks[0].text || '';
+      }
+    }
+
+    function renderIndexPane() {
+      const el = document.getElementById('out_index');
+      if (!el) return;
+
+      if (!selectedVideoId) {
+        el.classList.add('muted');
+        el.textContent = 'No video selected.';
+        return;
+      }
+
+      if (!Array.isArray(_lastBuiltIndex) || _lastBuiltIndex.length === 0) {
+        el.classList.add('muted');
+        el.textContent = 'No index.';
+        return;
+      }
+
+      el.classList.remove('muted');
+      el.innerHTML = '';
+
+      _lastBuiltIndex.forEach((entry) => {
+        const row = document.createElement('div');
+        row.className = 'idxRow';
+        row.dataset.i = String(entry.i);
+        row.dataset.selected = (_selectedItemI === entry.i) ? '1' : '0';
+
+        const meta = document.createElement('div');
+        meta.className = 'idxMeta';
+
+        const iEl = document.createElement('div');
+        iEl.className = 'idxI';
+        iEl.textContent = `#${entry.i}`;
+
+        const tEl = document.createElement('div');
+        tEl.className = 'idxT';
+        tEl.textContent = (entry.t == null) ? '' : fmtTimestamp(entry.t);
+
+        meta.appendChild(iEl);
+        meta.appendChild(tEl);
+
+        const line = document.createElement('div');
+        line.className = 'idxLine';
+        line.textContent = entry.line || '';
+
+        row.appendChild(meta);
+        row.appendChild(line);
+
+        row.onclick = () => {
+          _selectedItemI = entry.i;
+          highlightSelectedItem();
+          renderIndexPane();
+        };
+
+        el.appendChild(row);
+      });
+    }
+
+    function highlightSelectedItem() {
+      // This feature is defined for full-text mode. If not in full mode, switch.
+      if (viewMode !== 'full') {
+        viewMode = 'full';
+        updateViewButtons();
+      }
+
+      renderTranscript();
+
+      // After render, scroll the selection into view.
+      try {
+        const mark = document.getElementById('selMark');
+        if (mark && typeof mark.scrollIntoView === 'function') {
+          mark.scrollIntoView({ block: 'center', inline: 'nearest' });
+        }
+      } catch {}
+    }
+
+    function renderTranscript() {
+      const out = document.getElementById('out');
+      if (!out) return;
+
+      if (!selectedVideoId) {
+        out.classList.add('muted');
+        out.textContent = 'No video selected.';
+        return;
+      }
+
+      if (!Array.isArray(transcriptItems) || transcriptItems.length === 0) {
+        out.classList.add('muted');
+        out.textContent = 'No transcript items for this video.';
+        return;
+      }
+
+      out.classList.remove('muted');
+
+      // Always (re)build full text + index map so we have stable positions.
+      const built = buildTranscriptText(transcriptItems, {
+        lang: selectedLang,
+        showTime: showTimestamps,
+        separator: '\n'
+      });
+      _lastBuiltText = built.text;
+      _lastBuiltIndex = built.index;
+      renderIndexPane();
+
+      // Function 3 output (chunks)
+      const func3 = splitTranscriptTextToChunks(built, FUNC3_MAX_LENCHARS);
+      _func3Chunks = Array.isArray(func3.chunks) ? func3.chunks : [];
+      if (_func3Chunks.length === 0) {
+        _selectedChunkK = null;
+      } else if (_selectedChunkK == null || _selectedChunkK >= _func3Chunks.length) {
+        _selectedChunkK = 0;
+      }
+      renderFunc3ChunksPane();
+
+      // If a selected item exists, resolve its current start/end from the rebuilt index.
+      const selectedEntry = (typeof _selectedItemI === 'number')
+        ? _lastBuiltIndex.find(e => e && e.i === _selectedItemI)
+        : null;
+
+      // View mode: full text
+      if (viewMode === 'full') {
+        out.innerHTML = '';
+        if (selectedEntry && Number.isFinite(selectedEntry.start) && Number.isFinite(selectedEntry.end)) {
+          const start = Math.max(0, Math.min(_lastBuiltText.length, selectedEntry.start));
+          const end = Math.max(start, Math.min(_lastBuiltText.length, selectedEntry.end));
+          const before = _lastBuiltText.slice(0, start);
+          const mid = _lastBuiltText.slice(start, end);
+          const after = _lastBuiltText.slice(end);
+          out.innerHTML = `${escapeHtml(before)}<mark id="selMark">${escapeHtml(mid)}</mark>${escapeHtml(after)}`;
+        } else {
+          out.textContent = _lastBuiltText;
+        }
+        return;
+      }
+
+      // View mode: per-item lines
+      out.innerHTML = '';
+      transcriptItems.forEach((it, idx) => {
+        const line = document.createElement('div');
+        line.className = 'line';
+
+        if (showTimestamps) {
+          const ts = document.createElement('div');
+          ts.className = 'ts';
+          ts.textContent = fmtTimestamp(it && it.t);
+          line.appendChild(ts);
+        }
+
+        const txt = document.createElement('div');
+        txt.textContent = getItemText(it, selectedLang);
+        line.appendChild(txt);
+
+        // Keep a stable reference for future features (highlight/scroll-to).
+        try { line.dataset.itemIdx = String(idx); } catch {}
+        out.appendChild(line);
+      });
+    }
+
+    async function loadTranscriptForSelectedVideo() {
+      const vid = cleanStr(selectedVideoId);
+      if (!vid) {
+        transcriptItems = [];
+        renderTranscript();
+        return;
+      }
+
+      setStatus('Loading transcript…');
+      setOutLoading('Loading transcript…');
+
+      const res = await loadTranscriptItemsByVideoId(vid);
+      transcriptItems = Array.isArray(res.items) ? res.items : [];
+      _selectedItemI = null;
+      _selectedChunkK = null;
+      if (transcriptItems.length || !res.meta || !res.meta.error) {
+        setStatus('');
+        renderTranscript();
+        return;
+      }
+
+      setStatus('Transcript load failed');
+      setOutLoading('Transcript load failed (check console).');
+      try { console.warn('Transcript load failed', res.meta); } catch {}
+    }
+
+    async function loadRefVideos() {
+      if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.listAll !== 'function') {
+        throw new Error('YouTubeRefVideosStore not available');
+      }
+
+      const all = await window.YouTubeRefVideosStore.listAll();
+      const sorted = (Array.isArray(all) ? all : [])
+        .filter(Boolean)
+        .map(v => ({
+          indent_id: cleanStr(v.indent_id),
+          url: cleanStr(v.url),
+          short_name: cleanStr(v.short_name),
+          title: cleanStr(v.title),
+          order: Number.isFinite(Number(v.order)) ? Number(v.order) : 9999
+        }))
+        .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
+
+      refVideos = sorted;
+
+      selectedVideoId = cleanStr(getVideoIdFromRefVideo(refVideos[0]));
+      renderVideosSelect();
+    }
+
+    async function bootstrap() {
+      setStatus('Loading…');
+      setOutLoading('Loading…');
+
+      setSectionHeaderByIds(
+        'sectionTitle1',
+        'sectionDesc1',
+        'Function 2: buildTranscriptText(items, options)',
+        'Builds full transcript text + index map (used by highlight)'
+      );
+
+      setSectionHeaderByIds(
+        'sectionTitle2',
+        'sectionDesc2',
+        'Function 3: splitTranscriptTextToChunks(built, max_lenchars)',
+        `Splits Function 2 output into chunk-items (max_lenchars=${FUNC3_MAX_LENCHARS})`
+      );
+
+      setPaneHeader('outIndexTitle', 'outIndexDesc', 'Index', 'Click an item to highlight it in Text');
+      setPaneHeader('outTitle', 'outDesc', 'Text', 'Transcript output for selected language');
+
+      setPaneHeader('outIndexTitle2', 'outIndexDesc2', 'Chunks', 'Click a chunk to show its text');
+      setPaneHeader('outTitle2', 'outDesc2', 'Chunk text', 'Text for the selected chunk');
+
+      updateViewButtons();
+
+      const btnTs = document.getElementById('btnToggleTimestamps');
+      if (btnTs) btnTs.onclick = () => {
+        showTimestamps = !showTimestamps;
+        updateViewButtons();
+        renderTranscript();
+      };
+
+      const btnMode = document.getElementById('btnToggleViewMode');
+      if (btnMode) btnMode.onclick = () => {
+        viewMode = (viewMode === 'full') ? 'lines' : 'full';
+        updateViewButtons();
+        renderTranscript();
+      };
+
+      try {
+        await ytEnsureSignedIn();
+      } catch (e) {
+        setStatus('Sign-in failed');
+        setOutLoading('Sign-in failed (check console).');
+        try { console.warn('Sign-in failed', e); } catch {}
+        return;
+      }
+
+      try {
+        languages = await loadOrSeedLanguagesSet();
+        selectedLang = cleanLangCode(languages[0] && languages[0].code) || 'sv';
+        renderLanguageButtons();
+      } catch (e) {
+        languages = [];
+        selectedLang = 'sv';
+        renderLanguageButtons();
+        try { console.warn('Load languages failed', e); } catch {}
+      }
+
+      try {
+        await loadRefVideos();
+      } catch (e) {
+        setStatus('Load videos failed');
+        setOutLoading('Load videos failed (check console).');
+        try { console.warn('Load videos failed', e); } catch {}
+        return;
+      }
+
+      await loadTranscriptForSelectedVideo();
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>
