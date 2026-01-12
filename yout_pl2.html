@@ -167,7 +167,9 @@
     }
 
     /* Language selector (Menu header row) */
-    #langRow button[data-selected="1"] {
+    #langRow button[data-selected="1"],
+    #langRowShow1 button[data-selected="1"],
+    #langRowShow2 button[data-selected="1"] {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
 
@@ -242,9 +244,19 @@
   <dialog id="dlgMenu">
     <form method="dialog">
       <h3 style="margin:0 0 8px; font-size:16px;">Menu</h3>
-      <div id="langRow" class="row" style="margin:0 0 8px;"></div>
-      <div class="row" style="margin:8px 0 0;">
+      <div class="muted" style="margin:0 0 6px;">Paste / Edit language</div>
+      <div id="langRow" class="row" style="margin:0 0 10px;"></div>
+
+      <div class="row" style="margin:0 0 12px;">
         <button id="btnMenuPaste" value="cancel">Paste transcript</button>
+      </div>
+
+      <div class="muted" style="margin:0 0 6px;">Show in playback</div>
+      <div class="muted" style="margin:0 0 6px; font-size:12px;">Line 1</div>
+      <div id="langRowShow1" class="row" style="margin:0 0 10px;"></div>
+      <div class="muted" style="margin:0 0 6px; font-size:12px;">Line 2</div>
+      <div id="langRowShow2" class="row" style="margin:0 0 8px;"></div>
+      <div class="row" style="margin:8px 0 0;">
         <button id="btnMenuToggleTrans" value="cancel">Hide transcription</button>
         <button id="btnMenuToggleTime" value="cancel">Show time</button>
         <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
@@ -356,6 +368,9 @@ English Channel..."></textarea>
     let lang1Show = 'sv';
     let lang2Show = 'en';
 
+    // Debounced persistence of playback language display settings.
+    let _playbackLangSaveTimer = null;
+
     // Ref videos menu
     const REF_VIDEOS_MENU_LIMIT = 9;
 
@@ -446,6 +461,49 @@ English Channel..."></textarea>
           reject(e);
         }
       });
+    }
+
+    function isSignedInNow() {
+      try {
+        return !!(window.gv && window.gv.URL_DS && window.gv.URL_DS.idToken);
+      } catch {
+        return false;
+      }
+    }
+
+    function getTranscriptRootPath() {
+      return (window.YouTubeTranscriptStore && window.YouTubeTranscriptStore.ROOT_PATH)
+        ? window.YouTubeTranscriptStore.ROOT_PATH
+        : '../db_youtube2/youtube_transcripts';
+    }
+
+    function scheduleSavePlaybackLangSettings() {
+      // Avoid triggering sign-in prompts from UI clicks; save only when already signed in.
+      if (!isSignedInNow()) return;
+
+      try {
+        if (_playbackLangSaveTimer) clearTimeout(_playbackLangSaveTimer);
+      } catch {}
+
+      _playbackLangSaveTimer = setTimeout(async () => {
+        try {
+          const vid = cleanStr(currentVideoId);
+          if (!vid) return;
+
+          const root = getTranscriptRootPath();
+          const l1 = cleanLangCode(lang1Show);
+          const l2 = cleanLangCode(lang2Show);
+
+          await ytRequestByPath(`${root}/${vid}`, 'PATCH', {
+            lang1_show: l1 || '',
+            // Persist Off explicitly as empty string so it can be restored reliably.
+            lang2_show: l2 || '',
+            updatedAt: ytNowIso()
+          });
+        } catch {
+          // ignore
+        }
+      }, 450);
     }
 
     function normalizeLanguagesSet(data) {
@@ -834,6 +892,63 @@ English Channel..."></textarea>
       updateTransLangInfo();
     }
 
+    function setLang1Show(nextLang) {
+      const code = cleanLangCode(nextLang);
+      if (!code) return;
+      lang1Show = code;
+
+      // If Line2 was set to the same language, force Line2 to Off.
+      try {
+        if (cleanLangCode(lang2Show) && cleanLangCode(lang2Show) === cleanLangCode(lang1Show)) {
+          lang2Show = '';
+        }
+      } catch {}
+
+      const row = document.getElementById('langRowShow1');
+      if (row) {
+        row.querySelectorAll('button[data-lang]').forEach(btn => {
+          btn.dataset.selected = (btn.dataset.lang === lang1Show) ? '1' : '0';
+        });
+      }
+
+      updateTransLangInfo();
+      const wrap = document.getElementById('transWrap');
+      if (wrap && wrap.dataset.rendered) renderTranscript();
+
+      scheduleSavePlaybackLangSettings();
+
+      // Refresh playback selector UI so Line2 disables the selected Line1 language.
+      try {
+        const row = document.getElementById('langRow');
+        if (row && row.dataset.langsJson) {
+          const list = JSON.parse(row.dataset.langsJson);
+          renderPlaybackLanguageButtons(Array.isArray(list) ? list : []);
+        }
+      } catch {}
+    }
+
+    function setLang2Show(nextLangOrOff) {
+      const raw = (nextLangOrOff == null) ? '' : String(nextLangOrOff);
+      const code = cleanLangCode(raw);
+      lang2Show = code; // empty => Off
+
+      const row = document.getElementById('langRowShow2');
+      if (row) {
+        row.querySelectorAll('button[data-lang]').forEach(btn => {
+          btn.dataset.selected = (btn.dataset.lang === lang2Show) ? '1' : '0';
+        });
+        row.querySelectorAll('button[data-off]').forEach(btn => {
+          btn.dataset.selected = (!cleanLangCode(lang2Show)) ? '1' : '0';
+        });
+      }
+
+      updateTransLangInfo();
+      const wrap = document.getElementById('transWrap');
+      if (wrap && wrap.dataset.rendered) renderTranscript();
+
+      scheduleSavePlaybackLangSettings();
+    }
+
     function updateTransLangInfo() {
       const el = document.getElementById('transLangInfo');
       if (!el) return;
@@ -848,6 +963,9 @@ English Channel..."></textarea>
       const row = document.getElementById('langRow');
       if (!row) return;
       row.innerHTML = '';
+
+      // Keep list for re-rendering playback selectors when Line1 changes.
+      try { row.dataset.langsJson = JSON.stringify(Array.isArray(list) ? list : []); } catch {}
 
       if (!Array.isArray(list) || list.length === 0) {
         const span = document.createElement('span');
@@ -869,13 +987,83 @@ English Channel..."></textarea>
         });
         row.appendChild(btn);
       });
+
+      // Also render playback display selectors using the same language list.
+      renderPlaybackLanguageButtons(list);
+    }
+
+    function renderPlaybackLanguageButtons(list) {
+      const row1 = document.getElementById('langRowShow1');
+      const row2 = document.getElementById('langRowShow2');
+      if (!row1 || !row2) return;
+
+      row1.innerHTML = '';
+      row2.innerHTML = '';
+
+      if (!Array.isArray(list) || list.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'muted';
+        span.textContent = 'No languages set';
+        row1.appendChild(span);
+        return;
+      }
+
+      // Line 1 buttons
+      list.forEach(l => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.lang = l.code;
+        btn.dataset.selected = (cleanLangCode(l.code) === cleanLangCode(lang1Show)) ? '1' : '0';
+        btn.textContent = l.label || l.code.toUpperCase();
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          setLang1Show(l.code);
+        });
+        row1.appendChild(btn);
+      });
+
+      // Line 2 buttons (Off + languages)
+      {
+        const btnOff = document.createElement('button');
+        btnOff.type = 'button';
+        btnOff.dataset.off = '1';
+        btnOff.dataset.selected = (!cleanLangCode(lang2Show)) ? '1' : '0';
+        btnOff.textContent = 'Off';
+        btnOff.addEventListener('click', (e) => {
+          e.preventDefault();
+          setLang2Show('');
+        });
+        row2.appendChild(btnOff);
+      }
+
+      list.forEach(l => {
+        const isSameAsLine1 = cleanLangCode(l.code) && cleanLangCode(l.code) === cleanLangCode(lang1Show);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.lang = l.code;
+        btn.dataset.selected = (!isSameAsLine1 && cleanLangCode(l.code) === cleanLangCode(lang2Show)) ? '1' : '0';
+        btn.textContent = l.label || l.code.toUpperCase();
+        btn.disabled = !!isSameAsLine1;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (isSameAsLine1) return;
+          setLang2Show(l.code);
+        });
+        row2.appendChild(btn);
+      });
     }
 
     function applyTranscriptMetaFromData(data) {
       const l1 = cleanLangCode(data && data.lang1_show);
-      const l2 = cleanLangCode(data && data.lang2_show);
       if (l1) lang1Show = l1;
-      if (l2) lang2Show = l2;
+
+      // Important: "Off" for Line 2 is a valid state and may be stored as empty string.
+      // Restore it if the field exists, even when it's empty.
+      try {
+        if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'lang2_show')) {
+          lang2Show = cleanLangCode(data.lang2_show) || '';
+        }
+      } catch {}
 
       updateTransLangInfo();
     }
@@ -1282,6 +1470,15 @@ English Channel..."></textarea>
           const list = await loadOrSeedLanguagesSet();
           renderLanguageButtons(list);
           if (list.length && !list.some(l => l.code === langEdit)) setLangEdit(list[0].code);
+
+          // Ensure playback display selections are valid when languages set changes.
+          if (list.length && !list.some(l => cleanLangCode(l.code) === cleanLangCode(lang1Show))) {
+            setLang1Show(list[0].code);
+          }
+          const l2 = cleanLangCode(lang2Show);
+          if (l2 && !list.some(l => cleanLangCode(l.code) === l2)) {
+            setLang2Show('');
+          }
         } catch {
           renderLanguageButtons([]);
         }

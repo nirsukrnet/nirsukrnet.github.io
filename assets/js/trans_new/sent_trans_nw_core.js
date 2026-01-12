@@ -105,7 +105,27 @@ function hideAllBlocksInFrame(id_block){
 }
 
 
-function GenerateTimeDelim_For_Sentence(BlockSentences1, sentence_str1, index_loop, prevTotalMillisec)  {
+function GenerateTimeDelim_For_Sentence(BlockSentences1, sentence_str1, index_loop, prevTotalMillisec, arr_already_generated_time_delims)  {
+    function testOnContainingInAlreadyGeneratedTimeDelims(curtimeDelim1, arr_already_generated_time_delims1){
+        for(let i = 0; i < arr_already_generated_time_delims1.length; i++){
+            let item1 = arr_already_generated_time_delims1[i];
+            let str_item1 = String(item1);
+            let str_curtimeDelim1 = String(curtimeDelim1);
+            // example: 
+            // str_curtimeDelim1 = 125:45  
+            // str_item1 = 25:45
+            if (str_curtimeDelim1.indexOf(str_item1) !== -1){
+                return true;
+            }            
+        }
+        return false;
+    }
+    function It_Is_Unique_ID_Time(curtimeDelim1, arr_already_generated_time_delims1){        
+        if (BlockSentences1.indexOf(itemTimeDelimArr[0]) !== -1){
+            return true;
+        }
+        return testOnContainingInAlreadyGeneratedTimeDelims(curtimeDelim1, arr_already_generated_time_delims1);
+    }
     const length1 = sentence_str1.length;
     const Per1CharMillisec = 10; // 10 milliseconds per character
     //const Item_Millisec = index1 * length1 * Per1CharMillisec; 
@@ -117,15 +137,16 @@ function GenerateTimeDelim_For_Sentence(BlockSentences1, sentence_str1, index_lo
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
         //const timeDelim = `${String(minutes)}:${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(2, '0')}`;
-        let curtimeDelim = `${String(totalSeconds)}:${String(milliseconds).padStart(2, '0')}`;    
+        let curtimeDelim = `${String(totalSeconds)}:${String(milliseconds).padStart(2, '0')}`;
         return [curtimeDelim, totalMillisec];
     }  
     let itemTimeDelimArr = Get_Total_Millisec_For_Sentence(index_loop, prevTotalMillisec);
     let restimeDelim = '';
     let prevTotalMillisecV1 = prevTotalMillisec;
     for (let i = 0; restimeDelim !== itemTimeDelimArr[0]; i++) {
-        // if sentence_str1 contains curtimeDelim, choose another the next
-        if (BlockSentences1.indexOf(itemTimeDelimArr[0]) !== -1) {
+        // if sentence_str1 contains curtimeDelim or , choose another the next or 
+        if (It_Is_Unique_ID_Time(itemTimeDelimArr[0], arr_already_generated_time_delims))
+        {
             prevTotalMillisecV1 = prevTotalMillisecV1 + 10; // add 10 milliseconds to avoid collision
             itemTimeDelimArr = Get_Total_Millisec_For_Sentence(index_loop, prevTotalMillisecV1);
         } else {
@@ -134,6 +155,7 @@ function GenerateTimeDelim_For_Sentence(BlockSentences1, sentence_str1, index_lo
             break;
         }
     }
+    
 
     return [restimeDelim, prevTotalMillisecV1];
 }
@@ -180,6 +202,7 @@ function FirstStagePreparation_InputData(inputData, countSentences) {
     block_id1 = -1;
     let prevMillisec = 0;
     j = 0;
+    let arr_already_generated_time_delims = [];
     for (let i = 0; i < tr_sentences.length; i++) {        
         let sent_tr1 = tr_sentences[i];
         if (block_id1 !== sent_tr1.id_block){
@@ -189,10 +212,11 @@ function FirstStagePreparation_InputData(inputData, countSentences) {
         }
         j++;
         block_id1 = sent_tr1.id_block;        
-        const ArrtimeDelim = GenerateTimeDelim_For_Sentence(BlockSentences, sent_tr1.sentence_from, j, prevMillisec);
+        const ArrtimeDelim = GenerateTimeDelim_For_Sentence(BlockSentences, sent_tr1.sentence_from, j, prevMillisec, arr_already_generated_time_delims);
         sent_tr1.id_time_delim = ArrtimeDelim[0];
         sent_tr1.val_time_millisec = ArrtimeDelim[1];
         prevMillisec = ArrtimeDelim[1];
+        arr_already_generated_time_delims.push(ArrtimeDelim[0]);
     }
 
     //id_time_delim: sentence.id_time_delim,
@@ -282,12 +306,7 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
             // change button text to "Copied!" for 2 seconds
             this.textContent = 'Copied';
             TextArea_copyToClipboard(TextToCopy1);          
-        };        
-
-
-        //==========================================================
-        //==========================================================
-        //==========================================================
+        }; 
 
 
         let parseButton = document.createElement('button');
@@ -298,26 +317,8 @@ function ExpImpForTrans_Sentence_loadDataToHTML(inputData) {
 
             ParseButton_Onclick.call(this, id_block, tr_sentences);
 
-            // // Show the save button
-            // let saveToBaseButton = document.getElementById(`button-save-to-db-${id_block}`);
-            // if (saveToBaseButton) {
-            //     if (sentencesToBlock.childElementCount > 0) {
-            //        saveToBaseButton.style.display = 'block'; // Show the button
-            //        displayBigSmall_sentencesFromBlock(id_block, 0);
-            //     }
-            //     else {
-            //         saveToBaseButton.style.display = 'none'; // Hide the button if no phrases
-            //         displayBigSmall_sentencesFromBlock(id_block, 1); 
-            //     }
-            // } else {
-            //     console.error(`Save button with id button-save-to-db-${id_block} not found.`);
-            // }
-
 
         };
-        //==========================================================
-        //==========================================================
-        //==========================================================
 
         let sentencesToBlock1 = document.createElement('div');
         sentencesToBlock1.id = `sentences-to-block-${id_block}`;
@@ -450,6 +451,87 @@ function ProccesMissedidTimeMark(idsent_begin, indx1, tr_sent_arr1, entire_text1
     const segment = entire_text1.substring(posBegin + beginDelim.length, posEnd);
     if (segment.length < ids.length) return null;
 
+    // Prefer sentence/line splitting when the translator merged multiple sentences into one block.
+    // Keep newlines as boundaries (do NOT normalize them away before splitting).
+    function splitBySentenceOrLine(text) {
+        const out = [];
+        let buf = '';
+        const s = String(text || '');
+
+        function commit() {
+            const part = buf.replace(/\s+/g, ' ').trim();
+            if (part) out.push(part);
+            buf = '';
+        }
+
+        for (let i = 0; i < s.length; i++) {
+            const ch = s[i];
+            buf += ch;
+
+            // Hard line break boundary
+            if (ch === '\n' || ch === '\r') {
+                commit();
+                continue;
+            }
+
+            const isEndPunct = ch === '.' || ch === '!' || ch === '?' || ch === '…';
+            if (!isEndPunct) continue;
+
+            const next = (i + 1 < s.length) ? s[i + 1] : '';
+            // commit at punctuation followed by whitespace/end
+            if (!next || next === ' ' || next === '\n' || next === '\r' || next === '\t') {
+                commit();
+            }
+        }
+        if (buf.trim()) commit();
+        return out;
+    }
+
+    function trySplitByComma(parts, targetCount) {
+        const list = Array.isArray(parts) ? parts.slice() : [];
+        const seps = [',', ';'];
+
+        function findBestSplitIndex(str) {
+            const s = String(str || '');
+            let best = -1;
+            for (const sep of seps) {
+                const idx = s.indexOf(sep);
+                if (idx !== -1) {
+                    // prefer later separators (keeps first part meaningful)
+                    const last = s.lastIndexOf(sep);
+                    best = Math.max(best, last);
+                }
+            }
+            return best;
+        }
+
+        while (list.length < targetCount) {
+            // split the longest item if possible
+            let longestIdx = -1;
+            let longestLen = -1;
+            for (let i = 0; i < list.length; i++) {
+                const len = String(list[i] || '').length;
+                if (len > longestLen) { longestLen = len; longestIdx = i; }
+            }
+            if (longestIdx < 0) break;
+
+            const cur = String(list[longestIdx] || '');
+            const cut = findBestSplitIndex(cur);
+            if (cut < 0) break;
+
+            const a = cur.slice(0, cut + 1).replace(/\s+/g, ' ').trim();
+            const b = cur.slice(cut + 1).replace(/\s+/g, ' ').trim();
+            if (!a || !b) break;
+
+            list.splice(longestIdx, 1, a, b);
+        }
+        return list;
+    }
+
+    const rawParts = splitBySentenceOrLine(segment);
+    const punctParts = trySplitByComma(rawParts, ids.length);
+    const segmentNorm = String(segment || '').replace(/\s+/g, ' ').trim();
+
     // Prefer consecutive mapping starting at indx1, but fall back to lookup by id if mismatch.
     const runSentences = [];
     for (let k = 0; k < ids.length; k++) {
@@ -463,6 +545,42 @@ function ProccesMissedidTimeMark(idsent_begin, indx1, tr_sent_arr1, entire_text1
             runSentences.push(found);
         }
     }
+
+    if (punctParts.length >= runSentences.length) {
+        const parts = punctParts.slice();
+        // If too many pieces, merge extras into the last required slot.
+        while (parts.length > runSentences.length) {
+            const extra = parts.pop();
+            parts[runSentences.length - 1] = (parts[runSentences.length - 1] + ' ' + extra).trim();
+        }
+        if (parts.length === runSentences.length) {
+            let pos = 0;
+            const fixed = [];
+            for (let k = 0; k < runSentences.length; k++) {
+                const text = parts[k];
+                const startIndex = pos;
+                pos += text.length;
+                const endIndex = pos;
+                pos += 1; // virtual space between parts
+                fixed.push({
+                    idsentence: runSentences[k].idsentence,
+                    startIndex,
+                    endIndex,
+                    extractedText: text
+                });
+            }
+            return {
+                fixed,
+                consumedTo: posEnd,
+                nextIndex: indx1 + ids.length,
+                beginDelim,
+                endDelim,
+                segmentLength: segmentNorm.length
+            };
+        }
+    }
+
+    // Fallback: proportional slicing (works even if punctuation splitting fails)
 
     const weights = runSentences.map(s => {
         const t = (s && s.sentence_from != null) ? String(s.sentence_from) : '';
@@ -512,17 +630,17 @@ function ProccesMissedidTimeMark(idsent_begin, indx1, tr_sent_arr1, entire_text1
     for (let k = 0; k < runSentences.length; k++) {
         acc += weights[k];
         let end = (k === runSentences.length - 1)
-            ? segment.length
-            : Math.floor((acc / totalW) * segment.length);
+            ? segmentNorm.length
+            : Math.floor((acc / totalW) * segmentNorm.length);
         if (end < start) end = start;
 
         // snap end boundary to whitespace, but keep monotonic and never exceed segment length
         if (k !== runSentences.length - 1) {
-            end = snapToWhitespace(segment, end, start, segment.length);
+            end = snapToWhitespace(segmentNorm, end, start, segmentNorm.length);
         }
         if (end < start) end = start;
 
-        const extractedText = segment.slice(start, end).trim();
+        const extractedText = segmentNorm.slice(start, end).trim();
         fixed.push({
             idsentence: runSentences[k].idsentence,
             startIndex: start,
@@ -538,22 +656,88 @@ function ProccesMissedidTimeMark(idsent_begin, indx1, tr_sent_arr1, entire_text1
         nextIndex: indx1 + ids.length,
         beginDelim,
         endDelim,
-        segmentLength: segment.length
+        segmentLength: segmentNorm.length
     };
 }
 
+//====================================================================================================================
+//====================================================================================================================
+//====================================================================================================================
+
+
+function Proc_Missed_idTimeMark(i, filtered_tr_sentences, fullText){
+    function countWords(str){
+        return str.trim().split(/\s+/).length;
+    }
+    function proportionabyWord_lSlicing_Str(from_str, to_str, arr_indxs, filtered_tr_sentences){
+        const total_from_words = countWords(from_str);
+        const total_to_words = countWords(to_str);
+        if(total_from_words === 0 || total_to_words === 0){
+            return;
+        }
+        const to_words_array = to_str.trim().split(/\s+/);
+        for (let k = 0; k < arr_indxs.length; k++) {
+            const sent = filtered_tr_sentences[arr_indxs[k]];
+            const sent_from = (sent && sent.sentence_from != null) ? String(sent.sentence_from) : '';
+            const sent_from_words = countWords(sent_from);
+            const proportion = sent_from_words / total_from_words;
+            const sent_to_words = Math.max(1, Math.round(proportion * total_to_words));            
+            const extracted_words = to_words_array.splice(0, sent_to_words);
+            const extractedText = extracted_words.join(' ');
+            sent.sentence_to = extractedText;
+        }                    
+    }       
+            
+
+    const sent_tr1 = filtered_tr_sentences[i];
+    const addedIdsStr = (sent_tr1.added_ids == null) ? '' : String(sent_tr1.added_ids);
+    const ids = addedIdsStr.split('-').map(s => String(s).trim()).filter(Boolean);
+    let from_str = '';
+    let to_str = '';
+    arr_indxs = [];
+    for (let k = 0; k < ids.length; k++) {
+        const Id = ids[k];
+        const j = filtered_tr_sentences.findIndex(x => x && String(x.idsentence) === String(Id));
+        arr_indxs.push(j);
+        const sent = filtered_tr_sentences[j];
+        //sent.length_from = (sent && sent.sentence_from != null) ? String(sent.sentence_from).length : 0;
+        from_str += (sent && sent.sentence_from != null) ? String(sent.sentence_from) + ' ' : ' ';
+    }
+    let Delim_start = sent_tr1.to_begin_delim;
+    let Delim_end = sent_tr1.to_end_delim;
+    extractedText = fullText.substring(fullText.indexOf(Delim_start) + Delim_start.length, fullText.indexOf(Delim_end));
+    to_str = extractedText;
+    console.log('--------BEGIN------------------------- ProccesMissedidTimeMark ---------------------------------');
+    console.log('Processing Id:', sent_tr1.idsentence);
+    console.log('From string:', from_str);
+    console.log('To string:', to_str);
+    console.log('result slices:');
+    proportionabyWord_lSlicing_Str(from_str, to_str, arr_indxs, filtered_tr_sentences);
+    for (let k = 0; k < arr_indxs.length; k++) {
+        const sent = filtered_tr_sentences[arr_indxs[k]];
+        console.log(`id: ${sent.idsentence} from: ${sent.sentence_from}`);
+        console.log(`id: ${sent.idsentence} to: ${sent.sentence_to}`);        
+    }
+    console.log('--------END------------------------- ProccesMissedidTimeMark ---------------------------------');
+    return null;
+}
+
+//====================================================================================================================
+//====================================================================================================================
+//====================================================================================================================
+
+
 function ParseButton_Onclick(id_block, tr_sentences) {    
 
-
     let textareaB1 = document.getElementById(`textareaB1-${id_block}`);
+    if (!textareaB1) {
+        console.error(`Textarea with id textareaB1-${id_block} not found.`);
+        return;
+    }
     textareaB1.style.display = 'block'; // Show the textarea
     let sentencesToBlock = document.getElementById(this.getAttribute('to_valueid'));
     if (!sentencesToBlock) {
         console.error(`Element with id ${this.getAttribute('to_valueid')} not found.`);
-        return;
-    }
-    if (!textareaB1) {
-        console.error(`Textarea with id textareaB1-${id_block} not found.`);
         return;
     }
     textareaB1.focus();             
@@ -563,6 +747,10 @@ function ParseButton_Onclick(id_block, tr_sentences) {
 
     //let text_1 = textareaB1.value;
     let text_1 = textareaB1.value;
+    if (!text_1 || text_1.trim().length <= 5) {
+        console.warn('No input text provided for parsing.');
+        return;
+    }
 
     // filter tr_sentences by id_block
     const filtered_tr_sentences = Array.isArray(tr_sentences)
@@ -608,7 +796,12 @@ function ParseButton_Onclick(id_block, tr_sentences) {
         const begin_delimeter_sentences = sent_tr1 && sent_tr1.id_time_delim;
         if (!begin_delimeter_sentences || text_1.indexOf(begin_delimeter_sentences) === -1) {
             missingIds.push(sent_tr1.idsentence);
-            console.log(`-------Delimiter ${begin_delimeter_sentences} not found id ${sent_tr1.idsentence}.`);
+            if (prevLeaderIndex < 0) {
+                console.warn(`[parse] Delimiter ${begin_delimeter_sentences} not found for id ${sent_tr1.idsentence} (no leader yet). Paste should include the first delimiter of the block.`);
+            } else if (missingIds.length === 1) {
+                const leaderId = filtered_tr_sentences[prevLeaderIndex] && filtered_tr_sentences[prevLeaderIndex].idsentence;
+                console.log(`[parse] Missing delimiters detected; will merge into leader id ${leaderId} until next delimiter.`);
+            }
             continue;
         }
 
@@ -638,8 +831,32 @@ function ParseButton_Onclick(id_block, tr_sentences) {
     }
 
     // 2) Parse text into sentence_to rows
+//====================================================================================================================
+//====================================================================================================================
+//====================================================================================================================
+
     const fullText = String(text_1 || '');
     let cursor = 0;
+
+    // for (let i = 0; i < filtered_tr_sentences.length; i++) {
+    //     const sent_tr1 = filtered_tr_sentences[i];
+    //     if (!sent_tr1) { i++; continue; }
+
+    //     const addedIdsStr = (sent_tr1.added_ids == null) ? '' : String(sent_tr1.added_ids);
+    //     const ids = addedIdsStr.split('-').map(s => String(s).trim()).filter(Boolean);
+
+    //     // Run recovery case
+    //     if (ids.length >= 2) {
+    //         const subText = fullText.substring(cursor);
+    //         const res2 =  Proc_Missed_idTimeMark(i, filtered_tr_sentences, fullText);
+    //     }
+    // }        
+
+//====================================================================================================================
+//====================================================================================================================
+//====================================================================================================================
+
+
 
     for (let i = 0; i < filtered_tr_sentences.length; ) {
         const sent_tr1 = filtered_tr_sentences[i];
@@ -651,7 +868,7 @@ function ParseButton_Onclick(id_block, tr_sentences) {
         // Run recovery case
         if (ids.length >= 2) {
             const subText = fullText.substring(cursor);
-            const res = ProccesMissedidTimeMark(sent_tr1.idsentence, i, filtered_tr_sentences, subText);
+            const res = ProccesMissedidTimeMark(sent_tr1.idsentence, i, filtered_tr_sentences, subText);    
             if (res && Array.isArray(res.fixed) && res.fixed.length === ids.length) {
                 console.log('[parse] recovered run', { begin: res.beginDelim, end: res.endDelim, ids: addedIdsStr, segmentLen: res.segmentLength });
                 for (const row of res.fixed) {

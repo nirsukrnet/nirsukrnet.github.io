@@ -1,0 +1,61 @@
+Console was cleared
+sent_trans_nw_core.js:803 [parse] Missing delimiters detected; will merge into leader id 151 until next delimiter.
+sent_trans_nw_core.js:814 begin: 0:20
+sent_trans_nw_core.js:815 end: 5:00
+sent_trans_nw_core.js:816 added: 151 - 152
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 5:00
+sent_trans_nw_core.js:815 end: 12:20
+sent_trans_nw_core.js:816 added: 153
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 12:20
+sent_trans_nw_core.js:815 end: 16:20
+sent_trans_nw_core.js:816 added: 154
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 16:20
+sent_trans_nw_core.js:815 end: 25:40
+sent_trans_nw_core.js:816 added: 155
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 25:40
+sent_trans_nw_core.js:815 end: 31:20
+sent_trans_nw_core.js:816 added: 156
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 31:20
+sent_trans_nw_core.js:815 end: 38:40
+sent_trans_nw_core.js:816 added: 157
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 38:40
+sent_trans_nw_core.js:815 end: 46:50
+sent_trans_nw_core.js:816 added: 158
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 46:50
+sent_trans_nw_core.js:815 end: 49:50
+sent_trans_nw_core.js:816 added: 159
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:803 [parse] Missing delimiters detected; will merge into leader id 160 until next delimiter.
+sent_trans_nw_core.js:814 begin: 49:50
+sent_trans_nw_core.js:815 end: 163:80
+sent_trans_nw_core.js:816 added: 160 - 161 - 162 - 163 - 164 - 165 - 166 - 167 - 168 - 169
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 163:80
+sent_trans_nw_core.js:815 end: 174:90
+sent_trans_nw_core.js:816 added: 170
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 174:90
+sent_trans_nw_core.js:815 end: 193:10
+sent_trans_nw_core.js:816 added: 171
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 193:10
+sent_trans_nw_core.js:815 end: 213:80
+sent_trans_nw_core.js:816 added: 172
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 213:80
+sent_trans_nw_core.js:815 end: 233:40
+sent_trans_nw_core.js:816 added: 173
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:814 begin: 233:40
+sent_trans_nw_core.js:815 end: 258:00
+sent_trans_nw_core.js:816 added: 174
+sent_trans_nw_core.js:817  - - - - - - - - - - - - - - - - - - - - - - - - - 
+sent_trans_nw_core.js:873 [parse] recovered run {begin: '0:20', end: '5:00', ids: '151 - 152', segmentLen: 117}
+sent_trans_nw_core.js:873 [parse] recovered run {begin: '49:50', end: '163:80', ids: '160 - 161 - 162 - 163 - 164 - 165 - 166 - 167 - 168 - 169', segmentLen: 716}

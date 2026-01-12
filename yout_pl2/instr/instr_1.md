@@ -1,121 +1,150 @@
+
+# yout_pl2 — Menu language blocks (instruction)
+
 ## Goal
+In the **Menu** we have language buttons `SV / EN / UK`.
+Right now these buttons are **related only to Paste/Edit** (when you paste transcript text).
 
-File: `C:\Python\AuTr\html\assets\js\trans_new\sent_trans_nw_core.js`
+We need to:
+1) Make this explicit in UI by placing them into a **separate block**.
+2) Add a second block that controls which languages are **shown during playing mode** (transcript rendering while the video plays).
 
-In `ParseButton_Onclick(id_block, tr_sentences)` we parse pasted translation text back into sentence rows.
-The pasted text contains *time delimiters* (e.g. `81:80`) which we use to locate where each translated sentence begins in the big pasted text.
+This document describes the intended UX/behavior.
 
-Problem: sometimes a delimiter for a sentence id is missing (or not found by search), so that sentence cannot be extracted and we log:
+---
 
-`-------Delimiter <time> not found id <n>.`
+## Block A — Paste / Edit language
 
-Example:
-- begin = `81:80`, end = `127:50`, added ids = `14 - 15 - 16 - 17`
-- but delimiters for ids `15`, `16`, `17` are not found
-- we still know the *segment bounds* (begin, end) that contains the translations for ids 14..17
+**Name (UI label):** `Paste / Edit language`
 
-We need a helper that can fill missing delimiters by splitting the text segment *proportionally* by the source sentence lengths.
+**Purpose:**
+- Selects the target language field that will be written when using **Paste transcript → Apply / Save**.
+- This should NOT change what languages are displayed during playback.
 
-## New function to implement
+**Controls:**
+- Buttons: `SV`, `EN`, `UK` (later can be extended to other languages).
+- Selected button = `langEdit`.
 
-Add a helper:
+**Behavior:**
+- When user pastes transcript and clicks **Apply**:
+	- Parsed items are merged into `transcript[*].text_<langEdit>`.
+- When user clicks **Save to Firebase**:
+	- Items are saved with the edited language text stored in `text_<langEdit>`.
 
-```js
-function ProccesMissedidTimeMark(idsent_begin, indx1, tr_sent_arr1, entire_text1)
-```
+**UI hint text (optional):**
+- Show something like: `Edit language: SV`.
 
-### Inputs
+---
 
-- `idsent_begin` (number|string)
-	- the first sentence id in the problematic run (the id for which we DID find a delimiter / anchor)
-- `indx1` (number)
-	- index in `tr_sent_arr1` where `idsent_begin` sits
-- `tr_sent_arr1` (array)
-	- array of sentence objects for the current parse block
-	- each item has at least:
-		- `idsentence`
-		- `sentence_from`
-		- `id_time_delim` (expected delimiter string)
-- `entire_text1` (string)
-	- the full pasted text (or the current block text) that contains delimiters + translated content
+## Block B — Playback display languages
 
-### Output
+**Name (UI label):** `Show in playback`
 
-Return a list of “recovered” items (or apply in-place), so caller can continue parse without losing sentences.
+**Purpose:**
+- Controls which language(s) the transcript panel shows while the video is playing.
+- This affects rendering only (what user sees), not what fields are edited by paste.
 
-Recommended return shape (simple):
+**Controls:**
+- `Line 1` language selector (primary): `lang1Show`
+- `Line 2` language selector (secondary): `lang2Show`
+	- Can be set to a language code or `Off`.
 
-```js
+**Behavior (rendering):**
+- `Line 1` always renders using `text_<lang1Show>` (or legacy `text` fallback).
+- `Line 2` renders only when:
+	- `lang2Show` is not `Off`, and
+	- `lang2Show != lang1Show`.
+
+**Persistence:**
+- When saving transcript to Firebase, store the chosen display languages in transcript meta (top-level fields, not inside `items`):
+	- `lang1_show: <lang1Show>`
+	- `lang2_show: <lang2Show>`
+- When loading transcript from Firebase, restore these meta settings and re-render.
+
+**Defaults:**
+- `langEdit = sv`
+- `lang1Show = sv`
+- `lang2Show = en`
+
+---
+
+## Notes / edge cases
+
+- If `lang1Show` points to a field that does not exist (example: transcript contains only `text_en` but user selected `sv`), the transcript can look “empty”.
+	- Preferred solution: add a fallback strategy (try legacy `text`, then any available `text_*` field) or show a visible placeholder like `[missing SV]`.
+
+- Keep the UI clear: the user should immediately understand:
+	- Block A = what language paste writes to.
+	- Block B = what language(s) are displayed during playback.
+
+---
+
+## Firebase RTDB — where data is stored (as on screenshot)
+
+**Root path:**
+- `db_youtube2/youtube_transcripts/<videoId>`
+
+**Example (shape):**
+
+```json
 {
-	fixed: Array<{ idsentence, startIndex, endIndex, extractedText }>,
-	nextIndex: number // where the caller should continue scanning
+	"videoId": "JkcMHLoPI3U",
+	"source": "manual",
+	"updatedAt": "2026-01-12T08:23:20.769Z",
+	"lang1_show": "en",
+	"lang2_show": "uk",
+	"rawText": "0:00 Hej och välkommen ...",
+	"items": [
+		{ "t": 0, "text_en": "...", "text_sv": "...", "Mark1": false },
+		{ "t": 4, "text_sv": "Hon går på SFI.", "text_en": "..." }
+	]
 }
 ```
 
-If you prefer in-place mutations, still return debug info to make it testable.
+**Field meanings:**
+- `videoId` — YouTube video id (key also equals this id).
+- `items` — array of transcript rows.
+	- `t` — time in seconds (number).
+	- `text` — legacy single-language text (optional).
+	- `text_<lang>` — language-specific fields, e.g. `text_sv`, `text_en`, `text_uk`.
+	- `Mark1` — optional boolean marker flag.
+- `rawText` — original pasted text (for re-saving without losing formatting).
+- `lang1_show` / `lang2_show` — playback display language settings for Line1/Line2.
+- `source` — how transcript was created (example: `manual`).
+- `updatedAt` — ISO timestamp.
 
-## When to call it
+---
 
-Inside `ParseButton_Onclick` when:
+## Playback display modes
 
-1) We successfully found a begin delimiter for some id (`idsent_begin`).
-2) We know we’re adding a run like `14 - 15 - 16 - 17`.
-3) One or more delimiters inside that run are missing (not found in `entire_text1`).
-4) We DO have an `end` boundary delimiter that exists (the delimiter after the run).
+Menu Block B (`Show in playback`) supports 2 modes.
 
-This helper is only for the case “missing internal delimiters, but run begin and run end exist”.
+### Mode 1 — show only 1 language
 
-## Algorithm (proportional split)
+**Goal:** show only one line per timestamp.
 
-Given a run of sentence ids: `run = tr_sent_arr1[indx1 ... indxEnd]`.
+**Settings:**
+- `lang1Show = sv` (example)
+- `lang2Show = Off`
 
-1) Determine `beginDelim` and `endDelim`.
-	 - `beginDelim` = delimiter of `run[0]` (the one we found)
-	 - `endDelim` = delimiter of the sentence immediately after the run, OR the next delimiter found in the text after `beginDelim`.
-	 - If `endDelim` cannot be found, abort and return empty (don’t guess).
+**Saved to Firebase:**
+- `lang1_show: "sv"`
+- `lang2_show: ""` (or omit the field)
 
-2) Find indices in text:
-	 - `posBegin = entire_text1.indexOf(beginDelim)`
-	 - `posEnd = entire_text1.indexOf(endDelim, posBegin + beginDelim.length)`
-	 - `segment = entire_text1.slice(posBegin + beginDelim.length, posEnd)`
+**Rendering rule:**
+- Only Line 1 is rendered.
 
-3) Split `segment` into N parts, where N = run length.
-	 - Compute weights using `sentence_from` lengths:
-		 - `w_i = max(1, length(sentence_from_i))`
-		 - `W = sum(w_i)`
-	 - Allocate character boundaries:
-		 - `start_0 = 0`
-		 - `end_i = round((sum_{k<=i} w_k / W) * segment.length)`
-		 - `part_i = segment.slice(start_i, end_i)`
-	 - IMPORTANT: adjust each `end_i` to the nearest whitespace (space/newline/tab) near that index,
-	   so we don’t split in the middle of a word. Keep boundaries monotonic (`end_i >= start_i`).
-	 - Trim each `part_i` (spaces/newlines), but do not delete meaningful punctuation.
+### Mode 2 — show 2 languages (two lines)
 
-4) Return extracted parts mapped to sentence ids.
+**Goal:** show two lines per timestamp (original + translation).
 
-## Edge cases / safety rules
+**Settings examples:**
+- `lang1Show = sv`, `lang2Show = en`
+- `lang1Show = en`, `lang2Show = uk`
 
-- If `segment.length` is too small (< run length), do not split; return empty.
-- If any `sentence_from` is missing, treat its weight as 1.
-- Never allow overlapping or decreasing boundaries.
-- If `posBegin === -1` or `posEnd === -1` or `posEnd <= posBegin`, return empty.
-- Keep the original logging, but add one log line summarizing the recovery:
-	- beginDelim, endDelim, ids, segmentLen.
+**Saved to Firebase:**
+- `lang1_show: "sv"`
+- `lang2_show: "en"`
 
-## Acceptance checklist
-
-- For a run `14 - 15 - 16 - 17` where only `14` and the next delimiter exist:
-	- `ProccesMissedidTimeMark` returns 4 extracted strings
-	- the caller assigns them as `sentence_to` for ids 14..17
-	- no “Delimiter not found” logs for 15..17 in this case
-- For runs where end delimiter is missing:
-	- helper returns empty and caller keeps existing behavior (logs error)
-
-## Notes
-
-- This is a heuristic; it’s acceptable if splits are approximate, but it must be deterministic.
-- Keep changes isolated: only new helper + minimal integration in `ParseButton_Onclick`.
-
-
-
-
+**Rendering rule:**
+- Line 2 is rendered only when `lang2Show` is not `Off` AND `lang2Show != lang1Show`.
