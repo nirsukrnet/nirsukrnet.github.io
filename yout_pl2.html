@@ -267,7 +267,8 @@
         <button id="btnMenuToggleTime" value="cancel">Show time</button>
         <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
         <button id="btnMenuToggleControlsDock" value="cancel">Dock controls bottom</button>
-        <button value="cancel">Close</button>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+        <button id="btnMenuHome" type="button" title="Home">Home</button>
       </div>
     </form>
   </dialog>
@@ -2076,6 +2077,18 @@ English Channel..."></textarea>
 
       const btnAdd = document.getElementById('btnAddVideo');
       if (btnAdd) btnAdd.onclick = (e) => { e.preventDefault(); openAddVideoDialog(); };
+
+      const btnHome = document.getElementById('btnMenuHome');
+      if (btnHome) btnHome.onclick = (e) => {
+        e.preventDefault();
+        try {
+          const origin = String(window.location && window.location.origin ? window.location.origin : '');
+          if (origin && origin !== 'null') window.location.href = origin;
+          else window.location.href = './index.html';
+        } catch {
+          try { window.location.href = './index.html'; } catch {}
+        }
+      };
 
       const btnSaveVid = document.getElementById('btnSaveVideo');
       if (btnSaveVid) btnSaveVid.onclick = async (e) => {
