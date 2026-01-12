@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seed ref_tags_short</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    h1 { margin: 0 0 10px; font-size: 18px; }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+      align-items: center;
+    }
+
+    .muted { opacity: 0.75; }
+
+    dialog {
+      width: min(980px, calc(100vw - 24px));
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+
+    textarea {
+      width: 100%;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <h1>Seed Firebase: <code>db_youtube2/ref_tags_short</code></h1>
+  <div class="muted">This page reads/writes only <code>../db_youtube2/ref_tags_short</code>. It does not touch other data.</div>
+
+  <div class="row">
+    <button id="btnOpen">Open</button>
+  </div>
+
+  <dialog id="dlg">
+    <form method="dialog">
+      <h3 style="margin:0 0 8px; font-size:16px;">Seed tags</h3>
+      <div id="status" class="muted" style="margin:0 0 10px;"></div>
+
+      <div class="row" style="margin:0 0 10px;">
+        <button id="btnLoad" value="cancel">Load</button>
+        <button id="btnSeed" value="cancel">Seed defaults</button>
+        <label style="display:flex; gap:8px; align-items:center;">
+          <input id="chkOverwrite" type="checkbox" />
+          <span>Overwrite if exists</span>
+        </label>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+      </div>
+
+      <div class="muted" style="margin:0 0 6px;">Seed payload (will be written with <code>PUT</code> to <code>db_youtube2/ref_tags_short</code>):</div>
+      <textarea id="taPayload" rows="10" spellcheck="false"></textarea>
+    </form>
+  </dialog>
+
+  <!-- Firebase auth + RTDB request helper (defines GlobalVars / URL_DataSet) -->
+  <script src="./yout_pl2/yu2_global_var.js"></script>
+
+  <script>
+    const REF_TAGS_SHORT_PATH = '../db_youtube2/ref_tags_short';
+
+    function nowIso() {
+      try { return new Date().toISOString(); } catch { return String(Date.now()); }
+    }
+
+    function seedPayload() {
+      return {
+        updatedAt: nowIso(),
+        tags: {
+          SWE: { id: '1', label: 'SWE', description: 'swedish', order: 1 },
+          ENG: { id: '2', label: 'ENG', description: 'english', order: 2 },
+          OTH: { id: '3', label: 'OTH', description: 'other', order: 3 }
+        }
+      };
+    }
+
+    function ensureGv() {
+      if (window.gv && window.gv.URL_DS) return window.gv;
+      const GVClass = (typeof GlobalVars === 'function')
+        ? GlobalVars
+        : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+          ? globalThis.GlobalVars
+          : (typeof window.GlobalVars === 'function')
+            ? window.GlobalVars
+            : null;
+      if (GVClass) {
+        const gv = new GVClass();
+        window.gv = gv;
+        return gv;
+      }
+      throw new Error('GlobalVars is not available (load ./yout_pl2/yu2_global_var.js first)');
+    }
+
+    async function ensureSignedIn() {
+      const gv = ensureGv();
+      if (gv.URL_DS && gv.URL_DS.idToken) return;
+      if (typeof gv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+      await gv.SignIn_User();
+    }
+
+    function requestByPath(addurl, method = 'GET', body = null) {
+      return new Promise((resolve, reject) => {
+        try {
+          const gv = ensureGv();
+          const ObjRequest = gv.URL_DS.GetObjForRequest();
+          ObjRequest.addUrl = addurl;
+          ObjRequest.ametod = method;
+          ObjRequest.vobj = body;
+          ObjRequest.CallBackFunction = function(vdata) { resolve(vdata); };
+          ObjRequest.ErrorCallback = function(err) { reject(err || new Error('request failed')); };
+          gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    function setStatus(msg) {
+      const el = document.getElementById('status');
+      if (!el) return;
+      el.textContent = msg || '';
+    }
+
+    function stringifyPretty(obj) {
+      try { return JSON.stringify(obj, null, 2); } catch { return String(obj); }
+    }
+
+    function parseJsonSafe(text) {
+      try {
+        const v = JSON.parse(String(text || ''));
+        if (v && typeof v === 'object') return v;
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    function summarizeData(data) {
+      if (data == null) return 'Exists: no';
+      const tags = (data && typeof data === 'object') ? data.tags : null;
+      const count = (tags && typeof tags === 'object') ? Object.keys(tags).length : 0;
+      const updatedAt = (data && typeof data === 'object' && data.updatedAt) ? String(data.updatedAt) : '';
+      return `Exists: yes | tags: ${count}${updatedAt ? ' | updatedAt: ' + updatedAt : ''}`;
+    }
+
+    async function loadCurrent() {
+      await ensureSignedIn();
+      const data = await requestByPath(REF_TAGS_SHORT_PATH, 'GET');
+      setStatus(summarizeData(data));
+      return data;
+    }
+
+    async function seedDefaults() {
+      const chk = document.getElementById('chkOverwrite');
+      const allowOverwrite = !!(chk && chk.checked);
+
+      await ensureSignedIn();
+
+      const existing = await requestByPath(REF_TAGS_SHORT_PATH, 'GET');
+      const exists = existing != null;
+
+      if (exists && !allowOverwrite) {
+        setStatus('Exists: yes — enable "Overwrite if exists" to seed');
+        return;
+      }
+
+      const ta = document.getElementById('taPayload');
+      const payloadFromText = ta ? parseJsonSafe(ta.value) : null;
+      const payload = payloadFromText || seedPayload();
+
+      // IMPORTANT: write only this node
+      await requestByPath(REF_TAGS_SHORT_PATH, 'PUT', payload);
+      setStatus('Seeded OK');
+
+      // refresh status
+      await loadCurrent();
+    }
+
+    function wire() {
+      const dlg = document.getElementById('dlg');
+      const btnOpen = document.getElementById('btnOpen');
+      const btnLoad = document.getElementById('btnLoad');
+      const btnSeed = document.getElementById('btnSeed');
+      const ta = document.getElementById('taPayload');
+
+      if (ta) ta.value = stringifyPretty(seedPayload());
+
+      if (btnOpen && dlg) {
+        btnOpen.addEventListener('click', async () => {
+          try {
+            setStatus('');
+            dlg.showModal();
+            await loadCurrent();
+          } catch (e) {
+            setStatus(String((e && e.message) || e || 'Error'));
+          }
+        });
+      }
+
+      if (btnLoad) {
+        btnLoad.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            setStatus('Loading...');
+            await loadCurrent();
+          } catch (err) {
+            setStatus(String((err && err.message) || err || 'Error'));
+          }
+        });
+      }
+
+      if (btnSeed) {
+        btnSeed.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            setStatus('Seeding...');
+            await seedDefaults();
+          } catch (err) {
+            setStatus(String((err && err.message) || err || 'Error'));
+          }
+        });
+      }
+    }
+
+    wire();
+  </script>
+</body>
+</html>

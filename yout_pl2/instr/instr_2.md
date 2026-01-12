@@ -1,7 +1,30 @@
-section lets leave in up menu only this 
-<ul id="refVideosList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
+# yout_pl2 — Main menu (ref videos) minimal + close icon
 
-and move to dlgMenu
+## Goal
+The top-right **Main menu** dialog (`dlgMainMenu`) should stay minimal:
+- It mainly shows the saved videos list (`refVideosList`).
 
-<button id="btnAddVideo" value="cancel">Add YouTube link</button>
+But we still want an easy way to close it with a **small close icon button**.
+
+## Current layout (after previous changes)
+- `dlgMainMenu` contains only:
+	- `<ul id="refVideosList"> ... </ul>`
+- The `Add YouTube link` button was moved into the regular **Menu** dialog (`dlgMenu`).
+
+## Requirement
+Add a small icon-style close button to `dlgMainMenu`.
+
+### UI / placement
+- Put it in the top-right corner of the dialog.
+- It should be visually small (icon-like), not a big full-size button.
+- It must close the dialog.
+
+### Behavior
+- Clicking the close icon closes `dlgMainMenu`.
+- `Esc` should still close the dialog as usual.
+- The ref videos list loading must keep working.
+
+## Notes
+- Do not move other controls back into `dlgMainMenu` (keep it minimal).
+- If needed, use a simple `×` character as the icon (no extra assets required).
 

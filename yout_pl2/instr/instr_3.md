@@ -1,104 +1,91 @@
-# Git — save detached HEAD work into branch `main202512_new`
+# /db_youtube2 — reference tags table (`ref_tags_short`) seed/load UI
 
-You see:
+## Goal
+Create (or initialize) a small reference table in Firebase RTDB under `/db_youtube2` for short tags (like `SWE`, `ENG`, `OTH`).
 
-```
-* (HEAD detached from 6065a36)
-  main
-  main202512
-  main202512_new
-```
-
-That means you are **not currently on a branch**. Your commits/changes are “floating”.
-
-Below are safe ways to move your work into `main202512_new`.
+UI must be **simple**:
+- No editor UI.
+- Only a dialog to **seed/load** this one node: `db_youtube2/ref_tags_short`.
+- Must NOT touch other data under `db_youtube2`.
 
 ---
 
-## 1) First check: do you have a commit already?
+## Database path
 
-Run:
+Store tags here:
 
-```bash
-git status
-git log --oneline -n 5
-```
+`db_youtube2/ref_tags_short`
 
-### Case A: you already have commits in detached HEAD
-
-If `git log` shows your new commit(s) on top, the simplest is:
-
-```bash
-git switch main202512_new
-git merge --ff-only HEAD
-```
-
-If `--ff-only` fails (branch has diverged), use a normal merge:
-
-```bash
-git merge HEAD
-```
-
-Then push (if you use a remote):
-
-```bash
-git push
-```
-
-Alternative (often easiest): just “move the branch pointer” to your current commit:
-
-```bash
-git branch -f main202512_new HEAD
-git switch main202512_new
-```
+This should be similar in style to `ref_languages_set` used elsewhere.
 
 ---
 
-### Case B: you have only uncommitted changes (no new commit yet)
+## Data model (seed payload)
 
-If `git status` shows modified files, do:
+Top-level object:
 
-```bash
-git switch main202512_new
+```json
+{
+  "updatedAt": "2026-01-12T00:00:00.000Z",
+  "tags": {
+    "SWE": { "id": "1", "label": "SWE", "description": "swedish", "order": 1 },
+    "ENG": { "id": "2", "label": "ENG", "description": "english", "order": 2 },
+    "OTH": { "id": "3", "label": "OTH", "description": "other",   "order": 3 }
+  }
+}
 ```
 
-If Git refuses because it would overwrite changes, use stash:
+### Rules
+- `tags` is an object keyed by **tag code** (recommended: `^[A-Z0-9_-]{2,12}$`).
+- Each tag value:
+  - `id` (string): stable id (can be `"1"`, `"2"`… or a GUID).
+  - `label` (string): display label (usually same as key).
+  - `description` (string): human meaning.
+  - `order` (number): sort order.
+- `updatedAt` is ISO string.
 
-```bash
-git stash push -m "detached-head work"
-git switch main202512_new
-git stash pop
-```
-
-Now commit on the branch:
-
-```bash
-git add -A
-git commit -m "your message"
-git push
-```
+### Sorting
+When rendering tags in UI:
+1) sort by `order` ascending
+2) then by `label` / key
 
 ---
 
-## 2) Most reliable method (always works): create a temp branch
+## Minimal UI requirements
 
-When in doubt, do this:
+### Button
+- Add a button somewhere accessible (Menu is OK): `Init tags` (or `Seed tags`).
+- Clicking opens a dialog.
 
-```bash
-git switch -c temp_detached_save
-git switch main202512_new
-git merge temp_detached_save
-```
+### Dialog
+The dialog should do only these actions:
 
-Then optionally delete temp branch:
+1) **Load current value** (read)
+- Read `db_youtube2/ref_tags_short` and display a short status:
+  - `Exists: yes/no`
+  - count of tags if present
+  - `updatedAt` if present
 
-```bash
-git branch -d temp_detached_save
-```
+2) **Seed defaults** (write)
+- Write ONLY to `db_youtube2/ref_tags_short` (do not overwrite `db_youtube2`).
+- Recommended operation:
+  - `PUT db_youtube2/ref_tags_short` with the seed payload (example JSON above).
+  - This replaces only that node.
 
----
+Optional safe mode (recommended):
+- If `ref_tags_short` already exists, require explicit confirmation: `Overwrite existing ref_tags_short`.
 
-## Notes
+UI controls in dialog (minimal):
+- `Load` button
+- `Seed defaults` button
+- Optional checkbox `Overwrite if exists`
+- `Close`
 
-- `git checkout` can be used instead of `git switch`, but `git switch` is clearer.
-- If you already pushed something and you’re rewriting history, prefer `git revert` instead of `reset --hard`.
+Notes:
+- Keep it simple: no extra pages.
+- Reuse the existing Firebase request helper (`ytRequestByPath` / `GlobalVars` patterns).
+- Seeding affects only `db_youtube2/ref_tags_short`, not the whole database.
+
+
+
+
