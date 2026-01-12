@@ -777,7 +777,7 @@ async function ensureTableExists(tableName){
 // ------------------------------------------------------------
 // YouTube translation saver (used by yout_transl.html)
 // ------------------------------------------------------------
-// Save translations back into ../db_youtube2/youtube_transcripts/<videoId>/items[*].text_<toLang>
+// Save translations back into DB_CONST_YOUTUBE_TRANSCRIPTS/<videoId>/items[*].text_<toLang>
 // This function is intentionally additive so transl.html keeps working unchanged.
 window.SaveTransReadyDataToFireBaseTo_youtube_transcripts = async function (videoId, toLang, fromLang, dataToSave) {
     const vid = (videoId == null) ? '' : String(videoId).trim();

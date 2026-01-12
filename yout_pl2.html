@@ -374,9 +374,10 @@ English Channel..."></textarea>
     let transcriptRawText = '';
 
     // Multi-language transcript settings
-    const LANG_ROOT_PATH = '../db_youtube2/ref_languages_set';
-    const UI_STATE_PATH = '../db_youtube2/ui_state/yout_pl2';
-    const REF_TAGS_SHORT_PATH = '../db_youtube2/ref_tags_short';
+    const gv = ytEnsureGv();
+    const LANG_ROOT_PATH = gv.cst.getcst('DB_CONST_REF_LANGUAGES_SET');
+    const UI_STATE_PATH = gv.cst.getcst('DB_CONST_UI_STATE_YOUT_PL2');
+    const REF_TAGS_SHORT_PATH = gv.cst.getcst('DB_CONST_REF_TAGS_SHORT');
     const MAIN_MENU_SELECTED_TAG_PATH = `${UI_STATE_PATH}/main_menu_selected_tag`;
     const MAIN_MENU_SHORT_NAME_FILTER_PATH = `${UI_STATE_PATH}/main_menu_short_name_filter`;
     let langEdit = 'sv';
@@ -601,7 +602,14 @@ English Channel..."></textarea>
     }
 
     function ytEnsureGv() {
-      if (window.gv && window.gv.URL_DS) return window.gv;
+      // ✅ Require cst.getcst as well, otherwise rebuild gv
+      if (
+        window.gv &&
+        window.gv.URL_DS &&
+        window.gv.cst &&
+        typeof window.gv.cst.getcst === 'function'
+      ) return window.gv;
+
       const GVClass = (typeof GlobalVars === 'function')
         ? GlobalVars
         : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
@@ -609,6 +617,7 @@ English Channel..."></textarea>
           : (typeof window.GlobalVars === 'function')
             ? window.GlobalVars
             : null;
+
       if (GVClass) {
         const gv = new GVClass();
         window.gv = gv;
@@ -652,7 +661,7 @@ English Channel..."></textarea>
     function getTranscriptRootPath() {
       return (window.YouTubeTranscriptStore && window.YouTubeTranscriptStore.ROOT_PATH)
         ? window.YouTubeTranscriptStore.ROOT_PATH
-        : '../db_youtube2/youtube_transcripts';
+        : gv.cst.getcst('DB_CONST_YOUTUBE_TRANSCRIPTS');
     }
 
     function scheduleSavePlaybackLangSettings() {
@@ -754,7 +763,7 @@ English Channel..."></textarea>
     // UI setting: transcript timestamps
     // ------------------------------
     // Stored under:
-    // ../db_youtube2/ui_state/yout_pl2/transcript_timestamps_visible
+    // DB_CONST_UI_STATE_YOUT_PL2/transcript_timestamps_visible
     function setTranscriptTimestampsVisible(isVisible) {
       const wrap = document.getElementById('transWrap');
       if (!wrap) return;
@@ -811,7 +820,7 @@ English Channel..."></textarea>
     // UI setting: controls docked to bottom
     // ------------------------------
     // Stored under:
-    // ../db_youtube2/ui_state/yout_pl2/controls_dock_bottom
+    // DB_CONST_UI_STATE_YOUT_PL2/controls_dock_bottom
     function isControlsDocked() {
       return !!document.body && document.body.dataset.controlsDocked === '1';
     }
@@ -886,7 +895,7 @@ English Channel..."></textarea>
     // Transcript UI persistence (scroll + time)
     // ------------------------------
     // Store transcript scroll position and last playback time per selected videoId under:
-    // ../db_youtube2/ref_youtube_videos/<encodedVideoId>/transListScroll
+    // DB_CONST_REF_YOUTUBE_VIDEOS/<encodedVideoId>/transListScroll
     //
     // Note: the scroll container is #transWrap (not #transList) in the current UI.
     // We still fallback to #transList if needed.
@@ -902,7 +911,7 @@ English Channel..."></textarea>
     function getRefVideosRootPath() {
       return (window.YouTubeRefVideosStore && window.YouTubeRefVideosStore.ROOT_PATH)
         ? window.YouTubeRefVideosStore.ROOT_PATH
-        : '../db_youtube2/ref_youtube_videos';
+        : gv.cst.getcst('DB_CONST_REF_YOUTUBE_VIDEOS');
     }
 
     function encodeRefVideoKey(videoId) {

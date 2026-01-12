@@ -1,150 +1,112 @@
-
-# yout_pl2 — Menu language blocks (instruction)
+# instr_1 — Persist translation langs (1)/(2) + use same pattern as filters
 
 ## Goal
-In the **Menu** we have language buttons `SV / EN / UK`.
-Right now these buttons are **related only to Paste/Edit** (when you paste transcript text).
+In `yout_transl.html` (YouTube Sentence Translation Tool), persist the selected languages:
+- (1) **From** language
+- (2) **To** language
 
-We need to:
-1) Make this explicit in UI by placing them into a **separate block**.
-2) Add a second block that controls which languages are **shown during playing mode** (transcript rendering while the video plays).
+After reload, the UI must restore the same values.
 
-This document describes the intended UX/behavior.
+This must use the **same persistence approach** as the main menu filters already implemented in [yout_pl2.html](yout_pl2.html).
 
----
+Also add **video list filtering** in `yout_transl.html`, same UX as the yout_pl2 main menu:
+- Tag buttons row (SWE/ENG/OTH/All)
+- Text input filter (“type to filter”)
 
-## Block A — Paste / Edit language
+## Hard rules (important)
+1) DB paths in code must come only from `gv.cst.getcst('DB_CONST_...')`.
+	- No hardcoded `../db_youtube2/...` strings in feature code.
+	- No per-file fallbacks like `|| '../db_youtube2/...'`.
 
-**Name (UI label):** `Paste / Edit language`
+2) `yout_transl.html` must load globals that provide `GB_Const/getcst`.
+	- Loader must include `./yout_pl2/yu2_global_var.js`.
+	- Loader must NOT include legacy `./assets/js/global_var.js`.
+	- Otherwise `gv.cst.getcst is not a function` will happen.
 
-**Purpose:**
-- Selects the target language field that will be written when using **Paste transcript → Apply / Save**.
-- This should NOT change what languages are displayed during playback.
+## Where to store
+Use UI state under the existing UI state root for this tool.
 
-**Controls:**
-- Buttons: `SV`, `EN`, `UK` (later can be extended to other languages).
-- Selected button = `langEdit`.
+Option A (preferred, minimal): store under the yout_pl2 UI state namespace:
+- Root: `DB_CONST_UI_STATE_YOUT_PL2`
+- Keys:
+  - `yout_transl_from_lang`
+  - `yout_transl_to_lang`
 
-**Behavior:**
-- When user pastes transcript and clicks **Apply**:
-	- Parsed items are merged into `transcript[*].text_<langEdit>`.
-- When user clicks **Save to Firebase**:
-	- Items are saved with the edited language text stored in `text_<langEdit>`.
+Add filter persistence keys:
+- `yout_transl_selected_tag`
+- `yout_transl_video_text_filter`
 
-**UI hint text (optional):**
-- Show something like: `Edit language: SV`.
+Reason: we already have `DB_CONST_UI_STATE_YOUT_PL2` and the persistence patterns.
 
----
+## When to save
+- Save on any change of From/To select.
+- Debounce writes (~300–500ms) to avoid excessive requests.
+- Do not force sign-in prompts on every change; if user is not signed in yet, defer saving until sign-in is available.
 
-## Block B — Playback display languages
+For filters:
+- Save on tag button click and on text input (`input` event), also debounced.
 
-**Name (UI label):** `Show in playback`
+## Save format
+Use `PUT` to save each value as an object with timestamp:
 
-**Purpose:**
-- Controls which language(s) the transcript panel shows while the video is playing.
-- This affects rendering only (what user sees), not what fields are edited by paste.
-
-**Controls:**
-- `Line 1` language selector (primary): `lang1Show`
-- `Line 2` language selector (secondary): `lang2Show`
-	- Can be set to a language code or `Off`.
-
-**Behavior (rendering):**
-- `Line 1` always renders using `text_<lang1Show>` (or legacy `text` fallback).
-- `Line 2` renders only when:
-	- `lang2Show` is not `Off`, and
-	- `lang2Show != lang1Show`.
-
-**Persistence:**
-- When saving transcript to Firebase, store the chosen display languages in transcript meta (top-level fields, not inside `items`):
-	- `lang1_show: <lang1Show>`
-	- `lang2_show: <lang2Show>`
-- When loading transcript from Firebase, restore these meta settings and re-render.
-
-**Defaults:**
-- `langEdit = sv`
-- `lang1Show = sv`
-- `lang2Show = en`
-
----
-
-## Notes / edge cases
-
-- If `lang1Show` points to a field that does not exist (example: transcript contains only `text_en` but user selected `sv`), the transcript can look “empty”.
-	- Preferred solution: add a fallback strategy (try legacy `text`, then any available `text_*` field) or show a visible placeholder like `[missing SV]`.
-
-- Keep the UI clear: the user should immediately understand:
-	- Block A = what language paste writes to.
-	- Block B = what language(s) are displayed during playback.
-
----
-
-## Firebase RTDB — where data is stored (as on screenshot)
-
-**Root path:**
-- `db_youtube2/youtube_transcripts/<videoId>`
-
-**Example (shape):**
-
+`PUT ${UI_STATE_PATH}/yout_transl_from_lang`
 ```json
-{
-	"videoId": "JkcMHLoPI3U",
-	"source": "manual",
-	"updatedAt": "2026-01-12T08:23:20.769Z",
-	"lang1_show": "en",
-	"lang2_show": "uk",
-	"rawText": "0:00 Hej och välkommen ...",
-	"items": [
-		{ "t": 0, "text_en": "...", "text_sv": "...", "Mark1": false },
-		{ "t": 4, "text_sv": "Hon går på SFI.", "text_en": "..." }
-	]
-}
+{ "value": "en", "updatedAt": "2026-01-12T12:34:56.789Z" }
 ```
 
-**Field meanings:**
-- `videoId` — YouTube video id (key also equals this id).
-- `items` — array of transcript rows.
-	- `t` — time in seconds (number).
-	- `text` — legacy single-language text (optional).
-	- `text_<lang>` — language-specific fields, e.g. `text_sv`, `text_en`, `text_uk`.
-	- `Mark1` — optional boolean marker flag.
-- `rawText` — original pasted text (for re-saving without losing formatting).
-- `lang1_show` / `lang2_show` — playback display language settings for Line1/Line2.
-- `source` — how transcript was created (example: `manual`).
-- `updatedAt` — ISO timestamp.
+`PUT ${UI_STATE_PATH}/yout_transl_to_lang`
+```json
+{ "value": "uk", "updatedAt": "2026-01-12T12:34:56.789Z" }
+```
 
----
+For filters:
 
-## Playback display modes
+`PUT ${UI_STATE_PATH}/yout_transl_selected_tag`
+```json
+{ "value": "SWE", "updatedAt": "2026-01-12T12:34:56.789Z" }
+```
 
-Menu Block B (`Show in playback`) supports 2 modes.
+`PUT ${UI_STATE_PATH}/yout_transl_video_text_filter`
+```json
+{ "value": "doctor", "updatedAt": "2026-01-12T12:34:56.789Z" }
+```
 
-### Mode 1 — show only 1 language
+## Load/restore rules
+- On init, load both keys.
+- If missing, use current defaults (do not overwrite DB with defaults immediately).
+- Validate values with existing language validation (2–16 chars, `[a-z0-9_-]`).
 
-**Goal:** show only one line per timestamp.
+For filters:
+- Load saved `selected_tag` and `video_text_filter` before building video list UI.
+- Default `selected_tag` is empty/All.
+- Default `video_text_filter` is empty.
 
-**Settings:**
-- `lang1Show = sv` (example)
-- `lang2Show = Off`
+## Filtering UX (same as yout_pl2 main menu)
 
-**Saved to Firebase:**
-- `lang1_show: "sv"`
-- `lang2_show: ""` (or omit the field)
+### Data sources
+- Tags list comes from: `DB_CONST_REF_TAGS_SHORT` (read `tags` object).
+	- Render one button per tag key (e.g. SWE/ENG/OTH)
+	- Add an `All` button (meaning no tag filter)
 
-**Rendering rule:**
-- Only Line 1 is rendered.
+### Filtering logic
+Given ref videos list (from `YouTubeRefVideosStore.listAll()`), apply:
+1) Tag filter
+	 - If `selected_tag` is set (not All), include only videos where `video.tag === selected_tag`.
+2) Text filter
+	 - Case-insensitive substring match against:
+		 - `short_name` (preferred)
+		 - and/or `title` (if `short_name` is empty)
 
-### Mode 2 — show 2 languages (two lines)
+### Rendering
+- The video dropdown/list must reflect the filtered list.
+- Selected tag button should show “selected” state (same as yout_pl2 main menu highlight).
 
-**Goal:** show two lines per timestamp (original + translation).
+## Acceptance checks
+- Reload `yout_transl.html`: From/To are restored.
+- No console errors related to `gv.cst.getcst`.
+- Firebase writes are debounced and do not spam on every keystroke.
+- Filters exist in `yout_transl.html` and behave like yout_pl2 main menu:
+	- Tag buttons filter by tag
+	- Text input filters by `short_name/title`
+	- Both restore after reload
 
-**Settings examples:**
-- `lang1Show = sv`, `lang2Show = en`
-- `lang1Show = en`, `lang2Show = uk`
-
-**Saved to Firebase:**
-- `lang1_show: "sv"`
-- `lang2_show: "en"`
-
-**Rendering rule:**
-- Line 2 is rendered only when `lang2Show` is not `Off` AND `lang2Show != lang1Show`.

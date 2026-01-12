@@ -332,7 +332,8 @@
   <script src="./yout_pl2/youtube_transcript_store.js"></script>
 
   <script>
-    const LANG_ROOT_PATH = '../db_youtube2/ref_languages_set';
+    const gv = ytEnsureGv();
+    const LANG_ROOT_PATH = gv.cst.getcst('DB_CONST_REF_LANGUAGES_SET');
 
     const FUNC3_MAX_LENCHARS = 100;
 

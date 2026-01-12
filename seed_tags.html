@@ -61,7 +61,7 @@
 </head>
 <body>
   <h1>Seed Firebase: <code>db_youtube2/ref_tags_short</code></h1>
-  <div class="muted">This page reads/writes only <code>../db_youtube2/ref_tags_short</code>. It does not touch other data.</div>
+  <div class="muted">This page reads/writes only <code>DB_CONST_REF_TAGS_SHORT</code> (<code>db_youtube2/ref_tags_short</code>). It does not touch other data.</div>
 
   <div class="row">
     <button id="btnOpen">Open</button>
@@ -91,7 +91,9 @@
   <script src="./yout_pl2/yu2_global_var.js"></script>
 
   <script>
-    const REF_TAGS_SHORT_PATH = '../db_youtube2/ref_tags_short';
+    function getRefTagsShortPath() {
+      return ensureGv().cst.getcst('DB_CONST_REF_TAGS_SHORT');
+    }
 
     function nowIso() {
       try { return new Date().toISOString(); } catch { return String(Date.now()); }
@@ -109,7 +111,7 @@
     }
 
     function ensureGv() {
-      if (window.gv && window.gv.URL_DS) return window.gv;
+      if (window.gv && window.gv.URL_DS && window.gv.cst && typeof window.gv.cst.getcst === 'function') return window.gv;
       const GVClass = (typeof GlobalVars === 'function')
         ? GlobalVars
         : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
@@ -179,7 +181,7 @@
 
     async function loadCurrent() {
       await ensureSignedIn();
-      const data = await requestByPath(REF_TAGS_SHORT_PATH, 'GET');
+      const data = await requestByPath(getRefTagsShortPath(), 'GET');
       setStatus(summarizeData(data));
       return data;
     }
@@ -190,7 +192,7 @@
 
       await ensureSignedIn();
 
-      const existing = await requestByPath(REF_TAGS_SHORT_PATH, 'GET');
+      const existing = await requestByPath(getRefTagsShortPath(), 'GET');
       const exists = existing != null;
 
       if (exists && !allowOverwrite) {
@@ -203,7 +205,7 @@
       const payload = payloadFromText || seedPayload();
 
       // IMPORTANT: write only this node
-      await requestByPath(REF_TAGS_SHORT_PATH, 'PUT', payload);
+      await requestByPath(getRefTagsShortPath(), 'PUT', payload);
       setStatus('Seeded OK');
 
       // refresh status

@@ -1,67 +1,68 @@
-## Goal
-Create a new page:
+## instr_7 — Use `gv.cst.getcst(...)` only (NO per-file fallbacks)
 
-- `C:\Python\AuTr\html\yout_pl2_ito_text.html`
+### Problem
+Some files still do this kind of logic:
 
-It must behave the same as:
+```js
+const v = (gv && gv.cst && typeof gv.cst.getcst === 'function')
+  ? gv.cst.getcst('DB_CONST_YOUTUBE_TRANSCRIPTS')
+  : '';
+return v || '../db_youtube2/youtube_transcripts';
+```
 
-- `C:\Python\AuTr\html\yout_pl2_viewer.html`
+This is **NOT** allowed because it reintroduces hardcoded DB paths in every file and duplicates fallback logic.
 
-…but it must include **only the “Section 1” functionality** (the first `.section_with_borders` block using `sectionTitle1`, etc.).  
-Anything related to **Section 2 / chunks** must be removed.
+### Goal
+All DB paths must be read **only** from the central constants store:
 
-## Scope (what to KEEP)
-Keep everything required to make **Section 1** work:
+```js
+const ROOT_PATH = gv.cst.getcst('DB_CONST_YOUTUBE_TRANSCRIPTS');
+```
 
-1) **Video selection**
-- Load videos from `../db_youtube2/ref_youtube_videos`
-- Show them in `#videoSelect` (same sorting/labels as viewer)
+No extra checks. No `|| '../db_youtube2/...'` in feature files.
 
-2) **Language selection**
-- Load languages from `../db_youtube2/ref_languages_set`
-- Render language buttons in `#langRow`
-- Support language fallback: `text_<lang>` → `text` → `''`
+### Rules
+1) In feature files, **never** hardcode DB paths like `../db_youtube2/...`.
+2) In feature files, **never** add “fallback” code like `v || '...'`.
+3) In feature files, **never** check `typeof gv.cst.getcst === 'function'`.
+4) The **only** acceptable access pattern is:
 
-3) **Output options**
-- Toggle: show/hide timestamps
-- Toggle: lines view vs full text view
+```js
+const ROOT_PATH = gv.cst.getcst('DB_CONST_...');
+```
 
-4) **Fixed-size output panes**
-- `#out_index` (index list) fixed height, scrollable
-- `#out` (text output) fixed height, scrollable
-- Clicking an item in `#out_index` highlights the matching substring in `#out`
-  using `start/end` from the built index map.
+5) If a default is needed, it must be defined centrally inside `GB_Const` defaults (in `yu2_global_var.js`).
+   - That is the **only** place where fallback values are allowed.
 
-5) **Header/title UI**
-- Section header uses:
-  - `#sectionTitle1`
-  - `#sectionDesc1`
-- Pane headers for Section 1 remain (Index/Text titles + one-line description)
+### Prerequisites
+- `gv` must exist.
+- `gv.cst` must be an instance of `GB_Const`.
 
-## Scope (what to REMOVE)
-Remove/omit everything related to **Section 2 (clone / chunking)**:
+If you are inside a standalone module, first obtain `gv` via `ensureGv()` (or the project’s standard method), then use `gv.cst.getcst(...)`.
 
-- No `sectionTitle2`, `sectionDesc2`, `panes2`
-- No `out2`, `out_index2`
-- No “Function 3” chunk splitting logic
-- No rendering of chunk lists, chunk preview rows, or chunk click handlers
+### Examples
 
-## Implementation notes
-- Prefer copying `yout_pl2_viewer.html` and then deleting Section 2 markup + CSS + JS.
-- Keep IDs consistent with the “Section 1” naming convention:
-  - `sectionTitle1`, `sectionDesc1`, `panes1`, `out_index`, `out`
+**Correct**
 
-## Notes / pitfalls
-- Ensure `setOutLoading()` only touches `#out` and `#out_index`.
-- Ensure `bootstrap()` sets only `sectionTitle1/sectionDesc1` and only Section 1 pane headers.
-- Ensure there is no CSS that references `#panes2`, `#out2`, `#out_index2`, or `.chunkGrid`.
+```js
+const LANG_ROOT_PATH = gv.cst.getcst('DB_CONST_REF_LANGUAGES_SET');
+const ROOT_PATH = gv.cst.getcst('DB_CONST_YOUTUBE_TRANSCRIPTS');
+const VIDEOS_PATH = gv.cst.getcst('DB_CONST_REF_YOUTUBE_VIDEOS');
+const TAGS_PATH = gv.cst.getcst('DB_CONST_REF_TAGS_SHORT');
+const UI_STATE_PATH = gv.cst.getcst('DB_CONST_UI_STATE');
+```
 
-## Acceptance checks
-1) Page loads and video list appears.
-2) Switching language updates output.
-3) Toggle “Hide time” removes timestamps from output.
-4) Toggle “Show full text” switches between line output and full text output.
-5) Clicking an index item highlights the corresponding text in the output pane.
-6) No references to `sectionTitle2`, `panes2`, `out2`, `out_index2`, or chunk functions exist.
+**Wrong (do not do this)**
 
+```js
+const ROOT_PATH = gv.cst.getcst('DB_CONST_YOUTUBE_TRANSCRIPTS') || '../db_youtube2/youtube_transcripts';
+```
 
+```js
+const v = (gv && gv.cst && typeof gv.cst.getcst === 'function') ? gv.cst.getcst('DB_CONST_...') : '';
+```
+
+### Migration checklist
+- Replace every `../db_youtube2/...` constant with `gv.cst.getcst('DB_CONST_...')`.
+- Delete all per-file fallback strings.
+- If some key is missing, add it to `GB_Const` default map (centralized), not in the caller.

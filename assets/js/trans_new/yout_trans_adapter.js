@@ -1,7 +1,7 @@
 // Adapter layer for yout_transl.html
 // - Replaces lesson menu with YouTube video select
 // - Overrides ExpImpForTrans_loadDataToHTML to load transcript items
-// - Routes "save" into ../db_youtube2/youtube_transcripts
+// - Routes "save" into DB_CONST_YOUTUBE_TRANSCRIPTS
 
 (function(){
   const APP_NS = 'yout_transl';

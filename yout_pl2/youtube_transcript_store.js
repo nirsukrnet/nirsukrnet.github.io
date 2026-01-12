@@ -1,15 +1,18 @@
 (function(){
   'use strict';
 
-  // Store per-video transcript here (outside data_base2 root via ../)
-  const ROOT_PATH = '../db_youtube2/youtube_transcripts';
+  // Store per-video transcript here.
+  const ROOT_PATH = (function() {
+    const gv = ensureGv();
+    return gv.cst.getcst('DB_CONST_YOUTUBE_TRANSCRIPTS');
+  })();
 
   function nowIso() {
     try { return new Date().toISOString(); } catch { return String(Date.now()); }
   }
 
   function ensureGv() {
-    if (window.gv && window.gv.URL_DS) return window.gv;
+    if (window.gv && window.gv.URL_DS && window.gv.cst && typeof window.gv.cst.getcst === 'function') return window.gv;
     // Note: top-level `class GlobalVars {}` may exist as a global binding but not as `window.GlobalVars`.
     const GVClass = (typeof GlobalVars === 'function')
       ? GlobalVars

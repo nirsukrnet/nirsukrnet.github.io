@@ -16,7 +16,7 @@
   // Scripts (absolute relative to page)
   const scripts = [
     // Firebase/globals first
-    './assets/js/global_var.js',
+    './yout_pl2/yu2_global_var.js',
     './assets/js/db_connswmp3.js',
 
     // Translation UI scripts    

@@ -157,6 +157,61 @@ async function safeReadText(res) {
 }
 
 
+// ------------------------------------------------------------
+// GB_Const: constants store (DB paths, etc.)
+// ------------------------------------------------------------
+class GB_Const {
+    constructor(initial = {}) {
+        this._cst = {};
+
+        // Defaults
+        const root = '../db_youtube2';
+        this._cst.DB_CONST_DB_YOUTUBE2_ROOT = root;
+        this._cst.DB_CONST_REF_LANGUAGES_SET = root + '/ref_languages_set';
+        this._cst.DB_CONST_REF_TAGS_SHORT = root + '/ref_tags_short';
+        this._cst.DB_CONST_YOUTUBE_TRANSCRIPTS = root + '/youtube_transcripts';
+        this._cst.DB_CONST_REF_YOUTUBE_VIDEOS = root + '/ref_youtube_videos';
+        this._cst.DB_CONST_UI_STATE_YOUT_PL2 = root + '/ui_state/yout_pl2';
+
+        // Back-compat: if window.YT_DB_CONST exists, prefer it.
+        try {
+            const w = (typeof window !== 'undefined') ? window : null;
+            const src = (w && w.YT_DB_CONST && typeof w.YT_DB_CONST === 'object') ? w.YT_DB_CONST : null;
+            if (src) {
+                if (typeof src.DB_YOUTUBE2_ROOT === 'string') this._cst.DB_CONST_DB_YOUTUBE2_ROOT = src.DB_YOUTUBE2_ROOT;
+                if (typeof src.REF_LANGUAGES_SET === 'string') this._cst.DB_CONST_REF_LANGUAGES_SET = src.REF_LANGUAGES_SET;
+                if (typeof src.REF_TAGS_SHORT === 'string') this._cst.DB_CONST_REF_TAGS_SHORT = src.REF_TAGS_SHORT;
+                if (typeof src.YOUTUBE_TRANSCRIPTS === 'string') this._cst.DB_CONST_YOUTUBE_TRANSCRIPTS = src.YOUTUBE_TRANSCRIPTS;
+                if (typeof src.REF_YOUTUBE_VIDEOS === 'string') this._cst.DB_CONST_REF_YOUTUBE_VIDEOS = src.REF_YOUTUBE_VIDEOS;
+                if (typeof src.UI_STATE_YOUT_PL2 === 'string') this._cst.DB_CONST_UI_STATE_YOUT_PL2 = src.UI_STATE_YOUT_PL2;
+            }
+        } catch {
+            // ignore
+        }
+
+        // Allow overrides
+        if (initial && typeof initial === 'object') {
+            for (const [k, v] of Object.entries(initial)) {
+                if (typeof v === 'string') this._cst[k] = v;
+            }
+        }
+    }
+
+    getcst(key) {
+        const k = (key == null) ? '' : String(key);
+        if (!k) return '';
+        const v = this._cst[k];
+        return (typeof v === 'string') ? v : '';
+    }
+
+    setcst(key, value) {
+        const k = (key == null) ? '' : String(key);
+        if (!k) return;
+        this._cst[k] = (value == null) ? '' : String(value);
+    }
+}
+
+
 
 class GlobalVars {
   constructor(initial = {}) {
@@ -164,10 +219,11 @@ class GlobalVars {
     //this.firebaseConfig = this.getFirebaseConfig();    
     this.URL_DS = new URL_DataSet({});
 
-    this.cst = {
-      FBSets: null,
-      ...(initial.cst || {})
-    };
+        this.cst = new GB_Const(initial.cst || {});
+        // Self-heal in case something overwrote `cst` shape.
+        if (!this.cst || typeof this.cst.getcst !== 'function') {
+            this.cst = new GB_Const({});
+        }
     this.sts = {
       vdata1: null,
             // Canonical lesson id is DB3 json_key_item like "lesson_1".
@@ -199,4 +255,26 @@ class GlobalVars {
 //     gv.URL_DS.requestData_By_URL_Path(ObjRequest);
 //   }
 
+}
+
+// ------------------------------------------------------------
+// DB path constants (do not change auth/request logic)
+// ------------------------------------------------------------
+// Used by yout_pl2 pages to avoid hard-coded DB path strings.
+try {
+    if (typeof window !== 'undefined') {
+        window.YT_DB_CONST = window.YT_DB_CONST || (function() {
+            const DB_YOUTUBE2_ROOT = '../db_youtube2';
+            return {
+                DB_YOUTUBE2_ROOT,
+                REF_LANGUAGES_SET: DB_YOUTUBE2_ROOT + '/ref_languages_set',
+                REF_TAGS_SHORT: DB_YOUTUBE2_ROOT + '/ref_tags_short',
+                YOUTUBE_TRANSCRIPTS: DB_YOUTUBE2_ROOT + '/youtube_transcripts',
+                REF_YOUTUBE_VIDEOS: DB_YOUTUBE2_ROOT + '/ref_youtube_videos',
+                UI_STATE_YOUT_PL2: DB_YOUTUBE2_ROOT + '/ui_state/yout_pl2'
+            };
+        })();
+    }
+} catch {
+    // ignore
 }

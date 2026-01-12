@@ -1,15 +1,18 @@
 (function(){
   'use strict';
 
-  // Store reference videos here (outside data_base2 root via ../)
-  const ROOT_PATH = '../db_youtube2/ref_youtube_videos';
+  // Store reference videos here.
+  const ROOT_PATH = (function() {
+    const gv = ensureGv();
+    return gv.cst.getcst('DB_CONST_REF_YOUTUBE_VIDEOS');
+  })();
 
   function nowIso() {
     try { return new Date().toISOString(); } catch { return String(Date.now()); }
   }
 
   function ensureGv() {
-    if (window.gv && window.gv.URL_DS) return window.gv;
+    if (window.gv && window.gv.URL_DS && window.gv.cst && typeof window.gv.cst.getcst === 'function') return window.gv;
 
     const GVClass = (typeof GlobalVars === 'function')
       ? GlobalVars
