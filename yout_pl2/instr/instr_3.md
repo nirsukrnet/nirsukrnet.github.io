@@ -1,113 +1,104 @@
-## Multi-language transcripts (yout_pl2)
+# Git — save detached HEAD work into branch `main202512_new`
 
-Goal: support storing transcript text in multiple languages per timestamp, and allow choosing which language is affected when pasting.
+You see:
 
-This spec targets Firebase root `db_youtube2/`.
-
----
-
-## 1) Firebase: language set table
-
-Add a new table:
-- `db_youtube2/ref_languages_set`
-
-Minimal schema:
-```json
-{
-  "languages": {
-    "1": "en",
-    "2": "uk",
-    "3": "sv"
-  }
-}
+```
+* (HEAD detached from 6065a36)
+  main
+  main202512
+  main202512_new
 ```
 
-Notes:
-- Values are language codes (`en`, `uk`, `sv`).
-- Keys (`"1"`, `"2"`, ...) are just ordering keys.
+That means you are **not currently on a branch**. Your commits/changes are “floating”.
+
+Below are safe ways to move your work into `main202512_new`.
 
 ---
 
-## 2) UI: language selection in the Menu dialog
+## 1) First check: do you have a commit already?
 
-Where:
-- In the Menu dialog header area (the line/area shown by the red arrow in the screenshot).
+Run:
 
-Add ONE new UI row that shows language buttons from `ref_languages_set.languages`.
-
-Example buttons:
-- `en`, `uk`, `sv`
-
-Behavior:
-- User clicks one language button to select the current editing language, call it `lang_edit`.
-- `lang_edit` is used when the user clicks **Paste transcript**.
-
-Minimal default:
-- If nothing selected, default `lang_edit = lang1_show` if available, otherwise `sv`.
-
----
-
-## 3) Transcript storage changes (per video)
-
-Transcript records live under:
-- `db_youtube2/youtube_transcripts/{videoId}`
-
-Add two optional fields:
-- `lang1_show` (string)
-- `lang2_show` (string)
-
-These control which two languages are shown in the transcript UI.
-
-Example:
-```json
-{
-  "videoId": "maKy1pRdcDw",
-  "source": "manual",
-  "lang1_show": "sv",
-  "lang2_show": "en",
-  "updatedAt": "2026-01-01T...Z",
-  "items": [
-    {
-      "t": 1,
-      "text_sv": "...",
-      "text_en": "...",
-      "text_uk": "...",
-      "Mark1": true
-    }
-  ],
-  "rawText": "..."
-}
+```bash
+git status
+git log --oneline -n 5
 ```
 
-Item rules:
-- `t` is the timestamp in seconds.
-- Each language is stored in its own field name `text_<langCode>`.
-- `Mark1` stays as-is.
+### Case A: you already have commits in detached HEAD
+
+If `git log` shows your new commit(s) on top, the simplest is:
+
+```bash
+git switch main202512_new
+git merge --ff-only HEAD
+```
+
+If `--ff-only` fails (branch has diverged), use a normal merge:
+
+```bash
+git merge HEAD
+```
+
+Then push (if you use a remote):
+
+```bash
+git push
+```
+
+Alternative (often easiest): just “move the branch pointer” to your current commit:
+
+```bash
+git branch -f main202512_new HEAD
+git switch main202512_new
+```
 
 ---
 
-## 4) Paste transcript behavior (language-aware)
+### Case B: you have only uncommitted changes (no new commit yet)
 
-When the user clicks **Paste transcript**:
-- Parse timestamps as usual.
-- Write the parsed text into the selected language field only:
-  - `text_${lang_edit}`
-- Do NOT overwrite other language fields (`text_en`, `text_sv`, ...).
+If `git status` shows modified files, do:
+
+```bash
+git switch main202512_new
+```
+
+If Git refuses because it would overwrite changes, use stash:
+
+```bash
+git stash push -m "detached-head work"
+git switch main202512_new
+git stash pop
+```
+
+Now commit on the branch:
+
+```bash
+git add -A
+git commit -m "your message"
+git push
+```
 
 ---
 
-## 5) Optional: selecting display languages
+## 2) Most reliable method (always works): create a temp branch
 
-Consider adding controls in the Menu to choose:
-- `lang1_show`
-- `lang2_show`
+When in doubt, do this:
 
-When changed:
-- Update the transcript record in Firebase for this video.
-- The transcript UI should display two lines per timestamp: `lang1_show` and `lang2_show`.
+```bash
+git switch -c temp_detached_save
+git switch main202512_new
+git merge temp_detached_save
+```
 
+Then optionally delete temp branch:
 
+```bash
+git branch -d temp_detached_save
+```
 
+---
 
+## Notes
 
-
+- `git checkout` can be used instead of `git switch`, but `git switch` is clearer.
+- If you already pushed something and you’re rewriting history, prefer `git revert` instead of `reset --hard`.
