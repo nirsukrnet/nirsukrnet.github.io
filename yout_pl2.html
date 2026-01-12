@@ -173,6 +173,11 @@
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
 
+    /* Main menu filters */
+    #mainMenuTagRow button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
     dialog {
       width: min(980px, calc(100vw - 24px));
       border: 1px solid currentColor;
@@ -301,6 +306,14 @@ English Channel..."></textarea>
         style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">
         ×
       </button>
+      
+      <div id="mainMenuTagRow" class="row" style="margin:0 0 10px;"></div>
+      
+      <div class="row" style="margin:0 0 10px;">
+        <input id="inMainMenuShortFilter" placeholder="type to filter" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+      </div>
+
+      <div id="refVideosStatus" class="muted" style="margin:0 0 10px;"></div>
       <ul id="refVideosList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
     </form>
   </dialog>
@@ -362,9 +375,18 @@ English Channel..."></textarea>
     // Multi-language transcript settings
     const LANG_ROOT_PATH = '../db_youtube2/ref_languages_set';
     const UI_STATE_PATH = '../db_youtube2/ui_state/yout_pl2';
+    const REF_TAGS_SHORT_PATH = '../db_youtube2/ref_tags_short';
+    const MAIN_MENU_SELECTED_TAG_PATH = `${UI_STATE_PATH}/main_menu_selected_tag`;
+    const MAIN_MENU_SHORT_NAME_FILTER_PATH = `${UI_STATE_PATH}/main_menu_short_name_filter`;
     let langEdit = 'sv';
     let lang1Show = 'sv';
     let lang2Show = 'en';
+
+    // Main menu filters
+    let mainMenuSelectedTag = '';
+    let mainMenuShortNameFilter = '';
+    let _mainMenuSaveTimer = null;
+    let _mainMenuTagsCache = [];
 
     // Debounced persistence of playback language display settings.
     let _playbackLangSaveTimer = null;
@@ -395,6 +417,163 @@ English Channel..."></textarea>
       const el = document.getElementById('refVideosStatus');
       if (!el) return;
       el.textContent = msg || '';
+    }
+
+    function cleanTagCode(x) {
+      const s = cleanStr(x).toUpperCase();
+      if (!s) return '';
+      if (!/^[A-Z0-9_-]{2,12}$/.test(s)) return '';
+      return s;
+    }
+
+    function normalizeRefTagsShort(data) {
+      const rawTags = (data && typeof data === 'object') ? data.tags : null;
+      const list = [];
+      if (rawTags && typeof rawTags === 'object') {
+        for (const [k, v] of Object.entries(rawTags)) {
+          const code = cleanTagCode((v && v.label) ? v.label : k);
+          // Keep key if label is not a valid code
+          const keyCode = cleanTagCode(k);
+          const finalCode = code || keyCode;
+          if (!finalCode) continue;
+          const label = cleanStr((v && v.label) || finalCode);
+          const order = Number.isFinite(Number(v && v.order)) ? Number(v.order) : 9999;
+          list.push({ code: finalCode, label, order });
+        }
+      }
+      list.sort((a, b) => (a.order - b.order) || a.code.localeCompare(b.code));
+      return list;
+    }
+
+    async function loadRefTagsShortList() {
+      await ytEnsureSignedIn();
+      let data = null;
+      try {
+        data = await ytRequestByPath(REF_TAGS_SHORT_PATH, 'GET');
+      } catch {
+        data = null;
+      }
+      return normalizeRefTagsShort(data);
+    }
+
+    function renderMainMenuTagButtons(list) {
+      const row = document.getElementById('mainMenuTagRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      const mkBtn = (label, tagCode) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        if (tagCode) btn.dataset.tag = tagCode;
+        else btn.dataset.all = '1';
+        btn.dataset.selected = (!tagCode && !cleanTagCode(mainMenuSelectedTag)) || (tagCode && cleanTagCode(mainMenuSelectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
+        btn.onclick = () => {
+          setMainMenuSelectedTag(tagCode || '');
+        };
+        return btn;
+      };
+
+      if (!Array.isArray(list) || list.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'muted';
+        span.textContent = 'No tags';
+        row.appendChild(span);
+        row.appendChild(mkBtn('All', ''));
+        return;
+      }
+
+      list.forEach(t => {
+        row.appendChild(mkBtn(t.label || t.code, t.code));
+      });
+
+      // Keep "All" on the right (last).
+      row.appendChild(mkBtn('All', ''));
+    }
+
+    function scheduleSaveMainMenuFilters() {
+      try {
+        if (_mainMenuSaveTimer) clearTimeout(_mainMenuSaveTimer);
+      } catch {}
+
+      _mainMenuSaveTimer = setTimeout(async () => {
+        try {
+          await ytEnsureSignedIn();
+          await ytRequestByPath(MAIN_MENU_SELECTED_TAG_PATH, 'PUT', {
+            tag: cleanTagCode(mainMenuSelectedTag) || '',
+            updatedAt: ytNowIso()
+          });
+          await ytRequestByPath(MAIN_MENU_SHORT_NAME_FILTER_PATH, 'PUT', {
+            q: cleanStr(mainMenuShortNameFilter),
+            updatedAt: ytNowIso()
+          });
+        } catch {
+          // ignore
+        }
+      }, 350);
+    }
+
+    function setMainMenuSelectedTag(tagCodeOrEmpty) {
+      mainMenuSelectedTag = cleanTagCode(tagCodeOrEmpty) || '';
+      try {
+        // Update selected state
+        const row = document.getElementById('mainMenuTagRow');
+        if (row) {
+          row.querySelectorAll('button[data-tag], button[data-all]').forEach(btn => {
+            const tag = cleanTagCode(btn.dataset.tag);
+            const isAll = btn.dataset.all === '1';
+            btn.dataset.selected = (isAll && !mainMenuSelectedTag) || (tag && tag === mainMenuSelectedTag) ? '1' : '0';
+          });
+        }
+      } catch {}
+
+      scheduleSaveMainMenuFilters();
+      Promise.resolve().then(() => loadRefVideos()).catch(() => {});
+    }
+
+    function setMainMenuShortNameFilter(q) {
+      mainMenuShortNameFilter = cleanStr(q);
+      scheduleSaveMainMenuFilters();
+      Promise.resolve().then(() => loadRefVideos()).catch(() => {});
+    }
+
+    async function loadMainMenuFilterState() {
+      await ytEnsureSignedIn();
+      let tag = '';
+      let q = '';
+      try {
+        const data = await ytRequestByPath(MAIN_MENU_SELECTED_TAG_PATH, 'GET');
+        if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'tag')) tag = cleanStr(data.tag);
+        else if (typeof data === 'string') tag = cleanStr(data);
+      } catch {}
+      try {
+        const data = await ytRequestByPath(MAIN_MENU_SHORT_NAME_FILTER_PATH, 'GET');
+        if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'q')) q = cleanStr(data.q);
+        else if (typeof data === 'string') q = cleanStr(data);
+      } catch {}
+
+      mainMenuSelectedTag = cleanTagCode(tag) || '';
+      mainMenuShortNameFilter = q;
+
+      const input = document.getElementById('inMainMenuShortFilter');
+      if (input) input.value = mainMenuShortNameFilter;
+    }
+
+    function applyMainMenuFilters(records) {
+      const selectedTag = cleanTagCode(mainMenuSelectedTag);
+      const q = cleanStr(mainMenuShortNameFilter).toLowerCase();
+      return (Array.isArray(records) ? records : []).filter(v => {
+        if (!v) return false;
+        if (selectedTag) {
+          const t = cleanTagCode(v.tag);
+          if (t !== selectedTag) return false;
+        }
+        if (q) {
+          const sn = cleanStr(v.short_name).toLowerCase();
+          if (!sn.includes(q)) return false;
+        }
+        return true;
+      });
     }
 
     function setAddVideoStatus(msg) {
@@ -1490,7 +1669,17 @@ English Channel..."></textarea>
       const dlg = document.getElementById('dlgMainMenu');
       if (!dlg) return;
       setRefStatus('Loading...');
-      Promise.resolve().then(() => loadRefVideos()).catch(() => setRefStatus('Load failed'));
+      Promise.resolve().then(async () => {
+        try {
+          await ytEnsureSignedIn();
+          await loadMainMenuFilterState();
+          _mainMenuTagsCache = await loadRefTagsShortList();
+          renderMainMenuTagButtons(_mainMenuTagsCache);
+        } catch {
+          renderMainMenuTagButtons([]);
+        }
+        await loadRefVideos();
+      }).catch(() => setRefStatus('Load failed'));
       if (typeof dlg.showModal === 'function') dlg.showModal();
       else dlg.setAttribute('open', 'open');
     }
@@ -1617,16 +1806,28 @@ English Channel..."></textarea>
           url: String(v.url || '').trim(),
           short_name: String(v.short_name || '').trim(),
           title: String(v.title || '').trim(),
+          tag: String(v.tag || '').trim(),
           order: Number.isFinite(Number(v.order)) ? Number(v.order) : 9999
         }))
         .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
 
       const limit = Math.max(0, Math.floor(Number(REF_VIDEOS_MENU_LIMIT) || 0));
-      const top = sorted.slice(0, limit);
-      if (top.length === 0) {
+      const filtered = applyMainMenuFilters(sorted);
+      const top = filtered.slice(0, limit);
+
+      if (sorted.length === 0) {
         const li = document.createElement('li');
         li.className = 'muted';
         li.textContent = 'No saved videos yet.';
+        list.appendChild(li);
+        setRefStatus('');
+        return;
+      }
+
+      if (top.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'No videos match.';
         list.appendChild(li);
         setRefStatus('');
         return;
@@ -1890,6 +2091,15 @@ English Channel..."></textarea>
           try { console.warn('Save ref video failed', err); } catch {}
         }
       };
+
+      // Main menu filters
+      const inMainFilter = document.getElementById('inMainMenuShortFilter');
+      if (inMainFilter && !inMainFilter.dataset.wired) {
+        inMainFilter.dataset.wired = '1';
+        inMainFilter.addEventListener('input', () => {
+          setMainMenuShortNameFilter(inMainFilter.value);
+        });
+      }
 
       // Autofill when user leaves the URL field (switches to another field)
       const inUrl = document.getElementById('inUrl');
