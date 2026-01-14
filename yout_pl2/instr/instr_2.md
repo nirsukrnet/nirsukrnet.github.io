@@ -1,48 +1,118 @@
-## Task: style button groups + add “AI copy” helper
+# Feature: “Resp” (AI response / explanation) modal + Firebase store
 
-### 1) Add a shared CSS class for the top action buttons
-Apply one common class to these buttons so they can be styled consistently:
+## Goal
+Add a workflow to paste/store the AI grammar explanation (“response”) for the current YouTube video (and optionally for the current transcript line).
+
+User clicks this existing button:
 
 ```html
-<button id="btnMark1" class="yu2-btn yu2-btn--tool">Mr</button>
-<button id="btnMrkOff" class="yu2-btn yu2-btn--tool">MOFF</button>
-<button id="btnMenu" class="yu2-btn yu2-btn--tool" style="margin-left:auto;">Menu</button>
+<button id="btnPasteAI" class="yu2-btn yu2-btn--tool" title="Paste grammar respond">Resp</button>
 ```
+
+It opens a modal (`showModal`) with a text area + **Save**.
+
+## Storage location (Firebase RTDB)
+Store under the YouTube DB root:
+
+- `EXPL_ROOT = DB_YOUTUBE2_ROOT + '/youtube_explanation'`
+
+Path per video:
+
+- `EXPL_DOC_PATH = EXPL_ROOT + '/' + <videoId>`
 
 Notes:
-- Keep `margin-left:auto` on `btnMenu` (or move this to CSS later) so it stays aligned to the right.
+- `DB_YOUTUBE2_ROOT` should come from existing constants (see `instr_5.md`).
+- Keep fallback if constants are missing: `const ROOT = (window.YT_DB_CONST?.DB_YOUTUBE2_ROOT) || '../db_youtube2'`.
 
-### 2) Use a different CSS class for the play/time button
-The play/time button should be styled differently from the “tool” buttons:
+## Data model
+Keep it similar to `youtube_transcripts`, but store explanation text.
 
-```html
-<button id="btnPlay" class="yu2-btn yu2-btn--play" data-state="pause">4:56</button>
+Recommended schema (document per video):
+
+```js
+{
+	videoId: "maKy1pRdcDw",
+	source: "manual",          // same style as transcript store
+	updatedAt: "2026-01-14T12:34:56.000Z",
+
+	// Optional: per-transcript-line explanations (indexed like transcript items)
+	items: [
+		{ idx: 0, t: 4.0, enc: "b64utf8", text_b64: "...", updatedAt: "..." },
+		{ idx: 1, t: 6.0, enc: "b64utf8", text_b64: "...", updatedAt: "..." }
+	]
+}
 ```
 
-### 3) Add an “AI copy” button
-Add a button that copies a ready-to-paste prompt to the clipboard:
+Rules:
+- The textarea content (Markdown) must be **encoded** before saving to Firebase.
+  - Reason: keep a stable, safe representation (newlines + Unicode) and avoid any escaping issues.
+- Store encoded content in `text_b64` with `enc: "b64utf8"`.
+- Decode on load and put the decoded string back into the textarea.
+- Back-compat:
+  - If `text_b64` is missing but `text` exists (older data), treat `text` as already-decoded plain text.
 
-```html
-<button id="btnAIcopy" class="yu2-btn yu2-btn--tool" title="Copy grammar prompt">AI</button>
+### Encoding/decoding contract
+Implement two helpers (names are free, but behavior must match):
+
+```js
+encodeForDb(str) -> { enc: 'b64utf8', text_b64: <base64> }
+decodeFromDb({enc, text_b64, text}) -> <decoded string>
 ```
 
-### 4) Clipboard template
-On click of `btnAIcopy`, copy exactly this text (with the selected text inserted):
+Required behavior:
+- `encodeForDb` converts the textarea string to UTF-8 bytes and Base64 encodes it.
+- `decodeFromDb`:
+  - if `enc === 'b64utf8'` and `text_b64` exists: Base64 decode -> UTF-8 string
+  - else if `text` exists: return `text`
+  - else return empty string
 
-```text
-Provide a grammatical explanation for these sentences/phrase: "<current selected text (lang1)>"
-```
+## UI: modal dialog
+Add a new dialog (name can vary, but keep IDs stable if you follow this spec):
 
-Behavior details:
-- Use the *current selection* from the lang1 text area/view.
-- If there is no selection, either copy an empty placeholder or show a small warning (your choice, but be consistent).
+- `dialog#dlgResp`
+- `textarea#taResp`
+- `button#btnRespSave` (type="button")
+- `span#respStatus` (small status line)
 
-### Acceptance criteria
-- Tool buttons (`Mr`, `MOFF`, `Menu`, `AI`) share one class for styling.
-- Play/time button has a separate class.
-- Clicking `AI` places the template text into the clipboard with the current selection inserted.
+Behavior:
+- Clicking `#btnPasteAI` opens the dialog via `dlg.showModal()` (fallback: set `open` attribute).
+- The dialog should show context info (videoId, and if available current active line index/time).
+- `#btnRespSave` saves to Firebase and updates `#respStatus`.
 
+### Which target is being edited
+This feature stores the explanation **per transcript line**.
 
+When opening the dialog:
+- If an “active transcript line” exists (e.g., `activeIndex >= 0`), edit **line-level**: decode from `items[activeIndex]` into the textarea.
+- If there is no active line, show a status like: “Select a transcript line first” (do not save).
+
+When saving:
+- Preserve existing doc fields if they exist (do not delete other indexes).
+- Ensure `items` grows to at least `activeIndex` if saving line-level.
+- Store `idx` and `t` for line-level rows if possible.
+
+## Load behavior
+On opening the dialog:
+- Best-effort `GET` the existing document at `EXPL_DOC_PATH`.
+- Fill textarea:
+	- line-level mode: `decodeFromDb(items[activeIndex])` (or empty)
+
+## Save behavior
+On Save:
+- Ensure sign-in (same approach used by transcript store).
+- `PUT` the full document at `EXPL_DOC_PATH` (simple and consistent).
+- Update `updatedAt` at document level, and for the updated line item.
+- Show success/failure in `#respStatus`.
+
+## Non-goals
+- Do not change existing transcript behavior.
+- Do not change Firebase auth/request logic.
+
+## Acceptance criteria
+- Clicking “Resp” opens a modal with textarea and Save button.
+- Saved content appears under `DB_YOUTUBE2_ROOT + '/youtube_explanation/<videoId>'`.
+- Re-opening the modal loads previously saved content.
+- Works even if the user pastes Markdown (stored via encode/decode).
 
 
 

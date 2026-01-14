@@ -52,17 +52,19 @@
 
     /* Fixed width to prevent layout jump when label changes Play <-> Pause */
     #btnPlay {
-      width: 50px;
+      width: 50px;      
       text-align: center;
     }
 
     /* Play button state color (time is shown on the button) */
     #btnPlay[data-state="play"] {
-      background-color: color-mix(in srgb, #1a7f37 28%, transparent);
+      background-color: color-mix(in srgb, #1a7f37 90%, transparent);
+      color: #fff;
     }
 
     #btnPlay[data-state="pause"] {
-      background-color: color-mix(in srgb, #d4a72c 35%, transparent);
+      background-color: color-mix(in srgb, #d4a72c 90%, transparent);
+      color:#111;
     }
 
     /* Top-right main menu button */
@@ -82,9 +84,17 @@
       cursor: pointer;
     }
 
-    /* Styling hooks for control buttons (used in instr/instr_2.md) */
+    /* Styling hooks for control buttons */
     .yu2-btn { white-space: nowrap; }
-    .yu2-btn--tool { user-select: none; }
+    /* Override `.row.controls button { background: transparent; }` */
+    .row.controls button.yu2-btn--tool{
+      user-select:none;
+      color: #fff;
+      border-color: color-mix(in srgb, #502cd4 70%, #ffffff);
+      background-color: rgba(80,44,212,.25); /* fallback */
+      background-color: color-mix(in srgb, #502cd4 90%, transparent);
+    }
+
     .yu2-btn--play { font-variant-numeric: tabular-nums; }
 
     button:disabled { opacity: 0.6; cursor: default; }
@@ -250,8 +260,10 @@
   <div class="row controls">
     <button id="btnPlay" class="yu2-btn yu2-btn--play">Play</button>
     <button id="btnMark1" class="yu2-btn yu2-btn--tool">Mr</button>
+    <!-- <button id="btnMrkOff" class="yu2-btn yu2-btn--tool" style="display: none;">MOFF</button> -->
     <button id="btnMrkOff" class="yu2-btn yu2-btn--tool">MOFF</button>
     <button id="btnAIcopy" class="yu2-btn yu2-btn--tool" title="Copy grammar prompt">AI</button>
+    <button id="btnPasteAI" class="yu2-btn yu2-btn--tool" title="Paste grammar respond">Resp</button>
     <button id="btnMenu" class="yu2-btn yu2-btn--tool" style="margin-left:auto;">Menu</button>
   </div>
 
