@@ -1,118 +1,81 @@
-# Feature: “Resp” (AI response / explanation) modal + Firebase store
+## Instr 2 — Add “Play mode” toggle (One / All)
 
-## Goal
-Add a workflow to paste/store the AI grammar explanation (“response”) for the current YouTube video (and optionally for the current transcript line).
+Goal: Add a UI toggle button that switches playback behavior between:
 
-User clicks this existing button:
+- **Play mode — One**: play only the currently selected transcript item, then stop.
+- **Play mode — All**: play from the current item and continue to the next items automatically.
 
-```html
-<button id="btnPasteAI" class="yu2-btn yu2-btn--tool" title="Paste grammar respond">Resp</button>
-```
+### 1) Button behavior and label
 
-It opens a modal (`showModal`) with a text area + **Save**.
+Add a new button (example id: `btnPlayMode`) with label format:
 
-## Storage location (Firebase RTDB)
-Store under the YouTube DB root:
+- `Play mode - One`
+- `Play mode - All`
 
-- `EXPL_ROOT = DB_YOUTUBE2_ROOT + '/youtube_explanation'`
+Clicking the button toggles the mode:
 
-Path per video:
+- If label is `Play mode - One` and user clicks it → mode becomes **All** and label updates to `Play mode - All`.
+- If label is `Play mode - All` and user clicks it → mode becomes **One** and label updates to `Play mode - One`.
 
-- `EXPL_DOC_PATH = EXPL_ROOT + '/' + <videoId>`
+The button label must always reflect the **current active mode**.
 
-Notes:
-- `DB_YOUTUBE2_ROOT` should come from existing constants (see `instr_5.md`).
-- Keep fallback if constants are missing: `const ROOT = (window.YT_DB_CONST?.DB_YOUTUBE2_ROOT) || '../db_youtube2'`.
+### 1.1) Button placement (IMPORTANT)
 
-## Data model
-Keep it similar to `youtube_transcripts`, but store explanation text.
+The new `btnPlayMode` button must be placed inside the menu dialog:
 
-Recommended schema (document per video):
+- `<dialog id="dlgMenu"> ... </dialog>`
 
-```js
-{
-	videoId: "maKy1pRdcDw",
-	source: "manual",          // same style as transcript store
-	updatedAt: "2026-01-14T12:34:56.000Z",
+Recommended location:
 
-	// Optional: per-transcript-line explanations (indexed like transcript items)
-	items: [
-		{ idx: 0, t: 4.0, enc: "b64utf8", text_b64: "...", updatedAt: "..." },
-		{ idx: 1, t: 6.0, enc: "b64utf8", text_b64: "...", updatedAt: "..." }
-	]
-}
-```
+- In the bottom menu buttons row (the row that contains `Hide transcription`, `Show time`, etc.),
+  next to those UI-toggle buttons.
 
-Rules:
-- The textarea content (Markdown) must be **encoded** before saving to Firebase.
-  - Reason: keep a stable, safe representation (newlines + Unicode) and avoid any escaping issues.
-- Store encoded content in `text_b64` with `enc: "b64utf8"`.
-- Decode on load and put the decoded string back into the textarea.
-- Back-compat:
-  - If `text_b64` is missing but `text` exists (older data), treat `text` as already-decoded plain text.
+Reason: this is a UI setting, not a main playback control, so it should live in the menu.
 
-### Encoding/decoding contract
-Implement two helpers (names are free, but behavior must match):
+### 2) Playback semantics
 
-```js
-encodeForDb(str) -> { enc: 'b64utf8', text_b64: <base64> }
-decodeFromDb({enc, text_b64, text}) -> <decoded string>
-```
+#### A) Play mode — One
 
-Required behavior:
-- `encodeForDb` converts the textarea string to UTF-8 bytes and Base64 encodes it.
-- `decodeFromDb`:
-  - if `enc === 'b64utf8'` and `text_b64` exists: Base64 decode -> UTF-8 string
-  - else if `text` exists: return `text`
-  - else return empty string
+When mode is **One**, pressing the Play/Pause button (`#btnPlay`) plays only the **current transcript item**:
 
-## UI: modal dialog
-Add a new dialog (name can vary, but keep IDs stable if you follow this spec):
+- Single click on `#btnPlay`:
+	- Start playing from the current item (the active transcript row `activeIndex`).
+	- Playback stops automatically at the end of this item.
+	- It must NOT automatically continue to the next item.
 
-- `dialog#dlgResp`
-- `textarea#taResp`
-- `button#btnRespSave` (type="button")
-- `span#respStatus` (small status line)
+- Double-click on a transcript row:
+	- Plays the selected item.
+	- Stops at the end of that item.
+	- Does NOT continue.
 
-Behavior:
-- Clicking `#btnPasteAI` opens the dialog via `dlg.showModal()` (fallback: set `open` attribute).
-- The dialog should show context info (videoId, and if available current active line index/time).
-- `#btnRespSave` saves to Firebase and updates `#respStatus`.
+Stopping criteria:
 
-### Which target is being edited
-This feature stores the explanation **per transcript line**.
+- Define “end of item” as the start time of the next transcript item (i.e., `transcript[activeIndex + 1].t`),
+	or if there is no next item, then stop at video end.
 
-When opening the dialog:
-- If an “active transcript line” exists (e.g., `activeIndex >= 0`), edit **line-level**: decode from `items[activeIndex]` into the textarea.
-- If there is no active line, show a status like: “Select a transcript line first” (do not save).
+#### B) Play mode — All
 
-When saving:
-- Preserve existing doc fields if they exist (do not delete other indexes).
-- Ensure `items` grows to at least `activeIndex` if saving line-level.
-- Store `idx` and `t` for line-level rows if possible.
+When mode is **All**, pressing `#btnPlay` plays continuously:
 
-## Load behavior
-On opening the dialog:
-- Best-effort `GET` the existing document at `EXPL_DOC_PATH`.
-- Fill textarea:
-	- line-level mode: `decodeFromDb(items[activeIndex])` (or empty)
+- Start from the current item and continue automatically through subsequent items.
+- As playback time moves forward, the app should keep updating the active transcript row.
 
-## Save behavior
-On Save:
-- Ensure sign-in (same approach used by transcript store).
-- `PUT` the full document at `EXPL_DOC_PATH` (simple and consistent).
-- Update `updatedAt` at document level, and for the updated line item.
-- Show success/failure in `#respStatus`.
+### 3) Integration points
 
-## Non-goals
-- Do not change existing transcript behavior.
-- Do not change Firebase auth/request logic.
+- The toggle affects behavior of:
+	- `#btnPlay`
+	- “play selected line” actions (click/double-click on transcript rows)
 
-## Acceptance criteria
-- Clicking “Resp” opens a modal with textarea and Save button.
-- Saved content appears under `DB_YOUTUBE2_ROOT + '/youtube_explanation/<videoId>'`.
-- Re-opening the modal loads previously saved content.
-- Works even if the user pastes Markdown (stored via encode/decode).
+### 4) Acceptance checklist
 
+- Toggling the button switches between `Play mode - One` and `Play mode - All`.
+- In **One** mode: playing stops after the current item (does not continue).
+- In **All** mode: playing continues beyond the current item.
+- Double-clicking a transcript row plays that row; in **One** mode it stops at the end of that row.
 
+lets fix issue
 
+1) when in one mode dont jump after stop to the next item
+
+2) not work double click in one mode - not playing once item
+lets check it and fix

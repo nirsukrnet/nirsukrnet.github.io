@@ -391,6 +391,7 @@
         <button id="btnMenuToggleTime" value="cancel">Show time</button>
         <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
         <button id="btnMenuToggleControlsDock" value="cancel">Dock controls bottom</button>
+        <button id="btnPlayMode" type="button" title="Toggle playback behavior">Play mode - All</button>
         <button value="cancel" style="margin-left:auto;">Close</button>
         <button id="btnMenuHome" type="button" title="Home">Home</button>
       </div>
@@ -553,6 +554,17 @@ English Channel..."></textarea>
     let activeIndex = -1;
 
     let isPlaying = false;
+
+    // Playback mode:
+    // - 'all': normal YouTube playback
+    // - 'one': stop automatically at the end of the current transcript item
+    let playMode = 'all';
+    let _oneModeStopAtSec = null;
+    let _oneModeStopIdx = null;
+
+    // For touch devices where dblclick is unreliable: detect double-tap on the same row.
+    let _lastTransTapIdx = null;
+    let _lastTransTapAtMs = 0;
 
     // When restoring saved UI state, suppress auto-scroll briefly so updateActiveRow()
     // does not override the restored scroll position.
@@ -2067,6 +2079,14 @@ English Channel..."></textarea>
       const next = Math.max(0, Math.min(transcript.length - 1, idx));
       activeIndex = next;
       updateActiveRow();
+
+      // When paused, show the start time of the selected item on the Play button.
+      if (!isPlaying) {
+        try {
+          const row = transcript[activeIndex];
+          updatePlayButtonLabel(row ? Number(row.t || 0) : 0);
+        } catch {}
+      }
     }
 
     function updateActiveRow() {
@@ -2129,6 +2149,59 @@ English Channel..."></textarea>
       setActiveIndex(idx);
     }
 
+    function updatePlayModeButton() {
+      const btn = document.getElementById('btnPlayMode');
+      if (!btn) return;
+      btn.textContent = (playMode === 'one') ? 'Play mode - One' : 'Play mode - All';
+      btn.dataset.mode = playMode;
+    }
+
+    function togglePlayMode() {
+      playMode = (playMode === 'one') ? 'all' : 'one';
+      _oneModeStopAtSec = null;
+      updatePlayModeButton();
+    }
+
+    function computeStopAtForIndex(idx) {
+      if (!Array.isArray(transcript) || transcript.length === 0) return null;
+      const next = transcript[idx + 1];
+      const nextT = next ? Number(next.t) : null;
+      if (!Number.isFinite(nextT)) return null;
+      return Math.max(0, nextT);
+    }
+
+    function armOneModeStopAtFromTime(currentTimeSec) {
+      if (playMode !== 'one') {
+        _oneModeStopAtSec = null;
+        _oneModeStopIdx = null;
+        return;
+      }
+      if (!Array.isArray(transcript) || transcript.length === 0) {
+        _oneModeStopAtSec = null;
+        _oneModeStopIdx = null;
+        return;
+      }
+      const t = Number(currentTimeSec || 0);
+      const idx = (typeof activeIndex === 'number' && activeIndex >= 0 && activeIndex < transcript.length)
+        ? activeIndex
+        : findActiveByTime(t);
+      _oneModeStopIdx = idx;
+      _oneModeStopAtSec = computeStopAtForIndex(idx);
+    }
+
+    function playSelectedTranscriptIndex(idx) {
+      seekToTranscriptIndex(idx);
+      // In One-mode, arm stop boundary immediately (stateChange may not fire if already playing).
+      try {
+        const row = transcript[idx];
+        const t = row ? Number(row.t || 0) : 0;
+        armOneModeStopAtFromTime(t);
+      } catch {}
+      try {
+        if (player && typeof player.playVideo === 'function') player.playVideo();
+      } catch {}
+    }
+
     function renderTranscript() {
       const list = document.getElementById('transList');
       list.innerHTML = '';
@@ -2181,7 +2254,20 @@ English Channel..."></textarea>
           div2.appendChild(sp2);
           li.appendChild(div2);
         }
-        li.addEventListener('click', () => seekToTranscriptIndex(idx));
+        li.addEventListener('click', () => {
+          const now = Date.now();
+          const isDoubleTap = (_lastTransTapIdx === idx) && (now - _lastTransTapAtMs <= 360);
+          _lastTransTapIdx = idx;
+          _lastTransTapAtMs = now;
+
+          if (isDoubleTap) {
+            playSelectedTranscriptIndex(idx);
+            return;
+          }
+          seekToTranscriptIndex(idx);
+        });
+        // Desktop support
+        li.addEventListener('dblclick', () => playSelectedTranscriptIndex(idx));
         list.appendChild(li);
       });
 
@@ -2225,6 +2311,7 @@ English Channel..."></textarea>
       if (btnTime) btnTime.textContent = isTimeVisible() ? 'Hide time' : 'Show time';
       if (btnTransTime) btnTransTime.textContent = isTranscriptTimestampsVisible() ? 'Hide transcript time' : 'Show transcript time';
       if (btnDock) btnDock.textContent = isControlsDocked() ? 'Undock controls' : 'Dock controls bottom';
+      updatePlayModeButton();
     }
 
     function openPasteModal() {
@@ -2273,17 +2360,49 @@ English Channel..."></textarea>
     function updatePlayButtonLabel(currentTimeSec = null) {
       const btn = document.getElementById('btnPlay');
       if (!btn) return;
-      const t = (currentTimeSec == null)
-        ? (player && typeof player.getCurrentTime === 'function' ? player.getCurrentTime() : 0)
-        : currentTimeSec;
+      let t;
+      if (currentTimeSec != null) {
+        t = currentTimeSec;
+      } else if (isPlaying) {
+        t = (player && typeof player.getCurrentTime === 'function') ? player.getCurrentTime() : 0;
+      } else {
+        const row = (Array.isArray(transcript) && activeIndex >= 0) ? transcript[activeIndex] : null;
+        t = (row && row.t != null) ? Number(row.t) : 0;
+      }
       btn.textContent = fmtMmSs(t);
       btn.dataset.state = isPlaying ? 'play' : 'pause';
     }
 
     function togglePlayPause() {
       if (!player) return;
-      if (isPlaying && typeof player.pauseVideo === 'function') player.pauseVideo();
-      else if (!isPlaying && typeof player.playVideo === 'function') player.playVideo();
+      if (isPlaying && typeof player.pauseVideo === 'function') {
+        _oneModeStopAtSec = null;
+        _oneModeStopIdx = null;
+        player.pauseVideo();
+        return;
+      }
+      if (!isPlaying && typeof player.playVideo === 'function') {
+        // In One-mode, always replay the current active item from its start.
+        if (playMode === 'one') {
+          try {
+            const idx = (typeof activeIndex === 'number') ? activeIndex : -1;
+            const row = (Array.isArray(transcript) && idx >= 0) ? transcript[idx] : null;
+            const startT = row ? Number(row.t || 0) : 0;
+            if (player && typeof player.seekTo === 'function') player.seekTo(Math.max(0, startT), true);
+            _oneModeStopIdx = idx;
+            _oneModeStopAtSec = computeStopAtForIndex(idx);
+          } catch {}
+          player.playVideo();
+          return;
+        }
+
+        // All-mode: normal resume behavior
+        try {
+          const t = (player && typeof player.getCurrentTime === 'function') ? player.getCurrentTime() : 0;
+          armOneModeStopAtFromTime(t);
+        } catch {}
+        player.playVideo();
+      }
     }
 
     async function setMark1OnActive(nextValue) {
@@ -2695,6 +2814,14 @@ English Channel..."></textarea>
         Promise.resolve().then(() => saveControlsDockBottomSetting(next)).catch(() => {});
       };
 
+      const btnPlayMode = document.getElementById('btnPlayMode');
+      if (btnPlayMode) btnPlayMode.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          togglePlayMode();
+        } catch {}
+      };
+
       document.getElementById('btnApplyTrans').onclick = (e) => {
         try {
           e.preventDefault();
@@ -2761,8 +2888,9 @@ English Channel..."></textarea>
         if (!player || typeof player.getCurrentTime !== 'function') return;
         const t = player.getCurrentTime();
 
-        // Always show time on the Play/Pause button.
-        updatePlayButtonLabel(t);
+        // Show time on the Play/Pause button.
+        // While playing: current playback time. While paused: active item start time.
+        updatePlayButtonLabel();
 
         // Keep seconds precision for the main time indicator (not the transcript timestamps)
         if (isTimeVisible()) {
@@ -2772,6 +2900,26 @@ English Channel..."></textarea>
         const wrap = document.getElementById('transWrap');
         const isShown = wrap.style.display === 'block';
         if (!isShown) return;
+
+        // Play mode: stop after one transcript item
+        if (isPlaying && playMode === 'one') {
+          const stopAt = Number(_oneModeStopAtSec);
+          if (Number.isFinite(stopAt) && t >= (stopAt - 0.02)) {
+            const stopIdx = _oneModeStopIdx;
+            _oneModeStopAtSec = null;
+            // Keep selection on the same item after auto-stop.
+            if (stopIdx != null && Number.isFinite(Number(stopIdx))) {
+              activeIndex = Number(stopIdx);
+              updateActiveRow();
+            }
+            try { if (player && typeof player.pauseVideo === 'function') player.pauseVideo(); } catch {}
+            return;
+          }
+        }
+
+        // While paused, do not force activeIndex based on current player time.
+        // This prevents jumping after One-mode auto-stop and allows free clicking while paused.
+        if (!isPlaying) return;
 
         const idx = findActiveByTime(t);
         if (idx !== activeIndex) {
@@ -2887,6 +3035,16 @@ English Channel..."></textarea>
             try {
               // 1 = playing
               isPlaying = (e && e.data === 1);
+              if (isPlaying) {
+                // Ensure One-mode knows when to stop.
+                try {
+                  const t = (player && typeof player.getCurrentTime === 'function') ? player.getCurrentTime() : 0;
+                  armOneModeStopAtFromTime(t);
+                } catch {}
+              } else {
+                _oneModeStopAtSec = null;
+                _oneModeStopIdx = null;
+              }
               updatePlayButtonLabel();
             } catch {}
           }
