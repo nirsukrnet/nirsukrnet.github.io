@@ -1,30 +1,48 @@
-# yout_pl2 — Main menu (ref videos) minimal + close icon
+## Task: style button groups + add “AI copy” helper
 
-## Goal
-The top-right **Main menu** dialog (`dlgMainMenu`) should stay minimal:
-- It mainly shows the saved videos list (`refVideosList`).
+### 1) Add a shared CSS class for the top action buttons
+Apply one common class to these buttons so they can be styled consistently:
 
-But we still want an easy way to close it with a **small close icon button**.
+```html
+<button id="btnMark1" class="yu2-btn yu2-btn--tool">Mr</button>
+<button id="btnMrkOff" class="yu2-btn yu2-btn--tool">MOFF</button>
+<button id="btnMenu" class="yu2-btn yu2-btn--tool" style="margin-left:auto;">Menu</button>
+```
 
-## Current layout (after previous changes)
-- `dlgMainMenu` contains only:
-	- `<ul id="refVideosList"> ... </ul>`
-- The `Add YouTube link` button was moved into the regular **Menu** dialog (`dlgMenu`).
+Notes:
+- Keep `margin-left:auto` on `btnMenu` (or move this to CSS later) so it stays aligned to the right.
 
-## Requirement
-Add a small icon-style close button to `dlgMainMenu`.
+### 2) Use a different CSS class for the play/time button
+The play/time button should be styled differently from the “tool” buttons:
 
-### UI / placement
-- Put it in the top-right corner of the dialog.
-- It should be visually small (icon-like), not a big full-size button.
-- It must close the dialog.
+```html
+<button id="btnPlay" class="yu2-btn yu2-btn--play" data-state="pause">4:56</button>
+```
 
-### Behavior
-- Clicking the close icon closes `dlgMainMenu`.
-- `Esc` should still close the dialog as usual.
-- The ref videos list loading must keep working.
+### 3) Add an “AI copy” button
+Add a button that copies a ready-to-paste prompt to the clipboard:
 
-## Notes
-- Do not move other controls back into `dlgMainMenu` (keep it minimal).
-- If needed, use a simple `×` character as the icon (no extra assets required).
+```html
+<button id="btnAIcopy" class="yu2-btn yu2-btn--tool" title="Copy grammar prompt">AI</button>
+```
+
+### 4) Clipboard template
+On click of `btnAIcopy`, copy exactly this text (with the selected text inserted):
+
+```text
+Provide a grammatical explanation for these sentences/phrase: "<current selected text (lang1)>"
+```
+
+Behavior details:
+- Use the *current selection* from the lang1 text area/view.
+- If there is no selection, either copy an empty placeholder or show a small warning (your choice, but be consistent).
+
+### Acceptance criteria
+- Tool buttons (`Mr`, `MOFF`, `Menu`, `AI`) share one class for styling.
+- Play/time button has a separate class.
+- Clicking `AI` places the template text into the clipboard with the current selection inserted.
+
+
+
+
 

@@ -52,7 +52,7 @@
 
     /* Fixed width to prevent layout jump when label changes Play <-> Pause */
     #btnPlay {
-      width: 92px;
+      width: 50px;
       text-align: center;
     }
 
@@ -82,6 +82,11 @@
       cursor: pointer;
     }
 
+    /* Styling hooks for control buttons (used in instr/instr_2.md) */
+    .yu2-btn { white-space: nowrap; }
+    .yu2-btn--tool { user-select: none; }
+    .yu2-btn--play { font-variant-numeric: tabular-nums; }
+
     button:disabled { opacity: 0.6; cursor: default; }
 
     #t {
@@ -110,22 +115,27 @@
       padding: 0;
       margin: 0;
       display: grid;
-      gap: 6px;
+      gap: 1px;
       /* Give some breathing room so borders are not clipped at edges */
       padding-top: 8px;
       padding-bottom: 24px;
     }
 
     #transList li {
-      padding: 0px 0px;
-      border-radius: 2px;
+      /* Padding creates space between text and the active inset border highlight */
+      padding: 2px 0px;
+      border-radius: 0px;
       border: 0px solid transparent;
       cursor: pointer;
       user-select: none;
     }
 
     #transList li[data-active="1"] {
-      background-color: color-mix(in srgb, currentColor 14%, transparent);
+      /* “Now playing” highlight: border-style (no layout shift) */
+      /* Top + bottom only (no left/right) */
+      box-shadow:
+        inset 0 2px 0 0 color-mix(in srgb, currentColor 55%, transparent),
+        inset 0 -2px 0 0 color-mix(in srgb, currentColor 55%, transparent);
     }
 
     /* Mark1 highlighting (visible after load from Firebase too) */
@@ -135,7 +145,10 @@
 
     /* Active + Mark1: slightly stronger tint */
     #transList li[data-active="1"][data-mark1="1"] {
-      background-color: color-mix(in srgb, currentColor 18%, transparent);
+      /* Keep Mark1 background tint + add a slightly stronger active border */
+      box-shadow:
+        inset 0 2px 0 0 color-mix(in srgb, currentColor 70%, transparent),
+        inset 0 -2px 0 0 color-mix(in srgb, currentColor 70%, transparent);
     }
 
     #transList small {
@@ -235,11 +248,11 @@
   </div>
 
   <div class="row controls">
-    <button id="btnPlay">Play</button>
-    <button id="btnMark1">Mark1</button>
-    <button id="btnMrkOff">MrkOFF</button>
-    <span id="timeWrap" style="display:none;">Time: <span id="t">0.00</span>s</span>
-    <button id="btnMenu" style="margin-left:auto;">Menu</button>
+    <button id="btnPlay" class="yu2-btn yu2-btn--play">Play</button>
+    <button id="btnMark1" class="yu2-btn yu2-btn--tool">Mr</button>
+    <button id="btnMrkOff" class="yu2-btn yu2-btn--tool">MOFF</button>
+    <button id="btnAIcopy" class="yu2-btn yu2-btn--tool" title="Copy grammar prompt">AI</button>
+    <button id="btnMenu" class="yu2-btn yu2-btn--tool" style="margin-left:auto;">Menu</button>
   </div>
 
   <div id="transWrap">
@@ -590,6 +603,68 @@ English Channel..."></textarea>
       setStatus(msg);
     }
 
+    function getSelectedText() {
+      try {
+        const sel = (typeof window.getSelection === 'function') ? window.getSelection() : null;
+        const txt = sel ? String(sel.toString() || '') : '';
+        return txt.trim();
+      } catch {
+        return '';
+      }
+    }
+
+    function escapeForQuotedPrompt(text) {
+      const s = (text == null) ? '' : String(text);
+      return s
+        .replace(/\\/g, '\\\\')
+        .replace(/\r\n|\r|\n/g, ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/"/g, '\\"')
+        .trim();
+    }
+
+    function getCurrentLang1TextForAiPrompt() {
+      const selected = getSelectedText();
+      if (selected) return selected;
+      try {
+        if (Array.isArray(transcript) && transcript.length && activeIndex >= 0 && activeIndex < transcript.length) {
+          return getRowText(transcript[activeIndex], lang1Show);
+        }
+      } catch {}
+      return '';
+    }
+
+    async function copyTextToClipboard(text) {
+      const s = (text == null) ? '' : String(text);
+      if (!s) return false;
+
+      // Prefer modern Clipboard API when available.
+      try {
+        if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          await navigator.clipboard.writeText(s);
+          return true;
+        }
+      } catch {}
+
+      // Fallback for file:// and older browsers.
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = s;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-9999px';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+        return !!ok;
+      } catch {
+        return false;
+      }
+    }
+
     function ytNowIso() {
       try { return new Date().toISOString(); } catch { return String(Date.now()); }
     }
@@ -757,6 +832,21 @@ English Channel..."></textarea>
       } catch {
         return '';
       }
+    }
+
+    // ------------------------------
+    // UI setting: main time indicator
+    // ------------------------------
+    // Controls visibility of the high-precision time indicator (#t).
+    // Note: the Play button always shows mm:ss; this is an optional seconds-with-decimals readout.
+    let _timeVisible = false;
+
+    function setTimeVisible(isVisible) {
+      _timeVisible = !!isVisible;
+    }
+
+    function isTimeVisible() {
+      return !!_timeVisible;
     }
 
     // ------------------------------
@@ -1522,16 +1612,6 @@ English Channel..."></textarea>
       setTranscriptVisible(!isOpen);
     }
 
-    function setTimeVisible(isVisible) {
-      const el = document.getElementById('timeWrap');
-      if (!el) return;
-      el.style.display = isVisible ? 'inline' : 'none';
-    }
-
-    function isTimeVisible() {
-      const el = document.getElementById('timeWrap');
-      return !!el && el.style.display !== 'none';
-    }
 
     function updateMenuLabels() {
       const btnTrans = document.getElementById('btnMenuToggleTrans');
@@ -1947,6 +2027,24 @@ English Channel..."></textarea>
 
       document.getElementById('btnMrkOff').onclick = () => {
         Promise.resolve().then(() => setMark1OnActive(false)).catch(() => {});
+      };
+
+      document.getElementById('btnAIcopy').onclick = async (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          const raw = getCurrentLang1TextForAiPrompt();
+          if (!raw) {
+            setMainStatus('Select text (Line 1) or play a line');
+            return;
+          }
+          const safe = escapeForQuotedPrompt(raw);
+          const prompt = `Provide a grammatical explanation for these sentences/phrase: "${safe}"`;
+          const ok = await copyTextToClipboard(prompt);
+          setMainStatus(ok ? 'AI prompt copied' : 'Copy blocked (browser)');
+        } catch (err) {
+          setMainStatus('Copy failed (check console)');
+          try { console.warn('AI copy failed', err); } catch {}
+        }
       };
 
       document.getElementById('btnMenu').onclick = () => openMenuModal();

@@ -8,11 +8,20 @@
   const DEFAULT_FROM = 'sv';
   const DEFAULT_TO = 'en';
 
+  const UIK_FROM_LANG = 'yout_transl_from_lang';
+  const UIK_TO_LANG = 'yout_transl_to_lang';
+  const UIK_SELECTED_TAG = 'yout_transl_selected_tag';
+  const UIK_VIDEO_TEXT_FILTER = 'yout_transl_video_text_filter';
+
   const state = {
     videoId: '',
     fromLang: DEFAULT_FROM,
     toLang: DEFAULT_TO,
-    refVideos: []
+    refVideosAll: [],
+    refVideos: [],
+    tags: [],
+    selectedTag: '',
+    videoTextFilter: ''
   };
 
   function cleanStr(v){ return (v == null) ? '' : String(v).trim(); }
@@ -21,6 +30,189 @@
     if (!s) return '';
     if (!/^[a-z0-9_-]{2,16}$/.test(s)) return '';
     return s;
+  }
+
+  function cleanTagCode(v){
+    const s = cleanStr(v).toUpperCase();
+    if (!s) return '';
+    if (!/^[A-Z0-9_-]{1,16}$/.test(s)) return '';
+    return s;
+  }
+
+  function isSignedInNow(){
+    try { return !!(window.gv && window.gv.URL_DS && window.gv.URL_DS.idToken); } catch { return false; }
+  }
+
+  function ensureGv(){
+    if (window.gv && window.gv.URL_DS && window.gv.cst && typeof window.gv.cst.getcst === 'function') return window.gv;
+    const GVClass = (typeof GlobalVars === 'function')
+      ? GlobalVars
+      : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+        ? globalThis.GlobalVars
+        : (typeof window.GlobalVars === 'function')
+          ? window.GlobalVars
+          : null;
+    if (GVClass) {
+      const gv = new GVClass();
+      window.gv = gv;
+      return gv;
+    }
+    throw new Error('[yout_trans] GlobalVars is not available (load ./yout_pl2/yu2_global_var.js first)');
+  }
+
+  async function ensureSignedIn(){
+    const gv = ensureGv();
+    if (gv.URL_DS && gv.URL_DS.idToken) return;
+    if (typeof gv.SignIn_User !== 'function') throw new Error('[yout_trans] gv.SignIn_User missing');
+    await gv.SignIn_User();
+  }
+
+  function requestByPath(addurl, method = 'GET', body = null){
+    return new Promise((resolve, reject) => {
+      try {
+        const gv = ensureGv();
+        const ObjRequest = gv.URL_DS.GetObjForRequest();
+        ObjRequest.addUrl = addurl;
+        ObjRequest.ametod = method;
+        ObjRequest.vobj = body;
+        ObjRequest.CallBackFunction = function(vdata){ resolve(vdata); };
+        ObjRequest.ErrorCallback = function(err){ reject(err || new Error('request failed')); };
+        gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  function nowIso(){
+    try { return new Date().toISOString(); } catch { return String(Date.now()); }
+  }
+
+  function getUiStatePath(){
+    return ensureGv().cst.getcst('DB_CONST_UI_STATE_YOUT_PL2');
+  }
+
+  function getRefTagsShortPath(){
+    return ensureGv().cst.getcst('DB_CONST_REF_TAGS_SHORT');
+  }
+
+  async function loadUiValue(key){
+    try {
+      await ensureSignedIn();
+      const base = getUiStatePath();
+      const data = await requestByPath(`${base}/${key}`, 'GET');
+      if (data == null) return '';
+      if (typeof data === 'string') return cleanStr(data);
+      if (typeof data === 'number') return String(data);
+      if (typeof data === 'object' && data) {
+        if (typeof data.value === 'string') return cleanStr(data.value);
+        if (typeof data.value === 'number') return String(data.value);
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  }
+
+  async function saveUiValue(key, value){
+    if (!isSignedInNow()) return;
+    try {
+      const base = getUiStatePath();
+      await requestByPath(`${base}/${key}`, 'PUT', { value: String(value || ''), updatedAt: nowIso() });
+    } catch {
+      // ignore
+    }
+  }
+
+  let _saveLangTimer = null;
+  let _saveFilterTimer = null;
+
+  function scheduleSaveLangState(){
+    if (!isSignedInNow()) return;
+    try { if (_saveLangTimer) clearTimeout(_saveLangTimer); } catch {}
+    _saveLangTimer = setTimeout(async () => {
+      await saveUiValue(UIK_FROM_LANG, cleanLangCode(state.fromLang) || DEFAULT_FROM);
+      await saveUiValue(UIK_TO_LANG, cleanLangCode(state.toLang) || DEFAULT_TO);
+    }, 450);
+  }
+
+  function scheduleSaveFilterState(){
+    if (!isSignedInNow()) return;
+    try { if (_saveFilterTimer) clearTimeout(_saveFilterTimer); } catch {}
+    _saveFilterTimer = setTimeout(async () => {
+      const tag = cleanTagCode(state.selectedTag);
+      await saveUiValue(UIK_SELECTED_TAG, tag);
+      await saveUiValue(UIK_VIDEO_TEXT_FILTER, cleanStr(state.videoTextFilter));
+    }, 450);
+  }
+
+  async function loadTagsShortList(){
+    try {
+      await ensureSignedIn();
+      const data = await requestByPath(getRefTagsShortPath(), 'GET');
+      const tagsObj = (data && typeof data === 'object') ? data.tags : null;
+      const keys = tagsObj && typeof tagsObj === 'object' ? Object.keys(tagsObj) : [];
+      return keys.map(cleanTagCode).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  function applyVideoFilters(all){
+    const selectedTag = cleanTagCode(state.selectedTag);
+    const q = cleanStr(state.videoTextFilter).toLowerCase();
+    return (Array.isArray(all) ? all : []).filter(v => {
+      if (!v) return false;
+      if (selectedTag) {
+        const t = cleanTagCode(v.tag);
+        if (t !== selectedTag) return false;
+      }
+      if (q) {
+        const sn = cleanStr(v.short_name).toLowerCase();
+        const title = cleanStr(v.title).toLowerCase();
+        if (!sn.includes(q) && !title.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderTagButtons(){
+    const row = document.getElementById('youtVideoTagRow');
+    if (!row) return;
+    row.innerHTML = '';
+
+    const tags = Array.isArray(state.tags) ? state.tags : [];
+    const selected = cleanTagCode(state.selectedTag);
+
+    function mkBtn(label, tagValue){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = label;
+      btn.style.padding = '10px 12px';
+      btn.style.minHeight = '44px';
+      btn.style.border = '1px solid currentColor';
+      btn.style.borderRadius = '10px';
+      btn.style.background = 'transparent';
+      btn.style.cursor = 'pointer';
+      const isOn = cleanTagCode(tagValue) === selected;
+      if (isOn) {
+        btn.style.background = 'color-mix(in srgb, currentColor 14%, transparent)';
+      }
+      btn.onclick = () => {
+        state.selectedTag = cleanTagCode(tagValue);
+        renderTagButtons();
+        state.refVideos = applyVideoFilters(state.refVideosAll);
+        renderVideoOptions();
+        scheduleSaveFilterState();
+      };
+      return btn;
+    }
+
+    for (const t of tags){
+      row.appendChild(mkBtn(t, t));
+    }
+    // All button last
+    row.appendChild(mkBtn('All', ''));
   }
 
   function setContentLangs(fromLang, toLang){
@@ -70,11 +262,16 @@
 
     wrap = document.createElement('div');
     wrap.id = 'youtTransMenu';
-    wrap.style.display = 'flex';
-    wrap.style.flexWrap = 'wrap';
+    wrap.style.display = 'grid';
     wrap.style.gap = '10px';
-    wrap.style.alignItems = 'center';
+    wrap.style.alignItems = 'start';
     wrap.style.marginTop = '10px';
+
+    const rowTop = document.createElement('div');
+    rowTop.style.display = 'flex';
+    rowTop.style.flexWrap = 'wrap';
+    rowTop.style.gap = '10px';
+    rowTop.style.alignItems = 'center';
 
     const labelVideo = document.createElement('label');
     labelVideo.textContent = 'Video: ';
@@ -113,12 +310,12 @@
     selFrom.value = state.fromLang;
     selTo.value = state.toLang;
 
-    wrap.appendChild(labelVideo);
-    wrap.appendChild(selVideo);
-    wrap.appendChild(labelFrom);
-    wrap.appendChild(selFrom);
-    wrap.appendChild(labelTo);
-    wrap.appendChild(selTo);
+    rowTop.appendChild(labelVideo);
+    rowTop.appendChild(selVideo);
+    rowTop.appendChild(labelFrom);
+    rowTop.appendChild(selFrom);
+    rowTop.appendChild(labelTo);
+    rowTop.appendChild(selTo);
 
     // Video-level clear translations button (yout_transl only)
     const btnClearVideo = document.createElement('button');
@@ -159,7 +356,37 @@
       try { await window.ExpImpForTrans_loadDataToHTML(); } catch {}
     };
 
-    wrap.appendChild(btnClearVideo);
+    rowTop.appendChild(btnClearVideo);
+
+    const tagRow = document.createElement('div');
+    tagRow.id = 'youtVideoTagRow';
+    tagRow.style.display = 'flex';
+    tagRow.style.flexWrap = 'wrap';
+    tagRow.style.gap = '10px';
+    tagRow.style.alignItems = 'center';
+
+    const filterRow = document.createElement('div');
+    filterRow.style.display = 'flex';
+    filterRow.style.flexWrap = 'wrap';
+    filterRow.style.gap = '10px';
+    filterRow.style.alignItems = 'center';
+
+    const inFilter = document.createElement('input');
+    inFilter.id = 'youtVideoTextFilter';
+    inFilter.placeholder = 'type to filter';
+    inFilter.autocomplete = 'off';
+    inFilter.spellcheck = false;
+    inFilter.style.minHeight = '44px';
+    inFilter.style.padding = '10px 12px';
+    inFilter.style.border = '1px solid currentColor';
+    inFilter.style.borderRadius = '10px';
+    inFilter.style.width = 'min(720px, 100%)';
+    filterRow.appendChild(inFilter);
+
+    // Order (per instr): filter block first, then the main menu row.
+    wrap.appendChild(tagRow);
+    wrap.appendChild(filterRow);
+    wrap.appendChild(rowTop);
 
     root.appendChild(wrap);
 
@@ -171,12 +398,21 @@
 
     selFrom.onchange = () => {
       setContentLangs(selFrom.value, selTo.value);
+      scheduleSaveLangState();
       Promise.resolve().then(() => window.ExpImpForTrans_loadDataToHTML()).catch(()=>{});
     };
 
     selTo.onchange = () => {
       setContentLangs(selFrom.value, selTo.value);
+      scheduleSaveLangState();
       Promise.resolve().then(() => window.ExpImpForTrans_loadDataToHTML()).catch(()=>{});
+    };
+
+    inFilter.oninput = () => {
+      state.videoTextFilter = cleanStr(inFilter.value);
+      state.refVideos = applyVideoFilters(state.refVideosAll);
+      renderVideoOptions();
+      scheduleSaveFilterState();
     };
 
     return wrap;
@@ -207,23 +443,62 @@
       sel.appendChild(opt);
     }
 
+    // Keep current selection if still present; otherwise pick first.
     if (state.videoId) sel.value = state.videoId;
+    if (state.videoId && sel.value !== state.videoId) {
+      state.videoId = cleanStr(sel.value);
+      try { localStorage.setItem(`${APP_NS}:videoId`, state.videoId); } catch {}
+    }
   }
 
   async function ensureVideoMenu(){
     ensureTopControls();
     hideLessonClearButton();
 
-    if (!state.refVideos.length){
-      state.refVideos = await loadRefVideos();
+    // Restore persisted UI state (langs + filters) once per session.
+    if (!state._uiLoaded) {
+      state._uiLoaded = true;
+      try {
+        const f = await loadUiValue(UIK_FROM_LANG);
+        const t = await loadUiValue(UIK_TO_LANG);
+        if (cleanLangCode(f)) state.fromLang = cleanLangCode(f);
+        if (cleanLangCode(t)) state.toLang = cleanLangCode(t);
+
+        const st = await loadUiValue(UIK_SELECTED_TAG);
+        state.selectedTag = cleanTagCode(st);
+        const q = await loadUiValue(UIK_VIDEO_TEXT_FILTER);
+        state.videoTextFilter = cleanStr(q);
+      } catch {}
+
+      // Reflect to controls
+      try {
+        const selFrom = document.getElementById('youtFromLang');
+        const selTo = document.getElementById('youtToLang');
+        if (selFrom) selFrom.value = state.fromLang;
+        if (selTo) selTo.value = state.toLang;
+        const inFilter = document.getElementById('youtVideoTextFilter');
+        if (inFilter) inFilter.value = state.videoTextFilter;
+      } catch {}
     }
+
+    // Load tags for tag buttons
+    if (!Array.isArray(state.tags) || !state.tags.length) {
+      state.tags = await loadTagsShortList();
+      renderTagButtons();
+    }
+
+    if (!state.refVideosAll.length){
+      state.refVideosAll = await loadRefVideos();
+    }
+
+    state.refVideos = applyVideoFilters(state.refVideosAll);
 
     // Restore last video selection
     if (!state.videoId){
       try { state.videoId = cleanStr(localStorage.getItem(`${APP_NS}:videoId`)); } catch {}
     }
 
-    if (!state.videoId){
+    if (!state.videoId || !state.refVideos.some(v => getVideoIdFromRefVideo(v) === state.videoId)){
       const first = (state.refVideos || []).find(v => getVideoIdFromRefVideo(v));
       state.videoId = first ? getVideoIdFromRefVideo(first) : '';
     }
