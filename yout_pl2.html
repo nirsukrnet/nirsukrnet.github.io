@@ -202,16 +202,37 @@
     }
 
     dialog {
-      width: min(980px, calc(100vw - 24px));
+      width: calc(100vw - 16px);
+      max-width: calc(100vw - 16px);
+      height: calc(100vh - 16px);
+      max-height: calc(100vh - 16px);
+      margin: 8px;
       border: 1px solid currentColor;
       border-radius: 12px;
       padding: 12px;
     }
 
+    /* Allow the Resp textarea to use most of the dialog height */
+    #dlgResp form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      height: 100%;
+    }
+
+    #dlgResp textarea {
+      flex: 1 1 auto;
+      min-height: 40vh;
+      resize: vertical;
+    }
+
     /* Wider main menu dialog */
     #dlgMainMenu {
-      width: min(1200px, calc(100vw - 2px));
-      margin: 1px auto;
+      width: calc(100vw - 2px);
+      max-width: calc(100vw - 2px);
+      height: calc(100vh - 2px);
+      max-height: calc(100vh - 2px);
+      margin: 1px;
     }
 
     dialog::backdrop {
@@ -316,6 +337,18 @@ English Channel..."></textarea>
         <button id="btnSaveTrans" value="cancel">Save to Firebase</button>
         <button value="cancel">Close</button>
         <span id="transStatus" class="muted"></span>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgResp">
+    <form method="dialog">      
+      <div id="respInfo" class="muted" style="margin-bottom:6px;"></div>
+      <textarea id="taResp" rows="12" placeholder="# Explanation..."></textarea>
+      <div class="row" style="margin:10px 0 0;">
+        <button id="btnRespSave" type="button">Save</button>
+        <button value="cancel">Close</button>
+        <span id="respStatus" class="muted"></span>
       </div>
     </form>
   </dialog>
@@ -749,6 +782,235 @@ English Channel..."></textarea>
       return (window.YouTubeTranscriptStore && window.YouTubeTranscriptStore.ROOT_PATH)
         ? window.YouTubeTranscriptStore.ROOT_PATH
         : gv.cst.getcst('DB_CONST_YOUTUBE_TRANSCRIPTS');
+    }
+
+    // ------------------------------
+    // Resp (AI explanation) storage
+    // ------------------------------
+    function getYoutube2RootPath() {
+      const fromCst = (gv && gv.cst && typeof gv.cst.getcst === 'function')
+        ? gv.cst.getcst('DB_CONST_DB_YOUTUBE2_ROOT')
+        : '';
+      const fromWin = (window.YT_DB_CONST && typeof window.YT_DB_CONST.DB_YOUTUBE2_ROOT === 'string')
+        ? window.YT_DB_CONST.DB_YOUTUBE2_ROOT
+        : '';
+      return cleanStr(fromCst) || cleanStr(fromWin) || '../db_youtube2';
+    }
+
+    function getYoutubeExplanationRootPath() {
+      return getYoutube2RootPath() + '/youtube_explanation';
+    }
+
+    function setRespStatus(msg) {
+      try {
+        const el = document.getElementById('respStatus');
+        if (el) el.textContent = cleanStr(msg);
+      } catch {}
+    }
+
+    function openRespModal() {
+      const dlg = document.getElementById('dlgResp');
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    function getActiveIdxSafe() {
+      if (!Array.isArray(transcript) || transcript.length === 0) return null;
+      if (typeof activeIndex !== 'number' || activeIndex < 0 || activeIndex >= transcript.length) return null;
+      return activeIndex;
+    }
+
+    function utf8ToBase64(str) {
+      const s = (str == null) ? '' : String(str);
+      try {
+        if (typeof TextEncoder === 'function') {
+          const bytes = new TextEncoder().encode(s);
+          let bin = '';
+          const chunk = 0x8000;
+          for (let i = 0; i < bytes.length; i += chunk) {
+            const slice = bytes.subarray(i, i + chunk);
+            bin += String.fromCharCode.apply(null, slice);
+          }
+          return btoa(bin);
+        }
+      } catch {}
+
+      // Fallback (older browsers): may not handle all unicode perfectly but is acceptable.
+      try {
+        return btoa(unescape(encodeURIComponent(s)));
+      } catch {
+        return '';
+      }
+    }
+
+    function base64ToUtf8(b64) {
+      const s = cleanStr(b64);
+      if (!s) return '';
+      try {
+        const bin = atob(s);
+        if (typeof TextDecoder === 'function') {
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          return new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+        }
+        // Fallback
+        return decodeURIComponent(escape(bin));
+      } catch {
+        return '';
+      }
+    }
+
+    function encodeForDb(str) {
+      return { enc: 'b64utf8', text_b64: utf8ToBase64(str) };
+    }
+
+    function decodeFromDb(obj) {
+      if (!obj || typeof obj !== 'object') return '';
+      const enc = cleanStr(obj.enc);
+      const b64 = cleanStr(obj.text_b64);
+      if (enc === 'b64utf8' && b64) return base64ToUtf8(b64);
+      const legacy = (typeof obj.text === 'string') ? obj.text : '';
+      return legacy || '';
+    }
+
+    function getExplanationItem(itemsContainer, idx) {
+      if (itemsContainer == null) return null;
+      if (Array.isArray(itemsContainer)) {
+        const v = itemsContainer[idx];
+        return (v && typeof v === 'object') ? v : null;
+      }
+      if (typeof itemsContainer === 'object') {
+        const v = itemsContainer[idx] ?? itemsContainer[String(idx)];
+        return (v && typeof v === 'object') ? v : null;
+      }
+      return null;
+    }
+
+    function ensureItemsObject(itemsContainer) {
+      if (itemsContainer && typeof itemsContainer === 'object' && !Array.isArray(itemsContainer)) {
+        return { ...itemsContainer };
+      }
+      const out = {};
+      if (Array.isArray(itemsContainer)) {
+        for (let i = 0; i < itemsContainer.length; i++) {
+          const v = itemsContainer[i];
+          if (v && typeof v === 'object') out[String(i)] = v;
+        }
+      }
+      return out;
+    }
+
+    async function loadExplanationDoc(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) return null;
+
+      try {
+        await ytEnsureSignedIn();
+        const root = getYoutubeExplanationRootPath();
+        return await ytRequestByPath(`${root}/${vid}`, 'GET');
+      } catch {
+        return null;
+      }
+    }
+
+    async function saveExplanationDoc(videoId, doc) {
+      const vid = cleanStr(videoId);
+      if (!vid) throw new Error('Missing videoId');
+      await ytEnsureSignedIn();
+      const root = getYoutubeExplanationRootPath();
+      return await ytRequestByPath(`${root}/${vid}`, 'PUT', doc);
+    }
+
+    async function openRespModalAndLoad() {
+      setRespStatus('');
+      const ta = document.getElementById('taResp');
+      const info = document.getElementById('respInfo');
+
+      const vid = cleanStr(currentVideoId);
+      const idx = getActiveIdxSafe();
+
+      if (info) {
+        const t = (idx != null && transcript[idx]) ? transcript[idx].t : null;
+        info.textContent = (idx == null)
+          ? `videoId: ${vid || '(none)'} | Select a transcript line first`
+          : `videoId: ${vid || '(none)'} | line: ${idx} | t: ${fmtTimestamp(t)}`;
+      }
+
+      openRespModal();
+
+      if (!ta) return;
+      if (!vid) {
+        ta.value = '';
+        setRespStatus('No videoId');
+        return;
+      }
+      if (idx == null) {
+        ta.value = '';
+        setRespStatus('Select a transcript line first');
+        return;
+      }
+
+      // Load existing (auto-load on open)
+      setRespStatus('Loading...');
+      try {
+        const doc = await loadExplanationDoc(vid);
+        const items = doc ? doc.items : null;
+        const row = getExplanationItem(items, idx);
+        ta.value = row ? decodeFromDb(row) : '';
+        setRespStatus('');
+      } catch (e) {
+        ta.value = '';
+        setRespStatus('Load failed (check console)');
+        try { console.warn('Resp load failed', e); } catch {}
+      }
+    }
+
+    async function saveRespFromModal() {
+      const vid = cleanStr(currentVideoId);
+      const idx = getActiveIdxSafe();
+      const ta = document.getElementById('taResp');
+      if (!ta) return;
+
+      if (!vid) {
+        setRespStatus('No videoId');
+        return;
+      }
+      if (idx == null) {
+        setRespStatus('Select a transcript line first');
+        return;
+      }
+
+      setRespStatus('Saving...');
+      try {
+        // Load existing doc so we preserve other indexes.
+        const existing = await loadExplanationDoc(vid);
+        const payload = (existing && typeof existing === 'object') ? { ...existing } : {};
+        payload.videoId = vid;
+        payload.source = payload.source || 'manual';
+        payload.updatedAt = ytNowIso();
+
+        // Use object-map form for RTDB stability (arrays with many nulls often come back as objects).
+        const items = ensureItemsObject(payload.items);
+        const prev = getExplanationItem(items, idx) || {};
+        const t = (transcript[idx] && transcript[idx].t != null) ? transcript[idx].t : null;
+        const encObj = encodeForDb(String(ta.value || ''));
+        items[String(idx)] = {
+          ...prev,
+          idx,
+          t,
+          enc: encObj.enc,
+          text_b64: encObj.text_b64,
+          updatedAt: ytNowIso()
+        };
+        payload.items = items;
+
+        await saveExplanationDoc(vid, payload);
+        setRespStatus('Saved');
+      } catch (e) {
+        setRespStatus('Save failed (check console)');
+        try { console.warn('Resp save failed', e); } catch {}
+      }
     }
 
     function scheduleSavePlaybackLangSettings() {
@@ -2050,13 +2312,21 @@ English Channel..."></textarea>
             return;
           }
           const safe = escapeForQuotedPrompt(raw);
-          const prompt = `Provide a grammatical explanation for these sentences/phrase: "${safe}"`;
+          const prompt = `Provide a short grammatical explanation for these sentences/phrase: "${safe}"`;
           const ok = await copyTextToClipboard(prompt);
           setMainStatus(ok ? 'AI prompt copied' : 'Copy blocked (browser)');
         } catch (err) {
           setMainStatus('Copy failed (check console)');
           try { console.warn('AI copy failed', err); } catch {}
         }
+      };
+
+      const btnResp = document.getElementById('btnPasteAI');
+      if (btnResp) btnResp.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          Promise.resolve().then(() => openRespModalAndLoad()).catch(() => {});
+        } catch {}
       };
 
       document.getElementById('btnMenu').onclick = () => openMenuModal();
@@ -2122,6 +2392,14 @@ English Channel..."></textarea>
           setStatus('Save failed (check console)');
           try { console.warn('Save transcript failed', err); } catch {}
         }
+      };
+
+      const btnRespSave = document.getElementById('btnRespSave');
+      if (btnRespSave) btnRespSave.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          Promise.resolve().then(() => saveRespFromModal()).catch(() => {});
+        } catch {}
       };
 
       // time + highlight loop

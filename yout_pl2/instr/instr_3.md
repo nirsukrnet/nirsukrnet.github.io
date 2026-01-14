@@ -1,91 +1,51 @@
-# /db_youtube2 — reference tags table (`ref_tags_short`) seed/load UI
+# Instr: load saved Resp text on open
 
 ## Goal
-Create (or initialize) a small reference table in Firebase RTDB under `/db_youtube2` for short tags (like `SWE`, `ENG`, `OTH`).
+When the user clicks the existing button:
 
-UI must be **simple**:
-- No editor UI.
-- Only a dialog to **seed/load** this one node: `db_youtube2/ref_tags_short`.
-- Must NOT touch other data under `db_youtube2`.
-
----
-
-## Database path
-
-Store tags here:
-
-`db_youtube2/ref_tags_short`
-
-This should be similar in style to `ref_languages_set` used elsewhere.
-
----
-
-## Data model (seed payload)
-
-Top-level object:
-
-```json
-{
-  "updatedAt": "2026-01-12T00:00:00.000Z",
-  "tags": {
-    "SWE": { "id": "1", "label": "SWE", "description": "swedish", "order": 1 },
-    "ENG": { "id": "2", "label": "ENG", "description": "english", "order": 2 },
-    "OTH": { "id": "3", "label": "OTH", "description": "other",   "order": 3 }
-  }
-}
+```html
+<button id="btnPasteAI" class="yu2-btn yu2-btn--tool" title="Paste grammar respond">Resp</button>
 ```
 
-### Rules
-- `tags` is an object keyed by **tag code** (recommended: `^[A-Z0-9_-]{2,12}$`).
-- Each tag value:
-  - `id` (string): stable id (can be `"1"`, `"2"`… or a GUID).
-  - `label` (string): display label (usually same as key).
-  - `description` (string): human meaning.
-  - `order` (number): sort order.
-- `updatedAt` is ISO string.
+the app must open the Resp dialog and **auto-load** the previously saved explanation from Firebase into the textarea.
 
-### Sorting
-When rendering tags in UI:
-1) sort by `order` ascending
-2) then by `label` / key
+## Behavior requirements
+- On click `btnPasteAI`:
+	- Open the dialog (use `showModal()` when available; fallback to `open` attribute).
+	- Determine the current `videoId` (the active YouTube video).
+	- Determine the active transcript line index (`activeIndex`).
+		- If there is no active line: show status like `Select a transcript line first` and do not try to load.
 
----
+## Firebase location
+- Root path: `DB_YOUTUBE2_ROOT + '/youtube_explanation'`
+- Document path: `.../youtube_explanation/<videoId>`
 
-## Minimal UI requirements
+## What to load
+- Load the explanation for the active line index from:
+	- `items[activeIndex]`
 
-### Button
-- Add a button somewhere accessible (Menu is OK): `Init tags` (or `Seed tags`).
-- Clicking opens a dialog.
+## Encoding
+- Stored text is Base64 UTF-8 encoded:
+	- `items[i].enc === 'b64utf8'`
+	- `items[i].text_b64` contains the Base64 string
+- When loading:
+	- Decode `text_b64` into a UTF-8 string
+	- Put the decoded Markdown into the Resp textarea (`#taResp`)
 
-### Dialog
-The dialog should do only these actions:
-
-1) **Load current value** (read)
-- Read `db_youtube2/ref_tags_short` and display a short status:
-  - `Exists: yes/no`
-  - count of tags if present
-  - `updatedAt` if present
-
-2) **Seed defaults** (write)
-- Write ONLY to `db_youtube2/ref_tags_short` (do not overwrite `db_youtube2`).
-- Recommended operation:
-  - `PUT db_youtube2/ref_tags_short` with the seed payload (example JSON above).
-  - This replaces only that node.
-
-Optional safe mode (recommended):
-- If `ref_tags_short` already exists, require explicit confirmation: `Overwrite existing ref_tags_short`.
-
-UI controls in dialog (minimal):
-- `Load` button
-- `Seed defaults` button
-- Optional checkbox `Overwrite if exists`
-- `Close`
-
-Notes:
-- Keep it simple: no extra pages.
-- Reuse the existing Firebase request helper (`ytRequestByPath` / `GlobalVars` patterns).
-- Seeding affects only `db_youtube2/ref_tags_short`, not the whole database.
+## UX
+- Show a short status while loading: `Loading...`
+- If nothing is saved yet: textarea becomes empty and status clears.
+- On error: show `Load failed (check console)`.
 
 
 
+can you make this size bigger then now
 
+    dialog {
+      width: min(980px, calc(100vw - 24px));
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+extend this to full window space
