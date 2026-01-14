@@ -140,6 +140,24 @@
       user-select: none;
     }
 
+    /* Resp highlight bar (see instr_4.md): always present, colored via data-resp / data-mark1 */
+    #transList li .highlight-explan {
+      height: 3px;
+      width: 100%;
+      border-radius: 2px;
+      background: transparent;
+    }
+
+    /* Resp only */
+    #transList li[data-resp="1"] .highlight-explan {
+      background: #14b8a6;
+    }
+
+    /* Mark1 + Resp */
+    #transList li[data-mark1="1"][data-resp="1"] .highlight-explan {
+      background: linear-gradient(90deg, #14b8a6 0%, #0ea5e9 100%);
+    }
+
     #transList li[data-active="1"] {
       /* “Now playing” highlight: border-style (no layout shift) */
       /* Top + bottom only (no left/right) */
@@ -220,10 +238,70 @@
       height: 100%;
     }
 
+    #dlgResp .respModeRow {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #dlgResp .respActionRow {
+      gap: 18px;
+    }
+
+    #dlgResp .respModeRow button {
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 10px;
+    }
+
+    #dlgResp .respModeRow button.is-active {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
     #dlgResp textarea {
       flex: 1 1 auto;
       min-height: 40vh;
       resize: vertical;
+    }
+
+    #respPreview {
+      flex: 1 1 auto;
+      min-height: 40vh;
+      overflow: auto;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+      background: color-mix(in srgb, white 92%, transparent);
+      color: inherit;
+    }
+
+    #dlgResp[data-mode="html"] #taResp { display: none; }
+    #dlgResp[data-mode="edit"] #respPreview { display: none; }
+
+    #respPreview pre {
+      background: color-mix(in srgb, black 8%, transparent);
+      padding: 10px;
+      border-radius: 10px;
+      overflow: auto;
+    }
+
+    #respPreview code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+    }
+
+    #respPreview h1, #respPreview h2, #respPreview h3 {
+      margin: 10px 0 6px;
+    }
+
+    #respPreview p {
+      margin: 8px 0;
+    }
+
+    #respPreview ul, #respPreview ol {
+      margin: 8px 0 8px 22px;
     }
 
     /* Wider main menu dialog */
@@ -341,11 +419,16 @@ English Channel..."></textarea>
     </form>
   </dialog>
 
-  <dialog id="dlgResp">
+  <dialog id="dlgResp" data-mode="edit">
     <form method="dialog">      
       <div id="respInfo" class="muted" style="margin-bottom:6px;"></div>
       <textarea id="taResp" rows="12" placeholder="# Explanation..."></textarea>
-      <div class="row" style="margin:10px 0 0;">
+      <div id="respPreview" aria-label="HTML preview"></div>
+      <div class="row respActionRow" style="margin:10px 0 0;">
+        <div class="respModeRow">
+          <button id="btnRespEdit" type="button" class="is-active" title="Edit Markdown">Edit</button>
+          <button id="btnRespHtml" type="button" title="Preview as HTML">Html</button>
+        </div>
         <button id="btnRespSave" type="button">Save</button>
         <button value="cancel">Close</button>
         <span id="respStatus" class="muted"></span>
@@ -430,6 +513,14 @@ English Channel..."></textarea>
 
     // Keep rawText if loaded from Firebase (so Mark1 updates can be saved without losing rawText)
     let transcriptRawText = '';
+
+    // Resp (youtube_explanation) highlight cache for current video.
+    // Store indices as strings so it matches RTDB object keys.
+    let _respIdxSet = new Set();
+
+    // Resp dialog mode: 'edit' | 'html'
+    let _respMode = 'edit';
+    let _respPreviewTimer = null;
 
     // Multi-language transcript settings
     const gv = ytEnsureGv();
@@ -808,6 +899,172 @@ English Channel..."></textarea>
       } catch {}
     }
 
+    function escapeHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function mdInlineToHtml(escapedText) {
+      let s = String(escapedText == null ? '' : escapedText);
+      // Inline code
+      s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Bold
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      // Italic (simple)
+      s = s.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, (m, p1, p2) => `${p1}<em>${p2}</em>`);
+      return s;
+    }
+
+    function markdownToSafeHtml(md) {
+      const src = String(md == null ? '' : md).replace(/\r\n?/g, '\n');
+      const lines = src.split('\n');
+      const out = [];
+      let para = [];
+      let listType = null; // 'ul' | 'ol'
+      let inCode = false;
+      let codeBuf = [];
+
+      const flushPara = () => {
+        if (!para.length) return;
+        const body = para.map(l => mdInlineToHtml(escapeHtml(l))).join('<br>');
+        out.push(`<p>${body}</p>`);
+        para = [];
+      };
+
+      const closeList = () => {
+        if (!listType) return;
+        out.push(listType === 'ol' ? '</ol>' : '</ul>');
+        listType = null;
+      };
+
+      const openListIfNeeded = (type) => {
+        if (listType === type) return;
+        closeList();
+        listType = type;
+        out.push(type === 'ol' ? '<ol>' : '<ul>');
+      };
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = String(line || '').trimEnd();
+
+        if (inCode) {
+          if (/^```/.test(trimmed.trim())) {
+            out.push(`<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`);
+            codeBuf = [];
+            inCode = false;
+            continue;
+          }
+          codeBuf.push(line);
+          continue;
+        }
+
+        if (/^```/.test(trimmed.trim())) {
+          flushPara();
+          closeList();
+          inCode = true;
+          codeBuf = [];
+          continue;
+        }
+
+        if (!trimmed.trim()) {
+          flushPara();
+          closeList();
+          continue;
+        }
+
+        if (/^---+$/.test(trimmed.trim())) {
+          flushPara();
+          closeList();
+          out.push('<hr>');
+          continue;
+        }
+
+        const h = /^(#{1,3})\s+(.*)$/.exec(trimmed.trim());
+        if (h) {
+          flushPara();
+          closeList();
+          const level = h[1].length;
+          const text = mdInlineToHtml(escapeHtml(h[2] || ''));
+          out.push(`<h${level}>${text}</h${level}>`);
+          continue;
+        }
+
+        const ol = /^\s*(\d+)\.\s+(.*)$/.exec(trimmed);
+        if (ol) {
+          flushPara();
+          openListIfNeeded('ol');
+          out.push(`<li>${mdInlineToHtml(escapeHtml(ol[2] || ''))}</li>`);
+          continue;
+        }
+
+        const ul = /^\s*[-*]\s+(.*)$/.exec(trimmed);
+        if (ul) {
+          flushPara();
+          openListIfNeeded('ul');
+          out.push(`<li>${mdInlineToHtml(escapeHtml(ul[1] || ''))}</li>`);
+          continue;
+        }
+
+        para.push(trimmed);
+      }
+
+      if (inCode) {
+        out.push(`<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`);
+      }
+      flushPara();
+      closeList();
+
+      return out.join('\n');
+    }
+
+    function renderRespPreviewNow() {
+      const ta = document.getElementById('taResp');
+      const preview = document.getElementById('respPreview');
+      if (!preview) return;
+      const md = ta ? String(ta.value || '') : '';
+      const html = markdownToSafeHtml(md);
+      preview.innerHTML = html || '<div class="muted">(empty)</div>';
+    }
+
+    function scheduleRespPreviewRender() {
+      try {
+        if (_respPreviewTimer) clearTimeout(_respPreviewTimer);
+      } catch {}
+      _respPreviewTimer = setTimeout(() => {
+        try {
+          const dlg = document.getElementById('dlgResp');
+          if (!dlg || dlg.dataset.mode !== 'html') return;
+          renderRespPreviewNow();
+        } catch {}
+      }, 120);
+    }
+
+    function setRespMode(mode) {
+      const m = (mode === 'html') ? 'html' : 'edit';
+      _respMode = m;
+      const dlg = document.getElementById('dlgResp');
+      if (dlg) dlg.dataset.mode = m;
+
+      const bEdit = document.getElementById('btnRespEdit');
+      const bHtml = document.getElementById('btnRespHtml');
+      if (bEdit) bEdit.classList.toggle('is-active', m === 'edit');
+      if (bHtml) bHtml.classList.toggle('is-active', m === 'html');
+
+      if (m === 'html') {
+        renderRespPreviewNow();
+      } else {
+        try {
+          const ta = document.getElementById('taResp');
+          if (ta && typeof ta.focus === 'function') ta.focus();
+        } catch {}
+      }
+    }
+
     function openRespModal() {
       const dlg = document.getElementById('dlgResp');
       if (!dlg) return;
@@ -874,6 +1131,54 @@ English Channel..."></textarea>
       return legacy || '';
     }
 
+    function itemHasResp(item) {
+      if (!item || typeof item !== 'object') return false;
+      const b64 = cleanStr(item.text_b64);
+      if (b64) return true;
+      const legacy = cleanStr(item.text);
+      return !!legacy;
+    }
+
+    function updateRespSetFromDoc(doc) {
+      const next = new Set();
+      if (!doc || typeof doc !== 'object') {
+        _respIdxSet = next;
+        return;
+      }
+      const items = doc.items;
+      if (Array.isArray(items)) {
+        for (let i = 0; i < items.length; i++) {
+          if (itemHasResp(items[i])) next.add(String(i));
+        }
+      } else if (items && typeof items === 'object') {
+        for (const [k, v] of Object.entries(items)) {
+          if (itemHasResp(v)) next.add(String(k));
+        }
+      }
+      _respIdxSet = next;
+    }
+
+    async function refreshRespHighlightsForVideo(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) {
+        _respIdxSet = new Set();
+        return;
+      }
+      try {
+        const doc = await loadExplanationDoc(vid);
+        updateRespSetFromDoc(doc);
+
+        const wrap = document.getElementById('transWrap');
+        if (wrap && wrap.dataset.rendered) {
+          const prev = activeIndex;
+          renderTranscript();
+          if (typeof prev === 'number' && prev >= 0) setActiveIndex(prev);
+        }
+      } catch {
+        // Ignore highlight load failures
+      }
+    }
+
     function getExplanationItem(itemsContainer, idx) {
       if (itemsContainer == null) return null;
       if (Array.isArray(itemsContainer)) {
@@ -926,6 +1231,8 @@ English Channel..."></textarea>
       setRespStatus('');
       const ta = document.getElementById('taResp');
       const info = document.getElementById('respInfo');
+      // Always start in Edit mode on open.
+      setRespMode('edit');
 
       const vid = cleanStr(currentVideoId);
       const idx = getActiveIdxSafe();
@@ -955,6 +1262,7 @@ English Channel..."></textarea>
       setRespStatus('Loading...');
       try {
         const doc = await loadExplanationDoc(vid);
+        updateRespSetFromDoc(doc);
         const items = doc ? doc.items : null;
         const row = getExplanationItem(items, idx);
         ta.value = row ? decodeFromDb(row) : '';
@@ -971,6 +1279,7 @@ English Channel..."></textarea>
       const idx = getActiveIdxSafe();
       const ta = document.getElementById('taResp');
       if (!ta) return;
+      const trimmedText = cleanStr(String(ta.value || ''));
 
       if (!vid) {
         setRespStatus('No videoId');
@@ -994,7 +1303,7 @@ English Channel..."></textarea>
         const items = ensureItemsObject(payload.items);
         const prev = getExplanationItem(items, idx) || {};
         const t = (transcript[idx] && transcript[idx].t != null) ? transcript[idx].t : null;
-        const encObj = encodeForDb(String(ta.value || ''));
+        const encObj = encodeForDb(trimmedText);
         items[String(idx)] = {
           ...prev,
           idx,
@@ -1007,6 +1316,16 @@ English Channel..."></textarea>
 
         await saveExplanationDoc(vid, payload);
         setRespStatus('Saved');
+        try {
+          if (trimmedText) _respIdxSet.add(String(idx));
+          else _respIdxSet.delete(String(idx));
+          const wrap = document.getElementById('transWrap');
+          if (wrap && wrap.dataset.rendered) {
+            const prev = activeIndex;
+            renderTranscript();
+            if (typeof prev === 'number' && prev >= 0) setActiveIndex(prev);
+          }
+        } catch {}
       } catch (e) {
         setRespStatus('Save failed (check console)');
         try { console.warn('Resp save failed', e); } catch {}
@@ -1669,7 +1988,6 @@ English Channel..."></textarea>
       const a = Number(m[1]);
       const b = Number(m[2]);
       const c = (m[3] != null) ? Number(m[3]) : null;
-      if (Number.isNaN(a) || Number.isNaN(b) || (c != null && Number.isNaN(c))) return null;
       if (c == null) return (a * 60) + b;
       return (a * 3600) + (b * 60) + c;
     }
@@ -1767,6 +2085,9 @@ English Channel..."></textarea>
         if (_suppressAutoScrollUntilMs && Date.now() < _suppressAutoScrollUntilMs) return;
       } catch {}
 
+      // UX: do not auto-scroll when playback is paused; allow free manual scrolling.
+      if (!isPlaying) return;
+
       // Keep current line around “line 3” (near top) to avoid it drifting to the bottom.
       try {
         const activeEl = items[activeIndex];
@@ -1815,6 +2136,7 @@ English Channel..."></textarea>
         const li = document.createElement('li');
         li.dataset.active = '0';
         li.dataset.mark1 = '0';
+        li.dataset.resp = '0';
         li.className = 'muted';
         li.textContent = 'No transcript loaded yet. Use “Paste transcript”.';
         list.appendChild(li);
@@ -1831,6 +2153,11 @@ English Channel..."></textarea>
         li.dataset.idx = String(idx);
         li.dataset.active = '0';
         li.dataset.mark1 = row && row.Mark1 ? '1' : '0';
+        li.dataset.resp = _respIdxSet.has(String(idx)) ? '1' : '0';
+
+        const bar = document.createElement('div');
+        bar.className = 'highlight-explan';
+        li.appendChild(bar);
 
         const line1 = getRowText(row, lang1Show);
         const showSecond = !!cleanLangCode(lang2Show) && cleanLangCode(lang2Show) !== cleanLangCode(lang1Show);
@@ -1928,6 +2255,7 @@ English Channel..."></textarea>
         applyTranscriptMetaFromData(data);
         if (items && items.length) {
           setTranscript(items);
+          Promise.resolve().then(() => refreshRespHighlightsForVideo(currentVideoId)).catch(() => {});
         }
       } catch {
         // silent; page should work without firebase
@@ -2107,6 +2435,7 @@ English Channel..."></textarea>
       // Persist the last selection (best-effort)
       Promise.resolve().then(() => saveLastSelectedVideoId(vid)).catch(() => {});
       transcriptRawText = '';
+      _respIdxSet = new Set();
       setTranscript([]);
 
       // Update the embedded player (no new window/tab)
@@ -2133,6 +2462,9 @@ English Channel..."></textarea>
         } else {
           setMainStatus('No transcript loaded');
         }
+
+        // Load Resp markers (best-effort) and re-render transcript with highlights.
+        await refreshRespHighlightsForVideo(vid);
 
         // Best-effort restore of transcript scroll position for this video.
         // Delay to ensure renderTranscript + active-row positioning have run.
@@ -2401,6 +2733,28 @@ English Channel..."></textarea>
           Promise.resolve().then(() => saveRespFromModal()).catch(() => {});
         } catch {}
       };
+
+      const btnRespEdit = document.getElementById('btnRespEdit');
+      if (btnRespEdit) btnRespEdit.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          setRespMode('edit');
+        } catch {}
+      };
+
+      const btnRespHtml = document.getElementById('btnRespHtml');
+      if (btnRespHtml) btnRespHtml.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          setRespMode('html');
+        } catch {}
+      };
+
+      const taResp = document.getElementById('taResp');
+      if (taResp) taResp.addEventListener('input', () => {
+        const dlg = document.getElementById('dlgResp');
+        if (dlg && dlg.dataset.mode === 'html') scheduleRespPreviewRender();
+      });
 
       // time + highlight loop
       setInterval(() => {

@@ -1,102 +1,37 @@
+# Instr 1 — Transcript auto-align (auto-scroll) only while playing
 
-# yout_pl2 — “Now playing” highlight (continuous update loop)
+Problem:
+When clicking a transcript row like:
 
-## Where continuous updates happen
+`<li data-idx="..." data-active="1" data-mark1="0" data-resp="0"> ... </li>`
 
-The “now playing” highlight is driven by a **timer loop** (a `setInterval`) that runs every **250ms**.
+the transcript scroll container (`#transWrap`) currently “auto-aligns” (auto-scrolls) the active row.
+This is annoying when playback is **paused**, because the user wants to scroll freely and click lines without the UI forcing the scroll position.
 
-Conceptually, each tick does:
+## Required behavior
 
-1. Read current playback time from the YouTube player (`player.getCurrentTime()`).
-2. Update the Play/Pause button label to show time.
-3. If the transcript panel is visible, compute which transcript row matches current time.
-4. If the active row changed, update DOM attributes to reflect the new active row.
+1. Auto-align is allowed only while **playing**
+	- If playback state is **playing**, the app may auto-scroll the transcript so the active row stays near the top gap.
+	- This includes the periodic time-loop that updates `activeIndex`.
 
-The loop is in `yout_pl2.html` and looks like this (simplified):
+2. No auto-align while **not playing**
+	- If playback state is **paused** (or stopped/not started), do not auto-scroll `#transWrap`.
+	- Clicking a row while paused should:
+	  - set the active row highlight (and optionally seek the player if that is current behavior),
+	  - but must NOT change the scrollTop of `#transWrap`.
 
-```js
-// time + highlight loop
-setInterval(() => {
-	if (!player || typeof player.getCurrentTime !== 'function') return;
-	const t = player.getCurrentTime();
+3. Preserve manual scroll
+	- While paused, user scrolling must be “free”: the app must not fight it.
+	- While paused, repeated calls that update highlight must not re-align.
 
-	updatePlayButtonLabel(t);
-	if (isTimeVisible()) {
-		document.getElementById('t').textContent = Number(t || 0).toFixed(2);
-	}
+## Notes / constraints
 
-	const wrap = document.getElementById('transWrap');
-	if (wrap.style.display !== 'block') return;
+- “Playing state” means the internal playback flag (example: `isPlaying === true`) and/or player state that indicates playback is running.
+- The change should be enforced in the place that performs the auto-scroll (example: `updateActiveRow()` or any helper that scrolls the active `<li>` into view).
+- The active highlight (`data-active="1"`) should still update both in playing and paused states.
 
-	const idx = findActiveByTime(t);
-	if (idx !== activeIndex) {
-		activeIndex = idx;
-		updateActiveRow();
-	}
-}, 250);
-```
+## Acceptance checklist
 
-## How the active row is selected
-
-### `findActiveByTime(t)`
-
-This function scans the transcript array and returns the index `i` such that:
-
-`transcript[i].t <= t < transcript[i+1].t`
-
-(for the last row, `end = +Infinity`).
-
-### `updateActiveRow()`
-
-This function applies the active row to the DOM by setting an attribute on each `<li>`:
-
-- active row: `li.dataset.active = '1'`
-- non-active rows: `li.dataset.active = '0'`
-
-It also performs **auto-scroll** to keep the active row near the top of the transcript panel.
-The top gap is controlled by:
-
-```js
-const TRANS_ACTIVE_ROW_TOP_GAP_PX = 90;
-```
-
-## How highlighting is implemented (CSS)
-
-The UI highlight is CSS-driven using the `data-active` attribute on transcript list items:
-
-- Active row has `data-active="1"`
-- Mark1 rows have `data-mark1="1"`
-
-### Refactor: active highlight uses border-style (not background)
-
-To avoid using `background-color` for “now playing”, the active row highlight is implemented with a **border-like inset** (a `box-shadow`), which does not change layout like a real `border` can.
-
-#### Spacing between border and text
-
-The inset border is drawn at the edge of the `<li>`. To control how close it appears to the text, adjust the padding on transcript rows:
-
-```css
-#transList li {
-	padding: 6px 0px; /* vertical padding only (left/right = 0) */
-}
-```
-
-```css
-#transList li[data-active="1"] {
-	/* “Now playing” highlight: border-style (no layout shift) */
-	box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);
-}
-```
-
-Mark1 highlighting can still use background tint, and when a row is both Active + Mark1 we keep the Mark1 tint and strengthen the active border:
-
-```css
-#transList li[data-mark1="1"] {
-	background-color: color-mix(in srgb, currentColor 9%, transparent);
-}
-
-#transList li[data-active="1"][data-mark1="1"] {
-	box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 55%, transparent);
-}
-```
-
+- Start playback: active line follows time and auto-aligns as it changes.
+- Pause playback: active highlight can change, but scroll position stays where the user left it.
+- Click a transcript line while paused: highlight changes, no forced scroll jump.
