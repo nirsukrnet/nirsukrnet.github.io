@@ -434,17 +434,17 @@ English Channel..."></textarea>
   <dialog id="dlgResp" data-mode="edit">
     <form method="dialog">      
       <div id="respInfo" class="muted" style="margin-bottom:6px;"></div>
-      <textarea id="taResp" rows="12" placeholder="# Explanation..."></textarea>
-      <div id="respPreview" aria-label="HTML preview"></div>
-      <div class="row respActionRow" style="margin:10px 0 0;">
+      <div class="row respActionRow" style="margin:0 0 10px;">
         <div class="respModeRow">
           <button id="btnRespEdit" type="button" class="is-active" title="Edit Markdown">Edit</button>
           <button id="btnRespHtml" type="button" title="Preview as HTML">Html</button>
         </div>
         <button id="btnRespSave" type="button">Save</button>
         <button value="cancel">Close</button>
-        <span id="respStatus" class="muted"></span>
+        <span id="respStatus" class="muted" style="margin-left:auto;"></span>
       </div>
+      <textarea id="taResp" rows="12" placeholder="# Explanation..."></textarea>
+      <div id="respPreview" aria-label="HTML preview"></div>
     </form>
   </dialog>
 

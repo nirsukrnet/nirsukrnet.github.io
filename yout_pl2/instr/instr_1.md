@@ -35,3 +35,13 @@ This is annoying when playback is **paused**, because the user wants to scroll f
 - Start playback: active line follows time and auto-aligns as it changes.
 - Pause playback: active highlight can change, but scroll position stays where the user left it.
 - Click a transcript line while paused: highlight changes, no forced scroll jump.
+
+
+move all this button from bottom 
+
+          <button id="btnRespEdit" type="button" class="is-active" title="Edit Markdown">Edit</button>
+          <button id="btnRespHtml" type="button" title="Preview as HTML">Html</button>
+        </div>
+        <button id="btnRespSave" type="button">Save</button>
+        <button value="cancel">Close</button>
+to top
