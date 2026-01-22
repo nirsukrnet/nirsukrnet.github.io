@@ -104,6 +104,11 @@
       gap: 8px;
     }
 
+    /* History meta visibility (default hidden via data-show-meta="0") */
+    #history[data-show-meta="0"] .meta {
+      display: none;
+    }
+
     .item {
       padding: 8px 10px;
       border-radius: 10px;
@@ -153,6 +158,7 @@
 
       <button id="btnPermission" type="button" data-state="unknown" title="Check/ask microphone permission">Permission mic</button>
       <button id="btnRec" type="button" data-state="idle" disabled>Start recognition</button>
+      <button id="btnToggleMeta" type="button" data-state="0" title="Toggle meta line (time + language)">Meta: off</button>
     </div>
 
     <div id="status" class="status" hidden></div>
@@ -165,7 +171,7 @@
 
       <div>
         <div class="historyTitle">History</div>
-        <div id="history"></div>
+        <div id="history" data-show-meta="0"></div>
       </div>
     </div>
   </main>
@@ -179,6 +185,8 @@
     const btnPermission = document.getElementById('btnPermission');
     /** @type {HTMLButtonElement} */
     const btnRec = document.getElementById('btnRec');
+    /** @type {HTMLButtonElement} */
+    const btnToggleMeta = document.getElementById('btnToggleMeta');
 
     const elStatus = document.getElementById('status');
     const panel = document.getElementById('panel');
@@ -190,6 +198,10 @@
     let recognition = null;
     let isRecording = false;
     let micPermissionState = 'unknown'; // unknown | allowed | denied | unsupported
+    let _lastHistoryText = '';
+    let _lastHistoryAtMs = 0;
+
+    const SHOW_META_KEY = 'rec_voice_show_meta';
 
     function setStatus(msg, kind = 'info') {
       if (!msg) {
@@ -230,18 +242,28 @@
       }
     }
 
-    function autoScrollToBottom() {
-      // Keep the latest content visible
-      panel.scrollTop = panel.scrollHeight;
+    function scrollIfNearTop() {
+      // Keep latest segment + newest history visible, but don't yank user if they scroll down.
+      if (panel.scrollTop <= 40) panel.scrollTop = 0;
     }
 
     function setLatest(text) {
       const t = (text == null || String(text).trim() === '') ? '(empty)' : String(text);
       latestText.textContent = t;
-      autoScrollToBottom();
+      scrollIfNearTop();
     }
 
     function addHistoryItem(text, lang) {
+      const cleanText = (text == null) ? '' : String(text).trim();
+      if (!cleanText) return;
+
+      // Prevent double-add when stopping can trigger a final result too.
+      const now = Date.now();
+      const norm = cleanText.replace(/\s+/g, ' ');
+      if (_lastHistoryText === norm && (now - _lastHistoryAtMs) < 1500) return;
+      _lastHistoryText = norm;
+      _lastHistoryAtMs = now;
+
       const item = document.createElement('div');
       item.className = 'item';
 
@@ -257,13 +279,31 @@
       meta.appendChild(right);
 
       const body = document.createElement('div');
-      body.textContent = text;
+      body.textContent = cleanText;
 
       item.appendChild(meta);
       item.appendChild(body);
 
-      history.appendChild(item);
-      autoScrollToBottom();
+      // Newest on top
+      history.prepend(item);
+      scrollIfNearTop();
+    }
+
+    function setShowMeta(on) {
+      const v = on ? '1' : '0';
+      history.dataset.showMeta = v;
+      btnToggleMeta.dataset.state = v;
+      btnToggleMeta.textContent = on ? 'Meta: on' : 'Meta: off';
+      try { localStorage.setItem(SHOW_META_KEY, v); } catch { /* ignore */ }
+    }
+
+    function loadShowMetaSetting() {
+      try {
+        const v = localStorage.getItem(SHOW_META_KEY);
+        return v === '1';
+      } catch {
+        return false;
+      }
     }
 
     function setRecState(recording) {
@@ -421,6 +461,15 @@
         setRecState(false);
         return;
       }
+
+      // If user stops while interim text is visible, commit it into history.
+      // This matches: "after clicked stop lets add last text to history".
+      const latest = (latestText && latestText.textContent) ? String(latestText.textContent).trim() : '';
+      if (latest && latest !== '(empty)') {
+        addHistoryItem(latest, selLang.value);
+        setLatest('');
+      }
+
       try {
         recognition.stop();
       } catch {
@@ -438,6 +487,11 @@
       else await startRecognition();
     });
 
+    btnToggleMeta.addEventListener('click', () => {
+      const cur = history.dataset.showMeta === '1';
+      setShowMeta(!cur);
+    });
+
     selLang.addEventListener('change', () => {
       // Per spec: language affects recognition on next start.
       setStatus(`Language set to ${selLang.value}.`, 'info');
@@ -446,6 +500,9 @@
     // Init
     (async function init() {
       setLatest('');
+
+      // Default: meta hidden
+      setShowMeta(loadShowMetaSetting());
 
       // Basic support hints
       if (!SpeechRecognition) {

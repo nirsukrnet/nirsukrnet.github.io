@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>rec_voice — instrdoc (UI map)</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.4;
+      color: #111;
+    }
+
+    header {
+      max-width: 980px;
+      margin: 0 auto 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    h1 { margin: 0; font-size: 18px; }
+    .sub { opacity: 0.8; font-size: 13px; }
+
+    .note {
+      max-width: 980px;
+      margin: 0 auto 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px dashed #999;
+      background: color-mix(in srgb, #0ea5e9 10%, transparent);
+      font-size: 13px;
+    }
+
+    main { max-width: 980px; margin: 0 auto; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    label {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    select {
+      min-height: 40px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #999;
+      background: #fff;
+    }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    #btnPermission[data-state="unknown"] { color: #333; }
+    #btnPermission[data-state="allowed"] { color: #1a7f37; }
+    #btnPermission[data-state="denied"] { color: #b42318; }
+    #btnPermission[data-state="unsupported"] { color: #555; }
+
+    #btnRec[data-state="idle"] { color: #1d4ed8; }
+    #btnRec[data-state="recording"] {
+      color: #fff;
+      background-color: color-mix(in srgb, #b42318 85%, transparent);
+      border-color: color-mix(in srgb, #b42318 85%, transparent);
+    }
+
+    .status {
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px dashed #999;
+      background: color-mix(in srgb, #f59e0b 10%, transparent);
+    }
+
+    .panel {
+      border: 1px solid #999;
+      border-radius: 12px;
+      padding: 10px;
+      min-height: 220px;
+      max-height: min(70vh, 720px);
+      overflow-y: auto;
+      display: grid;
+      gap: 10px;
+      background: #fff;
+    }
+
+    .latest {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, #1d4ed8 35%, #999);
+      background: color-mix(in srgb, #1d4ed8 7%, transparent);
+    }
+
+    .latestTitle { font-size: 12px; opacity: 0.75; margin-bottom: 6px; }
+    #latestText { font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+
+    .historyTitle { font-size: 12px; opacity: 0.75; }
+
+    #history {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, #111 18%, #999);
+      background: color-mix(in srgb, #111 3%, transparent);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .meta {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      justify-content: space-between;
+      font-size: 12px;
+      opacity: 0.75;
+      margin-bottom: 4px;
+    }
+
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    /* Hover-help (popup) */
+    #helpPopup {
+      position: fixed;
+      z-index: 9999;
+      max-width: min(540px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, #111 35%, transparent);
+      background: color-mix(in srgb, #111 92%, transparent);
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      display: none;
+      pointer-events: none;
+      white-space: pre-wrap;
+    }
+
+    #helpPopup .t {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    #helpPopup .id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      opacity: 0.9;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .helpTarget {
+      outline: 2px solid color-mix(in srgb, #0ea5e9 70%, transparent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <header
+    data-help-title="A1. Header area"
+    data-help-id="<header>"
+    data-help-text="Container for page title and subtitle.\n\n- Title: <h1>rec_voice</h1>\n- Subtitle: .sub (environment note about HTTPS/localhost)"
+  >
+    <h1
+      data-help-title="A1. Header area (Title)"
+      data-help-id="<h1>"
+      data-help-text="Page heading (title).\nIn rec_voice it is: rec_voice."
+    >rec_voice</h1>
+    <div class="sub"
+      data-help-title="A1. Header area (Subtitle)"
+      data-help-id=".sub"
+      data-help-text="Subtitle note.\nImportant: mic access usually requires HTTPS or http://localhost (not file://)."
+    >Live microphone speech-to-text. Note: mic access usually requires HTTPS or <code>localhost</code>.</div>
+  </header>
+
+  <div class="note"
+    data-help-title="Instrdoc note"
+    data-help-id=".note"
+    data-help-text="This page is an instruction/demo UI map (UI logic only).\n\n- No real microphone permission is requested\n- No real speech recognition runs\n- Hover elements to see their definitions"
+  >
+    UI logic only: hover any element to see its definition (from instr_3.md). Buttons simulate states.
+  </div>
+
+  <main>
+    <div class="row"
+      data-help-title="A2. Controls row"
+      data-help-id=".row"
+      data-help-text="First row of controls inside <main>.\nContains language selector, mic permission button, and recognition start/stop button."
+    >
+      <label
+        data-help-title="A2.1 Language selector"
+        data-help-id="#selLang"
+        data-help-text="Select recognition language.\n\nValues:\n- uk-UA (Ukrainian)\n- en-US (English)\n- sv-SE (Swedish)\n\nBehavior: language is applied on the next recognition start (recognizer is recreated each start)."
+      >
+        Language:
+        <select id="selLang">
+          <option value="uk-UA">Ukrainian (uk-UA)</option>
+          <option value="en-US" selected>English (en-US)</option>
+          <option value="sv-SE">Swedish (sv-SE)</option>
+        </select>
+      </label>
+
+      <button id="btnPermission" type="button" data-state="unknown" title="Demo: toggle mic permission state"
+        data-help-title="A2.2 Microphone permission button"
+        data-help-id="#btnPermission"
+        data-help-text="Purpose: request/check microphone permission using getUserMedia({ audio: true }).\n\nState attribute:\n- data-state=unknown|allowed|denied|unsupported\n\nLabel behavior:\n- Permission mic (unknown)\n- Mic: allowed\n- Mic: denied\n- Mic: unsupported\n\nUX rule: while recognition is recording, this button is disabled to reduce confusion."
+      >Permission mic</button>
+
+      <button id="btnRec" type="button" data-state="idle" disabled
+        data-help-title="A2.3 Recognition start/stop button"
+        data-help-id="#btnRec"
+        data-help-text="Start/stop speech recognition.\n\nState attribute:\n- data-state=idle|recording\n\nLabel behavior:\n- Start recognition (idle)\n- Stop recognition (recording)\n\nEnabled/disabled logic:\n- Disabled if speech recognition is not supported\n- Disabled when mic permission is explicitly denied\n- Disabled while already recording"
+      >Start recognition</button>
+    </div>
+
+    <div id="status" class="status" hidden
+      data-help-title="B1. Status message strip"
+      data-help-id="#status"
+      data-help-text="Shows info/warn/ok messages (permission status, recognition start/stop, errors).\n\nVisibility:\n- hidden by default via the hidden attribute\n\nOptional dataset:\n- data-kind may be set by JS (info/warn/ok)."
+    ></div>
+
+    <div id="panel" class="panel" aria-label="Transcript output"
+      data-help-title="C1. Scrollable output panel"
+      data-help-id="#panel"
+      data-help-text="Scrollable transcript output panel.\nBehavior: auto-scrolls to the bottom when new content is added."
+    >
+      <div class="latest"
+        data-help-title="C2. Latest segment area"
+        data-help-id=".latest / #latestText"
+        data-help-text="Shows live/interim recognition text (“last frame of speaking”).\nDisplays (empty) if there is no current interim text."
+      >
+        <div class="latestTitle">Latest segment</div>
+        <div id="latestText">(empty)</div>
+      </div>
+
+      <div>
+        <div class="historyTitle"
+          data-help-title="C3. History area"
+          data-help-id="#history"
+          data-help-text="History list of finalized segments.\nEach item typically contains:\n- .meta (time + language)\n- body text of recognized final segment"
+        >History</div>
+        <div id="history"></div>
+      </div>
+    </div>
+  </main>
+
+  <div id="helpPopup" role="tooltip" aria-hidden="true">
+    <div class="t" id="helpTitle"></div>
+    <div class="id" id="helpId"></div>
+    <div id="helpText"></div>
+  </div>
+
+  <script>
+    "use strict";
+
+    // ------------------------------------------------------------
+    // Hover help popup
+    // ------------------------------------------------------------
+    const helpPopup = document.getElementById('helpPopup');
+    const helpTitle = document.getElementById('helpTitle');
+    const helpId = document.getElementById('helpId');
+    const helpText = document.getElementById('helpText');
+
+    let activeHelpEl = null;
+
+    function clamp(v, lo, hi) {
+      return Math.max(lo, Math.min(hi, v));
+    }
+
+    function showHelpFor(el, clientX, clientY) {
+      if (!el) return;
+      const title = el.getAttribute('data-help-title') || '';
+      const id = el.getAttribute('data-help-id') || '';
+      const text = el.getAttribute('data-help-text') || '';
+      if (!title && !text) return;
+
+      if (activeHelpEl && activeHelpEl !== el) {
+        activeHelpEl.classList.remove('helpTarget');
+      }
+      activeHelpEl = el;
+      activeHelpEl.classList.add('helpTarget');
+
+      helpTitle.textContent = title;
+      helpId.textContent = id;
+      helpText.textContent = text;
+
+      helpPopup.style.display = 'block';
+      helpPopup.setAttribute('aria-hidden', 'false');
+
+      positionHelp(clientX, clientY);
+    }
+
+    function hideHelp() {
+      helpPopup.style.display = 'none';
+      helpPopup.setAttribute('aria-hidden', 'true');
+      if (activeHelpEl) activeHelpEl.classList.remove('helpTarget');
+      activeHelpEl = null;
+    }
+
+    function positionHelp(clientX, clientY) {
+      const pad = 12;
+      const offset = 14;
+
+      // Temporarily place to measure
+      helpPopup.style.left = '0px';
+      helpPopup.style.top = '0px';
+
+      const rect = helpPopup.getBoundingClientRect();
+      const maxLeft = window.innerWidth - rect.width - pad;
+      const maxTop = window.innerHeight - rect.height - pad;
+
+      let x = clientX + offset;
+      let y = clientY + offset;
+
+      // If would overflow right/bottom, flip to left/up where possible
+      if (x > maxLeft) x = clientX - rect.width - offset;
+      if (y > maxTop) y = clientY - rect.height - offset;
+
+      x = clamp(x, pad, maxLeft);
+      y = clamp(y, pad, maxTop);
+
+      helpPopup.style.left = `${x}px`;
+      helpPopup.style.top = `${y}px`;
+    }
+
+    function attachHelp(el) {
+      el.addEventListener('mouseenter', (e) => {
+        showHelpFor(el, e.clientX, e.clientY);
+      });
+      el.addEventListener('mousemove', (e) => {
+        if (helpPopup.style.display === 'block') positionHelp(e.clientX, e.clientY);
+      });
+      el.addEventListener('mouseleave', () => {
+        hideHelp();
+      });
+
+      // keyboard accessibility (optional)
+      el.addEventListener('focus', (e) => {
+        const r = el.getBoundingClientRect();
+        showHelpFor(el, r.left + 12, r.top + 12);
+      });
+      el.addEventListener('blur', () => hideHelp());
+    }
+
+    // Attach help handlers to anything with help metadata
+    for (const el of document.querySelectorAll('[data-help-title], [data-help-text]')) {
+      attachHelp(el);
+    }
+
+    // ------------------------------------------------------------
+    // UI logic only (demo state simulation)
+    // ------------------------------------------------------------
+    const selLang = document.getElementById('selLang');
+    const btnPermission = document.getElementById('btnPermission');
+    const btnRec = document.getElementById('btnRec');
+    const elStatus = document.getElementById('status');
+    const latestText = document.getElementById('latestText');
+    const history = document.getElementById('history');
+
+    let micState = 'unknown'; // unknown | allowed | denied | unsupported
+    let recState = 'idle'; // idle | recording
+
+    function setStatus(msg, kind = 'info') {
+      if (!msg) {
+        elStatus.hidden = true;
+        elStatus.textContent = '';
+        delete elStatus.dataset.kind;
+        return;
+      }
+      elStatus.hidden = false;
+      elStatus.textContent = msg;
+      elStatus.dataset.kind = kind;
+    }
+
+    function setLatest(text) {
+      const t = (text == null || String(text).trim() === '') ? '(empty)' : String(text);
+      latestText.textContent = t;
+      const panel = document.getElementById('panel');
+      panel.scrollTop = panel.scrollHeight;
+    }
+
+    function addHistoryItem(text) {
+      const item = document.createElement('div');
+      item.className = 'item';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+
+      const left = document.createElement('span');
+      left.textContent = new Date().toLocaleTimeString();
+      const right = document.createElement('span');
+      right.textContent = selLang.value;
+
+      meta.appendChild(left);
+      meta.appendChild(right);
+
+      const body = document.createElement('div');
+      body.textContent = text;
+
+      item.appendChild(meta);
+      item.appendChild(body);
+      history.appendChild(item);
+
+      const panel = document.getElementById('panel');
+      panel.scrollTop = panel.scrollHeight;
+    }
+
+    function updatePermissionUI() {
+      btnPermission.dataset.state = micState;
+
+      if (micState === 'allowed') btnPermission.textContent = 'Mic: allowed';
+      else if (micState === 'denied') btnPermission.textContent = 'Mic: denied';
+      else if (micState === 'unsupported') btnPermission.textContent = 'Mic: unsupported';
+      else btnPermission.textContent = 'Permission mic';
+
+      const speechSupported = true; // demo
+      const denied = (micState === 'denied');
+      const recording = (recState === 'recording');
+
+      btnRec.disabled = !speechSupported || denied || recording;
+    }
+
+    function updateRecUI() {
+      btnRec.dataset.state = recState;
+      if (recState === 'recording') {
+        btnRec.textContent = 'Stop recognition';
+        btnPermission.disabled = true;
+      } else {
+        btnRec.textContent = 'Start recognition';
+        btnPermission.disabled = false;
+      }
+
+      updatePermissionUI();
+    }
+
+    btnPermission.addEventListener('click', () => {
+      if (recState === 'recording') return;
+
+      // Simple cycle for demo
+      if (micState === 'unknown') micState = 'allowed';
+      else if (micState === 'allowed') micState = 'denied';
+      else if (micState === 'denied') micState = 'unknown';
+      else micState = 'unknown';
+
+      updatePermissionUI();
+
+      if (micState === 'allowed') setStatus('Demo: microphone permission granted.', 'ok');
+      else if (micState === 'denied') setStatus('Demo: microphone permission denied. (Enable it in browser/site settings.)', 'warn');
+      else setStatus('Demo: microphone permission state is unknown.', 'info');
+    });
+
+    btnRec.addEventListener('click', () => {
+      if (recState === 'recording') {
+        recState = 'idle';
+        updateRecUI();
+        addHistoryItem('Demo final phrase.');
+        setLatest('');
+        setStatus('Demo: recognition stopped.', 'info');
+        return;
+      }
+
+      // Start
+      if (micState !== 'allowed') {
+        setStatus('Demo: cannot start. Click “Permission mic” until Mic: allowed.', 'warn');
+        return;
+      }
+
+      recState = 'recording';
+      updateRecUI();
+      setLatest('Demo: speaking… (interim text)');
+      setStatus('Demo: recognition started.', 'ok');
+    });
+
+    selLang.addEventListener('change', () => {
+      setStatus(`Demo: language set to ${selLang.value}.`, 'info');
+    });
+
+    // Init
+    setLatest('');
+    setStatus('Hover elements to see definitions. Click Permission mic to enable Start recognition.', 'info');
+    updateRecUI();
+  </script>
+</body>
+</html>

@@ -1,81 +1,111 @@
-## Instr 2 — Add “Play mode” toggle (One / All)
+## UI areas reference (for screenshots)
+This file describes the main UI areas visible in the `yout_pl2.html` page screenshots.
+Use these names/IDs as a shared vocabulary for future instructions and development tasks.
 
-Goal: Add a UI toggle button that switches playback behavior between:
+---
 
-- **Play mode — One**: play only the currently selected transcript item, then stop.
-- **Play mode — All**: play from the current item and continue to the next items automatically.
+## A) Main page (base layout)
 
-### 1) Button behavior and label
+### A1. Top-right **Main menu** button
+- Element: `#btnMainMenu` (fixed position: top-right)
+- Purpose: opens the main “video list / tag filter” dialog (`#dlgMainMenu`).
 
-Add a new button (example id: `btnPlayMode`) with label format:
+### A2. YouTube player area
+- Wrapper: `#playerWrap`
+- Player mount: `#player`
+- Purpose: embedded YouTube IFrame Player.
 
-- `Play mode - One`
-- `Play mode - All`
+### A3. Control bar (main playback/tools row)
+- Container: `.row.controls`
+- Buttons:
+	- `#btnPlay` — Play/Pause (also shows time/state in some modes)
+	- `#btnMark1` — Mark line (short label: `Mr`)
+	- `#btnMrkOff` — Mark-off (label: `MOFF`)
+	- `#btnAIcopy` — Copy grammar prompt (label: `AI`)
+	- `#btnPasteAI` — Paste grammar response (label: `Resp`)
+	- `#btnMenu` — opens the local in-page menu dialog (`#dlgMenu`)
+- Note: this row can be “docked” to bottom via `body[data-controls-docked="1"]`.
 
-Clicking the button toggles the mode:
+### A4. Transcript panel (scrollable)
+- Container: `#transWrap` (scroll container)
+- List: `#transList` (list of transcript rows)
+- Purpose: shows transcript items for the current video; clicking a row typically jumps playback.
 
-- If label is `Play mode - One` and user clicks it → mode becomes **All** and label updates to `Play mode - All`.
-- If label is `Play mode - All` and user clicks it → mode becomes **One** and label updates to `Play mode - One`.
+### A5. Transcript row structure (inside `#transList`)
+Each transcript row is a `<li>` and may contain:
+- Timestamp `<small>` (can be hidden by `#transWrap[data-ts="0"]`)
+- Text lines:
+	- `.trLine` (line 1)
+	- `.trLine2` (line 2)
+- Highlight bar:
+	- `.highlight-explan` (a thin bar used for response/mark visualization)
 
-The button label must always reflect the **current active mode**.
+Row state attributes (used for styling and logic):
+- `data-active="1"` — current “now playing” line
+- `data-mark1="1"` — marked line
+- `data-resp="1"` — has response/explanation
 
-### 1.1) Button placement (IMPORTANT)
+---
 
-The new `btnPlayMode` button must be placed inside the menu dialog:
+## B) Dialogs / overlays
 
-- `<dialog id="dlgMenu"> ... </dialog>`
+### B1. Local Menu dialog (tools/settings)
+- Dialog: `#dlgMenu` (opened from `#btnMenu`)
+- Areas inside:
+	- Language row: `#langRow` (buttons to select edit/paste language)
+	- Actions:
+		- `#btnMenuPaste` — open paste transcript dialog (`#dlgTrans`)
+		- `#btnAddVideo` — open add video dialog (`#dlgAddVideo`)
+	- Playback display language selectors:
+		- `#langRowShow1` — language for transcript Line 1
+		- `#langRowShow2` — language for transcript Line 2
+	- Toggles/tools:
+		- `#btnMenuToggleTrans` — show/hide transcript panel
+		- `#btnMenuToggleTime` — show/hide time
+		- `#btnMenuToggleTransTime` — show/hide transcript timestamps
+		- `#btnMenuToggleControlsDock` — dock controls bottom
+		- `#btnPlayMode` — playback mode toggle
+		- `#btnMenuHome` — “Home” action
 
-Recommended location:
+### B2. Paste Transcript dialog
+- Dialog: `#dlgTrans`
+- Input:
+	- `#taTrans` — textarea for pasted transcript text
+	- `#transLangInfo` — shows current language/context
+- Actions:
+	- `#btnApplyTrans` — parse and apply transcript into UI
+	- `#btnSaveTrans` — save to Firebase
+	- `#transStatus` — status text
 
-- In the bottom menu buttons row (the row that contains `Hide transcription`, `Show time`, etc.),
-  next to those UI-toggle buttons.
+### B3. Response / Explanation dialog
+- Dialog: `#dlgResp` (has `data-mode="edit"|"html"`)
+- Areas:
+	- `#respInfo` — context info about current item
+	- Edit/Preview mode buttons: `#btnRespEdit`, `#btnRespHtml`
+	- `#taResp` — Markdown editor
+	- `#respPreview` — HTML preview output
+	- `#btnRespSave` — save response
+	- `#respStatus` — status text
 
-Reason: this is a UI setting, not a main playback control, so it should live in the menu.
+### B4. Main Menu dialog (video list + tag + filter)
+- Dialog: `#dlgMainMenu` (opened from `#btnMainMenu`)
+- Close button: `#btnMainMenuClose`
+- Tag buttons row: `#mainMenuTagRow`
+- Text filter input: `#inMainMenuShortFilter`
+- Status text: `#refVideosStatus`
+- Video list: `#refVideosList` (select a video to load)
 
-### 2) Playback semantics
+### B5. Add Video dialog
+- Dialog: `#dlgAddVideo`
+- Form: `#frmAddVideo`
+- Inputs:
+	- `#inIndentId`, `#inUrl`, `#inShortName`, `#inTitle`, `#inTag`, `#inOrder`, `#inDesc`
+- Save/status:
+	- `#btnSaveVideo`
+	- `#addVideoStatus`
 
-#### A) Play mode — One
+---
 
-When mode is **One**, pressing the Play/Pause button (`#btnPlay`) plays only the **current transcript item**:
-
-- Single click on `#btnPlay`:
-	- Start playing from the current item (the active transcript row `activeIndex`).
-	- Playback stops automatically at the end of this item.
-	- It must NOT automatically continue to the next item.
-
-- Double-click on a transcript row:
-	- Plays the selected item.
-	- Stops at the end of that item.
-	- Does NOT continue.
-
-Stopping criteria:
-
-- Define “end of item” as the start time of the next transcript item (i.e., `transcript[activeIndex + 1].t`),
-	or if there is no next item, then stop at video end.
-
-#### B) Play mode — All
-
-When mode is **All**, pressing `#btnPlay` plays continuously:
-
-- Start from the current item and continue automatically through subsequent items.
-- As playback time moves forward, the app should keep updating the active transcript row.
-
-### 3) Integration points
-
-- The toggle affects behavior of:
-	- `#btnPlay`
-	- “play selected line” actions (click/double-click on transcript rows)
-
-### 4) Acceptance checklist
-
-- Toggling the button switches between `Play mode - One` and `Play mode - All`.
-- In **One** mode: playing stops after the current item (does not continue).
-- In **All** mode: playing continues beyond the current item.
-- Double-clicking a transcript row plays that row; in **One** mode it stops at the end of that row.
-
-lets fix issue
-
-1) when in one mode dont jump after stop to the next item
-
-2) not work double click in one mode - not playing once item
-lets check it and fix
+## Notes for writing future instructions
+- Prefer referencing **area name + element id** (example: “A4 Transcript panel `#transWrap`”).
+- When describing a screenshot, mention what dialogs are open (B1–B5) and which row in A4 is active/marked/responded.
