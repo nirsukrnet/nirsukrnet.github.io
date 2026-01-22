@@ -2,7 +2,7 @@
 # Update request: rec_voice.html — Firebase “recording sessions” storage
 
 ## Goal
-Add a “recording session” selector into the existing compact menu (c_menu) in `rec_voice.html`, backed by Firebase RTDB.
+Add a “recording session” selector into a **separate main menu** placed in the **top-right corner** of `rec_voice.html`, backed by Firebase RTDB.
 
 Each session has:
 - A metadata record (title/description/updated time)
@@ -32,12 +32,12 @@ Path:
 - `ROOT + '/ref_rec_storage'`
 
 Shape:
-- `ROOT + '/ref_rec_storage/{item_id}' = { title, description, atupdate }`
+- `ROOT + '/ref_rec_storage/{item_id}' = { title, description, updateAt }`
 
 Fields:
 - `title` (string) — visible in UI list
 - `description` (string, optional)
-- `atupdate` (number, unix ms) — updated on create and on any change to this session’s data
+- `updateAt` (number, unix ms) — updated on create and on any change to this session’s data
 
 Notes:
 - Original note had `tittle`; use `title` in DB and UI.
@@ -56,12 +56,24 @@ Fields:
 
 Rules:
 - `{item_id}` MUST be the same key as the session key in `ref_rec_storage`.
-- `{entry_id}` can be a generated unique id (e.g. `crypto.randomUUID()` or timestamp+random).
+- `{entry_id}` MUST be a small **incremental numeric key** like `0..1..2..` (array-like approach), similar to `/youtube_transcripts/<videoId>/items`.
+
+Entry id allocation rule (client):
+- Load existing children under `ROOT + '/rec_storage_data/{item_id}'`
+- Compute `nextId = max(existingNumericKeys) + 1` (or `0` if empty)
+- Save the new entry to `.../{nextId}`
+
+Note:
+- This is not safe for concurrent writers without a transaction/lock; for now assume single-writer UI.
 
 ## UI/UX
 
 ### Location
-Put everything in the existing c_menu dialog (the “⋯” compact menu), not on the main row.
+Create a **separate main menu panel** anchored to the **top-right** of the page.
+
+Implementation note:
+- Use `position: fixed; top: <px>; right: <px>; z-index: 1000;` so it stays visible.
+- This menu replaces the compact menu (`c_menu`) for session selection.
 
 ### Components
 1) “Session” list
@@ -80,10 +92,13 @@ Default Title behavior:
 - Move cursor to the end of the Title input after setting default value.
 
 Create session Save behavior:
-- Generate a new `item_id`
+- Generate a new `item_id` using timestamp format: `DD-MM-YYYY_HH_mm_ss`
 - Write metadata to `ROOT + '/ref_rec_storage/{item_id}'`.
 - Set the newly created session as the active selection.
 - Load/clear history UI for this session (should be empty initially).
+
+Item id uniqueness:
+- If an `item_id` already exists (created in same second), append a short suffix: `DD-MM-YYYY_HH_mm_ss__2`, `__3`, etc.
 
 Cancel behavior:
 - Close dialog and keep previous selection unchanged.
@@ -103,15 +118,22 @@ Integrate with the current “E” (end phrase / commit) flow:
 If the UI supports “Clear selected” history items:
 - Each history item should keep a reference to `{entry_id}` (and `{item_id}` implicitly via current session).
 - On confirmed delete, remove items from UI AND delete corresponding `ROOT + '/rec_storage_data/{item_id}/{entry_id}'`.
-- Update session `atupdate` after deletion.
+- Update session `updateAt` after deletion.
 
 ## Loading / ordering
-- Order session list by `atupdate` descending (most recently used first).
+- Order session list by `updateAt` descending (most recently used first).
 - Order session items by `datetime` descending (newest first).
 
 ## Persistence (client)
-- Remember last selected `item_id` in `localStorage` (key e.g. `rec_voice:last_session_id`).
-- On page load, restore that selection if it still exists.
+Do NOT use `localStorage`.
+
+Persist last selected session into Firebase UI state under DB root:
+- Path: `ROOT + '/ui_state/rec_voice'`
+- Shape: `{ selected_session_id, updateAt }`
+
+Rules:
+- Whenever user changes session selection, write `selected_session_id` to UI state.
+- On page load, read UI state and restore that selection (if the session still exists).
 
 ## Errors / offline behavior
 - If Firebase is not available / user not signed-in:
@@ -120,45 +142,15 @@ If the UI supports “Clear selected” history items:
 - All Firebase failures should be shown in `#status` and logged to console.
 
 ## Acceptance criteria
-1) Session list appears in c_menu and is loaded from `ROOT + '/ref_rec_storage'`.
+1) Session selector appears in a fixed top-right main menu and is loaded from `ROOT + '/ref_rec_storage'`.
 2) `+ Create new one…` opens a dialog; Title defaults to `DD-MM-YYYY HH:mm` and cursor is at end.
-3) Creating a session writes metadata to `ref_rec_storage/{item_id}` and selects it.
+3) Creating a session uses `item_id = DD-MM-YYYY_HH_mm_ss`, writes metadata to `ref_rec_storage/{item_id}`, and selects it.
 4) Selecting a session loads and renders its stored phrase items from `rec_storage_data/{item_id}`.
-5) Clicking “E” with an active session saves the committed phrase into both UI history and Firebase.
-6) `atupdate` is updated whenever data for the session changes (create / save phrase / delete).
+5) Clicking “E” with an active session saves the committed phrase into both UI history and Firebase using `{entry_id}` incremental numeric keys.
+6) `updateAt` is updated whenever data for the session changes (create / save phrase / delete).
+
+7) Last selected session is restored from `ROOT + '/ui_state/rec_voice'` (no localStorage).
+- `{entry_id}` can be a generated unique id 
 
 
-======================================================
-======================================================
-======================================================
-======================================================
-======================================================
 
-
-lets fix this intr with this updates and corrections
-
-
-A) create separated main menu and paste it relative top right corner instead of compact menu (c_menu)
- (Add a “recording session” selector into the existing compact menu (c_menu) in `rec_voice.html`, backed by Firebase RTDB.)
-
-
-B)
-in 
-
-### 2) Session items
-Path:
-- `ROOT + '/rec_storage_data'`
-
-Rules:
-- `{item_id}` MUST be the same key as the session key in `ref_rec_storage`.
-- `{entry_id}` can be a generated unique id (e.g. `crypto.randomUUID()` or timestamp+random).
-
-fix - `{entry_id}` not use long key like `crypto.randomUUID()` instead use incriment like in /youtube_transcripts/32KtK2bLs4I/items
-
-from 0..9..etc array aproach
-
-C) 
-Create session Save behavior:
-- Generate a new `item_id`
-
-`item_id` = DD-MM-YYYY_HH_mm_ss

@@ -27,6 +27,46 @@
 
     main { max-width: 980px; margin: 0 auto; }
 
+    /* Top-right main menu (sessions) */
+    #mainMenu {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      display: none;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, #111 18%, #999);
+      background: color-mix(in srgb, #fff 92%, #111);
+      box-shadow: 0 10px 26px rgba(0,0,0,.10);
+      width: min(420px, calc(100vw - 24px));
+    }
+
+    #mainMenu .title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    #mainMenu .row {
+      margin: 0;
+      gap: 8px;
+    }
+
+    #selSession {
+      min-width: 240px;
+      width: 100%;
+    }
+
+    #mainMenu small {
+      opacity: 0.75;
+      font-size: 12px;
+    }
+
     .row {
       display: flex;
       gap: 10px;
@@ -176,15 +216,137 @@
     dialog::backdrop {
       background: rgba(0,0,0,.35);
     }
+
+    /* YouTube transcript items window */
+    .ytItems {
+      border: 1px solid color-mix(in srgb, #111 18%, #999);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+      margin: 0 0 12px;
+    }
+
+    .ytAllText {
+      border: 1px solid color-mix(in srgb, #111 14%, #999);
+      border-radius: 10px;
+      padding: 10px;
+      background: color-mix(in srgb, #111 2%, transparent);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: min(35vh, 360px);
+      overflow: auto;
+    }
+
+    .ytItemsHead {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .ytItemsTitle {
+      font-size: 12px;
+      opacity: 0.85;
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    #ytItemsList {
+      display: grid;
+      gap: 6px;
+    }
+
+    .ytItem {
+      border: 1px solid color-mix(in srgb, #111 14%, #999);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: color-mix(in srgb, #111 2%, transparent);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .ytItemMeta {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .ytLine {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .ytLine small {
+      min-width: 50px;
+      opacity: 0.75;
+    }
+
+    .ytLine2 {
+      padding-left: 60px;
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
+  <div id="mainMenu" aria-label="Main menu">
+    <div class="title">
+      <strong>Sessions</strong>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="btnSessionsReload" type="button" title="Reload sessions list" style="min-height:32px; padding:6px 10px;">Reload</button>
+        <button id="btnSessionsHide" type="button" title="Hide sessions panel" style="min-height:32px; padding:6px 10px;">×</button>
+      </div>
+    </div>
+    <div class="row" style="flex-wrap:nowrap;">
+      <label style="flex:1; width:100%;">
+        <span style="min-width:70px;">Session:</span>
+        <select id="selSession" aria-label="Session list" disabled>
+          <option value="">Loading…</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="row" style="flex-wrap:nowrap;">
+      <button id="btnRecYoutubeMenu" type="button" title="Choose YouTube reference video" style="min-height:32px; padding:6px 10px;">Menu</button>
+      <div style="flex:1; min-height:32px; display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+        <span style="opacity:.75; font-size:12px;">YouTube:</span>
+        <strong id="sessionYoutubeName" style="font-size:12px; font-weight:600;">(none)</strong>
+      </div>
+    </div>
+    <small id="sessionHint">Firebase not ready</small>
+  </div>
+
+  <button id="btnSessionsShow" type="button" title="Toggle sessions panel" style="position:fixed; top:12px; right:12px; z-index:1001; min-height:32px; padding:6px 10px; border-radius:999px;">Sessions</button>
+
   <header>
     <h1>rec_voice</h1>
     <div class="sub">Live microphone speech-to-text. Note: mic access usually requires HTTPS or <code>localhost</code>.</div>
   </header>
 
   <main>
+    <section class="ytItems" aria-label="Transcript items">
+      <div class="ytItemsHead">
+        <div class="ytItemsTitle">
+          <strong>Transcript items</strong>
+          <span style="opacity:.75;">(3)</span>
+          <span id="ytItemsStart" style="opacity:.75;">start: 0</span>
+          <span id="ytItemsLangInfo" style="opacity:.75;"></span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="btnYtBeg" type="button" title="Go to beginning" style="min-height:32px; padding:6px 10px;" disabled>Beg</button>
+          <button id="btnYtPrev" type="button" title="Previous" style="min-height:32px; padding:6px 10px;" disabled>Prev</button>
+          <button id="btnYtNext" type="button" title="Next" style="min-height:32px; padding:6px 10px;" disabled>Next</button>
+        </div>
+      </div>
+      <div id="ytItemsStatus" class="sub" style="margin:0 0 8px;"></div>
+      <div id="ytItemsList" class="ytAllText"></div>
+    </section>
+
     <div class="row">
       <label>
         Language:
@@ -245,6 +407,52 @@
     </form>
   </dialog>
 
+  <dialog id="dlgCreateSession">
+    <form method="dialog">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <strong>Create session</strong>
+        <button value="cancel" aria-label="Close" title="Close">Close</button>
+      </div>
+
+      <div style="display:grid; gap:8px; margin-top:10px;">
+        <label style="display:grid; gap:6px; align-items:start;">
+          <span>Title</span>
+          <input id="inpSessionTitle" type="text" style="min-height:40px; padding:8px 10px; border-radius:10px; border:1px solid #999;" />
+        </label>
+        <label style="display:grid; gap:6px; align-items:start;">
+          <span>Description</span>
+          <textarea id="inpSessionDesc" rows="3" style="padding:8px 10px; border-radius:10px; border:1px solid #999;"></textarea>
+        </label>
+      </div>
+
+      <div class="row" style="margin:12px 0 0; justify-content:flex-end;">
+        <button id="btnCreateSessionCancel" value="cancel">Cancel</button>
+        <button id="btnCreateSessionSave" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgRecYoutubeMenu">
+    <form method="dialog">
+      <button value="cancel" aria-label="Close" title="Close"
+        style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">
+        ×
+      </button>
+
+      <strong>YouTube menu</strong>
+      <div class="sub" style="margin:6px 0 10px;">Choose a reference video to attach to the current session.</div>
+
+      <div class="row" style="margin:0 0 10px;">
+        <input id="inRecYoutubeFilter" placeholder="type to filter" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+      </div>
+
+      <div id="recYoutubeStatus" class="sub" style="margin:0 0 10px;"></div>
+      <ul id="recYoutubeList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
+    </form>
+  </dialog>
+
+  <script src="./yout_pl2/yu2_global_var.js"></script>
+
   <script>
     "use strict";
 
@@ -271,10 +479,52 @@
     /** @type {HTMLButtonElement} */
     const btnClearSelected = document.getElementById('btnClearSelected');
 
+    /** @type {HTMLSelectElement} */
+    const selSession = document.getElementById('selSession');
+    /** @type {HTMLButtonElement} */
+    const btnSessionsReload = document.getElementById('btnSessionsReload');
+    /** @type {HTMLButtonElement} */
+    const btnSessionsHide = document.getElementById('btnSessionsHide');
+    /** @type {HTMLButtonElement} */
+    const btnSessionsShow = document.getElementById('btnSessionsShow');
+    const sessionHint = document.getElementById('sessionHint');
+
+    /** @type {HTMLButtonElement} */
+    const btnRecYoutubeMenu = document.getElementById('btnRecYoutubeMenu');
+    const sessionYoutubeName = document.getElementById('sessionYoutubeName');
+    /** @type {HTMLDialogElement} */
+    const dlgRecYoutubeMenu = document.getElementById('dlgRecYoutubeMenu');
+    /** @type {HTMLInputElement} */
+    const inRecYoutubeFilter = document.getElementById('inRecYoutubeFilter');
+    const recYoutubeStatus = document.getElementById('recYoutubeStatus');
+    const recYoutubeList = document.getElementById('recYoutubeList');
+
+    /** @type {HTMLDialogElement} */
+    const dlgCreateSession = document.getElementById('dlgCreateSession');
+    /** @type {HTMLInputElement} */
+    const inpSessionTitle = document.getElementById('inpSessionTitle');
+    /** @type {HTMLTextAreaElement} */
+    const inpSessionDesc = document.getElementById('inpSessionDesc');
+    /** @type {HTMLButtonElement} */
+    const btnCreateSessionSave = document.getElementById('btnCreateSessionSave');
+    /** @type {HTMLButtonElement} */
+    const btnCreateSessionCancel = document.getElementById('btnCreateSessionCancel');
+
     const elStatus = document.getElementById('status');
     const panel = document.getElementById('panel');
     const latestText = document.getElementById('latestText');
     const history = document.getElementById('history');
+
+    /** @type {HTMLButtonElement} */
+    const btnYtBeg = document.getElementById('btnYtBeg');
+    /** @type {HTMLButtonElement} */
+    const btnYtPrev = document.getElementById('btnYtPrev');
+    /** @type {HTMLButtonElement} */
+    const btnYtNext = document.getElementById('btnYtNext');
+    const ytItemsStatus = document.getElementById('ytItemsStatus');
+    const ytItemsList = document.getElementById('ytItemsList');
+    const ytItemsStart = document.getElementById('ytItemsStart');
+    const ytItemsLangInfo = document.getElementById('ytItemsLangInfo');
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -285,7 +535,440 @@
     let _lastHistoryAtMs = 0;
     let accumulatedFinalText = '';
 
+    // Firebase sessions state
+    const SESSION_CREATE_VALUE = '__create__';
+    let fbReady = false;
+    let activeSessionId = '';
+    let sessionsIndex = []; // [{id,title,description,updatedAt,youtube_ids}]
+    let nextEntryId = 0;
+
+    // Ref videos cache (from DB_CONST_REF_YOUTUBE_VIDEOS)
+    let refVideosCache = []; // [{indent_id, short_name, title, url, order, tag}]
+    let refVideosById = new Map();
+
+    // YouTube transcript viewer state
+    let ytStartIndex = 0;
+    let ytLastVideoId = '';
+    let ytLoadSeq = 0;
+    let ytLang1Show = '';
+    let ytLang2Show = '';
+
     const SHOW_META_KEY = 'rec_voice_show_meta';
+
+    function pad2(n) {
+      const x = Number(n);
+      return String(Number.isFinite(x) ? x : 0).padStart(2, '0');
+    }
+
+    function formatTitleDefault(now = new Date()) {
+      return `${pad2(now.getDate())}-${pad2(now.getMonth() + 1)}-${now.getFullYear()} ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    }
+
+    function formatItemId(now = new Date()) {
+      return `${pad2(now.getDate())}-${pad2(now.getMonth() + 1)}-${now.getFullYear()}_${pad2(now.getHours())}_${pad2(now.getMinutes())}_${pad2(now.getSeconds())}`;
+    }
+
+    function ensureGv() {
+      if (window.gv && window.gv.URL_DS && window.gv.cst && typeof window.gv.cst.getcst === 'function') return window.gv;
+      const GVClass = (typeof GlobalVars === 'function')
+        ? GlobalVars
+        : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+          ? globalThis.GlobalVars
+          : (typeof window.GlobalVars === 'function')
+            ? window.GlobalVars
+            : null;
+      if (!GVClass) throw new Error('GlobalVars is not available (yu2_global_var.js not loaded)');
+      const gv = new GVClass();
+      window.gv = gv;
+      return gv;
+    }
+
+    async function ensureSignedIn() {
+      const gv = ensureGv();
+      if (gv.URL_DS && gv.URL_DS.idToken) return;
+      if (typeof gv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+      await gv.SignIn_User();
+    }
+
+    function requestByPath(addurl, method = 'GET', body = null) {
+      return new Promise((resolve, reject) => {
+        try {
+          const gv = ensureGv();
+          const ObjRequest = gv.URL_DS.GetObjForRequest();
+          ObjRequest.addUrl = addurl;
+          ObjRequest.ametod = method;
+          ObjRequest.vobj = body;
+          ObjRequest.CallBackFunction = function(vdata) { resolve(vdata); };
+          ObjRequest.ErrorCallback = function(err) { reject(err || new Error('request failed')); };
+          gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    function getDbRoot() {
+      try {
+        const gv = window.gv;
+        const fromCst = (gv && gv.cst && typeof gv.cst.getcst === 'function') ? gv.cst.getcst('DB_CONST_DB_YOUTUBE2_ROOT') : '';
+        const fromWin = (window.YT_DB_CONST && typeof window.YT_DB_CONST.DB_YOUTUBE2_ROOT === 'string') ? window.YT_DB_CONST.DB_YOUTUBE2_ROOT : '';
+        return String(fromCst || fromWin || '../db_youtube2');
+      } catch {
+        return '../db_youtube2';
+      }
+    }
+
+    function getPaths() {
+      const ROOT = getDbRoot();
+      return {
+        ROOT,
+        REF_REC_STORAGE: `${ROOT}/ref_rec_storage`,
+        REC_STORAGE_DATA: `${ROOT}/rec_storage_data`,
+        UI_STATE_REC_VOICE: `${ROOT}/ui_state/rec_voice`,
+        YOUTUBE_TRANSCRIPTS: `${ROOT}/youtube_transcripts`,
+      };
+    }
+
+    function setSessionUiReady(ready, hint) {
+      fbReady = Boolean(ready);
+      selSession.disabled = !fbReady;
+      btnSessionsReload.disabled = !fbReady;
+      sessionHint.textContent = hint || (fbReady ? 'Ready' : 'Firebase not ready');
+    }
+
+    function nowIso() {
+      try { return new Date().toISOString(); } catch { return String(Date.now()); }
+    }
+
+    function safeParseIsoToMs(iso) {
+      const t = Date.parse(String(iso || ''));
+      return Number.isFinite(t) ? t : NaN;
+    }
+
+    function getSessionMeta(sessionId) {
+      const sid = String(sessionId || '');
+      return sessionsIndex.find(x => x && x.id === sid) || null;
+    }
+
+    function updateSessionYoutubeLabel() {
+      const meta = getSessionMeta(activeSessionId);
+      const vid = meta && typeof meta.youtube_ids === 'string' ? meta.youtube_ids : '';
+      if (!vid) {
+        sessionYoutubeName.textContent = '(none)';
+        return;
+      }
+      const rec = refVideosById.get(vid);
+      const shortName = rec && typeof rec.short_name === 'string' ? rec.short_name.trim() : '';
+      sessionYoutubeName.textContent = shortName || vid;
+    }
+
+    function setYtItemsStatus(msg) {
+      ytItemsStatus.textContent = msg || '';
+    }
+
+    function getActiveYoutubeId() {
+      const meta = getSessionMeta(activeSessionId);
+      return (meta && typeof meta.youtube_ids === 'string') ? meta.youtube_ids.trim() : '';
+    }
+
+    function cleanLangCode(x) {
+      const s = (x == null) ? '' : String(x).trim().toLowerCase();
+      if (!s) return '';
+      if (!/^[a-z]{2,3}$/.test(s)) return '';
+      return s;
+    }
+
+    function setYtLangInfo(l1, l2) {
+      const a = cleanLangCode(l1);
+      const b = cleanLangCode(l2);
+      if (!ytItemsLangInfo) return;
+      if (!a) {
+        ytItemsLangInfo.textContent = '';
+        return;
+      }
+      if (b && b !== a) ytItemsLangInfo.textContent = `(${a} + ${b})`;
+      else ytItemsLangInfo.textContent = `(${a})`;
+    }
+
+    function langFromSelValue(selValue) {
+      const raw = (selValue == null) ? '' : String(selValue);
+      const base = raw.split('-')[0];
+      const code = cleanLangCode(base);
+      return code || '';
+    }
+
+    function getRowTextLikeYoutPl2(row, langCode) {
+      const code = cleanLangCode(langCode);
+      if (row && code) {
+        const v = row[`text_${code}`];
+        if (typeof v === 'string' && v.trim()) return v.trim();
+      }
+      const legacy = row && row.text;
+      if (typeof legacy === 'string' && legacy.trim()) return legacy.trim();
+      return '';
+    }
+
+    async function loadYoutPl2LangSettings() {
+      // Read display language settings from yout_pl2 UI state in Firebase.
+      // Use the same storage used by yout_pl2.html: DB_CONST_UI_STATE_YOUT_PL2
+      try {
+        const gv = ensureGv();
+        const path = gv.cst.getcst('DB_CONST_UI_STATE_YOUT_PL2');
+        if (!path) return { lang1: '', lang2: '' };
+        const data = await requestByPath(path, 'GET');
+        const lang1 = cleanLangCode(data && data.lang1_show);
+        // lang2_show may be intentionally empty (Off)
+        let lang2 = '';
+        try {
+          if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'lang2_show')) {
+            lang2 = cleanLangCode(data.lang2_show) || '';
+          }
+        } catch {}
+        return { lang1, lang2 };
+      } catch {
+        return { lang1: '', lang2: '' };
+      }
+    }
+
+    function renderTranscriptText3(text) {
+      ytItemsList.textContent = text || '';
+    }
+
+    async function loadTranscriptItemsWindow(opts = {}) {
+      const seq = ++ytLoadSeq;
+      const requestedStart = Number.isFinite(Number(opts.startIndex)) ? Number(opts.startIndex) : ytStartIndex;
+      ytStartIndex = Math.max(0, Math.floor(requestedStart));
+      if (ytItemsStart) ytItemsStart.textContent = `start: ${ytStartIndex}`;
+
+      const vid = getActiveYoutubeId();
+      const canNav = fbReady && !!vid;
+      btnYtBeg.disabled = !canNav;
+      btnYtPrev.disabled = !canNav || (ytStartIndex === 0);
+      btnYtNext.disabled = !canNav;
+
+      if (!vid) {
+        ytLastVideoId = '';
+        setYtLangInfo('', '');
+        setYtItemsStatus('Select YouTube video to view transcript items.');
+        renderTranscriptText3('');
+        return;
+      }
+
+      if (!fbReady) {
+        ytLastVideoId = vid;
+        setYtLangInfo('', '');
+        setYtItemsStatus('Firebase not ready.');
+        renderTranscriptText3('');
+        return;
+      }
+
+      setYtItemsStatus('Loading…');
+      const { lang1, lang2 } = await loadYoutPl2LangSettings();
+      ytLang1Show = lang1 || 'sv';
+      ytLang2Show = (lang2 && lang2 !== ytLang1Show) ? lang2 : 'en';
+      setYtLangInfo(ytLang1Show, ytLang2Show);
+
+      const { YOUTUBE_TRANSCRIPTS } = getPaths();
+      const idx = [ytStartIndex, ytStartIndex + 1, ytStartIndex + 2, ytStartIndex + 3];
+      const results = await Promise.all(idx.map(async (i) => {
+        try {
+          const v = await requestByPath(`${YOUTUBE_TRANSCRIPTS}/${vid}/items/${i}`, 'GET');
+          return { ok: true, index: i, value: v };
+        } catch {
+          return { ok: false, index: i, value: null };
+        }
+      }));
+
+      if (seq !== ytLoadSeq) return;
+
+      const rows = results.slice(0, 3).filter(r => r.ok && r.value != null).map(r => r.value);
+      const lookahead = results[3];
+
+      ytLastVideoId = vid;
+
+      if (!rows.length) {
+        setYtItemsStatus('(no items at this position)');
+        renderTranscriptText3('');
+      } else {
+        const part1 = [];
+        const part2 = [];
+        for (const row of rows) {
+          const a = getRowTextLikeYoutPl2(row, ytLang1Show);
+          const b = ytLang2Show ? getRowTextLikeYoutPl2(row, ytLang2Show) : '';
+          if (a) part1.push(a);
+          if (b) part2.push(b);
+        }
+
+        let text = part1.join('\n');
+        if (part2.length) text = `${text}\n\n${part2.join('\n')}`;
+        setYtItemsStatus('');
+        renderTranscriptText3(text);
+      }
+
+      btnYtPrev.disabled = (ytStartIndex === 0);
+      const hasNext = Boolean(lookahead && lookahead.ok && lookahead.value != null);
+      btnYtNext.disabled = !hasNext;
+      btnYtBeg.disabled = false;
+    }
+
+    function setRecYoutubeStatus(msg) {
+      recYoutubeStatus.textContent = msg || '';
+    }
+
+    function cleanStr(x) {
+      return (x == null) ? '' : String(x).trim();
+    }
+
+    function renderRefVideosList(filterText) {
+      const f = cleanStr(filterText).toLowerCase();
+      recYoutubeList.innerHTML = '';
+      const list = (refVideosCache || []).filter(v => {
+        if (!f) return true;
+        const s = `${cleanStr(v.short_name)} ${cleanStr(v.title)} ${cleanStr(v.indent_id)} ${cleanStr(v.tag)}`.toLowerCase();
+        return s.includes(f);
+      });
+
+      if (!list.length) {
+        const li = document.createElement('li');
+        li.textContent = '(no matches)';
+        li.style.opacity = '0.7';
+        recYoutubeList.appendChild(li);
+        return;
+      }
+
+      for (const v of list) {
+        const li = document.createElement('li');
+        li.style.display = 'flex';
+        li.style.gap = '10px';
+        li.style.alignItems = 'center';
+        li.style.justifyContent = 'space-between';
+        li.style.border = '1px solid color-mix(in srgb, #111 18%, #999)';
+        li.style.borderRadius = '10px';
+        li.style.padding = '8px 10px';
+
+        const left = document.createElement('div');
+        left.style.display = 'grid';
+        left.style.gap = '2px';
+
+        const nm = document.createElement('strong');
+        nm.style.fontSize = '13px';
+        nm.textContent = cleanStr(v.short_name) || cleanStr(v.title) || cleanStr(v.indent_id);
+
+        const meta = document.createElement('div');
+        meta.style.fontSize = '12px';
+        meta.style.opacity = '0.75';
+        meta.textContent = cleanStr(v.indent_id);
+
+        left.appendChild(nm);
+        left.appendChild(meta);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Select';
+        btn.style.minHeight = '32px';
+        btn.style.padding = '6px 10px';
+        btn.addEventListener('click', () => onSelectRefVideo(v));
+
+        li.appendChild(left);
+        li.appendChild(btn);
+        recYoutubeList.appendChild(li);
+      }
+    }
+
+    async function loadRefVideos() {
+      const gv = ensureGv();
+      const refPath = gv.cst.getcst('DB_CONST_REF_YOUTUBE_VIDEOS');
+      if (!refPath) throw new Error('DB_CONST_REF_YOUTUBE_VIDEOS missing');
+      const data = await requestByPath(refPath, 'GET');
+      const list = [];
+      if (data && typeof data === 'object') {
+        for (const v of Object.values(data)) {
+          if (!v || typeof v !== 'object') continue;
+          const indent_id = cleanStr(v.indent_id);
+          if (!indent_id) continue;
+          list.push({
+            indent_id,
+            short_name: cleanStr(v.short_name),
+            title: cleanStr(v.title),
+            url: cleanStr(v.url),
+            tag: cleanStr(v.tag),
+            order: Number(v.order)
+          });
+        }
+      }
+      list.sort((a, b) => {
+        const ao = Number.isFinite(a.order) ? a.order : 9999;
+        const bo = Number.isFinite(b.order) ? b.order : 9999;
+        return (ao - bo) || cleanStr(a.short_name || a.title || a.indent_id).localeCompare(cleanStr(b.short_name || b.title || b.indent_id));
+      });
+      refVideosCache = list;
+      refVideosById = new Map(list.map(x => [x.indent_id, x]));
+      updateSessionYoutubeLabel();
+      return list;
+    }
+
+    async function openRecYoutubeMenu() {
+      if (!fbReady) {
+        setStatus('Firebase not ready.', 'warn');
+        return;
+      }
+      try {
+        setRecYoutubeStatus('Loading…');
+        await loadRefVideos();
+        setRecYoutubeStatus('');
+        renderRefVideosList(inRecYoutubeFilter.value);
+        try { dlgRecYoutubeMenu.showModal(); } catch { /* ignore */ }
+      } catch (err) {
+        setRecYoutubeStatus(`Failed to load ref videos: ${String(err)}`);
+        try { dlgRecYoutubeMenu.showModal(); } catch { /* ignore */ }
+      }
+    }
+
+    async function onSelectRefVideo(v) {
+      const sid = activeSessionId;
+      if (!sid) {
+        setStatus('Select or create a session first.', 'info');
+        return;
+      }
+      const vid = cleanStr(v && v.indent_id);
+      if (!vid) return;
+
+      const { REF_REC_STORAGE } = getPaths();
+      const patch = { youtube_ids: vid, updatedAt: nowIso() };
+      await requestByPath(`${REF_REC_STORAGE}/${sid}`, 'PATCH', patch);
+
+      // Update local cache
+      const meta = getSessionMeta(sid);
+      if (meta) {
+        meta.youtube_ids = vid;
+        meta.updatedAt = patch.updatedAt;
+      }
+      // Re-sort sessions (updatedAt changed)
+      sessionsIndex.sort((a, b) => {
+        const ta = safeParseIsoToMs(a && a.updatedAt);
+        const tb = safeParseIsoToMs(b && b.updatedAt);
+        return (tb - ta) || cleanStr(a.title).localeCompare(cleanStr(b.title));
+      });
+
+      renderSessionsSelect(sid);
+      updateSessionYoutubeLabel();
+      ytStartIndex = 0;
+      loadTranscriptItemsWindow({ startIndex: 0 });
+      setStatus('YouTube attached to session.', 'ok');
+      try { dlgRecYoutubeMenu.close('selected'); } catch { /* ignore */ }
+    }
+
+    function setSessionsPanelVisible(visible) {
+      const on = Boolean(visible);
+      const panelEl = document.getElementById('mainMenu');
+      // Note: #mainMenu is display:none in CSS by default, so we must explicitly
+      // set a visible display mode when opening.
+      if (panelEl) panelEl.style.display = on ? 'grid' : 'none';
+      if (btnSessionsShow) {
+        btnSessionsShow.dataset.open = on ? '1' : '0';
+        btnSessionsShow.title = on ? 'Hide sessions panel' : 'Show sessions panel';
+      }
+    }
 
     function setStatus(msg, kind = 'info') {
       if (!msg) {
@@ -337,7 +1020,7 @@
       scrollIfNearTop();
     }
 
-    function addHistoryItem(text, lang) {
+    function addHistoryItem(text, lang, datetimeMs = null, entryId = null) {
       const cleanText = (text == null) ? '' : String(text).trim();
       if (!cleanText) return;
 
@@ -359,7 +1042,8 @@
       meta.className = 'meta';
 
       const left = document.createElement('span');
-      left.textContent = new Date().toLocaleTimeString();
+      const at = (datetimeMs && Number.isFinite(Number(datetimeMs))) ? new Date(Number(datetimeMs)) : new Date();
+      left.textContent = at.toLocaleTimeString();
       const right = document.createElement('span');
       right.textContent = lang || '';
 
@@ -389,11 +1073,15 @@
       item.appendChild(head);
       item.appendChild(body);
 
+      if (entryId != null && entryId !== '') item.dataset.entryId = String(entryId);
+
       // Newest on top
       history.prepend(item);
       scrollIfNearTop();
 
       refreshClearSelectedUI();
+
+      return item;
     }
 
     function refreshClearSelectedUI() {
@@ -596,10 +1284,17 @@
         return;
       }
 
-      addHistoryItem(latest, selLang.value);
+      const el = addHistoryItem(latest, selLang.value, Date.now(), null);
+      if (!activeSessionId) {
+        setStatus('Committed locally. Select or create a session to save to Firebase.', 'info');
+      } else if (!fbReady) {
+        setStatus('Committed locally. Firebase not ready.', 'warn');
+      } else {
+        savePhraseToActiveSession(latest, selLang.value, el);
+        setStatus('Committed (E) and saving to Firebase…', 'ok');
+      }
       accumulatedFinalText = '';
       setLatest('');
-      setStatus('Committed to history (E).', 'ok');
     });
 
     btnCMenu.addEventListener('click', () => {
@@ -623,11 +1318,345 @@
 
     btnConfirmDelete.addEventListener('click', (e) => {
       const selected = Array.from(history.querySelectorAll('.item[data-selected="1"]'));
-      for (const el of selected) el.remove();
+
+      (async () => {
+        // Best-effort Firebase delete (only if item has entryId + session active)
+        const sid = activeSessionId;
+        if (fbReady && sid) {
+          const { REC_STORAGE_DATA, REF_REC_STORAGE } = getPaths();
+          const entryIds = selected
+            .map(el => (el && el.dataset && el.dataset.entryId) ? String(el.dataset.entryId) : '')
+            .filter(x => x !== '');
+
+          if (entryIds.length) {
+            try {
+              for (const entryId of entryIds) {
+                await requestByPath(`${REC_STORAGE_DATA}/${sid}/${entryId}`, 'DELETE');
+              }
+              await requestByPath(`${REF_REC_STORAGE}/${sid}`, 'PATCH', { updatedAt: nowIso() });
+            } catch (err) {
+              setStatus(`Firebase delete failed: ${String(err)}`, 'warn');
+            }
+          }
+        }
+
+        for (const el of selected) el.remove();
+        refreshClearSelectedUI();
+        setStatus(`Deleted ${selected.length} item(s).`, 'ok');
+        e.preventDefault();
+        try { dlgConfirmDelete.close('confirm'); } catch { /* ignore */ }
+      })();
+    });
+
+    async function loadSessionsIndex() {
+      const { REF_REC_STORAGE } = getPaths();
+      const data = await requestByPath(REF_REC_STORAGE, 'GET');
+      const list = [];
+      const toMigrate = [];
+
+      if (data && typeof data === 'object') {
+        for (const [id, v] of Object.entries(data)) {
+          if (!id) continue;
+          const title = (v && typeof v.title === 'string') ? v.title : id;
+          const description = (v && typeof v.description === 'string') ? v.description : '';
+          const youtube_ids = (v && typeof v.youtube_ids === 'string') ? v.youtube_ids : '';
+
+          let updatedAt = (v && typeof v.updatedAt === 'string') ? v.updatedAt : '';
+          const t = safeParseIsoToMs(updatedAt);
+          if (!Number.isFinite(t)) {
+            // Legacy migration: derive updatedAt from atupdate if possible, else now.
+            const legacyAt = Number(v && v.atupdate);
+            if (Number.isFinite(legacyAt) && legacyAt > 0) updatedAt = new Date(legacyAt).toISOString();
+            else updatedAt = nowIso();
+            toMigrate.push({ id, updatedAt });
+          }
+
+          list.push({ id, title, description, youtube_ids, updatedAt });
+        }
+      }
+
+      // Lazy migrate missing/invalid updatedAt (do not use atupdate for sorting)
+      if (toMigrate.length) {
+        for (const it of toMigrate) {
+          try {
+            await requestByPath(`${REF_REC_STORAGE}/${it.id}`, 'PATCH', { updatedAt: it.updatedAt });
+          } catch (e) {
+            console.warn('[rec_voice] updatedAt migration failed', it.id, e);
+          }
+        }
+      }
+
+      list.sort((a, b) => {
+        const ta = safeParseIsoToMs(a && a.updatedAt);
+        const tb = safeParseIsoToMs(b && b.updatedAt);
+        return (tb - ta) || String(a.title).localeCompare(String(b.title));
+      });
+      sessionsIndex = list;
+      updateSessionYoutubeLabel();
+      return list;
+    }
+
+    function renderSessionsSelect(selectedId) {
+      const prev = String(selectedId || '');
+      selSession.innerHTML = '';
+
+      const optCreate = document.createElement('option');
+      optCreate.value = SESSION_CREATE_VALUE;
+      optCreate.textContent = '+ Create new one…';
+      selSession.appendChild(optCreate);
+
+      if (!sessionsIndex.length) {
+        const optEmpty = document.createElement('option');
+        optEmpty.value = '';
+        optEmpty.textContent = '(no sessions)';
+        selSession.appendChild(optEmpty);
+      } else {
+        for (const it of sessionsIndex) {
+          const opt = document.createElement('option');
+          opt.value = it.id;
+          opt.textContent = it.title || it.id;
+          selSession.appendChild(opt);
+        }
+      }
+
+      if (prev && sessionsIndex.some(x => x.id === prev)) selSession.value = prev;
+      else selSession.value = SESSION_CREATE_VALUE;
+    }
+
+    async function loadUiStateSelection() {
+      const { UI_STATE_REC_VOICE } = getPaths();
+      try {
+        const data = await requestByPath(UI_STATE_REC_VOICE, 'GET');
+        const sid = (data && typeof data.selected_session_id === 'string') ? data.selected_session_id : '';
+        return sid;
+      } catch {
+        return '';
+      }
+    }
+
+    async function saveUiStateSelection(sessionId) {
+      const { UI_STATE_REC_VOICE } = getPaths();
+      await requestByPath(UI_STATE_REC_VOICE, 'PUT', { selected_session_id: String(sessionId || ''), atupdate: Date.now() });
+    }
+
+    function clearHistoryUi() {
+      history.innerHTML = '';
       refreshClearSelectedUI();
-      setStatus(`Deleted ${selected.length} item(s).`, 'ok');
+    }
+
+    function computeNextNumericKey(itemsObj) {
+      let max = -1;
+      if (itemsObj && typeof itemsObj === 'object') {
+        for (const k of Object.keys(itemsObj)) {
+          if (!/^\d+$/.test(k)) continue;
+          const n = Number(k);
+          if (Number.isFinite(n)) max = Math.max(max, n);
+        }
+      }
+      return max + 1;
+    }
+
+    async function loadSessionItems(sessionId) {
+      const { REC_STORAGE_DATA } = getPaths();
+      const data = await requestByPath(`${REC_STORAGE_DATA}/${sessionId}`, 'GET');
+
+      clearHistoryUi();
+
+      const list = [];
+      if (data && typeof data === 'object') {
+        for (const [entryId, v] of Object.entries(data)) {
+          const dt = Number(v && v.datetime);
+          list.push({
+            entryId,
+            datetime: Number.isFinite(dt) ? dt : 0,
+            text: (v && typeof v.text === 'string') ? v.text : '',
+            lang: (v && typeof v.lang === 'string') ? v.lang : '',
+          });
+        }
+      }
+
+      list.sort((a, b) => (b.datetime - a.datetime) || (String(b.entryId).localeCompare(String(a.entryId))));
+      for (const it of list) addHistoryItem(it.text, it.lang, it.datetime, it.entryId);
+
+      nextEntryId = computeNextNumericKey(data);
+      setStatus(`Loaded session ${sessionId}: ${list.length} item(s).`, 'ok');
+    }
+
+    function openCreateSessionDialog() {
+      const defTitle = formatTitleDefault(new Date());
+      inpSessionTitle.value = defTitle;
+      inpSessionDesc.value = '';
+      try {
+        inpSessionTitle.focus();
+        const len = inpSessionTitle.value.length;
+        inpSessionTitle.setSelectionRange(len, len);
+      } catch {}
+      try { dlgCreateSession.showModal(); } catch { /* ignore */ }
+    }
+
+    async function createSessionFromDialog() {
+      const now = new Date();
+      let id = formatItemId(now);
+      let suffix = 1;
+      while (sessionsIndex.some(x => x.id === id)) {
+        suffix++;
+        id = `${formatItemId(now)}__${suffix}`;
+      }
+
+      const title = String(inpSessionTitle.value || '').trim() || formatTitleDefault(now);
+      const description = String(inpSessionDesc.value || '').trim();
+      const updatedAt = nowIso();
+
+      const { REF_REC_STORAGE } = getPaths();
+      await requestByPath(`${REF_REC_STORAGE}/${id}`, 'PUT', { title, description, updatedAt });
+
+      activeSessionId = id;
+      nextEntryId = 0;
+      clearHistoryUi();
+      await saveUiStateSelection(id);
+      await loadSessionsIndex();
+      renderSessionsSelect(id);
+      updateSessionYoutubeLabel();
+      ytStartIndex = 0;
+      loadTranscriptItemsWindow({ startIndex: 0 });
+      setStatus(`Created session: ${title}`, 'ok');
+    }
+
+    async function selectSession(sessionId) {
+      const sid = String(sessionId || '');
+      if (!sid) return;
+      activeSessionId = sid;
+      await saveUiStateSelection(sid);
+      await loadSessionItems(sid);
+      updateSessionYoutubeLabel();
+      ytStartIndex = 0;
+      loadTranscriptItemsWindow({ startIndex: 0 });
+    }
+
+    async function savePhraseToActiveSession(text, lang, historyEl) {
+      const sid = activeSessionId;
+      if (!fbReady || !sid) return;
+      const { REC_STORAGE_DATA, REF_REC_STORAGE } = getPaths();
+
+      const entryId = String(nextEntryId);
+      const datetime = Date.now();
+      const payload = { datetime, text: String(text || ''), lang: String(lang || '') };
+      try {
+        await requestByPath(`${REC_STORAGE_DATA}/${sid}/${entryId}`, 'PUT', payload);
+        await requestByPath(`${REF_REC_STORAGE}/${sid}`, 'PATCH', { updatedAt: nowIso() });
+        nextEntryId++;
+        if (historyEl && historyEl.dataset) historyEl.dataset.entryId = entryId;
+      } catch (err) {
+        setStatus(`Firebase save failed: ${String(err)}`, 'warn');
+      }
+    }
+
+    async function initSessionsUi() {
+      try {
+        ensureGv();
+        await ensureSignedIn();
+        setSessionUiReady(true, 'Ready');
+
+        // Preload ref videos for short_name display (do not block init)
+        loadRefVideos().catch(() => {});
+
+        await loadSessionsIndex();
+        const saved = await loadUiStateSelection();
+        renderSessionsSelect(saved);
+
+        if (saved && sessionsIndex.some(x => x.id === saved)) {
+          await selectSession(saved);
+        } else {
+          activeSessionId = '';
+          nextEntryId = 0;
+          clearHistoryUi();
+          updateSessionYoutubeLabel();
+          ytStartIndex = 0;
+          loadTranscriptItemsWindow({ startIndex: 0 });
+        }
+      } catch (err) {
+        setSessionUiReady(false, 'Firebase not ready');
+        console.warn('[rec_voice] sessions init failed', err);
+      }
+    }
+
+    btnYtBeg.addEventListener('click', () => {
+      ytStartIndex = 0;
+      loadTranscriptItemsWindow({ startIndex: 0 });
+    });
+
+    btnYtPrev.addEventListener('click', () => {
+      ytStartIndex = Math.max(0, ytStartIndex - 1);
+      loadTranscriptItemsWindow({ startIndex: ytStartIndex });
+    });
+
+    btnYtNext.addEventListener('click', () => {
+      ytStartIndex = ytStartIndex + 1;
+      loadTranscriptItemsWindow({ startIndex: ytStartIndex });
+    });
+
+    selSession.addEventListener('change', () => {
+      const v = String(selSession.value || '');
+      if (v === SESSION_CREATE_VALUE) {
+        renderSessionsSelect(activeSessionId);
+        openCreateSessionDialog();
+        return;
+      }
+      if (!v) return;
+      (async () => {
+        try {
+          await selectSession(v);
+        } catch (err) {
+          setStatus(`Failed to load session: ${String(err)}`, 'warn');
+        }
+      })();
+    });
+
+    btnSessionsReload.addEventListener('click', () => {
+      (async () => {
+        try {
+          await loadSessionsIndex();
+          renderSessionsSelect(activeSessionId);
+          loadTranscriptItemsWindow({ startIndex: ytStartIndex });
+          setStatus('Sessions reloaded.', 'ok');
+        } catch (err) {
+          setStatus(`Reload failed: ${String(err)}`, 'warn');
+        }
+      })();
+    });
+
+    btnSessionsHide.addEventListener('click', () => {
+      setSessionsPanelVisible(false);
+    });
+
+    btnSessionsShow.addEventListener('click', () => {
+      const isOpen = btnSessionsShow && btnSessionsShow.dataset.open === '1';
+      setSessionsPanelVisible(!isOpen);
+    });
+
+    btnRecYoutubeMenu.addEventListener('click', () => {
+      openRecYoutubeMenu();
+    });
+
+    inRecYoutubeFilter.addEventListener('input', () => {
+      renderRefVideosList(inRecYoutubeFilter.value);
+    });
+
+    btnCreateSessionSave.addEventListener('click', (e) => {
       e.preventDefault();
-      try { dlgConfirmDelete.close('confirm'); } catch { /* ignore */ }
+      (async () => {
+        try {
+          await createSessionFromDialog();
+          try { dlgCreateSession.close('save'); } catch { /* ignore */ }
+        } catch (err) {
+          setStatus(`Create session failed: ${String(err)}`, 'warn');
+        }
+      })();
+    });
+
+    btnCreateSessionCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      try { dlgCreateSession.close('cancel'); } catch { /* ignore */ }
     });
 
     selLang.addEventListener('change', () => {
@@ -639,10 +1668,16 @@
     (async function init() {
       setLatest('');
 
+      // Sessions panel opens only by click on the Sessions button.
+      setSessionsPanelVisible(false);
+
       refreshClearSelectedUI();
 
       // Default: meta hidden
       setShowMeta(loadShowMetaSetting());
+
+      // Firebase sessions (top-right menu)
+      initSessionsUi();
 
       // Basic support hints
       if (!SpeechRecognition) {
