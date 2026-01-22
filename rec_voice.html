@@ -109,6 +109,34 @@
       display: none;
     }
 
+    /* Selected history items */
+    .item[data-selected="1"] {
+      border-color: color-mix(in srgb, #0ea5e9 55%, #999);
+      background: color-mix(in srgb, #0ea5e9 12%, transparent);
+    }
+
+    .itemHead {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .selBtn {
+      padding: 6px 10px;
+      min-height: 32px;
+      border-radius: 10px;
+      border: 1px solid currentColor;
+      background: transparent;
+      font-size: 12px;
+    }
+
+    .selBtn[data-on="1"] {
+      color: #fff;
+      background-color: color-mix(in srgb, #0ea5e9 85%, transparent);
+      border-color: color-mix(in srgb, #0ea5e9 85%, transparent);
+    }
+
     .item {
       padding: 8px 10px;
       border-radius: 10px;
@@ -137,6 +165,17 @@
     }
 
     code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    dialog {
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+      width: min(680px, calc(100vw - 24px));
+    }
+
+    dialog::backdrop {
+      background: rgba(0,0,0,.35);
+    }
   </style>
 </head>
 <body>
@@ -155,10 +194,10 @@
           <option value="sv-SE">Swedish (sv-SE)</option>
         </select>
       </label>
-
-      <button id="btnPermission" type="button" data-state="unknown" title="Check/ask microphone permission">Permission mic</button>
       <button id="btnRec" type="button" data-state="idle" disabled>Start recognition</button>
-      <button id="btnToggleMeta" type="button" data-state="0" title="Toggle meta line (time + language)">Meta: off</button>
+
+      <button id="btnEndPhrase" type="button" title="End phrase: move current text to history">E</button>
+      <button id="btnCMenu" type="button" title="Menu">⋯</button>
     </div>
 
     <div id="status" class="status" hidden></div>
@@ -170,11 +209,41 @@
       </div>
 
       <div>
-        <div class="historyTitle">History</div>
+        <div class="row" style="margin:0 0 6px; align-items:center;">
+          <div class="historyTitle">History</div>
+          <button id="btnClearSelected" type="button" style="margin-left:auto;" disabled>Clear selected</button>
+        </div>
         <div id="history" data-show-meta="0"></div>
       </div>
     </div>
   </main>
+
+  <dialog id="dlgCMenu">
+    <form method="dialog">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <strong>Menu</strong>
+        <button value="cancel" aria-label="Close" title="Close">Close</button>
+      </div>
+      <div class="row" style="margin:10px 0 0;">
+        <button id="btnPermission" type="button" data-state="unknown" title="Check/ask microphone permission">Permission mic</button>
+        <button id="btnToggleMeta" type="button" data-state="0" title="Toggle meta line (time + language)">Meta: off</button>
+      </div>
+      <div class="sub" style="margin-top:6px;">
+        Tip: mic permission often requires HTTPS or <code>localhost</code>.
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgConfirmDelete">
+    <form method="dialog">
+      <strong>Delete selected items?</strong>
+      <div id="confirmDeleteText" style="margin:8px 0 12px;"></div>
+      <div class="row" style="margin:0; justify-content:flex-end;">
+        <button value="cancel">Cancel</button>
+        <button id="btnConfirmDelete" value="confirm">Delete</button>
+      </div>
+    </form>
+  </dialog>
 
   <script>
     "use strict";
@@ -182,11 +251,25 @@
     /** @type {HTMLSelectElement} */
     const selLang = document.getElementById('selLang');
     /** @type {HTMLButtonElement} */
-    const btnPermission = document.getElementById('btnPermission');
-    /** @type {HTMLButtonElement} */
     const btnRec = document.getElementById('btnRec');
     /** @type {HTMLButtonElement} */
+    const btnEndPhrase = document.getElementById('btnEndPhrase');
+    /** @type {HTMLButtonElement} */
+    const btnCMenu = document.getElementById('btnCMenu');
+
+    /** @type {HTMLDialogElement} */
+    const dlgCMenu = document.getElementById('dlgCMenu');
+    /** @type {HTMLDialogElement} */
+    const dlgConfirmDelete = document.getElementById('dlgConfirmDelete');
+    const confirmDeleteText = document.getElementById('confirmDeleteText');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+
+    /** @type {HTMLButtonElement} */
+    const btnPermission = document.getElementById('btnPermission');
+    /** @type {HTMLButtonElement} */
     const btnToggleMeta = document.getElementById('btnToggleMeta');
+    /** @type {HTMLButtonElement} */
+    const btnClearSelected = document.getElementById('btnClearSelected');
 
     const elStatus = document.getElementById('status');
     const panel = document.getElementById('panel');
@@ -200,6 +283,7 @@
     let micPermissionState = 'unknown'; // unknown | allowed | denied | unsupported
     let _lastHistoryText = '';
     let _lastHistoryAtMs = 0;
+    let accumulatedFinalText = '';
 
     const SHOW_META_KEY = 'rec_voice_show_meta';
 
@@ -266,6 +350,10 @@
 
       const item = document.createElement('div');
       item.className = 'item';
+      item.dataset.selected = '0';
+
+      const head = document.createElement('div');
+      head.className = 'itemHead';
 
       const meta = document.createElement('div');
       meta.className = 'meta';
@@ -278,15 +366,40 @@
       meta.appendChild(left);
       meta.appendChild(right);
 
+      const sel = document.createElement('button');
+      sel.type = 'button';
+      sel.className = 'selBtn';
+      sel.textContent = 'Select';
+      sel.dataset.on = '0';
+      sel.addEventListener('click', (e) => {
+        e.preventDefault();
+        const on = item.dataset.selected === '1';
+        item.dataset.selected = on ? '0' : '1';
+        sel.dataset.on = on ? '0' : '1';
+        sel.textContent = on ? 'Select' : 'Selected';
+        refreshClearSelectedUI();
+      });
+
+      head.appendChild(meta);
+      head.appendChild(sel);
+
       const body = document.createElement('div');
       body.textContent = cleanText;
 
-      item.appendChild(meta);
+      item.appendChild(head);
       item.appendChild(body);
 
       // Newest on top
       history.prepend(item);
       scrollIfNearTop();
+
+      refreshClearSelectedUI();
+    }
+
+    function refreshClearSelectedUI() {
+      const selected = history.querySelectorAll('.item[data-selected="1"]').length;
+      btnClearSelected.disabled = selected === 0;
+      btnClearSelected.textContent = selected ? `Clear selected (${selected})` : 'Clear selected';
     }
 
     function setShowMeta(on) {
@@ -402,23 +515,21 @@
 
       r.onresult = (event) => {
         let interim = '';
-        let finalText = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const res = event.results[i];
           const text = res && res[0] ? String(res[0].transcript || '') : '';
-          if (res.isFinal) finalText += text;
-          else interim += text;
+          if (res.isFinal) {
+            const t = text.trim();
+            if (t) accumulatedFinalText = (accumulatedFinalText ? (accumulatedFinalText + ' ') : '') + t;
+          } else {
+            interim += text;
+          }
         }
 
-        const combined = (finalText + interim).trim();
-        if (combined) setLatest(combined);
-
-        const finalTrim = finalText.trim();
-        if (finalTrim) {
-          addHistoryItem(finalTrim, selLang.value);
-          setLatest('');
-        }
+        // IMPORTANT: do not auto-move to history. Only update accumulated text in #latestText.
+        const combined = (accumulatedFinalText + ' ' + interim).trim();
+        setLatest(combined);
       };
 
       return r;
@@ -448,7 +559,6 @@
       if (!recognition) return;
 
       try {
-        setLatest('');
         recognition.start();
       } catch (err) {
         setStatus(`Failed to start recognition: ${String(err)}`, 'warn');
@@ -460,14 +570,6 @@
       if (!recognition) {
         setRecState(false);
         return;
-      }
-
-      // If user stops while interim text is visible, commit it into history.
-      // This matches: "after clicked stop lets add last text to history".
-      const latest = (latestText && latestText.textContent) ? String(latestText.textContent).trim() : '';
-      if (latest && latest !== '(empty)') {
-        addHistoryItem(latest, selLang.value);
-        setLatest('');
       }
 
       try {
@@ -487,9 +589,45 @@
       else await startRecognition();
     });
 
+    btnEndPhrase.addEventListener('click', () => {
+      const latest = (latestText && latestText.textContent) ? String(latestText.textContent).trim() : '';
+      if (!latest || latest === '(empty)') {
+        setStatus('Nothing to commit. Speak first, then press E.', 'info');
+        return;
+      }
+
+      addHistoryItem(latest, selLang.value);
+      accumulatedFinalText = '';
+      setLatest('');
+      setStatus('Committed to history (E).', 'ok');
+    });
+
+    btnCMenu.addEventListener('click', () => {
+      try { dlgCMenu.showModal(); } catch { /* ignore */ }
+    });
+
     btnToggleMeta.addEventListener('click', () => {
       const cur = history.dataset.showMeta === '1';
       setShowMeta(!cur);
+    });
+
+    btnClearSelected.addEventListener('click', () => {
+      const selected = Array.from(history.querySelectorAll('.item[data-selected="1"]'));
+      if (selected.length === 0) {
+        setStatus('No selected items to delete.', 'info');
+        return;
+      }
+      confirmDeleteText.textContent = `This will delete ${selected.length} item(s) from history.`;
+      try { dlgConfirmDelete.showModal(); } catch { /* ignore */ }
+    });
+
+    btnConfirmDelete.addEventListener('click', (e) => {
+      const selected = Array.from(history.querySelectorAll('.item[data-selected="1"]'));
+      for (const el of selected) el.remove();
+      refreshClearSelectedUI();
+      setStatus(`Deleted ${selected.length} item(s).`, 'ok');
+      e.preventDefault();
+      try { dlgConfirmDelete.close('confirm'); } catch { /* ignore */ }
     });
 
     selLang.addEventListener('change', () => {
@@ -500,6 +638,8 @@
     // Init
     (async function init() {
       setLatest('');
+
+      refreshClearSelectedUI();
 
       // Default: meta hidden
       setShowMeta(loadShowMetaSetting());
