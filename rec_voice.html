@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>rec_voice — live speech to text</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.4;
+      color: #111;
+    }
+
+    header {
+      max-width: 980px;
+      margin: 0 auto 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    h1 { margin: 0; font-size: 18px; }
+    .sub { opacity: 0.8; font-size: 13px; }
+
+    main { max-width: 980px; margin: 0 auto; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    label {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    select {
+      min-height: 40px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #999;
+      background: #fff;
+    }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    #btnPermission[data-state="unknown"] { color: #333; }
+    #btnPermission[data-state="allowed"] { color: #1a7f37; }
+    #btnPermission[data-state="denied"] { color: #b42318; }
+    #btnPermission[data-state="unsupported"] { color: #555; }
+
+    #btnRec[data-state="idle"] { color: #1d4ed8; }
+    #btnRec[data-state="recording"] {
+      color: #fff;
+      background-color: color-mix(in srgb, #b42318 85%, transparent);
+      border-color: color-mix(in srgb, #b42318 85%, transparent);
+    }
+
+    .panel {
+      border: 1px solid #999;
+      border-radius: 12px;
+      padding: 10px;
+      min-height: 220px;
+      max-height: min(70vh, 720px);
+      overflow-y: auto;
+      display: grid;
+      gap: 10px;
+      background: #fff;
+    }
+
+    .latest {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, #1d4ed8 35%, #999);
+      background: color-mix(in srgb, #1d4ed8 7%, transparent);
+    }
+
+    .latestTitle { font-size: 12px; opacity: 0.75; margin-bottom: 6px; }
+    #latestText { font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+
+    .historyTitle { font-size: 12px; opacity: 0.75; }
+
+    #history {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, #111 18%, #999);
+      background: color-mix(in srgb, #111 3%, transparent);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .meta {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      justify-content: space-between;
+      font-size: 12px;
+      opacity: 0.75;
+      margin-bottom: 4px;
+    }
+
+    .status {
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px dashed #999;
+      background: color-mix(in srgb, #f59e0b 10%, transparent);
+    }
+
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>rec_voice</h1>
+    <div class="sub">Live microphone speech-to-text. Note: mic access usually requires HTTPS or <code>localhost</code>.</div>
+  </header>
+
+  <main>
+    <div class="row">
+      <label>
+        Language:
+        <select id="selLang">
+          <option value="uk-UA">Ukrainian (uk-UA)</option>
+          <option value="en-US" selected>English (en-US)</option>
+          <option value="sv-SE">Swedish (sv-SE)</option>
+        </select>
+      </label>
+
+      <button id="btnPermission" type="button" data-state="unknown" title="Check/ask microphone permission">Permission mic</button>
+      <button id="btnRec" type="button" data-state="idle" disabled>Start recognition</button>
+    </div>
+
+    <div id="status" class="status" hidden></div>
+
+    <div id="panel" class="panel" aria-label="Transcript output">
+      <div class="latest">
+        <div class="latestTitle">Latest segment</div>
+        <div id="latestText">(empty)</div>
+      </div>
+
+      <div>
+        <div class="historyTitle">History</div>
+        <div id="history"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+
+    /** @type {HTMLSelectElement} */
+    const selLang = document.getElementById('selLang');
+    /** @type {HTMLButtonElement} */
+    const btnPermission = document.getElementById('btnPermission');
+    /** @type {HTMLButtonElement} */
+    const btnRec = document.getElementById('btnRec');
+
+    const elStatus = document.getElementById('status');
+    const panel = document.getElementById('panel');
+    const latestText = document.getElementById('latestText');
+    const history = document.getElementById('history');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    let recognition = null;
+    let isRecording = false;
+    let micPermissionState = 'unknown'; // unknown | allowed | denied | unsupported
+
+    function setStatus(msg, kind = 'info') {
+      if (!msg) {
+        elStatus.hidden = true;
+        elStatus.textContent = '';
+        return;
+      }
+      elStatus.hidden = false;
+      elStatus.textContent = msg;
+      // keep kind hook if you want later
+      elStatus.dataset.kind = kind;
+    }
+
+    function setMicPermissionState(state, details = '') {
+      micPermissionState = state;
+      btnPermission.dataset.state = state;
+
+      if (state === 'allowed') {
+        btnPermission.textContent = 'Mic: allowed';
+        btnPermission.title = details || 'Microphone permission granted';
+      } else if (state === 'denied') {
+        btnPermission.textContent = 'Mic: denied';
+        btnPermission.title = details || 'Microphone permission denied. Enable it in browser/site settings.';
+      } else if (state === 'unsupported') {
+        btnPermission.textContent = 'Mic: unsupported';
+        btnPermission.title = details || 'Microphone permission API not available in this context.';
+      } else {
+        btnPermission.textContent = 'Permission mic';
+        btnPermission.title = details || 'Check/ask microphone permission';
+      }
+
+      // Enable recognition button if speech API exists and mic is not explicitly denied.
+      const speechSupported = Boolean(SpeechRecognition);
+      btnRec.disabled = !speechSupported || (state === 'denied') || isRecording;
+
+      if (!speechSupported) {
+        setStatus('Speech recognition not supported in this browser (SpeechRecognition/webkitSpeechRecognition missing).', 'warn');
+      }
+    }
+
+    function autoScrollToBottom() {
+      // Keep the latest content visible
+      panel.scrollTop = panel.scrollHeight;
+    }
+
+    function setLatest(text) {
+      const t = (text == null || String(text).trim() === '') ? '(empty)' : String(text);
+      latestText.textContent = t;
+      autoScrollToBottom();
+    }
+
+    function addHistoryItem(text, lang) {
+      const item = document.createElement('div');
+      item.className = 'item';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+
+      const left = document.createElement('span');
+      left.textContent = new Date().toLocaleTimeString();
+      const right = document.createElement('span');
+      right.textContent = lang || '';
+
+      meta.appendChild(left);
+      meta.appendChild(right);
+
+      const body = document.createElement('div');
+      body.textContent = text;
+
+      item.appendChild(meta);
+      item.appendChild(body);
+
+      history.appendChild(item);
+      autoScrollToBottom();
+    }
+
+    function setRecState(recording) {
+      isRecording = Boolean(recording);
+
+      if (isRecording) {
+        btnRec.dataset.state = 'recording';
+        btnRec.textContent = 'Stop recognition';
+        btnRec.disabled = false;
+        // while recording, don't allow permission button to be clicked to avoid confusion
+        btnPermission.disabled = true;
+      } else {
+        btnRec.dataset.state = 'idle';
+        btnRec.textContent = 'Start recognition';
+        btnPermission.disabled = false;
+        // enable/disable based on current known permission + support
+        const speechSupported = Boolean(SpeechRecognition);
+        btnRec.disabled = !speechSupported || (micPermissionState === 'denied');
+      }
+    }
+
+    async function queryPermissionIfPossible() {
+      // Permissions API is not consistently supported for 'microphone' across browsers.
+      // We'll try it, but we do not rely on it.
+      try {
+        if (!navigator.permissions || !navigator.permissions.query) return;
+        const result = await navigator.permissions.query({ name: 'microphone' });
+        if (!result) return;
+
+        const mapState = (s) => {
+          if (s === 'granted') return 'allowed';
+          if (s === 'denied') return 'denied';
+          return 'unknown'; // prompt
+        };
+
+        const apply = () => setMicPermissionState(mapState(result.state), `Permissions API: ${result.state}`);
+        apply();
+        result.onchange = apply;
+      } catch {
+        // ignore, fallback to unknown
+      }
+    }
+
+    async function requestMicPermission() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicPermissionState('unsupported', 'navigator.mediaDevices.getUserMedia is not available.');
+        setStatus('Microphone access is not available in this browser/context. Try HTTPS or localhost.', 'warn');
+        return false;
+      }
+
+      try {
+        setStatus('Requesting microphone permission…', 'info');
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Immediately stop tracks (we only need permission here)
+        for (const track of stream.getTracks()) track.stop();
+
+        setMicPermissionState('allowed');
+        setStatus('Microphone permission granted.', 'ok');
+        return true;
+      } catch (err) {
+        const msg = (err && err.name) ? `${err.name}: ${err.message || ''}` : String(err);
+        setMicPermissionState('denied', msg);
+        setStatus('Microphone permission denied. Enable it in browser/site settings and retry.', 'warn');
+        return false;
+      }
+    }
+
+    function createRecognition() {
+      if (!SpeechRecognition) return null;
+      const r = new SpeechRecognition();
+      r.lang = selLang.value;
+      r.continuous = true;
+      r.interimResults = true;
+      r.maxAlternatives = 1;
+
+      r.onstart = () => {
+        setStatus('Recognition started.', 'ok');
+        setRecState(true);
+      };
+
+      r.onend = () => {
+        // This can happen unexpectedly; always sync UI.
+        setRecState(false);
+        setStatus('Recognition stopped.', 'info');
+      };
+
+      r.onerror = (ev) => {
+        const err = ev && ev.error ? String(ev.error) : 'unknown';
+        setStatus(`Recognition error: ${err}`, 'warn');
+
+        // Common errors: 'not-allowed', 'service-not-allowed'
+        if (err === 'not-allowed' || err === 'service-not-allowed') {
+          setMicPermissionState('denied', `Recognition error: ${err}`);
+        }
+      };
+
+      r.onresult = (event) => {
+        let interim = '';
+        let finalText = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          const text = res && res[0] ? String(res[0].transcript || '') : '';
+          if (res.isFinal) finalText += text;
+          else interim += text;
+        }
+
+        const combined = (finalText + interim).trim();
+        if (combined) setLatest(combined);
+
+        const finalTrim = finalText.trim();
+        if (finalTrim) {
+          addHistoryItem(finalTrim, selLang.value);
+          setLatest('');
+        }
+      };
+
+      return r;
+    }
+
+    async function startRecognition() {
+      if (isRecording) return;
+
+      // Make sure mic permission is available; request only if needed.
+      if (micPermissionState !== 'allowed') {
+        const ok = await requestMicPermission();
+        if (!ok) return;
+      }
+
+      if (!SpeechRecognition) {
+        setStatus('Speech recognition not supported in this browser.', 'warn');
+        return;
+      }
+
+      // Recreate recognition each start so language changes always apply.
+      if (recognition) {
+        try { recognition.onresult = null; recognition.onerror = null; recognition.onend = null; recognition.onstart = null; } catch {}
+        recognition = null;
+      }
+
+      recognition = createRecognition();
+      if (!recognition) return;
+
+      try {
+        setLatest('');
+        recognition.start();
+      } catch (err) {
+        setStatus(`Failed to start recognition: ${String(err)}`, 'warn');
+        setRecState(false);
+      }
+    }
+
+    function stopRecognition() {
+      if (!recognition) {
+        setRecState(false);
+        return;
+      }
+      try {
+        recognition.stop();
+      } catch {
+        // If stop fails, force UI state.
+        setRecState(false);
+      }
+    }
+
+    btnPermission.addEventListener('click', async () => {
+      await requestMicPermission();
+    });
+
+    btnRec.addEventListener('click', async () => {
+      if (isRecording) stopRecognition();
+      else await startRecognition();
+    });
+
+    selLang.addEventListener('change', () => {
+      // Per spec: language affects recognition on next start.
+      setStatus(`Language set to ${selLang.value}.`, 'info');
+    });
+
+    // Init
+    (async function init() {
+      setLatest('');
+
+      // Basic support hints
+      if (!SpeechRecognition) {
+        setMicPermissionState('unknown');
+        btnRec.disabled = true;
+        return;
+      }
+
+      // Start with unknown, then try to query.
+      setMicPermissionState('unknown');
+      await queryPermissionIfPossible();
+
+      // If Permissions API says granted, allow starting immediately.
+      // Otherwise user can press "Permission mic" first.
+      if (micPermissionState === 'allowed') {
+        btnRec.disabled = false;
+      }
+    })();
+  </script>
+</body>
+</html>
