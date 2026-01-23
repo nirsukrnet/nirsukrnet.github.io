@@ -61,9 +61,63 @@
       width: 100%;
     }
 
+    /* Sessions picker dialog (select existing session) */
+    #dlgSessionsMenu {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      width: min(720px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+    }
+
+    #dlgSessionsMenu > form {
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+    }
+
+    #sessionsList {
+      max-height: calc(100vh - 220px);
+      overflow: auto;
+    }
+
+    #sessionsList li {
+      border: 1px solid color-mix(in srgb, #111 18%, #999);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #sessionsList li:hover {
+      background: color-mix(in srgb, #111 4%, transparent);
+    }
+
+    #sessionsList li[data-active="1"] {
+      border-color: #111;
+      background: color-mix(in srgb, #111 8%, transparent);
+    }
+
     #mainMenu small {
       opacity: 0.75;
       font-size: 12px;
+    }
+
+    /* YouTube picker dialog: align to top (not centered) */
+    #dlgRecYoutubeMenu {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      width: min(720px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+    }
+
+    #dlgRecYoutubeMenu > form {
+      max-height: calc(100vh - 24px);
+      overflow: auto;
     }
 
     .row {
@@ -101,6 +155,28 @@
     }
 
     button:disabled { opacity: 0.6; cursor: default; }
+
+    /* YouTube picker (rec_voice) tag row, yout_pl2-like */
+    #recYoutubeTagRow {
+      margin: 0 0 10px;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .yu2-tagbtn {
+      min-height: 32px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .yu2-tagbtn[data-active="1"] {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+      opacity: 1;
+    }
 
     /* yout_pl2-like controls */
     .yu2-btn { white-space: nowrap; }
@@ -330,24 +406,19 @@
         <button id="btnSessionsHide" type="button" title="Hide sessions panel" style="min-height:32px; padding:6px 10px;">×</button>
       </div>
     </div>
-    <div class="row" style="flex-wrap:nowrap;">
-      <label style="flex:1; width:100%;">
-        <span style="min-width:70px;">Session:</span>
-        <select id="selSession" aria-label="Session list" disabled>
-          <option value="">Loading…</option>
-        </select>
-      </label>
-    </div>
 
-    <div class="row" style="flex-wrap:nowrap;">
-      <button id="btnRecYoutubeMenu" type="button" title="Choose YouTube reference video" style="min-height:32px; padding:6px 10px;">Menu</button>
-      <div style="flex:1; min-height:32px; display:flex; align-items:center; justify-content:flex-end; gap:8px;">
-        <span style="opacity:.75; font-size:12px;">YouTube:</span>
-        <strong id="sessionYoutubeName" style="font-size:12px; font-weight:600;">(none)</strong>
-      </div>
+    <div class="row" style="flex-direction:column; align-items:stretch; gap:8px;">
+      <button id="btnCreateSession" type="button" title="Create new session" style="min-height:32px; padding:6px 10px; width:100%;">New</button>
+      <button id="btnSelectSession" type="button" title="Select existing session" style="min-height:32px; padding:6px 10px; width:100%;">Select</button>
+      <button id="btnRecYoutubeMenu" type="button" title="Choose YouTube reference video" style="min-height:32px; padding:6px 10px; width:100%;">YouTube</button>
     </div>
     <small id="sessionHint">Firebase not ready</small>
   </div>
+
+  <!-- Hidden legacy select used as a state holder for existing logic (no combobox UX) -->
+  <select id="selSession" aria-label="Session list" disabled style="display:none;">
+    <option value="">Loading…</option>
+  </select>
 
   <button id="btnSessionsShow" type="button" title="Toggle sessions panel" style="position:fixed; top:12px; right:12px; z-index:1001; min-height:32px; padding:6px 10px; border-radius:999px;">Sessions</button>
 
@@ -369,7 +440,6 @@
 
     <div id="panel" class="panel" aria-label="Transcript output">
       <div class="latest">
-        <div class="latestTitle">Latest segment</div>
         <div id="latestText">(empty)</div>
       </div>
 
@@ -447,6 +517,25 @@
     </form>
   </dialog>
 
+  <dialog id="dlgSessionsMenu">
+    <form method="dialog">
+      <button value="cancel" aria-label="Close" title="Close"
+        style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">
+        ×
+      </button>
+
+      <strong>Sessions</strong>
+      <div class="sub" style="margin:6px 0 10px;">Select an existing session.</div>
+
+      <div class="row" style="margin:0 0 10px;">
+        <input id="inSessionsFilter" placeholder="type to filter" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+      </div>
+
+      <div id="sessionsMenuStatus" class="sub" style="margin:0 0 10px;"></div>
+      <ul id="sessionsList" style="list-style:none; padding:0; margin:0; display:grid; gap:6px;"></ul>
+    </form>
+  </dialog>
+
   <dialog id="dlgRecYoutubeMenu">
     <form method="dialog">
       <button value="cancel" aria-label="Close" title="Close"
@@ -456,6 +545,8 @@
 
       <strong>YouTube menu</strong>
       <div class="sub" style="margin:6px 0 10px;">Choose a reference video to attach to the current session.</div>
+
+      <div id="recYoutubeTagRow" class="row" style="margin:0 0 10px;"></div>
 
       <div class="row" style="margin:0 0 10px;">
         <input id="inRecYoutubeFilter" placeholder="type to filter" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
@@ -509,9 +600,20 @@
 
     /** @type {HTMLButtonElement} */
     const btnRecYoutubeMenu = document.getElementById('btnRecYoutubeMenu');
-    const sessionYoutubeName = document.getElementById('sessionYoutubeName');
+    /** @type {HTMLButtonElement} */
+    const btnCreateSession = document.getElementById('btnCreateSession');
+    /** @type {HTMLButtonElement} */
+    const btnSelectSession = document.getElementById('btnSelectSession');
+
+    /** @type {HTMLDialogElement} */
+    const dlgSessionsMenu = document.getElementById('dlgSessionsMenu');
+    /** @type {HTMLInputElement} */
+    const inSessionsFilter = document.getElementById('inSessionsFilter');
+    const sessionsMenuStatus = document.getElementById('sessionsMenuStatus');
+    const sessionsList = document.getElementById('sessionsList');
     /** @type {HTMLDialogElement} */
     const dlgRecYoutubeMenu = document.getElementById('dlgRecYoutubeMenu');
+    const recYoutubeTagRow = document.getElementById('recYoutubeTagRow');
     /** @type {HTMLInputElement} */
     const inRecYoutubeFilter = document.getElementById('inRecYoutubeFilter');
     const recYoutubeStatus = document.getElementById('recYoutubeStatus');
@@ -560,9 +662,16 @@
     let sessionsIndex = []; // [{id,title,description,updatedAt,youtube_ids}]
     let nextEntryId = 0;
 
+    // Legacy support: some DB schemas store entries under rec_storage_data/<sid>/items/<entryId>
+    const sessionItemsModeById = new Map(); // sid -> 'flat' | 'items'
+
     // Ref videos cache (from DB_CONST_REF_YOUTUBE_VIDEOS)
     let refVideosCache = []; // [{indent_id, short_name, title, url, order, tag}]
     let refVideosById = new Map();
+
+    // Ref tags cache (from DB_CONST_REF_TAGS_SHORT)
+    let recYoutubeTagsCache = []; // ["tag1", "tag2", ...]
+    let activeRecYoutubeTag = ''; // '' means All
 
     // YouTube transcript viewer state
     let ytStartIndex = 0;
@@ -673,16 +782,155 @@
       return sessionsIndex.find(x => x && x.id === sid) || null;
     }
 
+    function normalizeYoutubeIdsValue(v) {
+      if (typeof v === 'string') return v.trim();
+      if (Array.isArray(v)) {
+        const s = v.find(x => typeof x === 'string' && x.trim());
+        return s ? s.trim() : '';
+      }
+      if (v && typeof v === 'object') {
+        // sometimes stored as {0:"id"} or {id:true}
+        for (const x of Object.values(v)) {
+          if (typeof x === 'string' && x.trim()) return x.trim();
+        }
+        for (const k of Object.keys(v)) {
+          if (k && String(k).trim()) return String(k).trim();
+        }
+      }
+      return '';
+    }
+
+    function pickSessionItemsContainer(obj) {
+      // Return { mode, itemsObj }
+      // - flat: rec_storage_data/<sid>/<entryId>
+      // - items: rec_storage_data/<sid>/items/<entryId>
+      if (!obj || typeof obj !== 'object') return { mode: 'flat', itemsObj: null };
+      if (obj.items && typeof obj.items === 'object') return { mode: 'items', itemsObj: obj.items };
+      if (obj.data && typeof obj.data === 'object') return { mode: 'items', itemsObj: obj.data };
+      return { mode: 'flat', itemsObj: obj };
+    }
+
+    function getRecSessionItemsBasePath(sessionId) {
+      const sid = String(sessionId || '');
+      const { REC_STORAGE_DATA } = getPaths();
+      const mode = sessionItemsModeById.get(sid) || 'flat';
+      return (mode === 'items') ? `${REC_STORAGE_DATA}/${sid}/items` : `${REC_STORAGE_DATA}/${sid}`;
+    }
+
     function updateSessionYoutubeLabel() {
       const meta = getSessionMeta(activeSessionId);
       const vid = meta && typeof meta.youtube_ids === 'string' ? meta.youtube_ids : '';
+      if (!btnRecYoutubeMenu) return;
       if (!vid) {
-        sessionYoutubeName.textContent = '(none)';
+        btnRecYoutubeMenu.textContent = 'YouTube';
         return;
       }
       const rec = refVideosById.get(vid);
       const shortName = rec && typeof rec.short_name === 'string' ? rec.short_name.trim() : '';
-      sessionYoutubeName.textContent = shortName || vid;
+      const label = shortName || vid;
+      btnRecYoutubeMenu.textContent = label ? `YT: ${label}` : 'YouTube';
+    }
+
+    function updateSessionSelectButtonLabel() {
+      if (!btnSelectSession) return;
+      const meta = getSessionMeta(activeSessionId);
+      const title = cleanStr(meta && meta.title);
+      if (title) btnSelectSession.textContent = title;
+      else btnSelectSession.textContent = 'Select';
+    }
+
+    function setSessionsMenuStatus(msg) {
+      if (!sessionsMenuStatus) return;
+      sessionsMenuStatus.textContent = msg || '';
+    }
+
+    function renderSessionsMenuList(filterText) {
+      if (!sessionsList) return;
+      const f = cleanStr(filterText).toLowerCase();
+      sessionsList.innerHTML = '';
+
+      const list = (sessionsIndex || []).filter(it => {
+        if (!f) return true;
+        const s = `${cleanStr(it.title)} ${cleanStr(it.description)} ${cleanStr(it.youtube_ids)} ${cleanStr(it.id)}`.toLowerCase();
+        return s.includes(f);
+      });
+
+      if (!list.length) {
+        const li = document.createElement('li');
+        li.textContent = '(no matches)';
+        li.style.opacity = '0.7';
+        li.style.cursor = 'default';
+        li.tabIndex = -1;
+        sessionsList.appendChild(li);
+        return;
+      }
+
+      for (const it of list) {
+        const li = document.createElement('li');
+        li.tabIndex = 0;
+        li.dataset.sessionId = String(it.id || '');
+        li.dataset.active = (String(it.id) === String(activeSessionId)) ? '1' : '0';
+
+        const title = document.createElement('strong');
+        title.textContent = cleanStr(it.title) || cleanStr(it.id);
+        title.style.display = 'block';
+
+        const desc = cleanStr(it.description);
+        if (desc) {
+          const sub = document.createElement('div');
+          sub.textContent = desc;
+          sub.style.opacity = '0.75';
+          sub.style.fontSize = '12px';
+          sub.style.marginTop = '2px';
+          li.appendChild(title);
+          li.appendChild(sub);
+        } else {
+          li.appendChild(title);
+        }
+
+        const pick = async () => {
+          const sid = String(it.id || '');
+          if (!sid) return;
+          // Keep legacy state holder in sync and reuse existing selection logic.
+          if (selSession) {
+            selSession.value = sid;
+            selSession.dispatchEvent(new Event('change'));
+          }
+          try { dlgSessionsMenu && dlgSessionsMenu.close('selected'); } catch { /* ignore */ }
+          // Close the Sessions panel after choosing a session.
+          setSessionsPanelVisible(false);
+        };
+
+        li.addEventListener('click', () => { pick(); });
+        li.addEventListener('keydown', (e) => {
+          if (e && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            pick();
+          }
+        });
+
+        sessionsList.appendChild(li);
+      }
+    }
+
+    async function openSessionsMenu() {
+      if (!fbReady) {
+        setStatus('Firebase not ready.', 'warn');
+        return;
+      }
+      try {
+        setSessionsMenuStatus('Loading…');
+        await loadSessionsIndex();
+        renderSessionsSelect(activeSessionId);
+        updateSessionSelectButtonLabel();
+        setSessionsMenuStatus('');
+        renderSessionsMenuList(inSessionsFilter ? inSessionsFilter.value : '');
+        try { dlgSessionsMenu.showModal(); } catch { /* ignore */ }
+      } catch (err) {
+        setSessionsMenuStatus(`Failed to load sessions: ${String(err)}`);
+        renderSessionsMenuList(inSessionsFilter ? inSessionsFilter.value : '');
+        try { dlgSessionsMenu.showModal(); } catch { /* ignore */ }
+      }
     }
 
     function setYtItemsStatus(msg) {
@@ -874,10 +1122,118 @@
       return (x == null) ? '' : String(x).trim();
     }
 
+    function extractYoutubeVideoIdFromUrl(url) {
+      const s = cleanStr(url);
+      if (!s) return '';
+      try {
+        // Normalize to URL when possible
+        const u = new URL(s, window.location.href);
+        const host = (u.hostname || '').toLowerCase();
+
+        // youtu.be/<id>
+        if (host.endsWith('youtu.be')) {
+          const id = cleanStr((u.pathname || '').split('/').filter(Boolean)[0]);
+          return id || '';
+        }
+
+        // youtube.com/watch?v=<id>
+        const v = cleanStr(u.searchParams.get('v'));
+        if (v) return v;
+
+        // youtube.com/embed/<id>, youtube.com/shorts/<id>
+        const parts = (u.pathname || '').split('/').filter(Boolean);
+        if (parts.length >= 2 && (parts[0] === 'embed' || parts[0] === 'shorts')) {
+          return cleanStr(parts[1]) || '';
+        }
+
+        // Fallback: try to find a plausible id token in the URL
+        const m = s.match(/[\w-]{8,}/g);
+        return (m && m.length) ? String(m[0]) : '';
+      } catch {
+        // Not a valid URL; attempt lightweight parsing
+        const m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{8,})/i);
+        return m ? cleanStr(m[1]) : '';
+      }
+    }
+
+    function normalizeRefTagsShort(data) {
+      // Accept:
+      // - { tags: { anyKey: "tag"|true|1 } }
+      // - { tags: ["tag1","tag2"] }
+      // - ["tag1","tag2"]
+      const out = [];
+      const push = (t) => {
+        const s = cleanStr(t);
+        if (!s) return;
+        if (!out.includes(s)) out.push(s);
+      };
+
+      if (Array.isArray(data)) {
+        for (const x of data) push(x);
+        return out;
+      }
+
+      const rawTags = (data && typeof data === 'object') ? data.tags : null;
+      if (Array.isArray(rawTags)) {
+        for (const x of rawTags) push(x);
+        return out;
+      }
+      if (rawTags && typeof rawTags === 'object') {
+        for (const [k, v] of Object.entries(rawTags)) {
+          if (typeof v === 'string') push(v);
+          else if (v) push(k);
+        }
+      }
+      return out;
+    }
+
+    function deriveTagsFromVideos(list) {
+      const tags = [];
+      for (const v of (list || [])) {
+        const t = cleanStr(v && v.tag);
+        if (!t) continue;
+        if (!tags.includes(t)) tags.push(t);
+      }
+      tags.sort((a, b) => a.localeCompare(b));
+      return tags;
+    }
+
+    function renderRecYoutubeTagButtons(tags) {
+      if (!recYoutubeTagRow) return;
+      recYoutubeTagRow.innerHTML = '';
+
+      const makeBtn = (label, tagValue) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'yu2-tagbtn';
+        b.textContent = label;
+        const isActive = cleanStr(activeRecYoutubeTag).toLowerCase() === cleanStr(tagValue).toLowerCase();
+        b.dataset.active = isActive ? '1' : '0';
+        b.addEventListener('click', () => {
+          const cur = cleanStr(activeRecYoutubeTag);
+          if (cleanStr(tagValue) && cur.toLowerCase() === cleanStr(tagValue).toLowerCase()) activeRecYoutubeTag = '';
+          else activeRecYoutubeTag = cleanStr(tagValue);
+          renderRecYoutubeTagButtons(tags);
+          renderRefVideosList(inRecYoutubeFilter ? inRecYoutubeFilter.value : '');
+        });
+        return b;
+      };
+
+      recYoutubeTagRow.appendChild(makeBtn('All', ''));
+      for (const t of (tags || [])) {
+        recYoutubeTagRow.appendChild(makeBtn(t, t));
+      }
+    }
+
     function renderRefVideosList(filterText) {
       const f = cleanStr(filterText).toLowerCase();
+      const tsel = cleanStr(activeRecYoutubeTag).toLowerCase();
       recYoutubeList.innerHTML = '';
       const list = (refVideosCache || []).filter(v => {
+        if (tsel) {
+          const tv = cleanStr(v.tag).toLowerCase();
+          if (tv !== tsel) return false;
+        }
         if (!f) return true;
         const s = `${cleanStr(v.short_name)} ${cleanStr(v.title)} ${cleanStr(v.indent_id)} ${cleanStr(v.tag)}`.toLowerCase();
         return s.includes(f);
@@ -893,13 +1249,22 @@
 
       for (const v of list) {
         const li = document.createElement('li');
-        li.style.display = 'flex';
-        li.style.gap = '10px';
-        li.style.alignItems = 'center';
-        li.style.justifyContent = 'space-between';
+        li.style.display = 'block';
         li.style.border = '1px solid color-mix(in srgb, #111 18%, #999)';
         li.style.borderRadius = '10px';
         li.style.padding = '8px 10px';
+
+        // Make the whole row clickable (like selecting the item)
+        li.tabIndex = 0;
+        li.style.cursor = 'pointer';
+        li.title = 'Select';
+        li.addEventListener('click', () => onSelectRefVideo(v));
+        li.addEventListener('keydown', (e) => {
+          if (e && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onSelectRefVideo(v);
+          }
+        });
 
         const left = document.createElement('div');
         left.style.display = 'grid';
@@ -909,23 +1274,8 @@
         nm.style.fontSize = '13px';
         nm.textContent = cleanStr(v.short_name) || cleanStr(v.title) || cleanStr(v.indent_id);
 
-        const meta = document.createElement('div');
-        meta.style.fontSize = '12px';
-        meta.style.opacity = '0.75';
-        meta.textContent = cleanStr(v.indent_id);
-
         left.appendChild(nm);
-        left.appendChild(meta);
-
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = 'Select';
-        btn.style.minHeight = '32px';
-        btn.style.padding = '6px 10px';
-        btn.addEventListener('click', () => onSelectRefVideo(v));
-
         li.appendChild(left);
-        li.appendChild(btn);
         recYoutubeList.appendChild(li);
       }
     }
@@ -939,13 +1289,15 @@
       if (data && typeof data === 'object') {
         for (const v of Object.values(data)) {
           if (!v || typeof v !== 'object') continue;
-          const indent_id = cleanStr(v.indent_id);
+          const url = cleanStr(v.url);
+          let indent_id = cleanStr(v.indent_id);
+          if (!indent_id && url) indent_id = extractYoutubeVideoIdFromUrl(url);
           if (!indent_id) continue;
           list.push({
             indent_id,
             short_name: cleanStr(v.short_name),
             title: cleanStr(v.title),
-            url: cleanStr(v.url),
+            url,
             tag: cleanStr(v.tag),
             order: Number(v.order)
           });
@@ -962,6 +1314,18 @@
       return list;
     }
 
+    async function loadRecYoutubeTags() {
+      try {
+        const gv = ensureGv();
+        const tagsPath = gv.cst.getcst('DB_CONST_REF_TAGS_SHORT');
+        if (!tagsPath) return [];
+        const data = await requestByPath(tagsPath, 'GET');
+        return normalizeRefTagsShort(data);
+      } catch {
+        return [];
+      }
+    }
+
     async function openRecYoutubeMenu() {
       if (!fbReady) {
         setStatus('Firebase not ready.', 'warn');
@@ -970,6 +1334,9 @@
       try {
         setRecYoutubeStatus('Loading…');
         await loadRefVideos();
+        recYoutubeTagsCache = await loadRecYoutubeTags();
+        if (!recYoutubeTagsCache.length) recYoutubeTagsCache = deriveTagsFromVideos(refVideosCache);
+        renderRecYoutubeTagButtons(recYoutubeTagsCache);
         setRecYoutubeStatus('');
         renderRefVideosList(inRecYoutubeFilter.value);
         try { dlgRecYoutubeMenu.showModal(); } catch { /* ignore */ }
@@ -985,8 +1352,11 @@
         setStatus('Select or create a session first.', 'info');
         return;
       }
-      const vid = cleanStr(v && v.indent_id);
-      if (!vid) return;
+      const vid = cleanStr(v && v.indent_id) || extractYoutubeVideoIdFromUrl(v && v.url);
+      if (!vid) {
+        setStatus('Cannot extract videoId from selection.', 'warn');
+        return;
+      }
 
       const { REF_REC_STORAGE } = getPaths();
       const patch = { youtube_ids: vid, updatedAt: nowIso() };
@@ -1417,8 +1787,9 @@
 
           if (entryIds.length) {
             try {
+              const basePath = getRecSessionItemsBasePath(sid);
               for (const entryId of entryIds) {
-                await requestByPath(`${REC_STORAGE_DATA}/${sid}/${entryId}`, 'DELETE');
+                await requestByPath(`${basePath}/${entryId}`, 'DELETE');
               }
               await requestByPath(`${REF_REC_STORAGE}/${sid}`, 'PATCH', { updatedAt: nowIso() });
             } catch (err) {
@@ -1446,7 +1817,7 @@
           if (!id) continue;
           const title = (v && typeof v.title === 'string') ? v.title : id;
           const description = (v && typeof v.description === 'string') ? v.description : '';
-          const youtube_ids = (v && typeof v.youtube_ids === 'string') ? v.youtube_ids : '';
+          const youtube_ids = normalizeYoutubeIdsValue(v && (v.youtube_ids ?? v.youtube_id ?? v.youtubeId));
 
           let updatedAt = (v && typeof v.updatedAt === 'string') ? v.updatedAt : '';
           const t = safeParseIsoToMs(updatedAt);
@@ -1480,6 +1851,7 @@
       });
       sessionsIndex = list;
       updateSessionYoutubeLabel();
+      updateSessionSelectButtonLabel();
       return list;
     }
 
@@ -1554,11 +1926,14 @@
       const { REC_STORAGE_DATA } = getPaths();
       const data = await requestByPath(`${REC_STORAGE_DATA}/${sessionId}`, 'GET');
 
+      const { mode, itemsObj } = pickSessionItemsContainer(data);
+      sessionItemsModeById.set(String(sessionId || ''), mode);
+
       clearHistoryUi();
 
       const list = [];
-      if (data && typeof data === 'object') {
-        for (const [entryId, v] of Object.entries(data)) {
+      if (itemsObj && typeof itemsObj === 'object') {
+        for (const [entryId, v] of Object.entries(itemsObj)) {
           const dt = Number(v && v.datetime);
           list.push({
             entryId,
@@ -1572,7 +1947,7 @@
       list.sort((a, b) => (b.datetime - a.datetime) || (String(b.entryId).localeCompare(String(a.entryId))));
       for (const it of list) addHistoryItem(it.text, it.lang, it.datetime, it.entryId);
 
-      nextEntryId = computeNextNumericKey(data);
+      nextEntryId = computeNextNumericKey(itemsObj);
       setStatus(`Loaded session ${sessionId}: ${list.length} item(s).`, 'ok');
     }
 
@@ -1611,6 +1986,7 @@
       await loadSessionsIndex();
       renderSessionsSelect(id);
       updateSessionYoutubeLabel();
+      updateSessionSelectButtonLabel();
       ytStartIndex = 0;
       loadTranscriptItemsWindow({ startIndex: 0 });
       setStatus(`Created session: ${title}`, 'ok');
@@ -1623,6 +1999,7 @@
       await saveUiStateSelection(sid);
       await loadSessionItems(sid);
       updateSessionYoutubeLabel();
+      updateSessionSelectButtonLabel();
       ytStartIndex = 0;
       loadTranscriptItemsWindow({ startIndex: 0 });
     }
@@ -1636,7 +2013,8 @@
       const datetime = Date.now();
       const payload = { datetime, text: String(text || ''), lang: String(lang || '') };
       try {
-        await requestByPath(`${REC_STORAGE_DATA}/${sid}/${entryId}`, 'PUT', payload);
+        const basePath = getRecSessionItemsBasePath(sid);
+        await requestByPath(`${basePath}/${entryId}`, 'PUT', payload);
         await requestByPath(`${REF_REC_STORAGE}/${sid}`, 'PATCH', { updatedAt: nowIso() });
         nextEntryId++;
         if (historyEl && historyEl.dataset) historyEl.dataset.entryId = entryId;
@@ -1656,15 +2034,22 @@
 
         await loadSessionsIndex();
         const saved = await loadUiStateSelection();
-        renderSessionsSelect(saved);
 
-        if (saved && sessionsIndex.some(x => x.id === saved)) {
-          await selectSession(saved);
+        let initialId = '';
+        if (saved && sessionsIndex.some(x => x.id === saved)) initialId = saved;
+        else if (sessionsIndex.length && sessionsIndex[0] && sessionsIndex[0].id) initialId = String(sessionsIndex[0].id);
+
+        renderSessionsSelect(initialId);
+        updateSessionSelectButtonLabel();
+
+        if (initialId) {
+          await selectSession(initialId);
         } else {
           activeSessionId = '';
           nextEntryId = 0;
           clearHistoryUi();
           updateSessionYoutubeLabel();
+          updateSessionSelectButtonLabel();
           ytStartIndex = 0;
           loadTranscriptItemsWindow({ startIndex: 0 });
         }
@@ -1711,6 +2096,7 @@
         try {
           await loadSessionsIndex();
           renderSessionsSelect(activeSessionId);
+          updateSessionSelectButtonLabel();
           loadTranscriptItemsWindow({ startIndex: ytStartIndex });
           setStatus('Sessions reloaded.', 'ok');
         } catch (err) {
@@ -1718,6 +2104,18 @@
         }
       })();
     });
+
+    if (btnCreateSession) {
+      btnCreateSession.addEventListener('click', () => {
+        openCreateSessionDialog();
+      });
+    }
+
+    if (btnSelectSession) {
+      btnSelectSession.addEventListener('click', () => {
+        openSessionsMenu();
+      });
+    }
 
     btnSessionsHide.addEventListener('click', () => {
       setSessionsPanelVisible(false);
@@ -1735,6 +2133,12 @@
     inRecYoutubeFilter.addEventListener('input', () => {
       renderRefVideosList(inRecYoutubeFilter.value);
     });
+
+    if (inSessionsFilter) {
+      inSessionsFilter.addEventListener('input', () => {
+        renderSessionsMenuList(inSessionsFilter.value);
+      });
+    }
 
     btnCreateSessionSave.addEventListener('click', (e) => {
       e.preventDefault();
