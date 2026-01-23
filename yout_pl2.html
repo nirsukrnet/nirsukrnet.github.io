@@ -550,6 +550,7 @@ English Channel..."></textarea>
     let mainMenuShortNameFilter = '';
     let _mainMenuSaveTimer = null;
     let _mainMenuTagsCache = [];
+    let _refVideosLoadSeq = 0;
 
     // Debounced persistence of playback language display settings.
     let _playbackLangSaveTimer = null;
@@ -2609,6 +2610,8 @@ English Channel..."></textarea>
     }
 
     async function loadRefVideos() {
+      const seq = ++_refVideosLoadSeq;
+
       const list = document.getElementById('refVideosList');
       if (!list) return;
       list.innerHTML = '';
@@ -2625,21 +2628,47 @@ English Channel..."></textarea>
       }
 
       const all = await window.YouTubeRefVideosStore.listAll();
-      const sorted = (Array.isArray(all) ? all : [])
-        .filter(Boolean)
-        .map(v => ({
-          indent_id: String(v.indent_id || '').trim(),
-          url: String(v.url || '').trim(),
-          short_name: String(v.short_name || '').trim(),
-          title: String(v.title || '').trim(),
-          tag: String(v.tag || '').trim(),
-          order: Number.isFinite(Number(v.order)) ? Number(v.order) : 9999
-        }))
+
+      // Avoid duplicates due to:
+      // - underlying DB containing multiple records for the same video
+      // - concurrent loadRefVideos() calls racing (seq guard below)
+      const byVideoId = new Map();
+      (Array.isArray(all) ? all : []).filter(Boolean).forEach(raw => {
+        const v = {
+          indent_id: String(raw.indent_id || '').trim(),
+          url: String(raw.url || '').trim(),
+          short_name: String(raw.short_name || '').trim(),
+          title: String(raw.title || '').trim(),
+          tag: String(raw.tag || '').trim(),
+          order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : 9999
+        };
+        const key = cleanStr(getVideoIdFromRefVideo(v)) || cleanStr(v.url) || `${v.indent_id}::${v.title}`;
+        if (!key) return;
+
+        const prev = byVideoId.get(key);
+        if (!prev) {
+          byVideoId.set(key, v);
+          return;
+        }
+
+        // Merge: keep lowest order, fill missing fields.
+        prev.order = Math.min(prev.order, v.order);
+        if (!prev.indent_id && v.indent_id) prev.indent_id = v.indent_id;
+        if (!prev.url && v.url) prev.url = v.url;
+        if (!prev.short_name && v.short_name) prev.short_name = v.short_name;
+        if (!prev.title && v.title) prev.title = v.title;
+        if (!prev.tag && v.tag) prev.tag = v.tag;
+      });
+
+      const sorted = Array.from(byVideoId.values())
         .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
 
       const limit = Math.max(0, Math.floor(Number(REF_VIDEOS_MENU_LIMIT) || 0));
       const filtered = applyMainMenuFilters(sorted);
       const top = filtered.slice(0, limit);
+
+      // If a newer call started while we were awaiting, do not render stale results.
+      if (seq !== _refVideosLoadSeq) return;
 
       if (sorted.length === 0) {
         const li = document.createElement('li');
