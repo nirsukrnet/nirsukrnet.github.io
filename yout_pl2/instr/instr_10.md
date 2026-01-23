@@ -147,3 +147,20 @@ Add 3 buttons next to the window:
 
 Disable `Prev` when `startIndex == 0`.
 If the next item does not exist (end of list reached), disable `Next` (or keep enabled but show “(no more items)”).
+
+
+
+<div class="row">
+      <label>
+        Language:
+        <select id="selLang">
+          <option value="uk-UA">Ukrainian (uk-UA)</option>
+          <option value="en-US" selected="">English (en-US)</option>
+          <option value="sv-SE">Swedish (sv-SE)</option>
+        </select>
+      </label>
+      <button id="btnRec" type="button" data-state="idle">Start recognition</button>
+
+      <button id="btnEndPhrase" type="button" title="End phrase: move current text to history">E</button>
+      <button id="btnCMenu" type="button" title="Menu">⋯</button>
+    </div>

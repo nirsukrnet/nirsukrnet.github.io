@@ -9,23 +9,22 @@
     html { -webkit-text-size-adjust: 100%; }
     body {
       margin: 0;
-      padding: 16px;
+      padding: 12px;
+      padding-bottom: 84px;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       line-height: 1.4;
       color: #111;
     }
 
     header {
-      max-width: 980px;
-      margin: 0 auto 12px;
-      display: grid;
-      gap: 6px;
+      margin: 0;
+      display: none;
     }
 
     h1 { margin: 0; font-size: 18px; }
     .sub { opacity: 0.8; font-size: 13px; }
 
-    main { max-width: 980px; margin: 0 auto; }
+    main { width: 100%; max-width: none; margin: 0; }
 
     /* Top-right main menu (sessions) */
     #mainMenu {
@@ -102,6 +101,35 @@
     }
 
     button:disabled { opacity: 0.6; cursor: default; }
+
+    /* yout_pl2-like controls */
+    .yu2-btn { white-space: nowrap; }
+    .yu2-btn--play { font-variant-numeric: tabular-nums; }
+
+    .row.controls {
+      flex-wrap: nowrap;
+      background: transparent;
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: min(980px, calc(100vw - 24px));
+      margin: 0;
+      padding: 12px;
+      z-index: 900;
+    }
+
+    /* Keep control buttons transparent by default */
+    .row.controls button { background: transparent; }
+
+    /* Tool buttons: match yout_pl2 purple style */
+    .row.controls button.yu2-btn--tool {
+      user-select: none;
+      color: #fff;
+      border-color: color-mix(in srgb, #502cd4 70%, #ffffff);
+      background-color: rgba(80,44,212,.25); /* fallback */
+      background-color: color-mix(in srgb, #502cd4 90%, transparent);
+    }
 
     #btnPermission[data-state="unknown"] { color: #333; }
     #btnPermission[data-state="allowed"] { color: #1a7f37; }
@@ -323,46 +351,21 @@
 
   <button id="btnSessionsShow" type="button" title="Toggle sessions panel" style="position:fixed; top:12px; right:12px; z-index:1001; min-height:32px; padding:6px 10px; border-radius:999px;">Sessions</button>
 
-  <header>
-    <h1>rec_voice</h1>
-    <div class="sub">Live microphone speech-to-text. Note: mic access usually requires HTTPS or <code>localhost</code>.</div>
-  </header>
+  <header></header>
 
   <main>
-    <section class="ytItems" aria-label="Transcript items">
-      <div class="ytItemsHead">
-        <div class="ytItemsTitle">
-          <strong>Transcript items</strong>
-          <span style="opacity:.75;">(3)</span>
-          <span id="ytItemsStart" style="opacity:.75;">start: 0</span>
-          <span id="ytItemsLangInfo" style="opacity:.75;"></span>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button id="btnYtBeg" type="button" title="Go to beginning" style="min-height:32px; padding:6px 10px;" disabled>Beg</button>
-          <button id="btnYtPrev" type="button" title="Previous" style="min-height:32px; padding:6px 10px;" disabled>Prev</button>
-          <button id="btnYtNext" type="button" title="Next" style="min-height:32px; padding:6px 10px;" disabled>Next</button>
-        </div>
-      </div>
-      <div id="ytItemsStatus" class="sub" style="margin:0 0 8px;"></div>
-      <div id="ytItemsList" class="ytAllText"></div>
-    </section>
+    <section id="ytItemsList" class="ytItems ytAllText" aria-label="Transcript items"></section>
 
-    <div class="row">
-      <label>
-        Language:
-        <select id="selLang">
-          <option value="uk-UA">Ukrainian (uk-UA)</option>
-          <option value="en-US" selected>English (en-US)</option>
-          <option value="sv-SE">Swedish (sv-SE)</option>
-        </select>
-      </label>
-      <button id="btnRec" type="button" data-state="idle" disabled>Start recognition</button>
+    <div class="row controls">
+      <button id="btnRec" class="yu2-btn yu2-btn--play" type="button" data-state="idle" disabled>R en</button>
 
-      <button id="btnEndPhrase" type="button" title="End phrase: move current text to history">E</button>
-      <button id="btnCMenu" type="button" title="Menu">⋯</button>
+      <button id="btnYtBeg" class="yu2-btn yu2-btn--tool" type="button" title="Go to beginning" disabled>Beg</button>
+      <button id="btnYtPrev" class="yu2-btn yu2-btn--tool" type="button" title="Previous" disabled>Prev</button>
+      <button id="btnYtNext" class="yu2-btn yu2-btn--tool" type="button" title="Next" disabled>Next</button>
+
+      <button id="btnEndPhrase" class="yu2-btn yu2-btn--tool" type="button" title="End phrase: move current text to history">E</button>
+      <button id="btnCMenu" class="yu2-btn yu2-btn--tool" type="button" title="Menu" style="margin-left:auto;">⋯</button>
     </div>
-
-    <div id="status" class="status" hidden></div>
 
     <div id="panel" class="panel" aria-label="Transcript output">
       <div class="latest">
@@ -388,7 +391,19 @@
       </div>
       <div class="row" style="margin:10px 0 0;">
         <button id="btnPermission" type="button" data-state="unknown" title="Check/ask microphone permission">Permission mic</button>
+        <label style="gap:6px;">
+          <span>Language</span>
+          <select id="selLang" aria-label="Language">
+            <option value="uk-UA">Ukrainian (uk-UA)</option>
+            <option value="en-US" selected>English (en-US)</option>
+            <option value="sv-SE">Swedish (sv-SE)</option>
+          </select>
+        </label>
         <button id="btnToggleMeta" type="button" data-state="0" title="Toggle meta line (time + language)">Meta: off</button>
+      </div>
+
+      <div class="row" style="margin:10px 0 0;">
+        <button id="btnYtShowTranslation" type="button" data-state="1" title="Show/hide translation in the transcript items window">YT translation: on</button>
       </div>
       <div class="sub" style="margin-top:6px;">
         Tip: mic permission often requires HTTPS or <code>localhost</code>.
@@ -479,6 +494,9 @@
     /** @type {HTMLButtonElement} */
     const btnClearSelected = document.getElementById('btnClearSelected');
 
+    /** @type {HTMLButtonElement} */
+    const btnYtShowTranslation = document.getElementById('btnYtShowTranslation');
+
     /** @type {HTMLSelectElement} */
     const selSession = document.getElementById('selSession');
     /** @type {HTMLButtonElement} */
@@ -552,6 +570,11 @@
     let ytLoadSeq = 0;
     let ytLang1Show = '';
     let ytLang2Show = '';
+
+    // Render option: include translation (lang2) inside #ytItemsList
+    let ytShowTranslation = true;
+    let ytLastPrimaryText = '';
+    let ytLastTranslationText = '';
 
     const SHOW_META_KEY = 'rec_voice_show_meta';
 
@@ -663,6 +686,7 @@
     }
 
     function setYtItemsStatus(msg) {
+      if (!ytItemsStatus) return;
       ytItemsStatus.textContent = msg || '';
     }
 
@@ -708,15 +732,20 @@
       return '';
     }
 
-    async function loadYoutPl2LangSettings() {
-      // Read display language settings from yout_pl2 UI state in Firebase.
-      // Use the same storage used by yout_pl2.html: DB_CONST_UI_STATE_YOUT_PL2
+    async function loadYtItemsListLangSettings(videoId) {
+      // For rendering <section id="ytItemsList"> we must use per-video settings
+      // stored together with the transcript:
+      //   DB_CONST_YOUTUBE_TRANSCRIPTS/<videoId>/{lang1_show,lang2_show}
       try {
-        const gv = ensureGv();
-        const path = gv.cst.getcst('DB_CONST_UI_STATE_YOUT_PL2');
-        if (!path) return { lang1: '', lang2: '' };
-        const data = await requestByPath(path, 'GET');
+        const vid = cleanStr(videoId);
+        if (!vid) return { lang1: '', lang2: '' };
+        const { YOUTUBE_TRANSCRIPTS } = getPaths();
+        if (!YOUTUBE_TRANSCRIPTS) return { lang1: '', lang2: '' };
+
+        const data = await requestByPath(`${YOUTUBE_TRANSCRIPTS}/${vid}`, 'GET');
+
         const lang1 = cleanLangCode(data && data.lang1_show);
+
         // lang2_show may be intentionally empty (Off)
         let lang2 = '';
         try {
@@ -724,6 +753,7 @@
             lang2 = cleanLangCode(data.lang2_show) || '';
           }
         } catch {}
+
         return { lang1, lang2 };
       } catch {
         return { lang1: '', lang2: '' };
@@ -731,7 +761,22 @@
     }
 
     function renderTranscriptText3(text) {
+      if (!ytItemsList) return;
       ytItemsList.textContent = text || '';
+    }
+
+    function refreshYtTranslationToggleUI() {
+      if (!btnYtShowTranslation) return;
+      btnYtShowTranslation.dataset.state = ytShowTranslation ? '1' : '0';
+      btnYtShowTranslation.textContent = ytShowTranslation ? 'YT translation: on' : 'YT translation: off';
+    }
+
+    function renderYtItemsFromCache() {
+      let out = ytLastPrimaryText || '';
+      if (ytShowTranslation && (ytLastTranslationText || '').trim()) {
+        out = out ? `${out}\n\n${ytLastTranslationText}` : ytLastTranslationText;
+      }
+      renderTranscriptText3(out);
     }
 
     async function loadTranscriptItemsWindow(opts = {}) {
@@ -750,6 +795,8 @@
         ytLastVideoId = '';
         setYtLangInfo('', '');
         setYtItemsStatus('Select YouTube video to view transcript items.');
+        ytLastPrimaryText = '';
+        ytLastTranslationText = '';
         renderTranscriptText3('');
         return;
       }
@@ -758,14 +805,17 @@
         ytLastVideoId = vid;
         setYtLangInfo('', '');
         setYtItemsStatus('Firebase not ready.');
+        ytLastPrimaryText = '';
+        ytLastTranslationText = '';
         renderTranscriptText3('');
         return;
       }
 
       setYtItemsStatus('Loading…');
-      const { lang1, lang2 } = await loadYoutPl2LangSettings();
+      const { lang1, lang2 } = await loadYtItemsListLangSettings(vid);
       ytLang1Show = lang1 || 'sv';
-      ytLang2Show = (lang2 && lang2 !== ytLang1Show) ? lang2 : 'en';
+      // Respect Off/empty for lang2_show. Only use lang2 when it differs from lang1.
+      ytLang2Show = (lang2 && lang2 !== ytLang1Show) ? lang2 : '';
       setYtLangInfo(ytLang1Show, ytLang2Show);
 
       const { YOUTUBE_TRANSCRIPTS } = getPaths();
@@ -788,6 +838,8 @@
 
       if (!rows.length) {
         setYtItemsStatus('(no items at this position)');
+        ytLastPrimaryText = '';
+        ytLastTranslationText = '';
         renderTranscriptText3('');
       } else {
         const part1 = [];
@@ -799,8 +851,11 @@
           if (b) part2.push(b);
         }
 
-        let text = part1.join('\n');
-        if (part2.length) text = `${text}\n\n${part2.join('\n')}`;
+        ytLastPrimaryText = part1.join('\n');
+        ytLastTranslationText = part2.join('\n');
+
+        let text = ytLastPrimaryText;
+        if (ytShowTranslation && part2.length) text = `${text}\n\n${ytLastTranslationText}`;
         setYtItemsStatus('');
         renderTranscriptText3(text);
       }
@@ -967,10 +1022,14 @@
       if (btnSessionsShow) {
         btnSessionsShow.dataset.open = on ? '1' : '0';
         btnSessionsShow.title = on ? 'Hide sessions panel' : 'Show sessions panel';
+        // Avoid overlap: the floating button shares the same corner as the panel.
+        // When the panel is open, user can close it via the × button.
+        btnSessionsShow.style.display = on ? 'none' : '';
       }
     }
 
     function setStatus(msg, kind = 'info') {
+      if (!elStatus) return;
       if (!msg) {
         elStatus.hidden = true;
         elStatus.textContent = '';
@@ -1007,6 +1066,15 @@
       if (!speechSupported) {
         setStatus('Speech recognition not supported in this browser (SpeechRecognition/webkitSpeechRecognition missing).', 'warn');
       }
+
+      // Keep btnRec label synced with current state/lang.
+      updateRecButtonLabel();
+    }
+
+    function updateRecButtonLabel() {
+      const langTag = (selLang && selLang.value) ? String(selLang.value) : '';
+      const shortLang = langTag.split(/[-_]/)[0] || langTag;
+      btnRec.textContent = isRecording ? `S ${shortLang}` : `R ${shortLang}`;
     }
 
     function scrollIfNearTop() {
@@ -1112,13 +1180,13 @@
 
       if (isRecording) {
         btnRec.dataset.state = 'recording';
-        btnRec.textContent = 'Stop recognition';
+        updateRecButtonLabel();
         btnRec.disabled = false;
         // while recording, don't allow permission button to be clicked to avoid confusion
         btnPermission.disabled = true;
       } else {
         btnRec.dataset.state = 'idle';
-        btnRec.textContent = 'Start recognition';
+        updateRecButtonLabel();
         btnPermission.disabled = false;
         // enable/disable based on current known permission + support
         const speechSupported = Boolean(SpeechRecognition);
@@ -1299,6 +1367,25 @@
 
     btnCMenu.addEventListener('click', () => {
       try { dlgCMenu.showModal(); } catch { /* ignore */ }
+      refreshYtTranslationToggleUI();
+    });
+
+    btnYtShowTranslation.addEventListener('click', async () => {
+      ytShowTranslation = !ytShowTranslation;
+      refreshYtTranslationToggleUI();
+      renderYtItemsFromCache();
+      try {
+        const { UI_STATE_REC_VOICE } = getPaths();
+        const cur = await requestByPath(UI_STATE_REC_VOICE, 'GET');
+        const payload = {
+          ...(cur && typeof cur === 'object' ? cur : {}),
+          yt_show_translation: ytShowTranslation ? 1 : 0,
+          atupdate: Date.now(),
+        };
+        await requestByPath(UI_STATE_REC_VOICE, 'PUT', payload);
+      } catch {
+        // ignore
+      }
     });
 
     btnToggleMeta.addEventListener('click', () => {
@@ -1428,6 +1515,9 @@
       try {
         const data = await requestByPath(UI_STATE_REC_VOICE, 'GET');
         const sid = (data && typeof data.selected_session_id === 'string') ? data.selected_session_id : '';
+        ytShowTranslation = !data ? true : Boolean(data.yt_show_translation === 1 || data.yt_show_translation === true || data.yt_show_translation === '1');
+        refreshYtTranslationToggleUI();
+        renderYtItemsFromCache();
         return sid;
       } catch {
         return '';
@@ -1436,7 +1526,11 @@
 
     async function saveUiStateSelection(sessionId) {
       const { UI_STATE_REC_VOICE } = getPaths();
-      await requestByPath(UI_STATE_REC_VOICE, 'PUT', { selected_session_id: String(sessionId || ''), atupdate: Date.now() });
+      await requestByPath(UI_STATE_REC_VOICE, 'PUT', {
+        selected_session_id: String(sessionId || ''),
+        yt_show_translation: ytShowTranslation ? 1 : 0,
+        atupdate: Date.now(),
+      });
     }
 
     function clearHistoryUi() {
@@ -1662,11 +1756,14 @@
     selLang.addEventListener('change', () => {
       // Per spec: language affects recognition on next start.
       setStatus(`Language set to ${selLang.value}.`, 'info');
+      updateRecButtonLabel();
     });
 
     // Init
     (async function init() {
       setLatest('');
+
+      updateRecButtonLabel();
 
       // Sessions panel opens only by click on the Sessions button.
       setSessionsPanelVisible(false);
