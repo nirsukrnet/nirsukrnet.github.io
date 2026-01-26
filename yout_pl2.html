@@ -973,6 +973,16 @@ English Channel..."></textarea>
           referrerPolicy: null,
           playerElementTag: null
         },
+        ytPlayer: {
+          exists: false,
+          videoId: null,
+          videoUrl: null,
+          title: null,
+          author: null,
+          playerState: null,
+          currentTime: null,
+          duration: null
+        },
         firebaseAuth: {
           signedInNow: false,
           hasIdToken: false
@@ -996,6 +1006,35 @@ English Channel..."></textarea>
           } catch {
             payload.ytIframe.host = '';
           }
+        }
+      } catch {}
+
+      // YT.Player runtime info (more reliable than iframe src after loadVideoById).
+      try {
+        if (typeof player !== 'undefined' && player) {
+          payload.ytPlayer.exists = true;
+          try {
+            if (typeof player.getPlayerState === 'function') payload.ytPlayer.playerState = player.getPlayerState();
+          } catch {}
+          try {
+            if (typeof player.getCurrentTime === 'function') payload.ytPlayer.currentTime = player.getCurrentTime();
+          } catch {}
+          try {
+            if (typeof player.getDuration === 'function') payload.ytPlayer.duration = player.getDuration();
+          } catch {}
+          try {
+            if (typeof player.getVideoUrl === 'function') payload.ytPlayer.videoUrl = cleanStr(player.getVideoUrl());
+          } catch {}
+          try {
+            if (typeof player.getVideoData === 'function') {
+              const vd = player.getVideoData();
+              if (vd && typeof vd === 'object') {
+                payload.ytPlayer.videoId = cleanStr(vd.video_id || vd.videoId || '');
+                payload.ytPlayer.title = cleanStr(vd.title || '');
+                payload.ytPlayer.author = cleanStr(vd.author || '');
+              }
+            }
+          } catch {}
         }
       } catch {}
 
