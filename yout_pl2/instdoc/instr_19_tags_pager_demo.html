@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>instr_19 demo — tags pager</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #fff;
+      color: #111;
+    }
+
+    .dialog {
+      width: calc(100vw - 16px);
+      max-width: 520px;
+      height: calc(100vh - 16px);
+      margin: 8px auto;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid currentColor;
+      background: transparent;
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-height: 36px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    #btnClose {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      min-height: 32px;
+      padding: 0;
+      border-radius: 10px;
+      line-height: 1;
+      font-size: 18px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .muted {
+      opacity: 0.7;
+      font-size: 14px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    li {
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .spacer { height: 10px; }
+  </style>
+</head>
+<body>
+  <div class="dialog" role="dialog" aria-label="Main menu demo">
+    <button id="btnClose" type="button" aria-label="Close" title="Close">×</button>
+
+    <div id="mainMenuTagRow" class="row" style="margin: 0 0 10px;"></div>
+
+    <div class="row" style="margin: 0 0 10px;">
+      <input id="inFilter" placeholder="type to filter" />
+    </div>
+
+    <div id="info" class="muted" style="margin: 0 0 10px;"></div>
+
+    <ul id="items"></ul>
+  </div>
+
+  <script>
+    'use strict';
+
+    const PAGE_SIZE = 3;
+
+    // Demo tags (ordered)
+    const tags = ['SW1', 'SWE', 'ENG', 'SW2', 'OTH', 'ALL2', 'BAS', 'ADV', 'VID', 'TXT'];
+
+    // Demo items (15)
+    const allItems = [
+      { tag: 'SWE', title: '45 Vanliga Svenska Verb - Jennifer' },
+      { tag: 'SWE', title: 'Träna personliga pronomen - Jennifer' },
+      { tag: 'SWE', title: 'Kan du hitta alla VERBEN? - Jennifer' },
+      { tag: 'SW1', title: 'Svenska grunder: alfabet och ljud' },
+      { tag: 'ENG', title: 'English warm-up: common phrases' },
+      { tag: 'SW2', title: 'Bisatsinledare som, eftersom - Jennifer' },
+      { tag: 'SWE', title: '40 verb med bilder - Jennifer' },
+      { tag: 'OTH', title: 'At The Doctor\'s Office | SWE Dialogues' },
+      { tag: 'ADV', title: 'Advanced listening: speed practice' },
+      { tag: 'BAS', title: 'Basic Swedish: greetings and questions' },
+      { tag: 'VID', title: 'Video drills: short dialogues' },
+      { tag: 'TXT', title: 'Text practice: reading short stories' },
+      { tag: 'SW2', title: 'Konjunktioner med - Jennifer' },
+      { tag: 'SWE', title: 'Hur mycket svenska förstår du? - Jennifer' },
+      { tag: 'SW1', title: 'Numbers and time (swedish)' },
+    ];
+
+    let selectedTag = '';
+    let q = '';
+    let tagPageStart = 0;
+
+    const elTagRow = document.getElementById('mainMenuTagRow');
+    const elFilter = document.getElementById('inFilter');
+    const elInfo = document.getElementById('info');
+    const elItems = document.getElementById('items');
+
+    function cleanTagCode(x) {
+      const s = String(x || '').trim().toUpperCase();
+      if (!s) return '';
+      if (!/^[A-Z0-9_-]{2,12}$/.test(s)) return '';
+      return s;
+    }
+
+    function cleanStr(x) {
+      return String(x == null ? '' : x).trim();
+    }
+
+    function ensureSelectedTagVisible() {
+      const t = cleanTagCode(selectedTag);
+      if (!t) return;
+      const idx = tags.findIndex(v => cleanTagCode(v) === t);
+      if (idx < 0) return;
+      tagPageStart = idx - (idx % PAGE_SIZE);
+      if (tagPageStart < 0) tagPageStart = 0;
+    }
+
+    function renderTagRow() {
+      if (!elTagRow) return;
+      elTagRow.innerHTML = '';
+
+      const total = tags.length;
+      ensureSelectedTagVisible();
+
+      const start = Math.max(0, Math.min(tagPageStart, Math.max(0, total - 1)));
+      const page = tags.slice(start, start + PAGE_SIZE);
+
+      const mkBtn = (label, tagCode) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        btn.dataset.tag = cleanTagCode(tagCode);
+        btn.dataset.selected = (cleanTagCode(selectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
+        btn.onclick = () => {
+          selectedTag = cleanTagCode(tagCode);
+          renderAll();
+        };
+        return btn;
+      };
+
+      page.forEach(t => elTagRow.appendChild(mkBtn(t, t)));
+
+      // All button is always the 4th slot (inside the row).
+      {
+        const allBtn = document.createElement('button');
+        allBtn.type = 'button';
+        allBtn.textContent = 'All';
+        allBtn.dataset.selected = selectedTag ? '0' : '1';
+        allBtn.onclick = () => {
+          selectedTag = '';
+          renderAll();
+        };
+        elTagRow.appendChild(allBtn);
+      }
+
+      // Right arrow (5th button)
+      if (total > PAGE_SIZE) {
+        const arrow = document.createElement('button');
+        arrow.type = 'button';
+        arrow.textContent = '›';
+        arrow.title = 'Next tags';
+        arrow.setAttribute('aria-label', 'Next tags');
+        arrow.onclick = () => {
+          tagPageStart = start + PAGE_SIZE;
+          if (tagPageStart >= total) tagPageStart = 0;
+          renderTagRow();
+        };
+        elTagRow.appendChild(arrow);
+      }
+    }
+
+    function applyFilters(items) {
+      const t = cleanTagCode(selectedTag);
+      const qq = cleanStr(q).toLowerCase();
+      return items.filter(v => {
+        if (t && cleanTagCode(v.tag) !== t) return false;
+        if (qq && !cleanStr(v.title).toLowerCase().includes(qq)) return false;
+        return true;
+      });
+    }
+
+    function renderList() {
+      if (!elItems) return;
+      elItems.innerHTML = '';
+
+      const filtered = applyFilters(allItems);
+      const label = selectedTag ? cleanTagCode(selectedTag) : 'All';
+      if (elInfo) elInfo.textContent = `${label}: showing ${filtered.length} of ${filtered.length} (total ${allItems.length})`;
+
+      if (!filtered.length) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'No items match.';
+        elItems.appendChild(li);
+        return;
+      }
+
+      filtered.forEach(v => {
+        const li = document.createElement('li');
+        li.textContent = v.title;
+        li.title = `tag: ${v.tag}`;
+        elItems.appendChild(li);
+      });
+    }
+
+    function renderAll() {
+      renderTagRow();
+      renderList();
+    }
+
+    if (elFilter) {
+      elFilter.addEventListener('input', () => {
+        q = elFilter.value;
+        renderList();
+      });
+    }
+
+    const btnClose = document.getElementById('btnClose');
+    if (btnClose) {
+      btnClose.onclick = () => {
+        // Demo-only close: just clear filters to simulate "closing".
+        selectedTag = '';
+        q = '';
+        if (elFilter) elFilter.value = '';
+        tagPageStart = 0;
+        renderAll();
+      };
+    }
+
+    // Init
+    renderAll();
+  </script>
+</body>
+</html>

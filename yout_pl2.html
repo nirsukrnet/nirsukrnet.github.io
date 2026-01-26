@@ -565,6 +565,10 @@ English Channel..."></textarea>
     let _mainMenuTagsCache = [];
     let _refVideosLoadSeq = 0;
 
+    // Main menu tag pager (instr_19): 3 tags + All + arrow
+    const MAIN_MENU_TAG_PAGE_SIZE = 3;
+    let mainMenuTagPageStart = 0;
+
     // Debounced persistence of playback language display settings.
     let _playbackLangSaveTimer = null;
 
@@ -645,17 +649,46 @@ English Channel..."></textarea>
       return normalizeRefTagsShort(data);
     }
 
+    function clampMainMenuTagPageStart(total) {
+      const n = Math.max(0, Math.floor(Number(total) || 0));
+      if (n <= 0) {
+        mainMenuTagPageStart = 0;
+        return;
+      }
+      let s = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0));
+      if (s >= n) s = 0;
+      mainMenuTagPageStart = s;
+    }
+
+    function ensureMainMenuSelectedTagVisible(list) {
+      const selected = cleanTagCode(mainMenuSelectedTag);
+      if (!selected || !Array.isArray(list) || list.length === 0) return;
+      const idx = list.findIndex(t => cleanTagCode(t && t.code) === selected);
+      if (idx < 0) return;
+      mainMenuTagPageStart = idx - (idx % MAIN_MENU_TAG_PAGE_SIZE);
+      clampMainMenuTagPageStart(list.length);
+    }
+
     function renderMainMenuTagButtons(list) {
       const row = document.getElementById('mainMenuTagRow');
       if (!row) return;
       row.innerHTML = '';
 
-      const mkBtn = (label, tagCode) => {
+      const tags = Array.isArray(list) ? list.filter(Boolean) : [];
+      ensureMainMenuSelectedTagVisible(tags);
+      clampMainMenuTagPageStart(tags.length);
+
+      const mkBtn = (label, tagCode, order) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = label;
         if (tagCode) btn.dataset.tag = tagCode;
         else btn.dataset.all = '1';
+        try {
+          const t = cleanTagCode(tagCode);
+          if (t) btn.title = `${t} (order ${Number.isFinite(Number(order)) ? Number(order) : 9999})`;
+          else btn.title = 'All';
+        } catch {}
         btn.dataset.selected = (!tagCode && !cleanTagCode(mainMenuSelectedTag)) || (tagCode && cleanTagCode(mainMenuSelectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
         btn.onclick = () => {
           setMainMenuSelectedTag(tagCode || '');
@@ -663,7 +696,23 @@ English Channel..."></textarea>
         return btn;
       };
 
-      if (!Array.isArray(list) || list.length === 0) {
+      const mkArrow = () => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '›';
+        btn.title = 'Next tags';
+        btn.setAttribute('aria-label', 'Next tags');
+        btn.onclick = () => {
+          const total = tags.length;
+          if (total <= MAIN_MENU_TAG_PAGE_SIZE) return;
+          mainMenuTagPageStart = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0)) + MAIN_MENU_TAG_PAGE_SIZE;
+          if (mainMenuTagPageStart >= total) mainMenuTagPageStart = 0;
+          renderMainMenuTagButtons(_mainMenuTagsCache);
+        };
+        return btn;
+      };
+
+      if (tags.length === 0) {
         const span = document.createElement('span');
         span.className = 'muted';
         span.textContent = 'No tags';
@@ -672,12 +721,19 @@ English Channel..."></textarea>
         return;
       }
 
-      list.forEach(t => {
-        row.appendChild(mkBtn(t.label || t.code, t.code));
+      const start = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0));
+      const page = tags.slice(start, start + MAIN_MENU_TAG_PAGE_SIZE);
+
+      // 1) Up to 3 tags
+      page.forEach(t => {
+        row.appendChild(mkBtn(t.label || t.code, t.code, t.order));
       });
 
-      // Keep "All" on the right (last).
-      row.appendChild(mkBtn('All', ''));
+      // 2) All is always the 4th slot
+      row.appendChild(mkBtn('All', '', 0));
+
+      // 3) Arrow is 5th slot (only if more than 3 tags exist)
+      if (tags.length > MAIN_MENU_TAG_PAGE_SIZE) row.appendChild(mkArrow());
     }
 
     function scheduleSaveMainMenuFilters() {
@@ -704,17 +760,10 @@ English Channel..."></textarea>
 
     function setMainMenuSelectedTag(tagCodeOrEmpty) {
       mainMenuSelectedTag = cleanTagCode(tagCodeOrEmpty) || '';
-      try {
-        // Update selected state
-        const row = document.getElementById('mainMenuTagRow');
-        if (row) {
-          row.querySelectorAll('button[data-tag], button[data-all]').forEach(btn => {
-            const tag = cleanTagCode(btn.dataset.tag);
-            const isAll = btn.dataset.all === '1';
-            btn.dataset.selected = (isAll && !mainMenuSelectedTag) || (tag && tag === mainMenuSelectedTag) ? '1' : '0';
-          });
-        }
-      } catch {}
+
+      // Ensure selected tag is visible in the pager.
+      try { ensureMainMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
+      try { renderMainMenuTagButtons(_mainMenuTagsCache); } catch {}
 
       scheduleSaveMainMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
@@ -2709,6 +2758,9 @@ English Channel..."></textarea>
           await ytEnsureSignedIn();
           await loadMainMenuFilterState();
           _mainMenuTagsCache = await loadRefTagsShortList();
+          try {
+            console.log('Main menu tags (sorted):', (_mainMenuTagsCache || []).map(t => ({ code: t.code, order: t.order, label: t.label })));
+          } catch {}
           renderMainMenuTagButtons(_mainMenuTagsCache);
         } catch {
           renderMainMenuTagButtons([]);
