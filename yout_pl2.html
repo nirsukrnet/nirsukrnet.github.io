@@ -3229,7 +3229,7 @@ English Channel..."></textarea>
     window.onYouTubeIframeAPIReady = function () {
       player = new YT.Player('player', {
         videoId: currentVideoId,
-        playerVars: { rel: 0, modestbranding: 1, origin: location.origin },
+        playerVars: { rel: 0, modestbranding: 1, playsinline: 1, origin: location.origin },
         events: {
           onReady: () => {
             wireControls();
