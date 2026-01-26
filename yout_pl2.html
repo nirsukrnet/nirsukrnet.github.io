@@ -480,6 +480,7 @@ English Channel..."></textarea>
       </div>
 
       <div id="refVideosStatus" class="muted" style="margin:0 0 10px;"></div>
+      <div id="refVideosLimitInfo" class="muted" style="margin:0 0 10px;"></div>
       <ul id="refVideosList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
     </form>
   </dialog>
@@ -569,6 +570,7 @@ English Channel..."></textarea>
 
     // Ref videos menu
     const REF_VIDEOS_MENU_LIMIT = 9;
+    const REF_VIDEOS_MENU_LIMIT_ALL = 60;
 
     // Auto-scroll behavior: keep the active transcript row this many pixels from the
     // top edge of the transcript panel. Adjust this constant to tune the “top gap”.
@@ -2922,10 +2924,7 @@ English Channel..."></textarea>
       list.innerHTML = '';
 
       const limitInfo = document.getElementById('refVideosLimitInfo');
-      if (limitInfo) {
-        const n = Math.max(0, Math.floor(Number(REF_VIDEOS_MENU_LIMIT) || 0));
-        limitInfo.textContent = `First ${n} videos (sorted by order)`;
-      }
+      if (limitInfo) limitInfo.textContent = '';
 
       if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.listAll !== 'function') {
         setRefStatus('YouTubeRefVideosStore not available');
@@ -2968,9 +2967,16 @@ English Channel..."></textarea>
       const sorted = Array.from(byVideoId.values())
         .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
 
-      const limit = Math.max(0, Math.floor(Number(REF_VIDEOS_MENU_LIMIT) || 0));
+      const selectedTag = cleanTagCode(mainMenuSelectedTag);
+      const limitBase = selectedTag ? REF_VIDEOS_MENU_LIMIT : REF_VIDEOS_MENU_LIMIT_ALL;
+      const limit = Math.max(0, Math.floor(Number(limitBase) || 0));
       const filtered = applyMainMenuFilters(sorted);
       const top = filtered.slice(0, limit);
+
+      if (limitInfo) {
+        const label = selectedTag ? selectedTag : 'All';
+        limitInfo.textContent = `${label}: showing ${top.length} of ${filtered.length} (total ${sorted.length})`;
+      }
 
       // If a newer call started while we were awaiting, do not render stale results.
       if (seq !== _refVideosLoadSeq) return;
