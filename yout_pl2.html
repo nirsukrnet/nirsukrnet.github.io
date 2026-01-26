@@ -383,16 +383,20 @@
 
   <dialog id="dlgMenu">
     <form method="dialog">
-      <h3 style="margin:0 0 8px; font-size:16px;">Menu</h3>
-      <div class="muted" style="margin:0 0 6px;">Paste / Edit language</div>
-      <div id="langRow" class="row" style="margin:0 0 10px;"></div>
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <button id="btnMenuHome" type="button" title="Home">Home</button>
+        <h3 style="margin:0; font-size:16px;">Contexts menu</h3>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+      </div>
 
-      <div class="row" style="margin:0 0 12px;">
-        <button id="btnMenuPaste" value="cancel">Paste transcript</button>
+      <div class="muted" style="margin:0 0 6px;">Paste / Edit language</div>
+      <div class="row" style="margin:0 0 10px; align-items:center;">
         <button id="btnAddVideo" value="cancel">Add YouTube link</button>
-        <button id="btnStoreDebug" type="button" title="Save runtime debug info to Firebase">Store Debug</button>
-        <button id="btnOpenYoutube" type="button" title="Open current video in youtube.com (best for Premium/no-ads)">Open YouTube</button>
-        <button id="btnOpenYoutubeApp" type="button" title="Open current video in the YouTube app">Open App</button>
+        <button id="btnEditVideo" type="button" title="Edit the saved record for the current video">Edit YouTube link</button>
+      </div>
+      <div class="row" style="margin:0 0 12px; align-items:center;">
+        <div id="langRow" class="row" style="margin:0; flex:1 1 auto;"></div>
+        <button id="btnMenuPaste" value="cancel">Paste transcript</button>
       </div>
 
       <div class="muted" style="margin:0 0 6px;">Show in playback</div>
@@ -406,8 +410,13 @@
         <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
         <button id="btnMenuToggleControlsDock" value="cancel">Dock controls bottom</button>
         <button id="btnPlayMode" type="button" title="Toggle playback behavior">Play mode - All</button>
-        <button value="cancel" style="margin-left:auto;">Close</button>
-        <button id="btnMenuHome" type="button" title="Home">Home</button>
+      </div>
+
+      <div class="muted" style="margin:10px 0 6px;">Debug</div>
+      <div class="row" style="margin:0;">
+        <button id="btnStoreDebug" type="button" title="Save runtime debug info to Firebase">Store Debug</button>
+        <button id="btnOpenYoutube" type="button" title="Open current video in youtube.com (best for Premium/no-ads)">Open YouTube</button>
+        <button id="btnOpenYoutubeApp" type="button" title="Open current video in the YouTube app">Open App</button>
       </div>
     </form>
   </dialog>
@@ -2711,6 +2720,17 @@ English Channel..."></textarea>
     function openAddVideoDialog() {
       setAddVideoStatus('');
 
+      // Mark dialog as "add" mode.
+      try {
+        const frm = document.getElementById('frmAddVideo');
+        if (frm && frm.dataset) {
+          frm.dataset.mode = 'add';
+          delete frm.dataset.originalVideoId;
+        }
+        const titleEl = document.querySelector('#dlgAddVideo h3');
+        if (titleEl) titleEl.textContent = 'Add YouTube link';
+      } catch {}
+
       // Reset fields so each new "Add" starts clean.
       try {
         const ids = ['inIndentId', 'inUrl', 'inShortName', 'inTitle', 'inTag', 'inDesc'];
@@ -2719,9 +2739,93 @@ English Channel..."></textarea>
           if (el) el.value = '';
         });
 
+        const inIndent = document.getElementById('inIndentId');
+        const inUrl = document.getElementById('inUrl');
+        if (inIndent) inIndent.disabled = false;
+        if (inUrl) inUrl.disabled = false;
+
         const inOrder = document.getElementById('inOrder');
         if (inOrder) inOrder.value = '9999';
       } catch {}
+
+      const dlg = document.getElementById('dlgAddVideo');
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    function setAddVideoDialogMode(mode, originalVideoId) {
+      try {
+        const frm = document.getElementById('frmAddVideo');
+        if (frm && frm.dataset) {
+          frm.dataset.mode = cleanStr(mode) || 'add';
+          if (cleanStr(originalVideoId)) frm.dataset.originalVideoId = cleanStr(originalVideoId);
+          else delete frm.dataset.originalVideoId;
+        }
+      } catch {}
+
+      try {
+        const titleEl = document.querySelector('#dlgAddVideo h3');
+        if (titleEl) titleEl.textContent = (mode === 'edit') ? 'Edit YouTube link' : 'Add YouTube link';
+      } catch {}
+    }
+
+    async function openEditVideoDialogForCurrentVideo() {
+      setAddVideoStatus('');
+
+      const vid = cleanStr((typeof currentVideoId !== 'undefined') ? currentVideoId : '');
+      if (!vid) {
+        setMainStatus('No current video');
+        return;
+      }
+
+      if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.listAll !== 'function') {
+        setMainStatus('YouTubeRefVideosStore not available');
+        return;
+      }
+
+      setAddVideoStatus('Loading...');
+      let all = [];
+      try {
+        all = await window.YouTubeRefVideosStore.listAll();
+      } catch (err) {
+        setAddVideoStatus('Load failed');
+        try { console.warn('Edit video: listAll failed', err); } catch {}
+        return;
+      }
+
+      const list = Array.isArray(all) ? all.filter(Boolean) : [];
+      const record = list.find(r => cleanStr(getVideoIdFromRefVideo(r)) === vid);
+      if (!record) {
+        setAddVideoStatus('');
+        setMainStatus('This video is not in saved links');
+        return;
+      }
+
+      // Fill the existing Add dialog with record values.
+      try {
+        const inIndent = document.getElementById('inIndentId');
+        const inUrl = document.getElementById('inUrl');
+        const inShort = document.getElementById('inShortName');
+        const inTitle = document.getElementById('inTitle');
+        const inTag = document.getElementById('inTag');
+        const inOrder = document.getElementById('inOrder');
+        const inDesc = document.getElementById('inDesc');
+
+        if (inIndent) inIndent.value = cleanStr(record.indent_id);
+        if (inUrl) inUrl.value = cleanStr(record.url);
+        if (inShort) inShort.value = cleanStr(record.short_name);
+        if (inTitle) inTitle.value = cleanStr(record.title);
+        if (inTag) inTag.value = cleanStr(record.tag);
+        if (inOrder) inOrder.value = String(Number.isFinite(Number(record.order)) ? Number(record.order) : 9999);
+        if (inDesc) inDesc.value = cleanStr(record.description);
+
+        // Keep url editable, but enforce same videoId at save time.
+        if (inIndent) inIndent.disabled = true;
+      } catch {}
+
+      setAddVideoDialogMode('edit', vid);
+      setAddVideoStatus('Edit mode');
 
       const dlg = document.getElementById('dlgAddVideo');
       if (!dlg) return;
@@ -2918,6 +3022,15 @@ English Channel..."></textarea>
         throw new Error('YouTubeRefVideosStore not available');
       }
 
+      // Dialog mode: add | edit
+      let mode = 'add';
+      let originalVideoId = '';
+      try {
+        const frm = document.getElementById('frmAddVideo');
+        mode = cleanStr(frm && frm.dataset ? frm.dataset.mode : '') || 'add';
+        originalVideoId = cleanStr(frm && frm.dataset ? frm.dataset.originalVideoId : '');
+      } catch {}
+
       const indent_id = document.getElementById('inIndentId')?.value;
       const url = document.getElementById('inUrl')?.value;
       const short_name = document.getElementById('inShortName')?.value;
@@ -2926,8 +3039,22 @@ English Channel..."></textarea>
       const order = document.getElementById('inOrder')?.value;
       const description = document.getElementById('inDesc')?.value;
 
+      // In edit mode, do not allow changing the videoId.
+      if (mode === 'edit') {
+        const target = cleanStr(originalVideoId) || cleanStr((typeof currentVideoId !== 'undefined') ? currentVideoId : '');
+        if (!target) throw new Error('Edit mode: missing original videoId');
+
+        let nextId = cleanStr(indent_id);
+        if (!nextId && window.YouTubeRefVideosStore && typeof window.YouTubeRefVideosStore.extractVideoIdFromUrl === 'function') {
+          nextId = cleanStr(window.YouTubeRefVideosStore.extractVideoIdFromUrl(url));
+        }
+        if (nextId && cleanStr(nextId) !== cleanStr(target)) {
+          throw new Error('Edit mode: changing videoId is not allowed. Use Add YouTube link instead.');
+        }
+      }
+
       await window.YouTubeRefVideosStore.save({
-        indent_id,
+        indent_id: (mode === 'edit') ? (cleanStr(originalVideoId) || cleanStr((typeof currentVideoId !== 'undefined') ? currentVideoId : '')) : indent_id,
         url,
         short_name,
         title,
@@ -3241,6 +3368,14 @@ English Channel..."></textarea>
 
       const btnAdd = document.getElementById('btnAddVideo');
       if (btnAdd) btnAdd.onclick = (e) => { e.preventDefault(); openAddVideoDialog(); };
+
+      const btnEdit = document.getElementById('btnEditVideo');
+      if (btnEdit) btnEdit.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          Promise.resolve().then(() => openEditVideoDialogForCurrentVideo()).catch(() => setMainStatus('Edit open failed'));
+        } catch {}
+      };
 
       const btnHome = document.getElementById('btnMenuHome');
       if (btnHome) btnHome.onclick = (e) => {

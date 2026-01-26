@@ -1,88 +1,85 @@
-## instr_16: “Store Debug” button (save diagnostics to Firebase RTDB)
+# dlgMenu (extracted from yout_pl2.html)
 
-### Goal
-Add a new button **Store Debug** inside the **Menu dialog** (`<dialog id="dlgMenu">`). When clicked, it collects a compact set of runtime diagnostics and saves them to Firebase Realtime Database (RTDB) under:
+This is the **source** markup for the Menu dialog (not runtime-rendered HTML).
 
-- `<DB_CONST_DB_YOUTUBE2_ROOT>/debug_info/<autoId>`
+```html
+  <dialog id="dlgMenu">
+    <form method="dialog">
+      <h3 style="margin:0 0 8px; font-size:16px;">Menu</h3>
+      <div class="muted" style="margin:0 0 6px;">Paste / Edit language</div>
+      <div id="langRow" class="row" style="margin:0 0 10px;"></div>
 
-This is used to debug iPhone-specific issues (ex: why ads show in one page but not another, auth issues, iframe host differences, etc.).
+      <div class="row" style="margin:0 0 12px;">
+        <button id="btnMenuPaste" value="cancel">Paste transcript</button>
+        <button id="btnAddVideo" value="cancel">Add YouTube link</button>
+        <button id="btnStoreDebug" type="button" title="Save runtime debug info to Firebase">Store Debug</button>
+        <button id="btnOpenYoutube" type="button" title="Open current video in youtube.com (best for Premium/no-ads)">Open YouTube</button>
+        <button id="btnOpenYoutubeApp" type="button" title="Open current video in the YouTube app">Open App</button>
+      </div>
 
-### UI requirements
+      <div class="muted" style="margin:0 0 6px;">Show in playback</div>
+      <div class="muted" style="margin:0 0 6px; font-size:12px;">Line 1</div>
+      <div id="langRowShow1" class="row" style="margin:0 0 10px;"></div>
+      <div class="muted" style="margin:0 0 6px; font-size:12px;">Line 2</div>
+      <div id="langRowShow2" class="row" style="margin:0 0 8px;"></div>
 
-- Add a new button inside the Menu dialog:
-	- `id="btnStoreDebug"`
-	- `type="button"` (must NOT close the dialog)
-	- label text: `Store Debug`
+      <div class="row" style="margin:8px 0 0;">
+        <button id="btnMenuToggleTrans" value="cancel">Hide transcription</button>
+        <button id="btnMenuToggleTime" value="cancel">Show time</button>
+        <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
+        <button id="btnMenuToggleControlsDock" value="cancel">Dock controls bottom</button>
+        <button id="btnPlayMode" type="button" title="Toggle playback behavior">Play mode - All</button>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+        <button id="btnMenuHome" type="button" title="Home">Home</button>
+      </div>
+    </form>
+  </dialog>
+```
 
-- Button placement:
-	- In `dlgMenu`, in the first action row:
-		- `<div class="row" style="margin:0 0 12px;">`
-		- next to `btnMenuPaste` and `btnAddVideo`
+## dlgMenu: sections and buttons
 
-### Behavior
-- On click:
-	1) Ensure Firebase sign-in (use existing `ytEnsureSignedIn()` flow).
-	2) Collect debug data (see fields below).
-	3) Save it into RTDB via `POST` (so Firebase generates a unique key).
-	4) Show user feedback:
-		 - While saving: `Saving debug...`
-		 - On success: `Debug saved: <key>`
-		 - On failure: `Debug save failed: <error>`
+### Section: Header
+- Section name: `Menu`
+- Elements:
+  - (text) `Menu` — dialog title.
 
-### Data to save (payload)
-Store a single JSON object with these fields (keep it small; max ~10–30KB):
+### Section: Paste / Edit language
+- Section name: `Paste / Edit language`
+- Container: `#langRow`
+- Buttons:
+  - (dynamic) language buttons (e.g. `SV`, `EN`, `UK`) — switches the active language context used for paste/edit.
 
-**Metadata**
-- `createdAt`: ISO string
-- `page`: `location.href`
-- `origin`: `location.origin`
-- `referrer`: `document.referrer` (optional)
+### Section: Actions
+- Section container: the first `.row` after `#langRow`
+- Buttons:
+  - `btnMenuPaste` — label: `Paste transcript` — opens the transcript paste dialog.
+  - `btnAddVideo` — label: `Add YouTube link` — opens the “Add video” dialog to save a new link.
+  - `btnStoreDebug` — label: `Store Debug` — saves runtime debug info to Firebase (`.../debug_info`).
+  - `btnOpenYoutube` — label: `Open YouTube` — opens the current video in `youtube.com` (best chance for Premium/no-ads).
+  - `btnOpenYoutubeApp` — label: `Open App` — attempts to open the current video in the YouTube app (fallbacks to `youtube.com`).
 
-**Browser / device**
-- `userAgent`: `navigator.userAgent`
-- `platform`: `navigator.platform` (if available)
-- `language`: `navigator.language`
+### Section: Show in playback
+- Section name: `Show in playback`
 
-**App state**
-- `currentVideoId`: current selected videoId
-- `playMode`: current play mode value (if exists)
-- `isPlaying`: boolean (if exists)
-- `activeIndex`: active transcript index (if exists)
-- `transcriptLen`: transcript item count
+#### Subsection: Line 1
+- Container: `#langRowShow1`
+- Buttons:
+  - (dynamic) language buttons (e.g. `SV`, `EN`, `UK`) — selects which language is shown on transcript line 1.
 
-**YouTube iframe diagnostics** (key for iPhone ads debugging)
-- `ytIframe` object:
-	- `exists`: boolean
-	- `src`: iframe `src`
-	- `host`: derived host from `src`
-	- `sandbox`: iframe `sandbox` attribute (should usually be null)
-	- `allow`: iframe `allow` attribute
-	- `referrerPolicy`: iframe `referrerpolicy` attribute
+#### Subsection: Line 2
+- Container: `#langRowShow2`
+- Buttons:
+  - (dynamic) language buttons and/or `Off` (if supported) — selects which language is shown on transcript line 2 (or disables it).
 
-**Auth diagnostics (do NOT store secrets)**
-- `firebaseAuth` object:
-	- `signedInNow`: boolean (based on `gv.URL_DS.idToken`)
-	- `hasIdToken`: boolean
-	- `userEmail`: optional; only if easily available from Firebase Auth *and* you accept storing it
-		- If privacy is a concern, store `userEmailHash` instead (sha256) and omit raw email.
+### Section: Toggles / Close
+- Section container: last `.row`
+- Buttons:
+  - `btnMenuToggleTrans` — label changes (`Hide transcription` / `Show transcription`) — toggles transcript panel visibility.
+  - `btnMenuToggleTime` — label changes (`Show time` / `Hide time`) — toggles time display in the transcript.
+  - `btnMenuToggleTransTime` — label changes (`Hide transcript time` / `Show transcript time`) — toggles timestamps on each transcript line.
+  - `btnMenuToggleControlsDock` — label changes (`Dock controls bottom` / `Undock controls`) — docks/undocks controls row.
+  - `btnPlayMode` — label like `Play mode - All` — cycles playback behavior modes.
+  - (no id) `Close` — closes the dialog (native `<form method="dialog">` behavior).
+  - `btnMenuHome` — label: `Home` — navigates to site home.
 
-**Last errors (optional, best-effort)**
-- `lastError`: a short string, if you track last error message in the app
-
-### Privacy / safety constraints
-- Never store `idToken`, `refreshToken`, passwords, or full transcript contents.
-- If saving email is not required, omit it.
-
-### Firebase path rules
-- Base path MUST be derived from existing constants/logic:
-	- Use `getYoutube2RootPath()` (which is based on `gv.cst.getcst('DB_CONST_DB_YOUTUBE2_ROOT')`), then append `/debug_info`.
-	- (Optional) You may add a dedicated constant in `GB_Const`, e.g. `DB_CONST_DEBUG_INFO = root + '/debug_info'`, but it is not required.
-- Write method:
-	- Prefer `POST` to `/debug_info` so RTDB generates an autoId key.
-
-### Acceptance criteria
-- Clicking **Store Debug** creates a new entry in RTDB at `<DB_CONST_DB_YOUTUBE2_ROOT>/debug_info/<autoId>`.
-- Entry contains iframe info (`src`, `sandbox`, `allow`) and page/userAgent.
-- User sees a visible success or error message.
-- No tokens/passwords are written to the DB.
 
