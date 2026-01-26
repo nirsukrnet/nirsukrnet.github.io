@@ -391,6 +391,8 @@
         <button id="btnMenuPaste" value="cancel">Paste transcript</button>
         <button id="btnAddVideo" value="cancel">Add YouTube link</button>
         <button id="btnStoreDebug" type="button" title="Save runtime debug info to Firebase">Store Debug</button>
+        <button id="btnOpenYoutube" type="button" title="Open current video in youtube.com (best for Premium/no-ads)">Open YouTube</button>
+        <button id="btnOpenYoutubeApp" type="button" title="Open current video in the YouTube app">Open App</button>
       </div>
 
       <div class="muted" style="margin:0 0 6px;">Show in playback</div>
@@ -1044,6 +1046,50 @@ English Channel..."></textarea>
       } catch {}
 
       return payload;
+    }
+
+    function buildYoutubeWatchUrl(videoId, tSec) {
+      const vid = cleanStr(videoId);
+      if (!vid) return 'https://www.youtube.com/';
+      const t = Math.max(0, Math.floor(Number(tSec || 0)));
+      return `https://www.youtube.com/watch?v=${encodeURIComponent(vid)}${t ? `&t=${t}s` : ''}`;
+    }
+
+    function buildYoutubeAppUrl(videoId, tSec) {
+      const vid = cleanStr(videoId);
+      if (!vid) return 'youtube://';
+      const t = Math.max(0, Math.floor(Number(tSec || 0)));
+      return `youtube://www.youtube.com/watch?v=${encodeURIComponent(vid)}${t ? `&t=${t}s` : ''}`;
+    }
+
+    function openCurrentVideoInYoutube(useApp) {
+      try {
+        const vid = cleanStr((typeof currentVideoId !== 'undefined') ? currentVideoId : '');
+        let t = 0;
+        try {
+          if (typeof player !== 'undefined' && player && typeof player.getCurrentTime === 'function') t = player.getCurrentTime();
+        } catch {}
+
+        const webUrl = buildYoutubeWatchUrl(vid, t);
+        if (useApp) {
+          const appUrl = buildYoutubeAppUrl(vid, t);
+          try { window.location.href = appUrl; } catch {}
+          // Fallback if app open is blocked.
+          try { setTimeout(() => { try { window.open(webUrl, '_blank', 'noopener'); } catch {} }, 600); } catch {}
+          setMainStatus('Opening YouTube app...');
+          return;
+        }
+
+        try {
+          const w = window.open(webUrl, '_blank', 'noopener');
+          if (!w) window.location.href = webUrl;
+        } catch {
+          try { window.location.href = webUrl; } catch {}
+        }
+        setMainStatus('Opening youtube.com...');
+      } catch {
+        setMainStatus('Open failed');
+      }
     }
 
     async function storeDebugInfoToFirebase() {
@@ -2986,6 +3032,22 @@ English Channel..."></textarea>
         try {
           if (e && typeof e.preventDefault === 'function') e.preventDefault();
           Promise.resolve().then(() => storeDebugInfoToFirebase()).catch(() => {});
+        } catch {}
+      };
+
+      const btnOpenYoutube = document.getElementById('btnOpenYoutube');
+      if (btnOpenYoutube) btnOpenYoutube.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          openCurrentVideoInYoutube(false);
+        } catch {}
+      };
+
+      const btnOpenYoutubeApp = document.getElementById('btnOpenYoutubeApp');
+      if (btnOpenYoutubeApp) btnOpenYoutubeApp.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          openCurrentVideoInYoutube(true);
         } catch {}
       };
       document.getElementById('btnMenuToggleTrans').onclick = (e) => {
