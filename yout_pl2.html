@@ -921,6 +921,31 @@ English Channel..."></textarea>
       return getYoutube2RootPath() + '/debug_info';
     }
 
+    function findYoutubeIframeElement() {
+      try {
+        const el = document.getElementById('player');
+        if (el && String(el.tagName || '').toUpperCase() === 'IFRAME') return el;
+        if (el) {
+          const inside = el.querySelector && el.querySelector('iframe');
+          if (inside) return inside;
+        }
+      } catch {}
+
+      try {
+        const wrap = document.getElementById('playerWrap');
+        const inside = wrap && wrap.querySelector ? wrap.querySelector('iframe') : null;
+        if (inside) return inside;
+      } catch {}
+
+      // Fallback: any YouTube iframe on the page.
+      try {
+        const any = document.querySelector('iframe[src*="youtube"], iframe[src*="youtu.be"], iframe[src*="youtube-nocookie"]');
+        if (any) return any;
+      } catch {}
+
+      return null;
+    }
+
     function buildDebugInfoPayload() {
       const payload = {
         createdAt: ytNowIso(),
@@ -945,7 +970,8 @@ English Channel..."></textarea>
           host: '',
           sandbox: null,
           allow: null,
-          referrerPolicy: null
+          referrerPolicy: null,
+          playerElementTag: null
         },
         firebaseAuth: {
           signedInNow: false,
@@ -954,7 +980,10 @@ English Channel..."></textarea>
       };
 
       try {
-        const iframe = document.querySelector('#player iframe');
+        const playerEl = document.getElementById('player');
+        payload.ytIframe.playerElementTag = playerEl ? String(playerEl.tagName || '') : null;
+
+        const iframe = findYoutubeIframeElement();
         if (iframe) {
           payload.ytIframe.exists = true;
           payload.ytIframe.src = cleanStr(iframe.src || iframe.getAttribute('src'));
@@ -982,6 +1011,15 @@ English Channel..."></textarea>
       setMainStatus('Saving debug...');
       try {
         await ytEnsureSignedIn();
+
+        // Wait briefly for the iframe to exist (YT IFrame API can create it asynchronously).
+        const start = Date.now();
+        while (Date.now() - start < 2200) {
+          const iframe = findYoutubeIframeElement();
+          if (iframe) break;
+          await sleepMs(200);
+        }
+
         const payload = buildDebugInfoPayload();
         const root = getYoutubeDebugInfoRootPath();
         const res = await ytRequestByPath(root, 'POST', payload);
