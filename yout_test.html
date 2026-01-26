@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>YouTube Embed Test</title>
+	<style>
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 16px; }
+		.wrap { max-width: 980px; margin: 0 auto; }
+		h1 { font-size: 18px; margin: 0 0 10px; }
+		.muted { opacity: 0.75; }
+		.player {
+			width: 100%;
+			aspect-ratio: 16 / 9;
+			border: 1px solid #bbb;
+			border-radius: 12px;
+			overflow: hidden;
+			background: #000;
+		}
+		.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+		button, a.btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 44px;
+			padding: 10px 12px;
+			border-radius: 10px;
+			border: 1px solid currentColor;
+			background: transparent;
+			text-decoration: none;
+			color: inherit;
+			cursor: pointer;
+		}
+		code { background: rgba(0,0,0,.06); padding: 2px 6px; border-radius: 6px; }
+	</style>
+</head>
+<body>
+	<div class="wrap">
+		<h1>YouTube embedded video</h1>
+
+		<div class="muted" style="margin-bottom:10px;">
+			Video: <code id="vidCode">32KtK2bLs4I</code>
+		</div>
+
+		<div class="row" style="margin-top:0;">
+			<label class="muted" for="selVideo">Choose video</label>
+			<select id="selVideo" style="min-height:44px; padding:10px 12px; border-radius:10px; border:1px solid currentColor; background:transparent;">
+				<!-- options injected by JS -->
+			</select>
+		</div>
+
+		<div id="player" class="player" aria-label="YouTube player"></div>
+
+		<div class="row">
+			<button id="btnPlay" type="button">Play</button>
+			<button id="btnPause" type="button">Pause</button>
+			<a class="btn" id="lnkOpen" href="https://www.youtube.com/watch?v=32KtK2bLs4I" target="_blank" rel="noopener">Open in YouTube</a>
+			<a class="btn" id="lnkOpenApp" href="youtube://www.youtube.com/watch?v=32KtK2bLs4I" rel="noopener">Open in YouTube app</a>
+		</div>
+
+		<div class="muted" style="margin-top:8px;">
+			Quick links:
+			<div id="links" class="row" style="margin:8px 0 0;"></div>
+		</div>
+
+		<div id="status" class="muted"></div>
+
+		<hr style="margin:16px 0; opacity:.25;" />
+
+		<div class="muted">
+			<div style="margin-bottom:8px;">
+				Important: an embedded YouTube player cannot force “Premium / no-ads”. Ads and Premium features are controlled by YouTube.
+			</div>
+			<div style="margin-bottom:8px;">
+				Even if the user is signed in to YouTube in Safari/Chrome, the embed may not have access to that sign-in context due to iOS/WebKit privacy restrictions (third‑party cookies).
+			</div>
+			<div>
+				If you need the full Premium experience reliably, use <strong>Open in YouTube</strong> (top-level youtube.com or the YouTube app).
+			</div>
+		</div>
+	</div>
+
+	<!-- YouTube IFrame API -->
+	<script>
+		const VIDEOS = [
+			{ id: '32KtK2bLs4I', label: '32KtK2bLs4I (original)' },
+			{ id: 'ivm1vIlut5U', label: 'ivm1vIlut5U' },
+			{ id: 'jCo9NBXjquY', label: 'jCo9NBXjquY' },
+			{ id: 'kbz0pijxiFc', label: 'kbz0pijxiFc' }
+		];
+
+		let VIDEO_ID = VIDEOS[0].id;
+		const statusEl = document.getElementById('status');
+		const setStatus = (s) => { statusEl.textContent = String(s || ''); };
+
+		const vidCode = document.getElementById('vidCode');
+		const selVideo = document.getElementById('selVideo');
+		const lnkOpen = document.getElementById('lnkOpen');
+		const lnkOpenApp = document.getElementById('lnkOpenApp');
+		const linksRow = document.getElementById('links');
+
+		function updateOpenLinks(videoId) {
+			const vid = String(videoId || '').trim();
+			if (vidCode) vidCode.textContent = vid || '(none)';
+			if (lnkOpen) lnkOpen.href = `https://www.youtube.com/watch?v=${encodeURIComponent(vid)}`;
+			if (lnkOpenApp) lnkOpenApp.href = `youtube://www.youtube.com/watch?v=${encodeURIComponent(vid)}`;
+		}
+
+		function renderChooser() {
+			if (selVideo) {
+				selVideo.innerHTML = '';
+				VIDEOS.forEach(v => {
+					const opt = document.createElement('option');
+					opt.value = v.id;
+					opt.textContent = v.label || v.id;
+					if (v.id === VIDEO_ID) opt.selected = true;
+					selVideo.appendChild(opt);
+				});
+			}
+
+			if (linksRow) {
+				linksRow.innerHTML = '';
+				VIDEOS.forEach(v => {
+					const a = document.createElement('a');
+					a.className = 'btn';
+					a.href = `https://www.youtube.com/watch?v=${encodeURIComponent(v.id)}`;
+					a.target = '_blank';
+					a.rel = 'noopener';
+					a.textContent = v.label || v.id;
+					a.addEventListener('click', (e) => {
+						// Let it open in a new tab, but also switch selection in-page.
+						try {
+							if (selVideo) selVideo.value = v.id;
+							setVideoId(v.id);
+						} catch {}
+					});
+					linksRow.appendChild(a);
+				});
+			}
+		}
+
+		function setVideoId(nextId) {
+			const vid = String(nextId || '').trim();
+			if (!vid) return;
+			VIDEO_ID = vid;
+			updateOpenLinks(vid);
+			setStatus('');
+			try {
+				if (player && typeof player.loadVideoById === 'function') player.loadVideoById(vid);
+				else if (player && typeof player.cueVideoById === 'function') player.cueVideoById(vid);
+			} catch (e) {
+				setStatus('Switch failed');
+			}
+		}
+
+		// Load API
+		(function loadApi(){
+			const tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			document.head.appendChild(tag);
+		})();
+
+		let player = null;
+
+		window.onYouTubeIframeAPIReady = function () {
+			player = new YT.Player('player', {
+				videoId: VIDEO_ID,
+				playerVars: {
+					rel: 0,
+					modestbranding: 1,
+					playsinline: 1,
+					origin: (location && location.origin) ? location.origin : undefined
+				},
+				events: {
+					onReady: () => setStatus('Ready'),
+					onError: (e) => setStatus('Player error: ' + (e && e.data != null ? e.data : 'unknown'))
+				}
+			});
+		};
+
+		// UI wiring
+		renderChooser();
+		updateOpenLinks(VIDEO_ID);
+		if (selVideo) {
+			selVideo.addEventListener('change', () => {
+				setVideoId(selVideo.value);
+			});
+		}
+
+		document.getElementById('btnPlay').addEventListener('click', () => {
+			try {
+				if (!player) return;
+				player.playVideo();
+			} catch (e) {
+				setStatus('Play failed');
+			}
+		});
+
+		document.getElementById('btnPause').addEventListener('click', () => {
+			try {
+				if (!player) return;
+				player.pauseVideo();
+			} catch (e) {
+				setStatus('Pause failed');
+			}
+		});
+	</script>
+</body>
+</html>
+
+
+
