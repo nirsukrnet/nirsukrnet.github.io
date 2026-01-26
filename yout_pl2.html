@@ -390,6 +390,7 @@
       <div class="row" style="margin:0 0 12px;">
         <button id="btnMenuPaste" value="cancel">Paste transcript</button>
         <button id="btnAddVideo" value="cancel">Add YouTube link</button>
+        <button id="btnStoreDebug" type="button" title="Save runtime debug info to Firebase">Store Debug</button>
       </div>
 
       <div class="muted" style="margin:0 0 6px;">Show in playback</div>
@@ -914,6 +915,83 @@ English Channel..."></textarea>
 
     function getYoutubeExplanationRootPath() {
       return getYoutube2RootPath() + '/youtube_explanation';
+    }
+
+    function getYoutubeDebugInfoRootPath() {
+      return getYoutube2RootPath() + '/debug_info';
+    }
+
+    function buildDebugInfoPayload() {
+      const payload = {
+        createdAt: ytNowIso(),
+        page: (typeof location !== 'undefined' && location && location.href) ? String(location.href) : '',
+        origin: (typeof location !== 'undefined' && location && location.origin) ? String(location.origin) : '',
+        referrer: (typeof document !== 'undefined' && document && document.referrer) ? String(document.referrer) : '',
+        browser: {
+          userAgent: (typeof navigator !== 'undefined' && navigator && navigator.userAgent) ? String(navigator.userAgent) : '',
+          platform: (typeof navigator !== 'undefined' && navigator && navigator.platform) ? String(navigator.platform) : '',
+          language: (typeof navigator !== 'undefined' && navigator && navigator.language) ? String(navigator.language) : ''
+        },
+        app: {
+          currentVideoId: cleanStr((typeof currentVideoId !== 'undefined') ? currentVideoId : ''),
+          playMode: cleanStr((typeof playMode !== 'undefined') ? playMode : ''),
+          isPlaying: !!(typeof isPlaying !== 'undefined' ? isPlaying : false),
+          activeIndex: (typeof activeIndex === 'number') ? activeIndex : null,
+          transcriptLen: Array.isArray(transcript) ? transcript.length : 0
+        },
+        ytIframe: {
+          exists: false,
+          src: '',
+          host: '',
+          sandbox: null,
+          allow: null,
+          referrerPolicy: null
+        },
+        firebaseAuth: {
+          signedInNow: false,
+          hasIdToken: false
+        }
+      };
+
+      try {
+        const iframe = document.querySelector('#player iframe');
+        if (iframe) {
+          payload.ytIframe.exists = true;
+          payload.ytIframe.src = cleanStr(iframe.src || iframe.getAttribute('src'));
+          payload.ytIframe.sandbox = iframe.getAttribute('sandbox');
+          payload.ytIframe.allow = iframe.getAttribute('allow');
+          payload.ytIframe.referrerPolicy = iframe.getAttribute('referrerpolicy');
+          try {
+            const u = payload.ytIframe.src ? new URL(payload.ytIframe.src) : null;
+            payload.ytIframe.host = u ? cleanStr(u.host) : '';
+          } catch {
+            payload.ytIframe.host = '';
+          }
+        }
+      } catch {}
+
+      try {
+        payload.firebaseAuth.signedInNow = isSignedInNow();
+        payload.firebaseAuth.hasIdToken = !!(window.gv && window.gv.URL_DS && window.gv.URL_DS.idToken);
+      } catch {}
+
+      return payload;
+    }
+
+    async function storeDebugInfoToFirebase() {
+      setMainStatus('Saving debug...');
+      try {
+        await ytEnsureSignedIn();
+        const payload = buildDebugInfoPayload();
+        const root = getYoutubeDebugInfoRootPath();
+        const res = await ytRequestByPath(root, 'POST', payload);
+        const key = (res && typeof res === 'object') ? cleanStr(res.name) : '';
+        setMainStatus(key ? `Debug saved: ${key}` : 'Debug saved');
+      } catch (err) {
+        const msg = (err && err.message) ? err.message : String(err || 'failed');
+        setMainStatus(`Debug save failed: ${msg}`);
+        try { console.warn('Store Debug failed', err); } catch {}
+      }
     }
 
     function setRespStatus(msg) {
@@ -2824,6 +2902,14 @@ English Channel..."></textarea>
       document.getElementById('btnMenuPaste').onclick = (e) => {
         e.preventDefault();
         openPasteModal();
+      };
+
+      const btnStoreDebug = document.getElementById('btnStoreDebug');
+      if (btnStoreDebug) btnStoreDebug.onclick = (e) => {
+        try {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          Promise.resolve().then(() => storeDebugInfoToFirebase()).catch(() => {});
+        } catch {}
       };
       document.getElementById('btnMenuToggleTrans').onclick = (e) => {
         e.preventDefault();
