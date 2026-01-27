@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transcript Reader (yt_text)</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+      align-items: center;
+    }
+
+    /* Controls bar: keep transparent like yout_pl2.html */
+    .row.controls {
+      flex-wrap: wrap;
+      background: transparent;
+    }
+
+    .row.controls button {
+      background: transparent;
+    }
+
+    /* Dock controls row to bottom when enabled (same as yout_pl2.html) */
+    body[data-controls-docked="1"] .row.controls {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: min(980px, calc(100vw - 24px));
+      margin: 0;
+      padding: 12px;
+      z-index: 45;
+    }
+
+    /* Force a new line inside controls row */
+    .controls-break {
+      flex-basis: 100%;
+      height: 0;
+    }
+
+    /* Language buttons selected state */
+    .row.controls button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    /* Top-right MainMenu */
+    #btnMainMenu {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 50;
+    }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    .muted { opacity: 0.75; }
+
+    dialog {
+      width: calc(100vw - 16px);
+      max-width: calc(100vw - 16px);
+      height: calc(100vh - 16px);
+      max-height: calc(100vh - 16px);
+      margin: 8px;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    /* Transcript panel */
+    #transWrap {
+      max-width: 980px;
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 10px;
+      height: 90vh;
+      max-height: 720px;
+      min-height: 420px;
+      overflow-y: auto;
+    }
+
+    #transList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 1px;
+      padding-top: 8px;
+      padding-bottom: 24px;
+    }
+
+    #transList li {
+      padding: 2px 0px;
+      border-radius: 0px;
+      border: 0px solid transparent;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #transList li[data-active="1"] {
+      box-shadow:
+        inset 0 2px 0 0 color-mix(in srgb, currentColor 55%, transparent),
+        inset 0 -2px 0 0 color-mix(in srgb, currentColor 55%, transparent);
+    }
+
+    #transList small {
+      opacity: 0.75;
+      margin-right: 8px;
+      font-variant-numeric: tabular-nums;
+      min-width: 56px;
+      display: inline-block;
+    }
+
+    #transList .trLine {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    /* Second line styling (translation), similar to yout_pl2.html */
+    #transList .trLine2 {
+      margin-left: 1px;
+      color: darkolivegreen;
+    }
+
+    /* Main menu filters */
+    #mainMenuTagRow button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <button id="btnMainMenu" type="button">MainMenu</button>
+
+  <div class="row controls" aria-label="Controls">
+    <button id="btnLangSv" type="button">SV</button>
+    <button id="btnLangEn" type="button">EN</button>
+    <span class="controls-break" aria-hidden="true"></span>
+    <button id="btnNextSentence" type="button">Sn&gt;</button>
+    <button id="btnNextPage" type="button">Pg&gt;</button>
+    <button id="btnBegin" type="button">Beg</button>
+    <button id="btnMenu" type="button" style="margin-left:auto;">...</button>
+    <span id="mainInfo" class="muted"></span>
+  </div>
+
+  <div id="transStatus" class="muted" style="max-width:980px;"></div>
+
+  <div id="transWrap" data-rendered="1">
+    <ul id="transList"></ul>
+  </div>
+
+  <!-- Required but minimal/empty Contexts menu (dlgMenu) -->
+  <dialog id="dlgMenu">
+    <form method="dialog">
+      <div class="row" style="margin:0;">
+        <strong>Contexts menu</strong>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+      </div>
+      <div class="row" style="margin:10px 0 0;">
+        <button id="btnMenuToggleTransTime" value="cancel">Hide transcript time</button>
+        <button id="btnMenuToggleOneSentTrans" value="cancel">One sent trans - Off</button>
+      </div>
+      <div class="muted" style="margin-top:10px;">(menu is minimal in yt_text.html)</div>
+    </form>
+  </dialog>
+
+  <!-- Main menu: pick a videoId from saved refs -->
+  <dialog id="dlgMainMenu">
+    <form method="dialog">
+      <button id="btnMainMenuClose" value="cancel" aria-label="Close" title="Close"
+        style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">×</button>
+
+      <div id="mainMenuTagRow" class="row" style="margin:0 0 10px;"></div>
+
+      <div class="row" style="margin:0 0 10px;">
+        <input id="inMainMenuShortFilter" placeholder="type to filter" />
+      </div>
+
+      <div id="refVideosStatus" class="muted" style="margin:0 0 10px;"></div>
+      <div id="refVideosLimitInfo" class="muted" style="margin:0 0 10px;"></div>
+      <ul id="refVideosList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
+    </form>
+  </dialog>
+
+  <!-- Firebase auth + RTDB request helper (defines GlobalVars / URL_DataSet) -->
+  <script src="./yout_pl2/yu2_global_var.js"></script>
+  <script src="./yout_pl2/youtube_transcript_store.js"></script>
+  <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
+
+  <script>
+    'use strict';
+
+    // -------------------------
+    // Constants / state
+    // -------------------------
+    const TEXT_NEXT_PAGE_ITEMS = 10;
+
+    // Main menu paths
+    const gv = ytEnsureGv();
+    const UI_STATE_PATH = gv.cst.getcst('DB_CONST_UI_STATE_YOUT_PL2');
+    const REF_TAGS_SHORT_PATH = gv.cst.getcst('DB_CONST_REF_TAGS_SHORT');
+    const MAIN_MENU_SELECTED_TAG_PATH = `${UI_STATE_PATH}/main_menu_selected_tag`;
+    const MAIN_MENU_SHORT_NAME_FILTER_PATH = `${UI_STATE_PATH}/main_menu_short_name_filter`;
+
+    let currentVideoId = '';
+    let transcript = []; // base transcript items from store
+    let sentenceItems = []; // derived items for sentence-split view
+    let activeIndex = -1;
+    let transcriptRawText = '';
+
+    // UI state
+    let transcriptTimestampsVisible = true;
+    let oneSentTransEnabled = false;
+
+    // Display language for text
+    let lang1Show = 'sv';
+
+    // Main menu filters
+    let mainMenuSelectedTag = '';
+    let mainMenuShortNameFilter = '';
+    let _mainMenuSaveTimer = null;
+    let _mainMenuTagsCache = [];
+    let _refVideosLoadSeq = 0;
+
+    // Tag pager (same behavior as yout_pl2.html)
+    const MAIN_MENU_TAG_PAGE_SIZE = 3;
+    let mainMenuTagPageStart = 0;
+
+    const TRANS_ACTIVE_ROW_TOP_GAP_PX = 90;
+
+    // ------------------------------
+    // UI setting: transcript timestamps visible (same key as yout_pl2.html)
+    // Stored under:
+    // DB_CONST_UI_STATE_YOUT_PL2/transcript_timestamps_visible
+    // ------------------------------
+    async function loadTranscriptTimestampsVisibleSetting() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(`${UI_STATE_PATH}/transcript_timestamps_visible`, 'GET');
+        if (data == null) return null;
+        if (typeof data === 'boolean') return data;
+        if (typeof data === 'number') return data !== 0;
+        if (typeof data === 'string') {
+          const s = data.trim().toLowerCase();
+          if (s === 'true' || s === '1' || s === 'yes') return true;
+          if (s === 'false' || s === '0' || s === 'no') return false;
+          return null;
+        }
+        if (typeof data === 'object') {
+          if (typeof data.visible === 'boolean') return data.visible;
+          if (typeof data.visible === 'number') return data.visible !== 0;
+          if (typeof data.visible === 'string') {
+            const s = data.visible.trim().toLowerCase();
+            if (s === 'true' || s === '1' || s === 'yes') return true;
+            if (s === 'false' || s === '0' || s === 'no') return false;
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function saveTranscriptTimestampsVisibleSetting(isVisible) {
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(`${UI_STATE_PATH}/transcript_timestamps_visible`, 'PUT', {
+          visible: !!isVisible,
+          updatedAt: ytNowIso()
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    function setTranscriptTimestampsVisible(isVisible) {
+      transcriptTimestampsVisible = !!isVisible;
+      ensureDerivedSentenceItems();
+      // Keep selection if possible
+      const items = getRenderedItems();
+      if (!Array.isArray(items) || items.length === 0) {
+        activeIndex = -1;
+      } else {
+        if (activeIndex < 0) activeIndex = 0;
+        if (activeIndex >= items.length) activeIndex = items.length - 1;
+      }
+      updateMenuLabels();
+      renderTranscript();
+    }
+
+    function toggleTranscriptTimestampsVisible() {
+      const next = !transcriptTimestampsVisible;
+      setTranscriptTimestampsVisible(next);
+      Promise.resolve().then(() => saveTranscriptTimestampsVisibleSetting(next)).catch(() => {});
+    }
+
+    // ------------------------------
+    // UI setting: One sent trans mode
+    // Stored under:
+    // DB_CONST_UI_STATE_YOUT_PL2/one_sent_trans
+    // ------------------------------
+    async function loadOneSentTransSetting() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(`${UI_STATE_PATH}/one_sent_trans`, 'GET');
+        if (data == null) return null;
+        if (typeof data === 'boolean') return data;
+        if (typeof data === 'number') return data !== 0;
+        if (typeof data === 'string') {
+          const s = data.trim().toLowerCase();
+          if (s === 'true' || s === '1' || s === 'yes') return true;
+          if (s === 'false' || s === '0' || s === 'no') return false;
+          return null;
+        }
+        if (typeof data === 'object') {
+          if (typeof data.enabled === 'boolean') return data.enabled;
+          if (typeof data.enabled === 'number') return data.enabled !== 0;
+          if (typeof data.enabled === 'string') {
+            const s = data.enabled.trim().toLowerCase();
+            if (s === 'true' || s === '1' || s === 'yes') return true;
+            if (s === 'false' || s === '0' || s === 'no') return false;
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function saveOneSentTransSetting(isEnabled) {
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(`${UI_STATE_PATH}/one_sent_trans`, 'PUT', {
+          enabled: !!isEnabled,
+          updatedAt: ytNowIso()
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    function setOneSentTransEnabled(isEnabled) {
+      oneSentTransEnabled = !!isEnabled;
+      ensureDerivedSentenceItems();
+      updateMenuLabels();
+      renderTranscript();
+    }
+
+    function toggleOneSentTransEnabled() {
+      const next = !oneSentTransEnabled;
+      setOneSentTransEnabled(next);
+      Promise.resolve().then(() => saveOneSentTransSetting(next)).catch(() => {});
+    }
+
+    // ------------------------------
+    // UI setting: controls docked to bottom (same key as yout_pl2.html)
+    // Stored under:
+    // DB_CONST_UI_STATE_YOUT_PL2/controls_dock_bottom
+    // ------------------------------
+    function isControlsDocked() {
+      return !!document.body && document.body.dataset.controlsDocked === '1';
+    }
+
+    function updateControlsDockSpacer() {
+      const row = document.querySelector('.row.controls');
+      if (!row || !document.body) return;
+      if (!isControlsDocked()) {
+        document.body.style.paddingBottom = '';
+        return;
+      }
+      try {
+        const h = Math.ceil(row.getBoundingClientRect().height || 0);
+        document.body.style.paddingBottom = `${Math.max(0, h + 8)}px`;
+      } catch {
+        document.body.style.paddingBottom = '64px';
+      }
+    }
+
+    function setControlsDocked(isDocked) {
+      if (!document.body) return;
+      document.body.dataset.controlsDocked = isDocked ? '1' : '0';
+      try {
+        requestAnimationFrame(() => updateControlsDockSpacer());
+      } catch {
+        setTimeout(() => updateControlsDockSpacer(), 0);
+      }
+    }
+
+    async function loadControlsDockBottomSetting() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(`${UI_STATE_PATH}/controls_dock_bottom`, 'GET');
+        if (data == null) return null;
+        if (typeof data === 'boolean') return data;
+        if (typeof data === 'number') return data !== 0;
+        if (typeof data === 'string') {
+          const s = data.trim().toLowerCase();
+          if (s === 'true' || s === '1' || s === 'yes') return true;
+          if (s === 'false' || s === '0' || s === 'no') return false;
+          return null;
+        }
+        if (typeof data === 'object') {
+          if (typeof data.docked === 'boolean') return data.docked;
+          if (typeof data.docked === 'number') return data.docked !== 0;
+          if (typeof data.docked === 'string') {
+            const s = data.docked.trim().toLowerCase();
+            if (s === 'true' || s === '1' || s === 'yes') return true;
+            if (s === 'false' || s === '0' || s === 'no') return false;
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    // -------------------------
+    // Basic helpers
+    // -------------------------
+    function ytNowIso() {
+      try { return new Date().toISOString(); } catch { return String(Date.now()); }
+    }
+
+    function cleanStr(x) {
+      return (x == null) ? '' : String(x).trim();
+    }
+
+    function cleanLangCode(x) {
+      const s = cleanStr(x).toLowerCase();
+      if (!s) return '';
+      if (!/^[a-z0-9_-]{2,16}$/.test(s)) return '';
+      return s;
+    }
+
+    function cleanTagCode(x) {
+      const s = cleanStr(x).toUpperCase();
+      if (!s) return '';
+      if (!/^[A-Z0-9_-]{2,12}$/.test(s)) return '';
+      return s;
+    }
+
+    function setStatus(msg) {
+      const el = document.getElementById('transStatus');
+      if (el) el.textContent = msg || '';
+    }
+
+    function setRefStatus(msg) {
+      const el = document.getElementById('refVideosStatus');
+      if (el) el.textContent = msg || '';
+    }
+
+    function fmtTimestamp(seconds) {
+      const total = Math.max(0, Math.floor(Number(seconds || 0)));
+      if (!isFinite(total)) return '0:00';
+      const s = total % 60;
+      const totalMin = Math.floor(total / 60);
+      const m = totalMin % 60;
+      const h = Math.floor(totalMin / 60);
+      const s2 = String(s).padStart(2, '0');
+      if (h > 0) {
+        const m2 = String(m).padStart(2, '0');
+        return `${h}:${m2}:${s2}`;
+      }
+      return `${totalMin}:${s2}`;
+    }
+
+    function getRowText(row, langCode) {
+      const code = cleanLangCode(langCode);
+      if (row && code) {
+        const v = row[`text_${code}`];
+        if (typeof v === 'string' && v.trim()) return v.trim();
+      }
+      const legacy = row && row.text;
+      if (typeof legacy === 'string' && legacy.trim()) return legacy.trim();
+      return '';
+    }
+
+    // -------------------------
+    // Firebase request helpers (same pattern as yout_pl2.html)
+    // -------------------------
+    function ytEnsureGv() {
+      if (window.gv && window.gv.URL_DS && window.gv.cst && typeof window.gv.cst.getcst === 'function') return window.gv;
+
+      const GVClass = (typeof GlobalVars === 'function')
+        ? GlobalVars
+        : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+          ? globalThis.GlobalVars
+          : (typeof window.GlobalVars === 'function')
+            ? window.GlobalVars
+            : null;
+
+      if (GVClass) {
+        const gv = new GVClass();
+        window.gv = gv;
+        return gv;
+      }
+      throw new Error('GlobalVars is not available (load ./yout_pl2/yu2_global_var.js first)');
+    }
+
+    async function ytEnsureSignedIn() {
+      const gv = ytEnsureGv();
+      if (gv.URL_DS && gv.URL_DS.idToken) return;
+      if (typeof gv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+      await gv.SignIn_User();
+    }
+
+    function ytRequestByPath(addurl, method = 'GET', body = null) {
+      return new Promise((resolve, reject) => {
+        try {
+          const gv = ytEnsureGv();
+          const ObjRequest = gv.URL_DS.GetObjForRequest();
+          ObjRequest.addUrl = addurl;
+          ObjRequest.ametod = method;
+          ObjRequest.vobj = body;
+          ObjRequest.CallBackFunction = function(vdata) { resolve(vdata); };
+          ObjRequest.ErrorCallback = function(err) { reject(err || new Error('request failed')); };
+          gv.URL_DS.requestData_By_URL_Path(ObjRequest);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    function setLang1Show(nextLang) {
+      const code = cleanLangCode(nextLang);
+      if (!code) return;
+      lang1Show = code;
+      updateLangButtons();
+      updateControlsLabels();
+      // If sentence view depends on per-row language (no rawText), rebuild.
+      ensureDerivedSentenceItems();
+      renderTranscript();
+    }
+
+    function updateLangButtons() {
+      const bSv = document.getElementById('btnLangSv');
+      const bEn = document.getElementById('btnLangEn');
+      if (bSv) bSv.dataset.selected = (cleanLangCode(lang1Show) === 'sv') ? '1' : '0';
+      if (bEn) bEn.dataset.selected = (cleanLangCode(lang1Show) === 'en') ? '1' : '0';
+    }
+
+    // -------------------------
+    // Transcript rendering / navigation
+    // -------------------------
+    function getRenderedItems() {
+      if (transcriptTimestampsVisible) return Array.isArray(transcript) ? transcript : [];
+      return Array.isArray(sentenceItems) ? sentenceItems : [];
+    }
+
+    function splitIntoSentences(text) {
+      const s = cleanStr(text).replace(/\s+/g, ' ');
+      if (!s) return [];
+      const out = [];
+      let buf = '';
+      for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        buf += ch;
+        if (ch === '.' || ch === '!' || ch === '?') {
+          const t = buf.trim();
+          if (t) out.push(t);
+          buf = '';
+        }
+      }
+      const tail = buf.trim();
+      if (tail) out.push(tail);
+      return out;
+    }
+
+    function ensureDerivedSentenceItems() {
+      if (transcriptTimestampsVisible) {
+        sentenceItems = [];
+        return;
+      }
+
+      let srcText = '';
+      const base = Array.isArray(transcript) ? transcript : [];
+      const fromItems = base.map(r => getRowText(r, lang1Show)).filter(Boolean).join(' ');
+      if (fromItems && fromItems.trim()) {
+        // Prefer language-specific text so SV/EN buttons affect sentence view.
+        srcText = fromItems;
+      } else if (typeof transcriptRawText === 'string' && transcriptRawText.trim()) {
+        // Fallback when there is no language-specific text.
+        srcText = transcriptRawText;
+      } else {
+        srcText = '';
+      }
+
+      // Optional translation (EN) for One sent trans mode.
+      // Build EN sentences from items and align by index (best-effort).
+      let enSentences = [];
+      try {
+        const enText = base.map(r => getRowText(r, 'en')).filter(Boolean).join(' ');
+        if (enText && enText.trim()) enSentences = splitIntoSentences(enText);
+      } catch {
+        enSentences = [];
+      }
+
+      const sentences = splitIntoSentences(srcText);
+      sentenceItems = sentences.map((t, i) => ({
+        text: t,
+        trans_en: (enSentences[i] ? cleanStr(enSentences[i]) : '')
+      }));
+    }
+
+    function setTranscript(items) {
+      transcript = Array.isArray(items) ? items : [];
+      if (transcript.length > 0) setActiveIndex(0, { scrollIntoView: true });
+      else {
+        activeIndex = -1;
+        updateActiveRow({ scrollIntoView: false });
+      }
+      ensureDerivedSentenceItems();
+      renderTranscript();
+    }
+
+    function renderTranscript(opts = {}) {
+      const scrollIntoView = opts && opts.scrollIntoView === false ? false : true;
+      const list = document.getElementById('transList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      const items = getRenderedItems();
+      if (!Array.isArray(items) || items.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = currentVideoId ? 'No transcript loaded.' : 'Open MainMenu to select a video.';
+        list.appendChild(li);
+        updateControlsLabels();
+        updateMenuLabels();
+        return;
+      }
+
+      items.forEach((row, idx) => {
+        const li = document.createElement('li');
+        li.dataset.idx = String(idx);
+        li.dataset.active = (idx === activeIndex) ? '1' : '0';
+
+        const line = document.createElement('div');
+        line.className = 'trLine';
+
+        if (transcriptTimestampsVisible) {
+          const tm = document.createElement('small');
+          tm.textContent = fmtTimestamp(row && row.t != null ? row.t : 0);
+          line.appendChild(tm);
+        }
+
+        const txt = document.createElement('span');
+        // sentence view uses row.text; transcript view uses per-language fields.
+        txt.textContent = transcriptTimestampsVisible ? (getRowText(row, lang1Show) || '') : cleanStr(row && row.text);
+        line.appendChild(txt);
+        li.appendChild(line);
+
+        // One sent trans: show translation line only for active item, only in sentence (timestamps hidden) mode.
+        if (!transcriptTimestampsVisible && oneSentTransEnabled && idx === activeIndex && cleanLangCode(lang1Show) !== 'en') {
+          const tr = cleanStr(row && row.trans_en);
+          if (tr) {
+            const div2 = document.createElement('div');
+            div2.className = 'trLine trLine2';
+            const sp2 = document.createElement('span');
+            sp2.textContent = tr;
+            div2.appendChild(sp2);
+            li.appendChild(div2);
+          }
+        }
+
+        li.onclick = () => {
+          // Click should only select/highlight; do not auto-scroll.
+          setActiveIndex(idx, { scrollIntoView: false });
+        };
+
+        list.appendChild(li);
+      });
+
+      updateControlsLabels();
+      updateActiveRow({ scrollIntoView });
+    }
+
+    function setActiveIndex(idx, opts = {}) {
+      const scrollIntoView = opts && opts.scrollIntoView === true;
+      const items = getRenderedItems();
+      if (!Array.isArray(items) || items.length === 0) {
+        activeIndex = -1;
+        updateActiveRow({ scrollIntoView: false });
+        return;
+      }
+      const next = Math.max(0, Math.min(items.length - 1, idx));
+      activeIndex = next;
+
+      // In sentence mode, One sent trans needs a re-render to move the translation line.
+      if (!transcriptTimestampsVisible && oneSentTransEnabled) {
+        renderTranscript({ scrollIntoView });
+        return;
+      }
+
+      updateActiveRow({ scrollIntoView });
+    }
+
+    function updateActiveRow(opts = {}) {
+      const scrollIntoView = opts && opts.scrollIntoView === true;
+      const list = document.getElementById('transList');
+      if (!list) return;
+      list.querySelectorAll('li[data-idx]').forEach(li => {
+        const idx = Number(li.dataset.idx);
+        li.dataset.active = (idx === activeIndex) ? '1' : '0';
+      });
+
+      const wrap = document.getElementById('transWrap');
+      if (!wrap) return;
+
+      if (activeIndex < 0) return;
+
+      const el = list.querySelector(`li[data-idx="${activeIndex}"]`);
+      if (!el) return;
+
+      if (scrollIntoView) {
+        try {
+          const top = el.offsetTop;
+          const cur = wrap.scrollTop;
+          const target = Math.max(0, top - TRANS_ACTIVE_ROW_TOP_GAP_PX);
+          // Only adjust if far away, to avoid jitter
+          if (Math.abs(cur - target) > 20) wrap.scrollTop = target;
+        } catch {}
+      }
+
+      updateControlsLabels();
+    }
+
+    function nextSentence() {
+      const items = getRenderedItems();
+      if (!Array.isArray(items) || items.length === 0) return;
+      const next = (typeof activeIndex === 'number' ? activeIndex : -1) + 1;
+      setActiveIndex(next, { scrollIntoView: true });
+    }
+
+    function nextPage() {
+      const items = getRenderedItems();
+      if (!Array.isArray(items) || items.length === 0) return;
+      const step = Math.max(1, Math.floor(Number(TEXT_NEXT_PAGE_ITEMS) || 10));
+      const next = (typeof activeIndex === 'number' ? activeIndex : -1) + step;
+      setActiveIndex(next, { scrollIntoView: true });
+    }
+
+    function beginText() {
+      setActiveIndex(0, { scrollIntoView: true });
+      try {
+        const wrap = document.getElementById('transWrap');
+        if (wrap) wrap.scrollTop = 0;
+      } catch {}
+    }
+
+    function applyTranscriptMetaFromData(data) {
+      const l1 = cleanLangCode(data && data.lang1_show);
+      if (l1) lang1Show = l1;
+      updateControlsLabels();
+      updateLangButtons();
+    }
+
+    async function loadTranscriptForVideoId(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) return;
+      currentVideoId = vid;
+      setStatus('Loading transcript...');
+
+      try {
+        if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.load !== 'function') {
+          setStatus('Transcript store not available');
+          return;
+        }
+
+        const data = await window.YouTubeTranscriptStore.load(vid);
+        const items = (data && Array.isArray(data.items)) ? data.items : [];
+        transcriptRawText = (data && typeof data.rawText === 'string') ? data.rawText : '';
+        applyTranscriptMetaFromData(data);
+
+        setTranscript(items);
+        setStatus(items.length ? `Loaded: ${items.length} items` : 'No transcript loaded');
+      } catch (err) {
+        setStatus('Transcript load failed (check console)');
+        try { console.warn('Load transcript failed', err); } catch {}
+      }
+    }
+
+    // -------------------------
+    // Main menu (ref videos)
+    // -------------------------
+    function looksLikeYouTubeVideoId(s) {
+      const x = cleanStr(s);
+      return /^[a-zA-Z0-9_-]{11}$/.test(x);
+    }
+
+    function getVideoIdFromRefVideo(v) {
+      const byIndent = cleanStr(v && v.indent_id);
+      if (looksLikeYouTubeVideoId(byIndent)) return byIndent;
+      const url = cleanStr(v && v.url);
+      if (url && window.YouTubeRefVideosStore && typeof window.YouTubeRefVideosStore.extractVideoIdFromUrl === 'function') {
+        const vid = cleanStr(window.YouTubeRefVideosStore.extractVideoIdFromUrl(url));
+        if (vid) return vid;
+      }
+      return byIndent;
+    }
+
+    function normalizeRefTagsShort(data) {
+      const rawTags = (data && typeof data === 'object') ? data.tags : null;
+      const list = [];
+      if (rawTags && typeof rawTags === 'object') {
+        for (const [k, v] of Object.entries(rawTags)) {
+          const code = cleanTagCode((v && v.label) ? v.label : k);
+          const keyCode = cleanTagCode(k);
+          const finalCode = code || keyCode;
+          if (!finalCode) continue;
+          const label = cleanStr((v && v.label) || finalCode);
+          const order = Number.isFinite(Number(v && v.order)) ? Number(v.order) : 9999;
+          list.push({ code: finalCode, label, order });
+        }
+      }
+      list.sort((a, b) => (a.order - b.order) || a.code.localeCompare(b.code));
+      return list;
+    }
+
+    async function loadRefTagsShortList() {
+      await ytEnsureSignedIn();
+      let data = null;
+      try {
+        data = await ytRequestByPath(REF_TAGS_SHORT_PATH, 'GET');
+      } catch {
+        data = null;
+      }
+      return normalizeRefTagsShort(data);
+    }
+
+    function scheduleSaveMainMenuFilters() {
+      try { if (_mainMenuSaveTimer) clearTimeout(_mainMenuSaveTimer); } catch {}
+
+      _mainMenuSaveTimer = setTimeout(async () => {
+        try {
+          await ytEnsureSignedIn();
+          await ytRequestByPath(MAIN_MENU_SELECTED_TAG_PATH, 'PUT', { tag: cleanTagCode(mainMenuSelectedTag) || '', updatedAt: ytNowIso() });
+          await ytRequestByPath(MAIN_MENU_SHORT_NAME_FILTER_PATH, 'PUT', { q: cleanStr(mainMenuShortNameFilter), updatedAt: ytNowIso() });
+        } catch {
+          // ignore
+        }
+      }, 350);
+    }
+
+    async function loadMainMenuFilterState() {
+      await ytEnsureSignedIn();
+      let tag = '';
+      let q = '';
+      try {
+        const data = await ytRequestByPath(MAIN_MENU_SELECTED_TAG_PATH, 'GET');
+        if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'tag')) tag = cleanStr(data.tag);
+        else if (typeof data === 'string') tag = cleanStr(data);
+      } catch {}
+      try {
+        const data = await ytRequestByPath(MAIN_MENU_SHORT_NAME_FILTER_PATH, 'GET');
+        if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'q')) q = cleanStr(data.q);
+        else if (typeof data === 'string') q = cleanStr(data);
+      } catch {}
+
+      mainMenuSelectedTag = cleanTagCode(tag) || '';
+      mainMenuShortNameFilter = q;
+
+      const input = document.getElementById('inMainMenuShortFilter');
+      if (input) input.value = mainMenuShortNameFilter;
+    }
+
+    function setMainMenuSelectedTag(tagCodeOrEmpty) {
+      mainMenuSelectedTag = cleanTagCode(tagCodeOrEmpty) || '';
+      try { ensureMainMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
+      try { renderMainMenuTagButtons(_mainMenuTagsCache, true); } catch {}
+      scheduleSaveMainMenuFilters();
+      Promise.resolve().then(() => loadRefVideos()).catch(() => {});
+    }
+
+    function setMainMenuShortNameFilter(q) {
+      mainMenuShortNameFilter = cleanStr(q);
+      scheduleSaveMainMenuFilters();
+      Promise.resolve().then(() => loadRefVideos()).catch(() => {});
+    }
+
+    function applyMainMenuFilters(records) {
+      const selectedTag = cleanTagCode(mainMenuSelectedTag);
+      const q = cleanStr(mainMenuShortNameFilter).toLowerCase();
+      return (Array.isArray(records) ? records : []).filter(v => {
+        if (!v) return false;
+        if (selectedTag) {
+          const t = cleanTagCode(v.tag);
+          if (t !== selectedTag) return false;
+        }
+        if (q) {
+          const sn = cleanStr(v.short_name).toLowerCase();
+          if (!sn.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function clampMainMenuTagPageStart(total) {
+      const n = Math.max(0, Math.floor(Number(total) || 0));
+      if (n <= 0) {
+        mainMenuTagPageStart = 0;
+        return;
+      }
+      let s = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0));
+      if (s >= n) s = 0;
+      mainMenuTagPageStart = s;
+    }
+
+    function ensureMainMenuSelectedTagVisible(list) {
+      const selected = cleanTagCode(mainMenuSelectedTag);
+      if (!selected || !Array.isArray(list) || list.length === 0) return;
+      const idx = list.findIndex(t => cleanTagCode(t && t.code) === selected);
+      if (idx < 0) return;
+      mainMenuTagPageStart = idx - (idx % MAIN_MENU_TAG_PAGE_SIZE);
+      clampMainMenuTagPageStart(list.length);
+    }
+
+    function renderMainMenuTagButtons(list, forceSelectedVisible = true) {
+      const row = document.getElementById('mainMenuTagRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      const tags = Array.isArray(list) ? list.filter(Boolean) : [];
+      if (forceSelectedVisible) ensureMainMenuSelectedTagVisible(tags);
+      clampMainMenuTagPageStart(tags.length);
+
+      const mkBtn = (label, tagCode) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        if (tagCode) btn.dataset.tag = tagCode;
+        else btn.dataset.all = '1';
+        btn.dataset.selected = (!tagCode && !cleanTagCode(mainMenuSelectedTag)) || (tagCode && cleanTagCode(mainMenuSelectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
+        btn.onclick = () => setMainMenuSelectedTag(tagCode || '');
+        return btn;
+      };
+
+      const mkArrow = () => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '›';
+        btn.title = 'Next tags';
+        btn.setAttribute('aria-label', 'Next tags');
+        btn.onclick = () => {
+          const total = tags.length;
+          if (total <= MAIN_MENU_TAG_PAGE_SIZE) return;
+          mainMenuTagPageStart = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0)) + MAIN_MENU_TAG_PAGE_SIZE;
+          if (mainMenuTagPageStart >= total) mainMenuTagPageStart = 0;
+          renderMainMenuTagButtons(_mainMenuTagsCache, false);
+        };
+        return btn;
+      };
+
+      if (tags.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'muted';
+        span.textContent = 'No tags';
+        row.appendChild(span);
+        row.appendChild(mkBtn('All', ''));
+        return;
+      }
+
+      const start = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0));
+      const page = tags.slice(start, start + MAIN_MENU_TAG_PAGE_SIZE);
+
+      page.forEach(t => row.appendChild(mkBtn(t.label || t.code, t.code)));
+      row.appendChild(mkBtn('All', ''));
+      if (tags.length > MAIN_MENU_TAG_PAGE_SIZE) row.appendChild(mkArrow());
+    }
+
+    async function loadRefVideos() {
+      const seq = ++_refVideosLoadSeq;
+
+      const list = document.getElementById('refVideosList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      const limitInfo = document.getElementById('refVideosLimitInfo');
+      if (limitInfo) limitInfo.textContent = '';
+
+      if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.listAll !== 'function') {
+        setRefStatus('YouTubeRefVideosStore not available');
+        return;
+      }
+
+      const all = await window.YouTubeRefVideosStore.listAll();
+
+      const byVideoId = new Map();
+      (Array.isArray(all) ? all : []).filter(Boolean).forEach(raw => {
+        const v = {
+          indent_id: String(raw.indent_id || '').trim(),
+          url: String(raw.url || '').trim(),
+          short_name: String(raw.short_name || '').trim(),
+          title: String(raw.title || '').trim(),
+          tag: String(raw.tag || '').trim(),
+          order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : 9999
+        };
+        const key = cleanStr(getVideoIdFromRefVideo(v)) || cleanStr(v.url) || `${v.indent_id}::${v.title}`;
+        if (!key) return;
+        const prev = byVideoId.get(key);
+        if (!prev) {
+          byVideoId.set(key, v);
+          return;
+        }
+        prev.order = Math.min(prev.order, v.order);
+        if (!prev.indent_id && v.indent_id) prev.indent_id = v.indent_id;
+        if (!prev.url && v.url) prev.url = v.url;
+        if (!prev.short_name && v.short_name) prev.short_name = v.short_name;
+        if (!prev.title && v.title) prev.title = v.title;
+        if (!prev.tag && v.tag) prev.tag = v.tag;
+      });
+
+      const sorted = Array.from(byVideoId.values())
+        .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
+
+      const filtered = applyMainMenuFilters(sorted);
+
+      if (limitInfo) {
+        const label = cleanTagCode(mainMenuSelectedTag) || 'All';
+        limitInfo.textContent = `${label}: showing ${Math.min(60, filtered.length)} of ${filtered.length} (total ${sorted.length})`;
+      }
+
+      const top = filtered.slice(0, 60);
+
+      if (seq !== _refVideosLoadSeq) return;
+
+      if (sorted.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'No saved videos yet.';
+        list.appendChild(li);
+        setRefStatus('');
+        return;
+      }
+
+      if (top.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'No videos match.';
+        list.appendChild(li);
+        setRefStatus('');
+        return;
+      }
+
+      top.forEach(v => {
+        const li = document.createElement('li');
+        li.style.padding = '10px';
+        li.style.border = '1px solid currentColor';
+        li.style.borderRadius = '10px';
+        li.style.cursor = 'pointer';
+        const label = v.short_name || v.title || v.indent_id || v.url;
+        li.textContent = label;
+        li.onclick = () => {
+          Promise.resolve().then(async () => {
+            const vid = getVideoIdFromRefVideo(v);
+            if (!vid) {
+              setStatus('Bad video id');
+              return;
+            }
+            closeDialogById('dlgMainMenu');
+            await loadTranscriptForVideoId(vid);
+          }).catch(() => setStatus('Switch failed'));
+        };
+        list.appendChild(li);
+      });
+
+      setRefStatus('');
+    }
+
+    function closeDialogById(id) {
+      const dlg = document.getElementById(id);
+      if (!dlg) return;
+      try {
+        if (typeof dlg.close === 'function') dlg.close();
+        else dlg.removeAttribute('open');
+      } catch {}
+    }
+
+    function openMenuModal() {
+      const dlg = document.getElementById('dlgMenu');
+      if (!dlg) return;
+      try {
+        if (typeof dlg.showModal === 'function') dlg.showModal();
+        else dlg.setAttribute('open', 'open');
+      } catch {}
+    }
+
+    function openMainMenu() {
+      const dlg = document.getElementById('dlgMainMenu');
+      if (!dlg) return;
+      setRefStatus('Loading...');
+      Promise.resolve().then(async () => {
+        try {
+          await ytEnsureSignedIn();
+          await loadMainMenuFilterState();
+          _mainMenuTagsCache = await loadRefTagsShortList();
+          renderMainMenuTagButtons(_mainMenuTagsCache, true);
+        } catch {
+          renderMainMenuTagButtons([], true);
+        }
+        await loadRefVideos();
+      }).catch(() => setRefStatus('Load failed'));
+
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    // -------------------------
+    // UI labels
+    // -------------------------
+    function updateControlsLabels() {
+      const info = document.getElementById('mainInfo');
+      if (info) {
+        const items = getRenderedItems();
+        const idx = (activeIndex >= 0 && Array.isArray(items) && items.length > 0)
+          ? `${activeIndex + 1}/${items.length}`
+          : '';
+        info.textContent = idx;
+      }
+    }
+
+    function updateMenuLabels() {
+      const btn = document.getElementById('btnMenuToggleTransTime');
+      if (!btn) return;
+      btn.textContent = transcriptTimestampsVisible ? 'Hide transcript time' : 'Show transcript time';
+
+      const btnOne = document.getElementById('btnMenuToggleOneSentTrans');
+      if (btnOne) btnOne.textContent = oneSentTransEnabled ? 'One sent trans - On' : 'One sent trans - Off';
+    }
+
+    // -------------------------
+    // Wire UI
+    // -------------------------
+    function wireUi() {
+      const btnMain = document.getElementById('btnMainMenu');
+      if (btnMain) btnMain.onclick = () => openMainMenu();
+
+      const btnSv = document.getElementById('btnLangSv');
+      if (btnSv) btnSv.onclick = (e) => { e.preventDefault(); setLang1Show('sv'); };
+
+      const btnEn = document.getElementById('btnLangEn');
+      if (btnEn) btnEn.onclick = (e) => { e.preventDefault(); setLang1Show('en'); };
+
+      const btnNext = document.getElementById('btnNextSentence');
+      if (btnNext) btnNext.onclick = (e) => { e.preventDefault(); nextSentence(); };
+
+      const btnNextPage = document.getElementById('btnNextPage');
+      if (btnNextPage) btnNextPage.onclick = (e) => { e.preventDefault(); nextPage(); };
+
+      const btnBegin = document.getElementById('btnBegin');
+      if (btnBegin) btnBegin.onclick = (e) => { e.preventDefault(); beginText(); };
+
+      const btnMenu = document.getElementById('btnMenu');
+      if (btnMenu) btnMenu.onclick = (e) => { e.preventDefault(); openMenuModal(); };
+
+      const btnToggleTransTime = document.getElementById('btnMenuToggleTransTime');
+      if (btnToggleTransTime) btnToggleTransTime.onclick = (e) => {
+        // allow dialog to close via value="cancel"; still run our toggle.
+        try { e.preventDefault(); } catch {}
+        toggleTranscriptTimestampsVisible();
+        // Manually close (best-effort) to match yout_pl2 pattern.
+        try { closeDialogById('dlgMenu'); } catch {}
+      };
+
+      const btnToggleOne = document.getElementById('btnMenuToggleOneSentTrans');
+      if (btnToggleOne) btnToggleOne.onclick = (e) => {
+        try { e.preventDefault(); } catch {}
+        toggleOneSentTransEnabled();
+        try { closeDialogById('dlgMenu'); } catch {}
+      };
+
+      const inMainFilter = document.getElementById('inMainMenuShortFilter');
+      if (inMainFilter && !inMainFilter.dataset.wired) {
+        inMainFilter.dataset.wired = '1';
+        inMainFilter.addEventListener('input', () => {
+          setMainMenuShortNameFilter(inMainFilter.value);
+        });
+      }
+
+      updateLangButtons();
+      updateControlsLabels();
+      updateMenuLabels();
+    }
+
+    // Init
+    wireUi();
+    renderTranscript();
+    setStatus('Ready. Open MainMenu to pick a transcript.');
+
+    // Defaults (keep consistent with yout_pl2.html) + best-effort load
+    setControlsDocked(false);
+    Promise.resolve().then(async () => {
+      const tsVisible = await loadTranscriptTimestampsVisibleSetting();
+      if (tsVisible != null) setTranscriptTimestampsVisible(!!tsVisible);
+
+      const one = await loadOneSentTransSetting();
+      if (one != null) setOneSentTransEnabled(!!one);
+
+      const docked = await loadControlsDockBottomSetting();
+      if (docked != null) setControlsDocked(!!docked);
+    }).catch(() => {});
+
+    // Keep spacer correct on resize when docked.
+    try {
+      window.addEventListener('resize', () => {
+        if (isControlsDocked()) updateControlsDockSpacer();
+      });
+    } catch {}
+  </script>
+</body>
+</html>

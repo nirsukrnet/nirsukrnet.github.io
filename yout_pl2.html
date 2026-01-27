@@ -669,13 +669,13 @@ English Channel..."></textarea>
       clampMainMenuTagPageStart(list.length);
     }
 
-    function renderMainMenuTagButtons(list) {
+    function renderMainMenuTagButtons(list, forceSelectedVisible = true) {
       const row = document.getElementById('mainMenuTagRow');
       if (!row) return;
       row.innerHTML = '';
 
       const tags = Array.isArray(list) ? list.filter(Boolean) : [];
-      ensureMainMenuSelectedTagVisible(tags);
+      if (forceSelectedVisible) ensureMainMenuSelectedTagVisible(tags);
       clampMainMenuTagPageStart(tags.length);
 
       const mkBtn = (label, tagCode, order) => {
@@ -707,7 +707,8 @@ English Channel..."></textarea>
           if (total <= MAIN_MENU_TAG_PAGE_SIZE) return;
           mainMenuTagPageStart = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0)) + MAIN_MENU_TAG_PAGE_SIZE;
           if (mainMenuTagPageStart >= total) mainMenuTagPageStart = 0;
-          renderMainMenuTagButtons(_mainMenuTagsCache);
+          // Do NOT snap back to selected tag when user is paging.
+          renderMainMenuTagButtons(_mainMenuTagsCache, false);
         };
         return btn;
       };
@@ -763,7 +764,7 @@ English Channel..."></textarea>
 
       // Ensure selected tag is visible in the pager.
       try { ensureMainMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
-      try { renderMainMenuTagButtons(_mainMenuTagsCache); } catch {}
+      try { renderMainMenuTagButtons(_mainMenuTagsCache, true); } catch {}
 
       scheduleSaveMainMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
