@@ -225,7 +225,9 @@
     // -----------------------------
     // Settings / state
     // -----------------------------
-    const DEFAULT_URL = 'http://localhost:8080/learnbook_sw_beg.pdf';
+    // Use a same-origin relative URL so it works both on localhost server and GitHub Pages.
+    // PDF is located next to this viewer: pdf_viewer/learnbook_sw_beg.pdf
+    const DEFAULT_URL = './learnbook_sw_beg.pdf';
 
     const SCALE_MIN = 0.5;
     const SCALE_MAX = 2.5;
@@ -710,6 +712,55 @@
       saveState();
     }
 
+    function normalizeUrlForFetch(inputUrl) {
+      let raw = String(inputUrl || '').trim();
+      if (!raw) return { url: '', warning: '' };
+
+      // Accept Windows-style paths in the input ("pdf_viewer\file.pdf").
+      raw = raw.replace(/\\+/g, '/');
+
+      // If user types a workspace-style path like "pdf_viewer/learnbook_sw_beg.pdf",
+      // interpret it as same-host absolute path ("/pdf_viewer/learnbook_sw_beg.pdf").
+      // This avoids accidental resolution to "/pdf_viewer/pdf_viewer/..." when the viewer
+      // itself is hosted under "/pdf_viewer/".
+      if (/^pdf_viewer\//i.test(raw)) {
+        try {
+          const abs = new URL('/' + raw, window.location.origin);
+          return { url: abs.toString(), warning: '' };
+        } catch {
+          // fall through
+        }
+      }
+
+      // If user enters a bare filename, treat it as relative to current page.
+      // (e.g. "learnbook_sw_beg.pdf" from /pdf_viewer/ -> resolves to /pdf_viewer/learnbook_sw_beg.pdf)
+      // We'll leave it as-is and let the browser resolve.
+
+      // If viewer is served over HTTPS, block mixed content and also browsers block loopback fetch
+      // from non-local origins. Provide actionable guidance.
+      const isHttps = (window.location && window.location.protocol === 'https:');
+      if (isHttps && raw.startsWith('http://')) {
+        try {
+          const u = new URL(raw);
+          const host = (u.hostname || '').toLowerCase();
+          const isLoopback = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+          if (isLoopback) {
+            return {
+              url: raw,
+              warning: 'Blocked: GitHub Pages (https) cannot fetch http://localhost. Use Open (file picker), or run this viewer locally (http://localhost:8080/pdf_viewer/), or host the PDF over https.'
+            };
+          }
+          // Try upgrading to https for normal hosts (fixes "Mixed Content" for github.io, etc.)
+          u.protocol = 'https:';
+          return { url: u.toString(), warning: 'Upgraded URL to https to avoid mixed content.' };
+        } catch {
+          // keep raw
+        }
+      }
+
+      return { url: raw, warning: '' };
+    }
+
     async function loadPdfFromFile(file) {
       initPdfJsWorker();
 
@@ -845,8 +896,10 @@
       };
 
       btnLoadUrl.onclick = async () => {
-        const url = String(elUrl.value || '').trim();
+        const norm = normalizeUrlForFetch(elUrl.value);
+        const url = norm.url;
         if (!url) return;
+        if (norm.warning) setStatus(norm.warning);
         try {
           await loadPdfFromUrl(url);
           // Restore persisted page only after a successful load
