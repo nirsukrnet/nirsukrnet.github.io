@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF Viewer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      padding: 12px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.35;
+    }
+
+    .app {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    input[type="text"], input[type="search"] {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      width: min(560px, 100%);
+    }
+
+    .muted { opacity: 0.75; }
+    .mono { font-variant-numeric: tabular-nums; }
+
+    .canvasWrap {
+      position: relative;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 8px;
+      height: min(74vh, 820px);
+      min-height: 420px;
+      overflow: auto;
+      background: transparent;
+    }
+
+    canvas { display: block; margin: 0 auto; }
+
+    /* Highlight overlay (absolute div with rectangles) */
+    #hlOverlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+    }
+
+    /* Selection overlay */
+    #selOverlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+    }
+
+    #selRect {
+      position: absolute;
+      border: 2px solid rgba(0, 120, 215, 0.9);
+      background: rgba(0, 120, 215, 0.12);
+      border-radius: 4px;
+      display: none;
+    }
+
+    .selectMode canvas {
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .hl {
+      position: absolute;
+      background: rgba(255, 215, 0, 0.35);
+      outline: 1px solid rgba(255, 165, 0, 0.55);
+      border-radius: 2px;
+    }
+
+    /* Bottom controls always visible */
+    .bottomBar {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: min(980px, calc(100vw - 24px));
+      padding: 10px 12px;
+      margin: 0;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+      border-radius: 12px;
+      z-index: 50;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .bottomBar {
+        background: rgba(0,0,0,0.35);
+      }
+    }
+
+    .spacer { height: 92px; }
+
+    /* Search panel line-break on small screens */
+    .break { flex-basis: 100%; height: 0; }
+
+    dialog {
+      width: calc(100vw - 16px);
+      max-width: min(980px, calc(100vw - 16px));
+      height: calc(100vh - 16px);
+      max-height: calc(100vh - 16px);
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 50vh;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="row" aria-label="Header">
+      <button id="btnOpen" type="button">Open</button>
+      <input id="fileInput" type="file" accept="application/pdf" hidden />
+
+      <input id="urlInput" type="text" placeholder="PDF URL" />
+      <button id="btnLoadUrl" type="button">Load</button>
+
+      <span id="pageInfo" class="muted mono" style="margin-left:auto;">0/0</span>
+    </div>
+
+    <div class="row" aria-label="Status">
+      <span id="status" class="muted"></span>
+    </div>
+
+    <div id="canvasWrap" class="canvasWrap">
+      <canvas id="pdfCanvas"></canvas>
+      <div id="hlOverlay" aria-hidden="true"></div>
+      <div id="selOverlay" aria-hidden="true">
+        <div id="selRect"></div>
+      </div>
+    </div>
+
+    <div class="spacer" aria-hidden="true"></div>
+  </div>
+
+  <div id="bottomBar" class="row bottomBar" aria-label="Controls">
+    <button id="btnPrev" type="button">Prev</button>
+    <button id="btnNext" type="button">Next</button>
+
+    <button id="btnZoomOut" type="button">-</button>
+    <button id="btnZoomIn" type="button">+</button>
+    <span id="zoomInfo" class="muted mono">100%</span>
+    <button id="btnFitWidth" type="button">Fit width</button>
+
+    <button id="btnSelect" type="button">Select</button>
+    <select id="ocrLang" aria-label="OCR language" style="min-height:44px; border:1px solid currentColor; border-radius:10px; padding:10px 12px; background:transparent;">
+      <option value="eng">OCR: eng</option>
+      <option value="swe">OCR: swe</option>
+      <option value="eng+swe">OCR: eng+swe</option>
+      <option value="ukr">OCR: ukr</option>
+      <option value="rus">OCR: rus</option>
+    </select>
+    <button id="btnOcr" type="button" disabled>OCR</button>
+    <button id="btnClearSel" type="button" disabled>Clear</button>
+
+    <span class="break" aria-hidden="true"></span>
+
+    <input id="searchInput" type="search" placeholder="Search text" />
+    <button id="btnFind" type="button">Find</button>
+    <button id="btnPrevMatch" type="button">Prev match</button>
+    <button id="btnNextMatch" type="button">Next match</button>
+    <span id="matchInfo" class="muted mono">0/0</span>
+  </div>
+
+  <dialog id="dlgOcr">
+    <form method="dialog">
+      <div class="row" style="margin:0;">
+        <strong>OCR result</strong>
+        <button id="btnCopyOcr" type="button" style="margin-left:auto;">Copy</button>
+        <button value="cancel">Close</button>
+      </div>
+      <div class="row" style="margin:10px 0 0;">
+        <span id="ocrStatus" class="muted"></span>
+      </div>
+      <textarea id="ocrText" placeholder="(OCR output)"></textarea>
+    </form>
+  </dialog>
+
+  <!-- PDF.js (CDN). If you want offline, download pdf.min.js + pdf.worker.min.js and update URLs. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Tesseract.js (CDN) for OCR selection. -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script>
+    'use strict';
+
+    // -----------------------------
+    // Settings / state
+    // -----------------------------
+    const DEFAULT_URL = 'http://localhost:8080/learnbook_sw_beg.pdf';
+
+    const SCALE_MIN = 0.5;
+    const SCALE_MAX = 2.5;
+    const SCALE_STEP = 1.2;
+
+    const LS_KEY = 'pdf_viewer_state_v1';
+    const LS_KEY_OCR = 'pdf_viewer_ocr_v1';
+
+    let pdfDoc = null;
+    let pageNum = 1;
+    let scale = 1.0;
+
+    let renderTask = null;
+    let renderSeq = 0;
+
+    // Search cache
+    let pageTextCache = new Map(); // pageNum -> { textLower, rawText }
+    let searchQuery = '';
+    let matches = []; // { pageNum }
+    let matchIndex = -1;
+
+    // Selection / OCR state
+    let selectMode = false;
+    let isSelecting = false;
+    let selStart = null; // { xCss, yCss }
+    let selRectCss = null; // { x, y, w, h } in CSS pixels relative to canvas
+    let selRectCanvas = null; // { x, y, w, h } in canvas pixels
+
+    let ocrWorker = null;
+    let ocrWorkerLang = '';
+
+    // -----------------------------
+    // Elements
+    // -----------------------------
+    const elStatus = document.getElementById('status');
+    const elPageInfo = document.getElementById('pageInfo');
+    const elZoomInfo = document.getElementById('zoomInfo');
+    const elMatchInfo = document.getElementById('matchInfo');
+
+    const elCanvasWrap = document.getElementById('canvasWrap');
+    const elCanvas = document.getElementById('pdfCanvas');
+    const elOverlay = document.getElementById('hlOverlay');
+    const elSelOverlay = document.getElementById('selOverlay');
+    const elSelRect = document.getElementById('selRect');
+
+    const elUrl = document.getElementById('urlInput');
+    const elFile = document.getElementById('fileInput');
+
+    const elSearch = document.getElementById('searchInput');
+
+    const elOcrLang = document.getElementById('ocrLang');
+    const dlgOcr = document.getElementById('dlgOcr');
+    const elOcrText = document.getElementById('ocrText');
+    const elOcrStatus = document.getElementById('ocrStatus');
+
+    // Buttons
+    const btnOpen = document.getElementById('btnOpen');
+    const btnLoadUrl = document.getElementById('btnLoadUrl');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnZoomOut = document.getElementById('btnZoomOut');
+    const btnZoomIn = document.getElementById('btnZoomIn');
+    const btnFitWidth = document.getElementById('btnFitWidth');
+    const btnFind = document.getElementById('btnFind');
+    const btnPrevMatch = document.getElementById('btnPrevMatch');
+    const btnNextMatch = document.getElementById('btnNextMatch');
+
+    const btnSelect = document.getElementById('btnSelect');
+    const btnOcr = document.getElementById('btnOcr');
+    const btnClearSel = document.getElementById('btnClearSel');
+    const btnCopyOcr = document.getElementById('btnCopyOcr');
+
+    // -----------------------------
+    // PDF.js init
+    // -----------------------------
+    function initPdfJsWorker() {
+      if (!window['pdfjsLib']) throw new Error('pdfjsLib not loaded');
+      // cdnjs puts worker at same version
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+    function setStatus(msg) {
+      elStatus.textContent = msg || '';
+    }
+
+    function updateIndicators() {
+      const total = pdfDoc ? pdfDoc.numPages : 0;
+      elPageInfo.textContent = `${total ? pageNum : 0}/${total}`;
+      elZoomInfo.textContent = `${Math.round(scale * 100)}%`;
+      elMatchInfo.textContent = matches.length ? `${matchIndex + 1}/${matches.length}` : '0/0';
+
+      btnPrev.disabled = !pdfDoc || pageNum <= 1;
+      btnNext.disabled = !pdfDoc || pageNum >= total;
+      btnPrevMatch.disabled = matches.length === 0;
+      btnNextMatch.disabled = matches.length === 0;
+
+      btnOcr.disabled = !selRectCanvas;
+      btnClearSel.disabled = !selRectCanvas;
+      btnSelect.textContent = selectMode ? 'Select: ON' : 'Select';
+    }
+
+    function isTypingTarget(el) {
+      if (!el) return false;
+      const tag = (el.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return true;
+      return !!el.isContentEditable;
+    }
+
+    function saveState(extra = {}) {
+      try {
+        const state = {
+          url: String(elUrl.value || ''),
+          pageNum,
+          scale,
+          ...extra,
+        };
+        localStorage.setItem(LS_KEY, JSON.stringify(state));
+      } catch {
+        // ignore
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return null;
+        const st = JSON.parse(raw);
+        if (!st || typeof st !== 'object') return null;
+        return st;
+      } catch {
+        return null;
+      }
+    }
+
+    function clearHighlights() {
+      elOverlay.innerHTML = '';
+    }
+
+    function setOcrStatus(msg) {
+      if (elOcrStatus) elOcrStatus.textContent = msg || '';
+    }
+
+    function setSelectMode(on) {
+      selectMode = !!on;
+      isSelecting = false;
+      selStart = null;
+      document.body.classList.toggle('selectMode', selectMode);
+      updateIndicators();
+    }
+
+    function clearSelection() {
+      selRectCss = null;
+      selRectCanvas = null;
+      isSelecting = false;
+      selStart = null;
+      if (elSelRect) elSelRect.style.display = 'none';
+      updateIndicators();
+    }
+
+    function clampRect(r, maxW, maxH) {
+      const x = clamp(r.x, 0, Math.max(0, maxW - 1));
+      const y = clamp(r.y, 0, Math.max(0, maxH - 1));
+      const w = clamp(r.w, 1, Math.max(1, maxW - x));
+      const h = clamp(r.h, 1, Math.max(1, maxH - y));
+      return { x, y, w, h };
+    }
+
+    function getCanvasRectCss() {
+      const rect = elCanvas.getBoundingClientRect();
+      return rect;
+    }
+
+    function cssPointToCanvasPoint(xCss, yCss) {
+      const rect = getCanvasRectCss();
+      const sx = elCanvas.width / Math.max(1, rect.width);
+      const sy = elCanvas.height / Math.max(1, rect.height);
+      return {
+        x: (xCss * sx),
+        y: (yCss * sy),
+      };
+    }
+
+    function updateSelectionOverlay() {
+      if (!selRectCss) {
+        if (elSelRect) elSelRect.style.display = 'none';
+        return;
+      }
+
+      // Overlay should match canvas CSS pixels.
+      const rect = elCanvas.getBoundingClientRect();
+      const canvasW = Math.max(1, Math.round(rect.width));
+      const canvasH = Math.max(1, Math.round(rect.height));
+      elSelOverlay.style.width = `${canvasW}px`;
+      elSelOverlay.style.height = `${canvasH}px`;
+      elSelOverlay.style.left = `${elCanvas.offsetLeft}px`;
+      elSelOverlay.style.top = `${elCanvas.offsetTop}px`;
+
+      const r = clampRect(selRectCss, canvasW, canvasH);
+      elSelRect.style.display = 'block';
+      elSelRect.style.left = `${r.x}px`;
+      elSelRect.style.top = `${r.y}px`;
+      elSelRect.style.width = `${r.w}px`;
+      elSelRect.style.height = `${r.h}px`;
+
+      // Keep a canvas-pixel rect for OCR
+      const p0 = cssPointToCanvasPoint(r.x, r.y);
+      const p1 = cssPointToCanvasPoint(r.x + r.w, r.y + r.h);
+      const cx = Math.floor(Math.min(p0.x, p1.x));
+      const cy = Math.floor(Math.min(p0.y, p1.y));
+      const cw = Math.max(1, Math.floor(Math.abs(p1.x - p0.x)));
+      const ch = Math.max(1, Math.floor(Math.abs(p1.y - p0.y)));
+      selRectCanvas = clampRect({ x: cx, y: cy, w: cw, h: ch }, elCanvas.width, elCanvas.height);
+      updateIndicators();
+    }
+
+    // Highlight strategy (v1): highlight any text item whose .str contains the query.
+    async function highlightMatchesOnCurrentPage(queryLower, page, viewport) {
+      clearHighlights();
+      if (!queryLower) return;
+
+      const tc = await page.getTextContent();
+      const divs = [];
+
+      // Overlay size should match canvas CSS pixels.
+      const rect = elCanvas.getBoundingClientRect();
+      const canvasW = Math.max(1, Math.round(rect.width));
+      const canvasH = Math.max(1, Math.round(rect.height));
+      elOverlay.style.width = `${canvasW}px`;
+      elOverlay.style.height = `${canvasH}px`;
+      elOverlay.style.left = `${elCanvas.offsetLeft}px`;
+      elOverlay.style.top = `${elCanvas.offsetTop}px`;
+
+      // Map PDF space -> viewport space.
+      // item.transform is in text space; viewport.transform maps to canvas.
+      // We'll approximate item box with item.width/height.
+      for (const item of (tc.items || [])) {
+        const s = (item && item.str) ? String(item.str) : '';
+        if (!s) continue;
+        if (s.toLowerCase().indexOf(queryLower) === -1) continue;
+
+        // Transform: combine viewport.transform and item.transform
+        const t = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
+        const x = t[4];
+        const y = t[5];
+
+        // item.width is in text space width; viewport.scale affects.
+        const w = Math.max(2, (item.width || 0) * viewport.scale);
+        const h = Math.max(8, (item.height || 0) * viewport.scale);
+
+        // PDF.js Y grows up; viewport has Y down, but transform already accounts.
+        // Place rect with bottom-aligned baseline-ish.
+        const left = x;
+        const top = (y - h);
+
+        // Clamp into overlay bounds.
+        if (!isFinite(left) || !isFinite(top) || !isFinite(w) || !isFinite(h)) continue;
+
+        const d = document.createElement('div');
+        d.className = 'hl';
+        d.style.left = `${left}px`;
+        d.style.top = `${top}px`;
+        d.style.width = `${w}px`;
+        d.style.height = `${h}px`;
+        divs.push(d);
+      }
+
+      for (const d of divs) elOverlay.appendChild(d);
+    }
+
+    // Try to extract actual PDF text for a selected rectangle.
+    // This is much more accurate than OCR for PDFs that have a real text layer.
+    async function extractPdfTextInRect(page, viewport, rectCanvasPx) {
+      if (!page || !viewport || !rectCanvasPx) return '';
+      // Inflate selection a bit to catch diacritics that may be separate tiny glyph items.
+      const pad = 3;
+      const r = {
+        x: Math.max(0, rectCanvasPx.x - pad),
+        y: Math.max(0, rectCanvasPx.y - pad),
+        w: Math.min(viewport.width, rectCanvasPx.w + pad * 2),
+        h: Math.min(viewport.height, rectCanvasPx.h + pad * 2),
+      };
+      const tc = await page.getTextContent();
+      const out = [];
+
+      for (const item of (tc.items || [])) {
+        const s = (item && item.str) ? String(item.str) : '';
+        if (!s) continue;
+
+        // Transform item bbox into viewport/canvas pixel space.
+        const t = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
+        const w = Math.max(1, (item.width || 0) * viewport.scale);
+        const h = Math.max(1, (item.height || 0) * viewport.scale);
+
+        // Use an axis-aligned bbox; pdf.js exposes helper for this.
+        let bbox;
+        try {
+          bbox = window.pdfjsLib.Util.getAxialAlignedBoundingBox([0, 0, w, h], t);
+        } catch {
+          // Fallback: approximate using transform translation.
+          const x = t[4];
+          const y = t[5];
+          bbox = [x, y - h, x + w, y];
+        }
+
+        const left = Math.min(bbox[0], bbox[2]);
+        const right = Math.max(bbox[0], bbox[2]);
+        const top = Math.min(bbox[1], bbox[3]);
+        const bottom = Math.max(bbox[1], bbox[3]);
+
+        // Intersection with selected rectangle (no strict overlap threshold; selection is explicit)
+        if (right < r.x || left > (r.x + r.w) || bottom < r.y || top > (r.y + r.h)) continue;
+
+        out.push({ s, x: left, y: top, right, w });
+      }
+
+      if (!out.length) return '';
+
+      // Reading order: group into lines (tolerant), then left-to-right.
+      out.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+
+      const lines = [];
+      const LINE_Y_TOL = 8; // pixels
+      let cur = [];
+      let curY = null;
+      for (const it of out) {
+        if (curY == null) {
+          curY = it.y;
+          cur = [it];
+          continue;
+        }
+        if (Math.abs(it.y - curY) <= LINE_Y_TOL) {
+          cur.push(it);
+        } else {
+          lines.push(cur);
+          curY = it.y;
+          cur = [it];
+        }
+      }
+      if (cur && cur.length) lines.push(cur);
+
+      const buildLine = (arr) => {
+        arr.sort((a, b) => a.x - b.x);
+        let outStr = '';
+        let prev = null;
+        for (const it of arr) {
+          const token = String(it.s);
+          if (!prev) {
+            outStr += token;
+            prev = it;
+            continue;
+          }
+
+          const gap = it.x - (prev.right != null ? prev.right : (prev.x + (prev.w || 0)));
+          const prevCharW = (prev.w && prev.s) ? (prev.w / Math.max(1, String(prev.s).length)) : 6;
+
+          // If it looks like characters of the same word, avoid inserting spaces.
+          const noSpace = (gap <= Math.max(2.2, prevCharW * 0.8));
+          if (!noSpace) outStr += ' ';
+          outStr += token;
+          prev = it;
+        }
+        return outStr.replace(/\s+/g, ' ').trim();
+      };
+
+      const joined = lines.map(buildLine).filter(Boolean).join('\n');
+      return joined.trim();
+    }
+
+    // -----------------------------
+    // Rendering
+    // -----------------------------
+    async function renderPage() {
+      if (!pdfDoc) return;
+
+      const seq = ++renderSeq;
+      updateIndicators();
+
+      // Cancel previous render if still running
+      try {
+        if (renderTask && typeof renderTask.cancel === 'function') renderTask.cancel();
+      } catch {
+        // ignore
+      }
+
+      setStatus('Rendering...');
+      clearHighlights();
+
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale });
+
+      // Set canvas to viewport size
+      const ctx = elCanvas.getContext('2d', { alpha: false });
+      elCanvas.width = Math.floor(viewport.width);
+      elCanvas.height = Math.floor(viewport.height);
+
+      // Keep overlay aligned to canvas size (in CSS pixels)
+      elOverlay.style.left = `${elCanvas.offsetLeft}px`;
+      elOverlay.style.top = `${elCanvas.offsetTop}px`;
+
+      const renderContext = { canvasContext: ctx, viewport };
+      renderTask = page.render(renderContext);
+
+      try {
+        await renderTask.promise;
+      } catch (e) {
+        // If a newer render started, ignore.
+        if (seq !== renderSeq) return;
+        setStatus('Render cancelled');
+        return;
+      }
+
+      if (seq !== renderSeq) return;
+      setStatus('');
+
+      // Highlight matches for the current query (best-effort)
+      if (searchQuery) {
+        try {
+          await highlightMatchesOnCurrentPage(searchQuery, page, viewport);
+        } catch {
+          // ignore
+        }
+      }
+
+      updateIndicators();
+      saveState();
+
+      // Re-align selection overlay after render (canvas size may change)
+      try { updateSelectionOverlay(); } catch {}
+    }
+
+    function setPage(nextPage) {
+      if (!pdfDoc) return;
+      const total = pdfDoc.numPages;
+      pageNum = clamp(nextPage, 1, total);
+      renderPage();
+      updateIndicators();
+    }
+
+    function setScale(nextScale) {
+      scale = clamp(nextScale, SCALE_MIN, SCALE_MAX);
+      renderPage();
+      updateIndicators();
+    }
+
+    function fitWidth() {
+      if (!pdfDoc) return;
+      pdfDoc.getPage(pageNum).then((page) => {
+        // Use scale=1 viewport to determine page width
+        const vp1 = page.getViewport({ scale: 1.0 });
+        const wrapW = Math.max(200, elCanvasWrap.clientWidth - 16);
+        const s = wrapW / vp1.width;
+        setScale(s);
+      }).catch(() => {});
+    }
+
+    // -----------------------------
+    // Loading
+    // -----------------------------
+    async function loadPdfFromUrl(url) {
+      initPdfJsWorker();
+
+      setStatus('Loading PDF...');
+      clearHighlights();
+      pageTextCache.clear();
+      matches = [];
+      matchIndex = -1;
+
+      const loadingTask = window.pdfjsLib.getDocument({ url });
+      const doc = await loadingTask.promise;
+      pdfDoc = doc;
+      pageNum = 1;
+      updateIndicators();
+      await renderPage();
+      setStatus('');
+
+      saveState();
+    }
+
+    async function loadPdfFromFile(file) {
+      initPdfJsWorker();
+
+      setStatus('Loading PDF...');
+      clearHighlights();
+      pageTextCache.clear();
+      matches = [];
+      matchIndex = -1;
+
+      const buf = await file.arrayBuffer();
+      const loadingTask = window.pdfjsLib.getDocument({ data: buf });
+      const doc = await loadingTask.promise;
+      pdfDoc = doc;
+      pageNum = 1;
+      updateIndicators();
+      await renderPage();
+      setStatus('');
+    }
+
+    // -----------------------------
+    // Text search
+    // -----------------------------
+    async function getPageTextLower(pn) {
+      if (!pdfDoc) return '';
+      if (pageTextCache.has(pn)) return pageTextCache.get(pn).textLower;
+
+      const page = await pdfDoc.getPage(pn);
+      const tc = await page.getTextContent();
+
+      // Some PDFs split words into multiple text items (sometimes even per-letter).
+      // Keep both a spaced and a compact representation so search can succeed.
+      const parts = (tc.items || []).map(it => (it && it.str) ? String(it.str) : '');
+      const rawSpaced = parts.join(' ');
+      const rawCompact = parts.join('');
+
+      const norm = (s) => {
+        try { return String(s || '').normalize('NFKD'); } catch { return String(s || ''); }
+      };
+
+      const textLower = norm(rawSpaced).toLowerCase();
+      const textLowerNoWS = norm(rawCompact).replace(/\s+/g, '').toLowerCase();
+
+      const obj = {
+        rawText: rawSpaced,
+        textLower,
+        textLowerNoWS,
+      };
+      pageTextCache.set(pn, obj);
+      return obj.textLower;
+    }
+
+    async function buildMatches(query) {
+      if (!pdfDoc) return;
+      const q = String(query || '').trim().toLowerCase();
+      searchQuery = q;
+      matches = [];
+      matchIndex = -1;
+      clearHighlights();
+
+      if (!q) {
+        updateIndicators();
+        return;
+      }
+
+      setStatus('Searching...');
+      const total = pdfDoc.numPages;
+
+      const qNoWS = q.replace(/\s+/g, '');
+
+      for (let pn = 1; pn <= total; pn++) {
+        // eslint-disable-next-line no-await-in-loop
+        await getPageTextLower(pn);
+        const cached = pageTextCache.get(pn);
+        const has = !!cached && (
+          (q && cached.textLower && cached.textLower.indexOf(q) !== -1) ||
+          (qNoWS && cached.textLowerNoWS && cached.textLowerNoWS.indexOf(qNoWS) !== -1)
+        );
+        if (has) matches.push({ pageNum: pn });
+      }
+
+      if (matches.length) {
+        matchIndex = 0;
+        setPage(matches[0].pageNum);
+      }
+
+      setStatus(matches.length ? '' : 'No matches');
+      updateIndicators();
+    }
+
+    function gotoMatch(delta) {
+      if (!matches.length) return;
+      matchIndex = clamp(matchIndex + delta, 0, matches.length - 1);
+      const m = matches[matchIndex];
+      if (m && m.pageNum) setPage(m.pageNum);
+      updateIndicators();
+    }
+
+    // -----------------------------
+    // Wire UI
+    // -----------------------------
+    function wire() {
+      // Default URL
+      const st = loadState();
+      elUrl.value = (st && typeof st.url === 'string' && st.url.trim()) ? st.url.trim() : DEFAULT_URL;
+      if (st && Number.isFinite(Number(st.scale))) scale = clamp(Number(st.scale), SCALE_MIN, SCALE_MAX);
+      if (st && Number.isFinite(Number(st.pageNum))) pageNum = Math.max(1, Math.floor(Number(st.pageNum)));
+
+      updateIndicators();
+
+      // OCR language persistence
+      try {
+        const raw = localStorage.getItem(LS_KEY_OCR);
+        if (raw) {
+          const stOcr = JSON.parse(raw);
+          if (stOcr && typeof stOcr.lang === 'string' && stOcr.lang) elOcrLang.value = stOcr.lang;
+        }
+      } catch {}
+
+      elOcrLang.onchange = () => {
+        try { localStorage.setItem(LS_KEY_OCR, JSON.stringify({ lang: String(elOcrLang.value || 'eng') })); } catch {}
+      };
+
+      btnOpen.onclick = () => elFile.click();
+      elFile.onchange = async () => {
+        const f = elFile.files && elFile.files[0];
+        if (!f) return;
+        try {
+          await loadPdfFromFile(f);
+        } catch (e) {
+          setStatus('Failed to load file (check console)');
+          try { console.warn('load file failed', e); } catch {}
+        }
+      };
+
+      btnLoadUrl.onclick = async () => {
+        const url = String(elUrl.value || '').trim();
+        if (!url) return;
+        try {
+          await loadPdfFromUrl(url);
+          // Restore persisted page only after a successful load
+          const st2 = loadState();
+          const maybePage = st2 && Number.isFinite(Number(st2.pageNum)) ? Math.floor(Number(st2.pageNum)) : 1;
+          if (maybePage > 1 && pdfDoc) {
+            setPage(clamp(maybePage, 1, pdfDoc.numPages));
+          }
+        } catch (e) {
+          setStatus('Failed to load URL (check console)');
+          try { console.warn('load url failed', e); } catch {}
+        }
+      };
+
+      btnPrev.onclick = () => setPage(pageNum - 1);
+      btnNext.onclick = () => setPage(pageNum + 1);
+
+      btnZoomOut.onclick = () => setScale(scale / SCALE_STEP);
+      btnZoomIn.onclick = () => setScale(scale * SCALE_STEP);
+      btnFitWidth.onclick = () => fitWidth();
+
+      btnSelect.onclick = () => {
+        setSelectMode(!selectMode);
+      };
+
+      btnClearSel.onclick = () => {
+        clearSelection();
+      };
+
+      btnCopyOcr.onclick = async () => {
+        try {
+          const t = String(elOcrText.value || '');
+          await navigator.clipboard.writeText(t);
+          setOcrStatus('Copied');
+          setTimeout(() => setOcrStatus(''), 800);
+        } catch {
+          setOcrStatus('Copy failed');
+        }
+      };
+
+      async function ensureOcrWorker(lang) {
+        const l = String(lang || 'eng').trim();
+        if (!window.Tesseract) throw new Error('Tesseract not loaded');
+
+        if (ocrWorker && ocrWorkerLang === l) return ocrWorker;
+        if (ocrWorker) {
+          try { await ocrWorker.terminate(); } catch {}
+          ocrWorker = null;
+          ocrWorkerLang = '';
+        }
+
+        setOcrStatus('OCR: init...');
+        // Tesseract.js v5: languages are provided to createWorker and are preloaded/initialized.
+        // Avoid deprecated loadLanguage/initialize calls.
+        ocrWorker = await window.Tesseract.createWorker(l);
+        ocrWorkerLang = l;
+        return ocrWorker;
+      }
+
+      async function runOcrSelection() {
+        if (!selRectCanvas) return;
+        if (!pdfDoc) return;
+
+        const lang = String(elOcrLang.value || 'eng');
+        if (dlgOcr && typeof dlgOcr.showModal === 'function') {
+          try { dlgOcr.showModal(); } catch {}
+        }
+        if (elOcrText) elOcrText.value = '';
+        setOcrStatus('OCR: preparing image...');
+
+        // Prefer extracting real PDF text from the selection if available.
+        // This preserves diacritics (å/ä/ö) and punctuation better than OCR.
+        try {
+          const page = await pdfDoc.getPage(pageNum);
+          const viewport = page.getViewport({ scale });
+          const txt = await extractPdfTextInRect(page, viewport, selRectCanvas);
+          if (txt) {
+            if (elOcrText) elOcrText.value = txt;
+            setOcrStatus('Text extracted from PDF layer');
+            return;
+          }
+        } catch {
+          // ignore and fall back to OCR
+        }
+
+        // Crop current canvas into an offscreen canvas
+        const crop = document.createElement('canvas');
+        crop.width = selRectCanvas.w;
+        crop.height = selRectCanvas.h;
+        const cctx = crop.getContext('2d');
+        const ctx = elCanvas.getContext('2d');
+        const img = ctx.getImageData(selRectCanvas.x, selRectCanvas.y, selRectCanvas.w, selRectCanvas.h);
+        cctx.putImageData(img, 0, 0);
+
+        // Upscale selection to help OCR detect small diacritics (ö/ä/å).
+        // Tesseract performs much better with ~200-300 DPI equivalent.
+        const UPSCALE = 2;
+        const off = document.createElement('canvas');
+        off.width = Math.max(1, crop.width * UPSCALE);
+        off.height = Math.max(1, crop.height * UPSCALE);
+        const octx = off.getContext('2d');
+        octx.imageSmoothingEnabled = true;
+        octx.drawImage(crop, 0, 0, off.width, off.height);
+
+        // Light preprocessing: grayscale + contrast stretch (simple, fast).
+        try {
+          const id = octx.getImageData(0, 0, off.width, off.height);
+          const d = id.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const r = d[i];
+            const g = d[i + 1];
+            const b = d[i + 2];
+            // luminance
+            let y = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+            // contrast (center around 128)
+            y = (y - 128) * 1.25 + 128;
+            y = Math.max(0, Math.min(255, y));
+            d[i] = d[i + 1] = d[i + 2] = y;
+            d[i + 3] = 255;
+          }
+          octx.putImageData(id, 0, 0);
+        } catch {
+          // ignore preprocessing failure
+        }
+
+        try {
+          const worker = await ensureOcrWorker(lang);
+          try {
+            // Improve recognition for small snippets.
+            // 7 = single text line, 8 = single word.
+            // Auto-pick based on selection aspect ratio (wide => line).
+            const aspect = (selRectCanvas && selRectCanvas.h) ? (selRectCanvas.w / Math.max(1, selRectCanvas.h)) : 1;
+            const psm = (aspect >= 2.2) ? '7' : '8';
+
+            const params = {
+              user_defined_dpi: '300',
+              tessedit_pageseg_mode: psm,
+              // Keep spaces when OCR is configured to drop them.
+              preserve_interword_spaces: '1'
+            };
+            await worker.setParameters(params);
+          } catch {
+            // setParameters may not be available in some builds; ignore
+          }
+          setOcrStatus('OCR: recognizing...');
+          const res = await worker.recognize(off);
+          const text = (res && res.data && typeof res.data.text === 'string') ? res.data.text : '';
+          if (elOcrText) elOcrText.value = String(text || '').trim();
+          setOcrStatus('OCR: done');
+        } catch (e) {
+          setOcrStatus('OCR failed (check console)');
+          try { console.warn('OCR failed', e); } catch {}
+        }
+      }
+
+      btnOcr.onclick = () => {
+        runOcrSelection();
+      };
+
+      btnFind.onclick = () => buildMatches(elSearch.value);
+      btnPrevMatch.onclick = () => gotoMatch(-1);
+      btnNextMatch.onclick = () => gotoMatch(+1);
+
+      elSearch.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (matches.length) gotoMatch(+1);
+          else buildMatches(elSearch.value);
+        }
+      };
+
+      // Keyboard shortcuts (desktop)
+      document.addEventListener('keydown', (e) => {
+        if (isTypingTarget(document.activeElement)) return;
+        if (!pdfDoc) {
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            elSearch.focus();
+          }
+          return;
+        }
+
+        const k = e.key;
+        if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); setPage(pageNum - 1); return; }
+        if (k === 'ArrowRight' || k === 'PageDown') { e.preventDefault(); setPage(pageNum + 1); return; }
+        if (k === '+' || k === '=') { e.preventDefault(); setScale(scale * SCALE_STEP); return; }
+        if (k === '-') { e.preventDefault(); setScale(scale / SCALE_STEP); return; }
+        if (k === 'Home') { e.preventDefault(); setPage(1); return; }
+        if (k === 'End') { e.preventDefault(); setPage(pdfDoc.numPages); return; }
+        if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'f') { e.preventDefault(); elSearch.focus(); return; }
+      });
+
+      // Selection with pointer events (mouse + touch)
+      elCanvas.addEventListener('pointerdown', (e) => {
+        if (!selectMode) return;
+        try { elCanvas.setPointerCapture(e.pointerId); } catch {}
+
+        const rect = elCanvas.getBoundingClientRect();
+        const xCss = clamp(e.clientX - rect.left, 0, rect.width);
+        const yCss = clamp(e.clientY - rect.top, 0, rect.height);
+        selStart = { xCss, yCss };
+        selRectCss = { x: xCss, y: yCss, w: 1, h: 1 };
+        isSelecting = true;
+        updateSelectionOverlay();
+        e.preventDefault();
+      });
+
+      elCanvas.addEventListener('pointermove', (e) => {
+        if (!selectMode || !isSelecting || !selStart) return;
+        const rect = elCanvas.getBoundingClientRect();
+        const xCss = clamp(e.clientX - rect.left, 0, rect.width);
+        const yCss = clamp(e.clientY - rect.top, 0, rect.height);
+
+        const x0 = selStart.xCss;
+        const y0 = selStart.yCss;
+        const x = Math.min(x0, xCss);
+        const y = Math.min(y0, yCss);
+        const w = Math.max(1, Math.abs(xCss - x0));
+        const h = Math.max(1, Math.abs(yCss - y0));
+        selRectCss = { x, y, w, h };
+        updateSelectionOverlay();
+        e.preventDefault();
+      });
+
+      function endSelect(e) {
+        if (!selectMode || !isSelecting) return;
+        isSelecting = false;
+        selStart = null;
+        updateSelectionOverlay();
+        e.preventDefault();
+      }
+
+      elCanvas.addEventListener('pointerup', endSelect);
+      elCanvas.addEventListener('pointercancel', endSelect);
+
+      // Keep bottom bar from covering content
+      const bottom = document.getElementById('bottomBar');
+      const spacer = document.querySelector('.spacer');
+      const updateSpacer = () => {
+        if (!bottom || !spacer) return;
+        const h = Math.ceil(bottom.getBoundingClientRect().height || 92);
+        spacer.style.height = `${Math.max(72, h + 12)}px`;
+      };
+      updateSpacer();
+      try { new ResizeObserver(updateSpacer).observe(bottom); } catch { window.addEventListener('resize', updateSpacer); }
+
+      // Auto-load URL if available
+      if (elUrl.value && elUrl.value.trim()) {
+        btnLoadUrl.click();
+      }
+    }
+
+    // Start
+    wire();
+  </script>
+</body>
+</html>
