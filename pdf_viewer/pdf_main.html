@@ -46,6 +46,15 @@
       width: min(560px, 100%);
     }
 
+    input[type="file"] {
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      width: min(320px, 100%);
+      background: transparent;
+    }
+
     .muted { opacity: 0.75; }
     .mono { font-variant-numeric: tabular-nums; }
 
@@ -126,36 +135,59 @@
     .break { flex-basis: 100%; height: 0; }
 
     dialog {
-      width: calc(100vw - 16px);
-      max-width: min(980px, calc(100vw - 16px));
-      height: calc(100vh - 16px);
-      max-height: calc(100vh - 16px);
       border: 1px solid currentColor;
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px;
+      margin: 0;
+    }
+
+    /* OCR dialog: always white (90% opaque), independent of OS dark mode. */
+    #dlgOcr {
+      background: rgba(255,255,255,0.1);
+      color: #000;      
+    }
+
+    #dlgOcr::backdrop {
+      background: rgba(0,0,0,0.1);
+    }
+
+    #ocrHdr {
+      flex-wrap: nowrap;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    #ocrHdr strong {
+      white-space: nowrap;
+    }
+
+    /* Keep dialog buttons fully opaque (solid). */
+    #dlgOcr button {
+      background: #fff;
+      color: #000;
+      opacity: 1;
+    }
+
+    /* OCR output textarea: transparent background. */
+    #dlgOcr #ocrText {
+      background: transparent;
+      color: inherit;
     }
 
     textarea {
       width: 100%;
-      min-height: 50vh;
       border: 1px solid currentColor;
       border-radius: 10px;
       padding: 10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      resize: none;
+      overflow: auto;
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="row" aria-label="Header">
-      <button id="btnOpen" type="button">Open</button>
-      <input id="fileInput" type="file" accept="application/pdf" hidden />
-
-      <input id="urlInput" type="text" placeholder="PDF URL" />
-      <button id="btnLoadUrl" type="button">Load</button>
-
-      <span id="pageInfo" class="muted mono" style="margin-left:auto;">0/0</span>
-    </div>
+    <input id="fileInput" type="file" accept="application/pdf" hidden />
 
     <div class="row" aria-label="Status">
       <span id="status" class="muted"></span>
@@ -173,45 +205,33 @@
   </div>
 
   <div id="bottomBar" class="row bottomBar" aria-label="Controls">
-    <button id="btnPrev" type="button">Prev</button>
-    <button id="btnNext" type="button">Next</button>
+    <button id="btnPrev" type="button"><</button>
+    <button id="btnNext" type="button">></button>
 
     <button id="btnZoomOut" type="button">-</button>
     <button id="btnZoomIn" type="button">+</button>
     <span id="zoomInfo" class="muted mono">100%</span>
-    <button id="btnFitWidth" type="button">Fit width</button>
+    <button id="btnFitWidth" type="button">FW</button>
 
-    <button id="btnSelect" type="button">Select</button>
-    <select id="ocrLang" aria-label="OCR language" style="min-height:44px; border:1px solid currentColor; border-radius:10px; padding:10px 12px; background:transparent;">
-      <option value="eng">OCR: eng</option>
-      <option value="swe">OCR: swe</option>
-      <option value="eng+swe">OCR: eng+swe</option>
-      <option value="ukr">OCR: ukr</option>
-      <option value="rus">OCR: rus</option>
+    <button id="btnSelect" type="button">Sel</button>
+    <select id="ocrLang" aria-label="Ln" style="min-height:44px; border:1px solid currentColor; border-radius:10px; padding:10px 12px; background:transparent;">
+      <option value="eng">eng</option>
+      <option value="swe">swe</option>
+      <option value="eng+swe">e_s</option>
+      <option value="ukr">ukr</option>
+      <option value="rus">rus</option>
     </select>
     <button id="btnOcr" type="button" disabled>OCR</button>
     <button id="btnClearSel" type="button" disabled>Clear</button>
-
-    <span class="break" aria-hidden="true"></span>
-
-    <input id="searchInput" type="search" placeholder="Search text" />
-    <button id="btnFind" type="button">Find</button>
-    <button id="btnPrevMatch" type="button">Prev match</button>
-    <button id="btnNextMatch" type="button">Next match</button>
-    <span id="matchInfo" class="muted mono">0/0</span>
   </div>
 
   <dialog id="dlgOcr">
     <form method="dialog">
-      <div class="row" style="margin:0;">
-        <strong>OCR result</strong>
-        <button id="btnCopyOcr" type="button" style="margin-left:auto;">Copy</button>
+      <div id="ocrHdr" class="row" style="margin:0;">        
+        <button id="btnSaveToFB_Ocr" type="button" style="margin-left:auto;">Save</button>
         <button value="cancel">Close</button>
       </div>
-      <div class="row" style="margin:10px 0 0;">
-        <span id="ocrStatus" class="muted"></span>
-      </div>
-      <textarea id="ocrText" placeholder="(OCR output)"></textarea>
+      <textarea id="ocrText" rows="2" placeholder="(OCR output)"></textarea>
     </form>
   </dialog>
 
@@ -236,9 +256,18 @@
     const LS_KEY = 'pdf_viewer_state_v1';
     const LS_KEY_OCR = 'pdf_viewer_ocr_v1';
 
+    // OCR dialog sizing/placement
+    const OCR_DLG_W = 520;
+    const OCR_DLG_H = 100;
+    const OCR_DLG_EDGE = 8;
+    const OCR_HDR_H = 24;
+
     let pdfDoc = null;
     let pageNum = 1;
     let scale = 1.0;
+
+    // Last loaded URL (used for Ctrl+L prompt default + persistence)
+    let currentUrl = DEFAULT_URL;
 
     let renderTask = null;
     let renderSeq = 0;
@@ -263,42 +292,31 @@
     // Elements
     // -----------------------------
     const elStatus = document.getElementById('status');
-    const elPageInfo = document.getElementById('pageInfo');
     const elZoomInfo = document.getElementById('zoomInfo');
-    const elMatchInfo = document.getElementById('matchInfo');
 
     const elCanvasWrap = document.getElementById('canvasWrap');
     const elCanvas = document.getElementById('pdfCanvas');
     const elOverlay = document.getElementById('hlOverlay');
     const elSelOverlay = document.getElementById('selOverlay');
     const elSelRect = document.getElementById('selRect');
-
-    const elUrl = document.getElementById('urlInput');
     const elFile = document.getElementById('fileInput');
-
-    const elSearch = document.getElementById('searchInput');
 
     const elOcrLang = document.getElementById('ocrLang');
     const dlgOcr = document.getElementById('dlgOcr');
+    const elOcrHdr = document.getElementById('ocrHdr');
     const elOcrText = document.getElementById('ocrText');
-    const elOcrStatus = document.getElementById('ocrStatus');
 
     // Buttons
-    const btnOpen = document.getElementById('btnOpen');
-    const btnLoadUrl = document.getElementById('btnLoadUrl');
     const btnPrev = document.getElementById('btnPrev');
     const btnNext = document.getElementById('btnNext');
     const btnZoomOut = document.getElementById('btnZoomOut');
     const btnZoomIn = document.getElementById('btnZoomIn');
     const btnFitWidth = document.getElementById('btnFitWidth');
-    const btnFind = document.getElementById('btnFind');
-    const btnPrevMatch = document.getElementById('btnPrevMatch');
-    const btnNextMatch = document.getElementById('btnNextMatch');
 
     const btnSelect = document.getElementById('btnSelect');
     const btnOcr = document.getElementById('btnOcr');
     const btnClearSel = document.getElementById('btnClearSel');
-    const btnCopyOcr = document.getElementById('btnCopyOcr');
+    const btnSaveToFB_Ocr = document.getElementById('btnSaveToFB_Ocr');
 
     // -----------------------------
     // PDF.js init
@@ -321,18 +339,14 @@
 
     function updateIndicators() {
       const total = pdfDoc ? pdfDoc.numPages : 0;
-      elPageInfo.textContent = `${total ? pageNum : 0}/${total}`;
       elZoomInfo.textContent = `${Math.round(scale * 100)}%`;
-      elMatchInfo.textContent = matches.length ? `${matchIndex + 1}/${matches.length}` : '0/0';
 
       btnPrev.disabled = !pdfDoc || pageNum <= 1;
       btnNext.disabled = !pdfDoc || pageNum >= total;
-      btnPrevMatch.disabled = matches.length === 0;
-      btnNextMatch.disabled = matches.length === 0;
 
       btnOcr.disabled = !selRectCanvas;
       btnClearSel.disabled = !selRectCanvas;
-      btnSelect.textContent = selectMode ? 'Select: ON' : 'Select';
+      btnSelect.textContent = selectMode ? 'Sel: ON' : 'Sel';
     }
 
     function isTypingTarget(el) {
@@ -345,7 +359,7 @@
     function saveState(extra = {}) {
       try {
         const state = {
-          url: String(elUrl.value || ''),
+          url: String(currentUrl || ''),
           pageNum,
           scale,
           ...extra,
@@ -373,7 +387,64 @@
     }
 
     function setOcrStatus(msg) {
-      if (elOcrStatus) elOcrStatus.textContent = msg || '';
+      // Keep header compact (1 line); show OCR status in main status line.
+      setStatus(msg || '');
+    }
+
+    function clampInt(n, a, b) {
+      return Math.floor(clamp(n, a, b));
+    }
+
+    function isOcrDialogOpen() {
+      return !!(dlgOcr && dlgOcr.open);
+    }
+
+    function applyOcrHeaderHeight() {
+      if (!elOcrHdr) return;
+      const h = Math.max(28, Math.floor(Number(OCR_HDR_H) || 44));
+      elOcrHdr.style.height = `${h}px`;
+      elOcrHdr.style.minHeight = `${h}px`;
+      elOcrHdr.style.maxHeight = `${h}px`;
+    }
+
+    function positionOcrDialog() {
+      if (!dlgOcr) return;
+      if (!selRectCss) return;
+
+      const canvasRect = elCanvas.getBoundingClientRect();
+      const sel = {
+        x: canvasRect.left + selRectCss.x,
+        y: canvasRect.top + selRectCss.y,
+        w: selRectCss.w,
+        h: selRectCss.h,
+      };
+
+      const vw = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+      const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+
+      const w = Math.min(OCR_DLG_W, Math.max(220, vw - OCR_DLG_EDGE * 2));
+      const h = Math.min(OCR_DLG_H, Math.max(120, vh - OCR_DLG_EDGE * 2));
+
+      const spaceAbove = sel.y;
+      const spaceBelow = vh - (sel.y + sel.h);
+      const placeBelow = spaceBelow >= spaceAbove;
+
+      let left = (sel.x + sel.w / 2) - (w / 2);
+      left = clampInt(left, OCR_DLG_EDGE, vw - w - OCR_DLG_EDGE);
+
+      let top = placeBelow
+        ? (sel.y + sel.h + OCR_DLG_EDGE)
+        : (sel.y - h - OCR_DLG_EDGE);
+      top = clampInt(top, OCR_DLG_EDGE, vh - h - OCR_DLG_EDGE);
+
+      dlgOcr.style.position = 'fixed';
+      dlgOcr.style.left = `${left}px`;
+      dlgOcr.style.top = `${top}px`;
+      dlgOcr.style.width = `${w}px`;
+      dlgOcr.style.height = `${h}px`;
+      dlgOcr.style.maxWidth = 'none';
+      dlgOcr.style.maxHeight = 'none';
+      dlgOcr.style.margin = '0';
     }
 
     function setSelectMode(on) {
@@ -447,6 +518,10 @@
       const ch = Math.max(1, Math.floor(Math.abs(p1.y - p0.y)));
       selRectCanvas = clampRect({ x: cx, y: cy, w: cw, h: ch }, elCanvas.width, elCanvas.height);
       updateIndicators();
+
+      if (isOcrDialogOpen()) {
+        try { positionOcrDialog(); } catch {}
+      }
     }
 
     // Highlight strategy (v1): highlight any text item whose .str contains the query.
@@ -747,7 +822,7 @@
           if (isLoopback) {
             return {
               url: raw,
-              warning: 'Blocked: GitHub Pages (https) cannot fetch http://localhost. Use Open (file picker), or run this viewer locally (http://localhost:8080/pdf_viewer/), or host the PDF over https.'
+              warning: 'Blocked: GitHub Pages (https) cannot fetch http://localhost. Use the file picker, or run this viewer locally (http://localhost:8080/pdf_viewer/), or host the PDF over https.'
             };
           }
           // Try upgrading to https for normal hosts (fixes "Mixed Content" for github.io, etc.)
@@ -864,7 +939,7 @@
     function wire() {
       // Default URL
       const st = loadState();
-      elUrl.value = (st && typeof st.url === 'string' && st.url.trim()) ? st.url.trim() : DEFAULT_URL;
+      currentUrl = (st && typeof st.url === 'string' && st.url.trim()) ? st.url.trim() : DEFAULT_URL;
       if (st && Number.isFinite(Number(st.scale))) scale = clamp(Number(st.scale), SCALE_MIN, SCALE_MAX);
       if (st && Number.isFinite(Number(st.pageNum))) pageNum = Math.max(1, Math.floor(Number(st.pageNum)));
 
@@ -883,25 +958,45 @@
         try { localStorage.setItem(LS_KEY_OCR, JSON.stringify({ lang: String(elOcrLang.value || 'eng') })); } catch {}
       };
 
-      btnOpen.onclick = () => elFile.click();
+      try { applyOcrHeaderHeight(); } catch {}
+
       elFile.onchange = async () => {
         const f = elFile.files && elFile.files[0];
         if (!f) return;
         try {
           await loadPdfFromFile(f);
+          currentUrl = '';
+          saveState();
         } catch (e) {
           setStatus('Failed to load file (check console)');
           try { console.warn('load file failed', e); } catch {}
         }
       };
 
-      btnLoadUrl.onclick = async () => {
-        const norm = normalizeUrlForFetch(elUrl.value);
+      function openFilePicker() {
+        if (!elFile) return;
+        try { elFile.value = ''; } catch {}
+        elFile.click();
+      }
+
+      async function loadFromUrlString(rawInput) {
+        const norm = normalizeUrlForFetch(rawInput);
         const url = norm.url;
         if (!url) return;
+
+        // When opened as file://, browsers frequently block fetching relative paths.
+        // Allow http(s) URLs, but guide users to the file picker or a local server otherwise.
+        const pageProto = (window.location && window.location.protocol) ? window.location.protocol : '';
+        const isHttpUrl = /^https?:\/\//i.test(url);
+        if (pageProto === 'file:' && !isHttpUrl) {
+          setStatus('Tip: opened as file://. Use Ctrl+O (file picker), or run a local server (python -m http.server) to load by URL/path.');
+          return;
+        }
+
         if (norm.warning) setStatus(norm.warning);
         try {
           await loadPdfFromUrl(url);
+          currentUrl = String(rawInput || '').trim();
           // Restore persisted page only after a successful load
           const st2 = loadState();
           const maybePage = st2 && Number.isFinite(Number(st2.pageNum)) ? Math.floor(Number(st2.pageNum)) : 1;
@@ -912,7 +1007,23 @@
           setStatus('Failed to load URL (check console)');
           try { console.warn('load url failed', e); } catch {}
         }
-      };
+      }
+
+      async function promptAndLoadUrl() {
+        const def = String(currentUrl || DEFAULT_URL || '').trim();
+        const raw = window.prompt('PDF URL or path', def);
+        if (raw == null) return;
+        await loadFromUrlString(raw);
+        saveState();
+      }
+
+      async function promptAndSearch() {
+        if (!pdfDoc) return;
+        const def = String(searchQuery || '').trim();
+        const q = window.prompt('Search text', def);
+        if (q == null) return;
+        await buildMatches(q);
+      }
 
       btnPrev.onclick = () => setPage(pageNum - 1);
       btnNext.onclick = () => setPage(pageNum + 1);
@@ -929,15 +1040,8 @@
         clearSelection();
       };
 
-      btnCopyOcr.onclick = async () => {
-        try {
-          const t = String(elOcrText.value || '');
-          await navigator.clipboard.writeText(t);
-          setOcrStatus('Copied');
-          setTimeout(() => setOcrStatus(''), 800);
-        } catch {
-          setOcrStatus('Copy failed');
-        }
+      btnSaveToFB_Ocr.onclick = async () => {
+        // Save OCR text to Firebase Realtime Database
       };
 
       async function ensureOcrWorker(lang) {
@@ -964,6 +1068,8 @@
         if (!pdfDoc) return;
 
         const lang = String(elOcrLang.value || 'eng');
+        try { applyOcrHeaderHeight(); } catch {}
+        try { positionOcrDialog(); } catch {}
         if (dlgOcr && typeof dlgOcr.showModal === 'function') {
           try { dlgOcr.showModal(); } catch {}
         }
@@ -979,6 +1085,7 @@
           if (txt) {
             if (elOcrText) elOcrText.value = txt;
             setOcrStatus('Text extracted from PDF layer');
+            try { positionOcrDialog(); } catch {}
             return;
           }
         } catch {
@@ -1049,6 +1156,7 @@
           const text = (res && res.data && typeof res.data.text === 'string') ? res.data.text : '';
           if (elOcrText) elOcrText.value = String(text || '').trim();
           setOcrStatus('OCR: done');
+          try { positionOcrDialog(); } catch {}
         } catch (e) {
           setOcrStatus('OCR failed (check console)');
           try { console.warn('OCR failed', e); } catch {}
@@ -1059,26 +1167,30 @@
         runOcrSelection();
       };
 
-      btnFind.onclick = () => buildMatches(elSearch.value);
-      btnPrevMatch.onclick = () => gotoMatch(-1);
-      btnNextMatch.onclick = () => gotoMatch(+1);
-
-      elSearch.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          if (matches.length) gotoMatch(+1);
-          else buildMatches(elSearch.value);
-        }
-      };
-
       // Keyboard shortcuts (desktop)
       document.addEventListener('keydown', (e) => {
         if (isTypingTarget(document.activeElement)) return;
+
+        // Global shortcuts (even before a PDF is loaded)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+          e.preventDefault();
+          openFilePicker();
+          return;
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+          e.preventDefault();
+          promptAndLoadUrl();
+          return;
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          promptAndSearch();
+          return;
+        }
+
         if (!pdfDoc) {
-          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-            e.preventDefault();
-            elSearch.focus();
-          }
           return;
         }
 
@@ -1089,7 +1201,11 @@
         if (k === '-') { e.preventDefault(); setScale(scale / SCALE_STEP); return; }
         if (k === 'Home') { e.preventDefault(); setPage(1); return; }
         if (k === 'End') { e.preventDefault(); setPage(pdfDoc.numPages); return; }
-        if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'f') { e.preventDefault(); elSearch.focus(); return; }
+
+        // Match navigation: F3 / Shift+F3, or N/P
+        if (k === 'F3') { e.preventDefault(); gotoMatch(e.shiftKey ? -1 : +1); return; }
+        if (k.toLowerCase() === 'n') { e.preventDefault(); gotoMatch(+1); return; }
+        if (k.toLowerCase() === 'p') { e.preventDefault(); gotoMatch(-1); return; }
       });
 
       // Selection with pointer events (mouse + touch)
@@ -1146,9 +1262,19 @@
       updateSpacer();
       try { new ResizeObserver(updateSpacer).observe(bottom); } catch { window.addEventListener('resize', updateSpacer); }
 
+      // Reposition OCR dialog when viewport changes
+      window.addEventListener('resize', () => {
+        if (isOcrDialogOpen()) {
+          try { positionOcrDialog(); } catch {}
+        }
+      });
+
       // Auto-load URL if available
-      if (elUrl.value && elUrl.value.trim()) {
-        btnLoadUrl.click();
+      if (currentUrl && String(currentUrl).trim()) {
+        // Avoid confusing startup error when opened via file:// and URL is a relative path.
+        const pageProto = (window.location && window.location.protocol) ? window.location.protocol : '';
+        const isHttpUrl = /^https?:\/\//i.test(String(currentUrl).trim());
+        if (pageProto !== 'file:' || isHttpUrl) loadFromUrlString(currentUrl);
       }
     }
 
