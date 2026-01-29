@@ -32,15 +32,28 @@ Render saved entries as rectangles on the page:
 ---
 
 ## Data model
+Store metadata at the doc/page level (path), and keep each entry minimal.
+
+### Page container (implicit by path)
+The following values are **NOT** stored inside every entry, because they are already known from the path:
+- `docId`
+- `pageNum`
+- `userId`
+
+Optionally, you may store a small page-level object at:
+`/pdf_viewer_ocr_v1/{userId}/{docId}/{pageNum}/_meta`
+
+```js
+{
+   updatedAt: number  // Date.now()
+}
+```
+
+### Entry object
 Each saved entry is an object:
 
 ```js
 {
-   v: 1,
-   docId: string,        // stable id for this PDF
-   url: string,          // optional, last URL/path used
-   pageNum: number,
-
    // rectangle in "page units" independent of zoom
    // store as coordinates at scale=1 (canvas px divided by scale)
    rect1: { x: number, y: number, w: number, h: number },
@@ -102,6 +115,14 @@ rectCanvasNow = {
 ---
 
 ## Firebase RTDB paths
+### Root URL (important)
+Use the Firebase RTDB **root**:
+
+`https://storage-eu-default-rtdb.firebaseio.com/`
+
+Do **not** use the YouTube sub-path (do not prefix with `/db_youtube2`).
+
+### Path schema
 Use a predictable schema:
 
 ```
@@ -158,27 +179,5 @@ Rendering requirements:
 
 
 
-
-
-lets update this instr with 
-
-we use root ( exactly in https://storage-eu-default-rtdb.firebaseio.com/ and not in https://storage-eu-default-rtdb.firebaseio.com/db_youtube2 )
-
-https://storage-eu-default-rtdb.firebaseio.com/pdf_viewer_ocr_v1/ 
-
-
-if we use /pdf_viewer_ocr_v1/{userId}/{docId}/{pageNum}/{entryId}
-
-we dont need to save for each item/entry
-
-   v: 1,
-   docId: string,        // stable id for this PDF
-   url: string,          // optional, last URL/path used
-   pageNum: number,
-
-in 
-
-## Data model
-Each saved entry is an object.
 
 

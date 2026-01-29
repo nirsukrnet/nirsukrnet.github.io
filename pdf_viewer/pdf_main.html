@@ -46,6 +46,26 @@
       width: min(560px, 100%);
     }
 
+    #inGotoPage {
+      padding: 10px 10px;
+      min-height: 34px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      width: 50px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Hide number spinners where supported */
+    #inGotoPage::-webkit-outer-spin-button,
+    #inGotoPage::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    #inGotoPage[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
     input[type="file"] {
       min-height: 44px;
       padding: 8px 10px;
@@ -77,6 +97,27 @@
       left: 0;
       top: 0;
       pointer-events: none;
+    }
+
+    /* Saved OCR overlay (clickable when Select mode is OFF) */
+    #savedOverlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: auto;
+    }
+
+    .selectMode #savedOverlay {
+      pointer-events: none;
+    }
+
+    .savedRect {
+      position: absolute;
+      border: none;
+      outline: none;
+      background: rgba(0, 160, 0, 0.10);
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     /* Selection overlay */
@@ -170,7 +211,7 @@
 
     /* OCR output textarea: transparent background. */
     #dlgOcr #ocrText {
-      background: transparent;
+      background: rgba(255,255,255,0.7);
       color: inherit;
     }
 
@@ -195,6 +236,7 @@
 
     <div id="canvasWrap" class="canvasWrap">
       <canvas id="pdfCanvas"></canvas>
+      <div id="savedOverlay" aria-hidden="true"></div>
       <div id="hlOverlay" aria-hidden="true"></div>
       <div id="selOverlay" aria-hidden="true">
         <div id="selRect"></div>
@@ -212,6 +254,7 @@
     <button id="btnZoomIn" type="button">+</button>
     <span id="zoomInfo" class="muted mono">100%</span>
     <button id="btnFitWidth" type="button">FW</button>
+    <input id="inGotoPage" type="number" inputmode="numeric" min="1" step="1" placeholder="#" aria-label="Page" />
 
     <button id="btnSelect" type="button">Sel</button>
     <select id="ocrLang" aria-label="Ln" style="min-height:44px; border:1px solid currentColor; border-radius:10px; padding:10px 12px; background:transparent;">
@@ -239,6 +282,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <!-- Tesseract.js (CDN) for OCR selection. -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- Firebase auth + RTDB helper (GlobalVars / URL_DataSet) -->
+  <script src="../assets/js/global_var.js"></script>
   <script>
     'use strict';
 
@@ -297,6 +342,7 @@
     const elCanvasWrap = document.getElementById('canvasWrap');
     const elCanvas = document.getElementById('pdfCanvas');
     const elOverlay = document.getElementById('hlOverlay');
+    const elSavedOverlay = document.getElementById('savedOverlay');
     const elSelOverlay = document.getElementById('selOverlay');
     const elSelRect = document.getElementById('selRect');
     const elFile = document.getElementById('fileInput');
@@ -312,6 +358,7 @@
     const btnZoomOut = document.getElementById('btnZoomOut');
     const btnZoomIn = document.getElementById('btnZoomIn');
     const btnFitWidth = document.getElementById('btnFitWidth');
+    const inGotoPage = document.getElementById('inGotoPage');
 
     const btnSelect = document.getElementById('btnSelect');
     const btnOcr = document.getElementById('btnOcr');
@@ -347,6 +394,13 @@
       btnOcr.disabled = !selRectCanvas;
       btnClearSel.disabled = !selRectCanvas;
       btnSelect.textContent = selectMode ? 'Sel: ON' : 'Sel';
+
+      if (inGotoPage) {
+        try {
+          inGotoPage.min = '1';
+          inGotoPage.max = total ? String(total) : '';
+        } catch {}
+      }
     }
 
     function isTypingTarget(el) {
@@ -393,6 +447,330 @@
 
     function clampInt(n, a, b) {
       return Math.floor(clamp(n, a, b));
+    }
+
+    // -----------------------------
+    // Firebase RTDB helpers (pdf_viewer_ocr_v1)
+    // -----------------------------
+    const RTDB_ROOT = 'https://storage-eu-default-rtdb.firebaseio.com';
+
+    // Cache: key = `${userKey}|${docKey}|${pageNum}` -> { entriesById }
+    let savedCache = new Map();
+    let savedKeyActive = '';
+    let savedEntriesById = {}; // for current page
+    let savedLoadInFlightKey = '';
+    let activeSavedEntryId = '';
+    let activeSavedRect1 = null;
+
+    // UI state (store last page per document)
+    let uiSaveTimer = null;
+
+    function cleanStr(x) { return (x == null) ? '' : String(x).trim(); }
+
+    function base64UrlKey(ident) {
+      const s = cleanStr(ident);
+      if (!s) return '';
+      try {
+        const bytes = new TextEncoder().encode(s);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        const b64 = btoa(bin);
+        return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      } catch {
+        try {
+          const b64 = btoa(unescape(encodeURIComponent(s)));
+          return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        } catch {
+          return '';
+        }
+      }
+    }
+
+    function pvEnsureGv() {
+      if (window.gv && window.gv.URL_DS) return window.gv;
+      const GVClass = (typeof GlobalVars === 'function')
+        ? GlobalVars
+        : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+          ? globalThis.GlobalVars
+          : (typeof window.GlobalVars === 'function')
+            ? window.GlobalVars
+            : null;
+      if (GVClass) {
+        const gv = new GVClass();
+        window.gv = gv;
+        return gv;
+      }
+      throw new Error('GlobalVars is not available (load ../assets/js/global_var.js first)');
+    }
+
+    async function pvEnsureSignedIn() {
+      const gv = pvEnsureGv();
+      if (gv.URL_DS && gv.URL_DS.idToken) return;
+      if (typeof gv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+      await gv.SignIn_User();
+    }
+
+    function pvGetUserKey() {
+      try {
+        const gv = pvEnsureGv();
+        const email = gv && gv.URL_DS ? cleanStr(gv.URL_DS.email) : '';
+        return base64UrlKey(email) || 'anon';
+      } catch {
+        return 'anon';
+      }
+    }
+
+    function pvGetDocKey() {
+      // Prefer pdf.js fingerprints if available; encode for safe RTDB key.
+      try {
+        const fp = (pdfDoc && pdfDoc.fingerprints && pdfDoc.fingerprints[0]) ? cleanStr(pdfDoc.fingerprints[0]) : '';
+        if (fp) return base64UrlKey(fp);
+      } catch {}
+      // Fallback to URL
+      return base64UrlKey(currentUrl || DEFAULT_URL) || 'doc';
+    }
+
+    function pvMakeRtdbUrl(pathNoSlash) {
+      const p = cleanStr(pathNoSlash).replace(/^\/+/, '');
+      return `${RTDB_ROOT}/${p}.json`;
+    }
+
+    async function pvRtdbRequest(pathNoSlash, method = 'GET', body = null) {
+      await pvEnsureSignedIn();
+      const gv = pvEnsureGv();
+      const token = gv && gv.URL_DS ? cleanStr(gv.URL_DS.idToken) : '';
+      if (!token) throw new Error('Not authenticated (idToken missing)');
+
+      const url = pvMakeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token)}`;
+      const init = { method: String(method || 'GET') };
+      if (body != null) {
+        init.headers = { 'Content-Type': 'application/json' };
+        init.body = JSON.stringify(body);
+      }
+
+      const res = await fetch(url, init);
+      if (!res.ok) {
+        // One retry after re-sign-in if unauthorized
+        if (res.status === 401) {
+          try {
+            const gv2 = pvEnsureGv();
+            if (gv2 && typeof gv2.SignIn_User === 'function') await gv2.SignIn_User();
+          } catch {}
+          const gv3 = pvEnsureGv();
+          const token2 = gv3 && gv3.URL_DS ? cleanStr(gv3.URL_DS.idToken) : '';
+          const url2 = pvMakeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token2)}`;
+          const res2 = await fetch(url2, init);
+          if (!res2.ok) {
+            const txt2 = await (async () => { try { return await res2.text(); } catch { return ''; } })();
+            throw new Error(`RTDB ${res2.status}: ${txt2}`);
+          }
+          return await res2.json();
+        }
+        const txt = await (async () => { try { return await res.text(); } catch { return ''; } })();
+        throw new Error(`RTDB ${res.status}: ${txt}`);
+      }
+      return await res.json();
+    }
+
+    function pvActiveSavedKey(pageNumLocal) {
+      const userKey = pvGetUserKey();
+      const docKey = pvGetDocKey();
+      return `${userKey}|${docKey}|${pageNumLocal}`;
+    }
+
+    function pvGetRtdbPagePath(pageNumLocal) {
+      const userKey = pvGetUserKey();
+      const docKey = pvGetDocKey();
+      return `pdf_viewer_ocr_v1/${userKey}/${docKey}/${pageNumLocal}`;
+    }
+
+    function pvGetRtdbUiPath() {
+      const userKey = pvGetUserKey();
+      const docKey = pvGetDocKey();
+      return `pdf_viewer_ocr_v1/${userKey}/${docKey}/_ui`;
+    }
+
+    async function pvLoadUiState() {
+      try {
+        const data = await pvRtdbRequest(pvGetRtdbUiPath(), 'GET');
+        return (data && typeof data === 'object') ? data : null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function pvSaveUiStateNow() {
+      if (!pdfDoc) return;
+      try {
+        const payload = {
+          pageNum: Math.max(1, Math.floor(Number(pageNum) || 1)),
+          ocrLang: cleanStr(elOcrLang && elOcrLang.value) || 'eng',
+          updatedAt: Date.now(),
+        };
+        await pvRtdbRequest(pvGetRtdbUiPath(), 'PUT', payload);
+      } catch {
+        // ignore (viewer should work without firebase)
+      }
+    }
+
+    function pvScheduleSaveUiState() {
+      try {
+        if (uiSaveTimer) clearTimeout(uiSaveTimer);
+      } catch {}
+      uiSaveTimer = setTimeout(() => {
+        pvSaveUiStateNow();
+      }, 650);
+    }
+
+    function clearSavedOverlay() {
+      if (elSavedOverlay) elSavedOverlay.innerHTML = '';
+    }
+
+    function alignSavedOverlayToCanvas() {
+      if (!elSavedOverlay) return;
+      const rect = elCanvas.getBoundingClientRect();
+      const canvasW = Math.max(1, Math.round(rect.width));
+      const canvasH = Math.max(1, Math.round(rect.height));
+      elSavedOverlay.style.width = `${canvasW}px`;
+      elSavedOverlay.style.height = `${canvasH}px`;
+      elSavedOverlay.style.left = `${elCanvas.offsetLeft}px`;
+      elSavedOverlay.style.top = `${elCanvas.offsetTop}px`;
+    }
+
+    function rect1ToCanvasRect(rect1) {
+      if (!rect1) return null;
+      const x = Number(rect1.x);
+      const y = Number(rect1.y);
+      const w = Number(rect1.w);
+      const h = Number(rect1.h);
+      if (![x, y, w, h].every(n => Number.isFinite(n))) return null;
+      return {
+        x: x * scale,
+        y: y * scale,
+        w: w * scale,
+        h: h * scale,
+      };
+    }
+
+    function renderSavedOverlay() {
+      if (!elSavedOverlay) return;
+      clearSavedOverlay();
+      alignSavedOverlayToCanvas();
+
+      const entries = savedEntriesById && typeof savedEntriesById === 'object' ? savedEntriesById : {};
+      for (const [entryId, entry] of Object.entries(entries)) {
+        if (!entry || typeof entry !== 'object') continue;
+        if (entryId.startsWith('_')) continue;
+        const r = rect1ToCanvasRect(entry.rect1);
+        if (!r) continue;
+
+        const d = document.createElement('div');
+        d.className = 'savedRect';
+        d.dataset.entryId = String(entryId);
+        d.style.left = `${r.x}px`;
+        d.style.top = `${r.y}px`;
+        d.style.width = `${Math.max(1, r.w)}px`;
+        d.style.height = `${Math.max(1, r.h)}px`;
+        elSavedOverlay.appendChild(d);
+      }
+    }
+
+    async function loadSavedEntriesForCurrentPage(force = false) {
+      if (!pdfDoc) return;
+      const key = pvActiveSavedKey(pageNum);
+      savedKeyActive = key;
+
+      if (!force && savedCache.has(key)) {
+        const cached = savedCache.get(key);
+        savedEntriesById = (cached && cached.entriesById && typeof cached.entriesById === 'object') ? cached.entriesById : {};
+        renderSavedOverlay();
+        return;
+      }
+
+      if (savedLoadInFlightKey === key) return;
+      savedLoadInFlightKey = key;
+      const path = pvGetRtdbPagePath(pageNum);
+
+      try {
+        const data = await pvRtdbRequest(path, 'GET');
+        // If user navigated away while loading, do not overwrite.
+        if (savedKeyActive !== key) return;
+        const entriesByIdNext = (data && typeof data === 'object') ? data : {};
+        savedEntriesById = entriesByIdNext;
+        savedCache.set(key, { entriesById: entriesByIdNext });
+        renderSavedOverlay();
+      } catch (e) {
+        // Ignore (viewer should work without firebase)
+        try {
+          const msg = (e && e.message) ? e.message : String(e || 'load failed');
+          setStatus(`FB load failed: ${msg}`);
+        } catch {}
+      } finally {
+        if (savedLoadInFlightKey === key) savedLoadInFlightKey = '';
+      }
+    }
+
+    function findDuplicateEntryIdByRect1(rect1, tol = 2) {
+      const entries = savedEntriesById && typeof savedEntriesById === 'object' ? savedEntriesById : {};
+      const x = Number(rect1 && rect1.x);
+      const y = Number(rect1 && rect1.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return '';
+      for (const [id, e] of Object.entries(entries)) {
+        if (!e || typeof e !== 'object') continue;
+        if (id.startsWith('_')) continue;
+        const r = e.rect1;
+        const ex = Number(r && r.x);
+        const ey = Number(r && r.y);
+        if (!Number.isFinite(ex) || !Number.isFinite(ey)) continue;
+        if (Math.abs(ex - x) <= tol && Math.abs(ey - y) <= tol) return String(id);
+      }
+      return '';
+    }
+
+    function makeEntryIdFromRect1(rect1) {
+      const x = Math.round(Number(rect1 && rect1.x) || 0);
+      const y = Math.round(Number(rect1 && rect1.y) || 0);
+      const w = Math.round(Number(rect1 && rect1.w) || 0);
+      const h = Math.round(Number(rect1 && rect1.h) || 0);
+      return `${x}_${y}_${w}_${h}`;
+    }
+
+    function positionOcrDialogNearCanvasRect(rectCanvasPx) {
+      if (!dlgOcr || !rectCanvasPx) return;
+      const canvasRect = elCanvas.getBoundingClientRect();
+      const sel = {
+        x: canvasRect.left + rectCanvasPx.x,
+        y: canvasRect.top + rectCanvasPx.y,
+        w: rectCanvasPx.w,
+        h: rectCanvasPx.h,
+      };
+
+      const vw = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+      const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+
+      const w = Math.min(OCR_DLG_W, Math.max(220, vw - OCR_DLG_EDGE * 2));
+      const h = Math.min(OCR_DLG_H, Math.max(120, vh - OCR_DLG_EDGE * 2));
+
+      const spaceAbove = sel.y;
+      const spaceBelow = vh - (sel.y + sel.h);
+      const placeBelow = spaceBelow >= spaceAbove;
+
+      let left = (sel.x + sel.w / 2) - (w / 2);
+      left = clampInt(left, OCR_DLG_EDGE, vw - w - OCR_DLG_EDGE);
+
+      let top = placeBelow
+        ? (sel.y + sel.h + OCR_DLG_EDGE)
+        : (sel.y - h - OCR_DLG_EDGE);
+      top = clampInt(top, OCR_DLG_EDGE, vh - h - OCR_DLG_EDGE);
+
+      dlgOcr.style.position = 'fixed';
+      dlgOcr.style.left = `${left}px`;
+      dlgOcr.style.top = `${top}px`;
+      dlgOcr.style.width = `${w}px`;
+      dlgOcr.style.height = `${h}px`;
+      dlgOcr.style.maxWidth = 'none';
+      dlgOcr.style.maxHeight = 'none';
+      dlgOcr.style.margin = '0';
     }
 
     function isOcrDialogOpen() {
@@ -707,6 +1085,7 @@
       // Keep overlay aligned to canvas size (in CSS pixels)
       elOverlay.style.left = `${elCanvas.offsetLeft}px`;
       elOverlay.style.top = `${elCanvas.offsetTop}px`;
+      alignSavedOverlayToCanvas();
 
       const renderContext = { canvasContext: ctx, viewport };
       renderTask = page.render(renderContext);
@@ -737,6 +1116,10 @@
 
       // Re-align selection overlay after render (canvas size may change)
       try { updateSelectionOverlay(); } catch {}
+
+      // Saved entries: render (cached) and load if missing
+      try { renderSavedOverlay(); } catch {}
+      try { loadSavedEntriesForCurrentPage(false); } catch {}
     }
 
     function setPage(nextPage) {
@@ -745,6 +1128,7 @@
       pageNum = clamp(nextPage, 1, total);
       renderPage();
       updateIndicators();
+      pvScheduleSaveUiState();
     }
 
     function setScale(nextScale) {
@@ -779,12 +1163,27 @@
       const loadingTask = window.pdfjsLib.getDocument({ url });
       const doc = await loadingTask.promise;
       pdfDoc = doc;
-      pageNum = 1;
+
+      // Restore last page from Firebase UI state (preferred), else keep existing pageNum.
+      try {
+        const stUi = await pvLoadUiState();
+        try {
+          const fbLang = stUi && typeof stUi.ocrLang === 'string' ? cleanStr(stUi.ocrLang) : '';
+          if (fbLang && elOcrLang) elOcrLang.value = fbLang;
+        } catch {}
+        const fbPage = stUi && Number.isFinite(Number(stUi.pageNum)) ? Math.floor(Number(stUi.pageNum)) : null;
+        const desired = Number.isFinite(Number(fbPage)) ? fbPage : pageNum;
+        pageNum = clamp(desired, 1, pdfDoc.numPages);
+      } catch {
+        pageNum = clamp(pageNum, 1, pdfDoc.numPages);
+      }
+
       updateIndicators();
       await renderPage();
       setStatus('');
 
       saveState();
+      pvScheduleSaveUiState();
     }
 
     function normalizeUrlForFetch(inputUrl) {
@@ -849,10 +1248,26 @@
       const loadingTask = window.pdfjsLib.getDocument({ data: buf });
       const doc = await loadingTask.promise;
       pdfDoc = doc;
-      pageNum = 1;
+
+      // Restore last page from Firebase UI state (preferred), else keep existing pageNum.
+      try {
+        const stUi = await pvLoadUiState();
+        try {
+          const fbLang = stUi && typeof stUi.ocrLang === 'string' ? cleanStr(stUi.ocrLang) : '';
+          if (fbLang && elOcrLang) elOcrLang.value = fbLang;
+        } catch {}
+        const fbPage = stUi && Number.isFinite(Number(stUi.pageNum)) ? Math.floor(Number(stUi.pageNum)) : null;
+        const desired = Number.isFinite(Number(fbPage)) ? fbPage : pageNum;
+        pageNum = clamp(desired, 1, pdfDoc.numPages);
+      } catch {
+        pageNum = clamp(pageNum, 1, pdfDoc.numPages);
+      }
+
       updateIndicators();
       await renderPage();
       setStatus('');
+
+      pvScheduleSaveUiState();
     }
 
     // -----------------------------
@@ -956,6 +1371,7 @@
 
       elOcrLang.onchange = () => {
         try { localStorage.setItem(LS_KEY_OCR, JSON.stringify({ lang: String(elOcrLang.value || 'eng') })); } catch {}
+        try { pvScheduleSaveUiState(); } catch {}
       };
 
       try { applyOcrHeaderHeight(); } catch {}
@@ -1025,12 +1441,43 @@
         await buildMatches(q);
       }
 
+      function consumeGotoPage() {
+        if (!inGotoPage) return null;
+        const raw = String(inGotoPage.value || '').trim();
+        if (!raw) return null;
+        const n = Math.floor(Number(raw));
+        if (!Number.isFinite(n) || n < 1) {
+          try { inGotoPage.value = ''; } catch {}
+          return null;
+        }
+        try { inGotoPage.value = ''; } catch {}
+        return n;
+      }
+
       btnPrev.onclick = () => setPage(pageNum - 1);
-      btnNext.onclick = () => setPage(pageNum + 1);
+      btnNext.onclick = () => {
+        const n = consumeGotoPage();
+        if (n != null) {
+          setPage(n);
+          return;
+        }
+        setPage(pageNum + 1);
+      };
 
       btnZoomOut.onclick = () => setScale(scale / SCALE_STEP);
       btnZoomIn.onclick = () => setScale(scale * SCALE_STEP);
       btnFitWidth.onclick = () => fitWidth();
+
+      if (inGotoPage) {
+        inGotoPage.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            const n = consumeGotoPage();
+            if (n != null) setPage(n);
+          }
+        });
+      }
 
       btnSelect.onclick = () => {
         setSelectMode(!selectMode);
@@ -1041,8 +1488,114 @@
       };
 
       btnSaveToFB_Ocr.onclick = async () => {
-        // Save OCR text to Firebase Realtime Database
+        try {
+          if (!pdfDoc) return;
+
+          // Ensure current page entries are loaded before checking duplicates / updating.
+          await loadSavedEntriesForCurrentPage(true);
+
+          const now = Date.now();
+          const txt = cleanStr(elOcrText && elOcrText.value);
+          if (!txt) {
+            setOcrStatus('Nothing to save');
+            return;
+          }
+
+          let rect1 = null;
+          let entryId = '';
+          let isEdit = false;
+
+          if (activeSavedEntryId && activeSavedRect1) {
+            isEdit = true;
+            entryId = String(activeSavedEntryId);
+            rect1 = activeSavedRect1;
+          } else {
+            if (!selRectCanvas) {
+              setOcrStatus('No selection');
+              return;
+            }
+            rect1 = {
+              x: selRectCanvas.x / scale,
+              y: selRectCanvas.y / scale,
+              w: selRectCanvas.w / scale,
+              h: selRectCanvas.h / scale,
+            };
+
+            const dupId = findDuplicateEntryIdByRect1(rect1, 2);
+            if (dupId) {
+              setOcrStatus('Already saved');
+              return;
+            }
+            entryId = makeEntryIdFromRect1(rect1);
+          }
+
+          const path = `${pvGetRtdbPagePath(pageNum)}/${entryId}`;
+          const prev = (savedEntriesById && typeof savedEntriesById === 'object') ? savedEntriesById[entryId] : null;
+          const createdAt = (prev && typeof prev === 'object' && Number.isFinite(Number(prev.createdAt)))
+            ? Number(prev.createdAt)
+            : now;
+
+          const payload = {
+            rect1,
+            scaleSaved: scale,
+            text_sw: txt,
+            text_en: cleanStr(prev && prev.text_en),
+            text_uk: cleanStr(prev && prev.text_uk),
+            createdAt,
+            updatedAt: now,
+          };
+
+          await pvRtdbRequest(path, 'PUT', payload);
+
+          // Update local cache and overlay.
+          try {
+            if (!savedEntriesById || typeof savedEntriesById !== 'object') savedEntriesById = {};
+            savedEntriesById[entryId] = payload;
+            savedCache.set(pvActiveSavedKey(pageNum), { entriesById: savedEntriesById });
+          } catch {}
+
+          renderSavedOverlay();
+          setOcrStatus(isEdit ? 'Updated' : 'Saved');
+          activeSavedEntryId = '';
+          activeSavedRect1 = null;
+        } catch (e) {
+          const msg = (e && e.message) ? e.message : String(e || 'save failed');
+          setOcrStatus(`Save failed: ${msg}`);
+          try { console.warn('Save OCR to FB failed', e); } catch {}
+        }
       };
+
+      // Click saved rectangle to open OCR dialog in edit mode (only when Select mode is OFF)
+      if (elSavedOverlay) {
+        elSavedOverlay.onclick = (ev) => {
+          try {
+            if (selectMode) return;
+            const t = ev && ev.target ? ev.target : null;
+            const id = t && t.dataset ? cleanStr(t.dataset.entryId) : '';
+            if (!id) return;
+            const entry = (savedEntriesById && typeof savedEntriesById === 'object') ? savedEntriesById[id] : null;
+            if (!entry || typeof entry !== 'object') return;
+
+            activeSavedEntryId = id;
+            activeSavedRect1 = entry.rect1 || null;
+            if (elOcrText) elOcrText.value = cleanStr(entry.text_sw);
+
+            try { applyOcrHeaderHeight(); } catch {}
+
+            // Position dialog near saved rectangle.
+            const rc = rect1ToCanvasRect(entry.rect1);
+            if (rc) {
+              try { positionOcrDialogNearCanvasRect(rc); } catch {}
+            } else {
+              try { positionOcrDialog(); } catch {}
+            }
+
+            if (dlgOcr && typeof dlgOcr.showModal === 'function') {
+              try { dlgOcr.showModal(); } catch {}
+            }
+          } catch {}
+        };
+      }
 
       async function ensureOcrWorker(lang) {
         const l = String(lang || 'eng').trim();
@@ -1267,6 +1820,8 @@
         if (isOcrDialogOpen()) {
           try { positionOcrDialog(); } catch {}
         }
+        try { alignSavedOverlayToCanvas(); } catch {}
+        try { renderSavedOverlay(); } catch {}
       });
 
       // Auto-load URL if available
