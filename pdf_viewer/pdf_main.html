@@ -6,17 +6,40 @@
   <title>PDF Viewer</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
+    html { -webkit-text-size-adjust: 100%; height: 100%; }
+    :root {
+      --pv-bottomBarPad: 92px;
+    }
     body {
       margin: 0;
-      padding: 12px;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       line-height: 1.35;
     }
 
     .app {
-      max-width: 980px;
-      margin: 0 auto;
+      max-width: none;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      padding-bottom: 0;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Status overlays on top of the full-window canvas. */
+    .row[aria-label="Status"] {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 8px;
+      z-index: 80;
+      pointer-events: none;
+      margin: 0;
     }
 
     .row {
@@ -83,10 +106,23 @@
       border: 1px solid currentColor;
       border-radius: 12px;
       padding: 8px;
-      height: min(74vh, 820px);
-      min-height: 420px;
+      flex: 1 1 auto;
+      height: auto;
+      min-height: 0;
       overflow: auto;
       background: transparent;
+    }
+
+    /* Full-window viewer surface (behind bottom bar). */
+    #canvasWrap {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      height: 100vh;
+      height: 100dvh;
     }
 
     canvas { display: block; margin: 0 auto; }
@@ -151,26 +187,45 @@
     /* Bottom controls always visible */
     .bottomBar {
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 0;
-      width: min(980px, calc(100vw - 24px));
+      left: 12px;
+      right: 12px;
+      transform: none;
+      bottom: 12px;
+      width: auto;
       padding: 10px 12px;
       margin: 0;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(6px);
-      border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+      background: transparent;
+      backdrop-filter: none;
+      border: 0;
       border-radius: 12px;
-      z-index: 50;
+      z-index: 90;
+    }
+
+    /* Controls are solid/opaque even though the bar container is transparent. */
+    #bottomBar button,
+    #bottomBar select,
+    #bottomBar input {
+      background: rgba(255, 255, 255, 0.96);
+      color: #000;
+      opacity: 1;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #bottomBar button,
+      #bottomBar select,
+      #bottomBar input {
+        background: rgba(0, 0, 0, 0.82);
+        color: #fff;
+      }
     }
 
     @media (prefers-color-scheme: dark) {
       .bottomBar {
-        background: rgba(0,0,0,0.35);
+        background: rgba(0,0,0,0.01);
       }
     }
 
-    .spacer { height: 92px; }
+    .spacer { display: none; height: 0; }
 
     /* Search panel line-break on small screens */
     .break { flex-basis: 100%; height: 0; }
@@ -215,6 +270,16 @@
       color: inherit;
     }
 
+    /* OCR header status must be fully readable (not transparent/muted). */
+    #dlgOcr #ocrHdrStatus {
+      opacity: 1;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+      background: rgba(255, 255, 255, 0.96);
+      color: #000;
+    }
+
     textarea {
       width: 100%;
       border: 1px solid currentColor;
@@ -257,7 +322,7 @@
     <input id="inGotoPage" type="number" inputmode="numeric" min="1" step="1" placeholder="#" aria-label="Page" />
 
     <button id="btnSelect" type="button">Sel</button>
-    <select id="ocrLang" aria-label="Ln" style="min-height:44px; border:1px solid currentColor; border-radius:10px; padding:10px 12px; background:transparent;">
+    <select id="ocrLang" aria-label="Ln" style="min-height:44px; border:1px solid currentColor; border-radius:10px; padding:10px 12px;">
       <option value="eng">eng</option>
       <option value="swe">swe</option>
       <option value="eng+swe">e_s</option>
@@ -271,7 +336,8 @@
   <dialog id="dlgOcr">
     <form method="dialog">
       <div id="ocrHdr" class="row" style="margin:0;">        
-        <button id="btnSaveToFB_Ocr" type="button" style="margin-left:auto;">Save</button>
+        <button id="btnSaveToFB_Ocr" type="button">Save</button>
+        <span id="ocrHdrStatus" style="flex:1 1 auto; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;"></span>
         <button value="cancel">Close</button>
       </div>
       <textarea id="ocrText" rows="2" placeholder="(OCR output)"></textarea>
@@ -350,6 +416,7 @@
     const elOcrLang = document.getElementById('ocrLang');
     const dlgOcr = document.getElementById('dlgOcr');
     const elOcrHdr = document.getElementById('ocrHdr');
+    const elOcrHdrStatus = document.getElementById('ocrHdrStatus');
     const elOcrText = document.getElementById('ocrText');
 
     // Buttons
@@ -441,8 +508,28 @@
     }
 
     function setOcrStatus(msg) {
-      // Keep header compact (1 line); show OCR status in main status line.
-      setStatus(msg || '');
+      // Show OCR/save status in the OCR dialog header (not in the page status line).
+      try {
+        if (elOcrHdrStatus) elOcrHdrStatus.textContent = msg || '';
+      } catch {}
+    }
+
+    function clearOcrStatus() {
+      setOcrStatus('');
+    }
+
+    function toIsoTimestamp(value, fallbackIso) {
+      const fb = (fallbackIso && typeof fallbackIso === 'string') ? fallbackIso : new Date().toISOString();
+      if (typeof value === 'string' && value.trim()) {
+        const d = new Date(value);
+        if (!Number.isNaN(d.getTime())) return d.toISOString();
+        return fb;
+      }
+      const n = Number(value);
+      if (Number.isFinite(n) && n > 0) {
+        try { return new Date(n).toISOString(); } catch { return fb; }
+      }
+      return fb;
     }
 
     function clampInt(n, a, b) {
@@ -461,6 +548,11 @@
     let savedLoadInFlightKey = '';
     let activeSavedEntryId = '';
     let activeSavedRect1 = null;
+
+    function clearActiveEditEntry() {
+      activeSavedEntryId = '';
+      activeSavedRect1 = null;
+    }
 
     // UI state (store last page per document)
     let uiSaveTimer = null;
@@ -714,15 +806,26 @@
       const entries = savedEntriesById && typeof savedEntriesById === 'object' ? savedEntriesById : {};
       const x = Number(rect1 && rect1.x);
       const y = Number(rect1 && rect1.y);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return '';
+      const w = Number(rect1 && rect1.w);
+      const h = Number(rect1 && rect1.h);
+      if (![x, y, w, h].every(n => Number.isFinite(n))) return '';
       for (const [id, e] of Object.entries(entries)) {
         if (!e || typeof e !== 'object') continue;
         if (id.startsWith('_')) continue;
         const r = e.rect1;
         const ex = Number(r && r.x);
         const ey = Number(r && r.y);
-        if (!Number.isFinite(ex) || !Number.isFinite(ey)) continue;
-        if (Math.abs(ex - x) <= tol && Math.abs(ey - y) <= tol) return String(id);
+        const ew = Number(r && r.w);
+        const eh = Number(r && r.h);
+        if (![ex, ey, ew, eh].every(n => Number.isFinite(n))) continue;
+        if (
+          Math.abs(ex - x) <= tol &&
+          Math.abs(ey - y) <= tol &&
+          Math.abs(ew - w) <= tol &&
+          Math.abs(eh - h) <= tol
+        ) {
+          return String(id);
+        }
       }
       return '';
     }
@@ -830,6 +933,10 @@
       isSelecting = false;
       selStart = null;
       document.body.classList.toggle('selectMode', selectMode);
+      if (selectMode) {
+        // Entering selection/OCR flow should never keep an old edit target.
+        clearActiveEditEntry();
+      }
       updateIndicators();
     }
 
@@ -1494,7 +1601,7 @@
           // Ensure current page entries are loaded before checking duplicates / updating.
           await loadSavedEntriesForCurrentPage(true);
 
-          const now = Date.now();
+          const nowIso = new Date().toISOString();
           const txt = cleanStr(elOcrText && elOcrText.value);
           if (!txt) {
             setOcrStatus('Nothing to save');
@@ -1527,13 +1634,17 @@
               return;
             }
             entryId = makeEntryIdFromRect1(rect1);
+
+            // Guard against ID collisions from rounding: never overwrite an existing entry.
+            if (savedEntriesById && typeof savedEntriesById === 'object' && savedEntriesById[entryId]) {
+              entryId = `${entryId}_${Date.now()}`;
+            }
           }
 
           const path = `${pvGetRtdbPagePath(pageNum)}/${entryId}`;
           const prev = (savedEntriesById && typeof savedEntriesById === 'object') ? savedEntriesById[entryId] : null;
-          const createdAt = (prev && typeof prev === 'object' && Number.isFinite(Number(prev.createdAt)))
-            ? Number(prev.createdAt)
-            : now;
+          const createdAt = toIsoTimestamp(prev && prev.createdAt, nowIso);
+          const updatedAt = nowIso;
 
           const payload = {
             rect1,
@@ -1542,7 +1653,7 @@
             text_en: cleanStr(prev && prev.text_en),
             text_uk: cleanStr(prev && prev.text_uk),
             createdAt,
-            updatedAt: now,
+            updatedAt,
           };
 
           await pvRtdbRequest(path, 'PUT', payload);
@@ -1556,8 +1667,12 @@
 
           renderSavedOverlay();
           setOcrStatus(isEdit ? 'Updated' : 'Saved');
-          activeSavedEntryId = '';
-          activeSavedRect1 = null;
+          clearActiveEditEntry();
+
+          // Close dialog after saving a NEW record only.
+          if (!isEdit && dlgOcr && typeof dlgOcr.close === 'function') {
+            try { dlgOcr.close(); } catch {}
+          }
         } catch (e) {
           const msg = (e && e.message) ? e.message : String(e || 'save failed');
           setOcrStatus(`Save failed: ${msg}`);
@@ -1579,6 +1694,8 @@
             activeSavedEntryId = id;
             activeSavedRect1 = entry.rect1 || null;
             if (elOcrText) elOcrText.value = cleanStr(entry.text_sw);
+
+            clearOcrStatus();
 
             try { applyOcrHeaderHeight(); } catch {}
 
@@ -1620,6 +1737,9 @@
         if (!selRectCanvas) return;
         if (!pdfDoc) return;
 
+        // Starting OCR from a fresh selection must not be treated as "edit existing".
+        clearActiveEditEntry();
+
         const lang = String(elOcrLang.value || 'eng');
         try { applyOcrHeaderHeight(); } catch {}
         try { positionOcrDialog(); } catch {}
@@ -1627,6 +1747,7 @@
           try { dlgOcr.showModal(); } catch {}
         }
         if (elOcrText) elOcrText.value = '';
+        clearOcrStatus();
         setOcrStatus('OCR: preparing image...');
 
         // Prefer extracting real PDF text from the selection if available.
@@ -1764,6 +1885,8 @@
       // Selection with pointer events (mouse + touch)
       elCanvas.addEventListener('pointerdown', (e) => {
         if (!selectMode) return;
+        // Any new pointer selection cancels previous edit target.
+        clearActiveEditEntry();
         try { elCanvas.setPointerCapture(e.pointerId); } catch {}
 
         const rect = elCanvas.getBoundingClientRect();
@@ -1808,9 +1931,16 @@
       const bottom = document.getElementById('bottomBar');
       const spacer = document.querySelector('.spacer');
       const updateSpacer = () => {
-        if (!bottom || !spacer) return;
+        if (!bottom) return;
         const h = Math.ceil(bottom.getBoundingClientRect().height || 92);
-        spacer.style.height = `${Math.max(72, h + 12)}px`;
+        const pad = Math.max(72, h + 12);
+        try {
+          document.documentElement.style.setProperty('--pv-bottomBarPad', `${pad}px`);
+        } catch {}
+        // Spacer is kept only for legacy layout; it's hidden via CSS.
+        if (spacer) {
+          try { spacer.style.height = '0px'; } catch {}
+        }
       };
       updateSpacer();
       try { new ResizeObserver(updateSpacer).observe(bottom); } catch { window.addEventListener('resize', updateSpacer); }
@@ -1823,6 +1953,13 @@
         try { alignSavedOverlayToCanvas(); } catch {}
         try { renderSavedOverlay(); } catch {}
       });
+
+      // Clear edit mode when dialog closes to avoid accidental overwrites later.
+      if (dlgOcr) {
+        dlgOcr.addEventListener('close', () => {
+          clearActiveEditEntry();
+        });
+      }
 
       // Auto-load URL if available
       if (currentUrl && String(currentUrl).trim()) {
