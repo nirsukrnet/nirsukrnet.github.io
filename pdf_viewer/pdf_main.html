@@ -239,7 +239,7 @@
 
     /* OCR dialog: always white (90% opaque), independent of OS dark mode. */
     #dlgOcr {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.92);
       color: #000;      
     }
 
@@ -268,6 +268,20 @@
     #dlgOcr #ocrText {
       background: rgba(255,255,255,1);
       color: inherit;
+    }
+
+    /* Translation textarea: keep same readability. */
+    #dlgOcr #ocrTextEn {
+      background: rgba(0, 0, 0, 0.06);
+      color: inherit;
+    }
+
+    /* Translation area: slightly tinted background. */
+    #dlgOcr #ocrTransWrap {
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+      background: rgba(240, 248, 255, 0.92);
     }
 
     /* OCR header status must be fully readable (not transparent/muted). */
@@ -338,9 +352,13 @@
       <div id="ocrHdr" class="row" style="margin:0;">        
         <button id="btnSaveToFB_Ocr" type="button">Save</button>
         <span id="ocrHdrStatus" style="flex:1 1 auto; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;"></span>
+        <button id="btnOcrTrans" type="button">trans: OFF</button>
         <button value="cancel">Close</button>
       </div>
       <textarea id="ocrText" rows="2" placeholder="(OCR output)"></textarea>
+      <!-- <div id="ocrTransWrap" style="display:none;"> -->
+        <textarea id="ocrTextEn" rows="2" placeholder="(translation)" readonly></textarea>
+      <!-- </div> -->
     </form>
   </dialog>
 
@@ -370,6 +388,7 @@
     // OCR dialog sizing/placement
     const OCR_DLG_W = 520;
     const OCR_DLG_H = 100;
+    const OCR_DLG_H_TRANS = 170;
     const OCR_DLG_EDGE = 8;
     const OCR_HDR_H = 24;
 
@@ -418,6 +437,56 @@
     const elOcrHdr = document.getElementById('ocrHdr');
     const elOcrHdrStatus = document.getElementById('ocrHdrStatus');
     const elOcrText = document.getElementById('ocrText');
+    const elBtnOcrTrans = document.getElementById('btnOcrTrans');
+    const elOcrTransWrap = document.getElementById('ocrTransWrap');
+    const elOcrTextEn = document.getElementById('ocrTextEn');
+
+    let ocrShowTrans = false;
+
+    function loadOcrPrefs() {
+      try {
+        const raw = localStorage.getItem(LS_KEY_OCR);
+        if (!raw) return {};
+        const obj = JSON.parse(raw);
+        return (obj && typeof obj === 'object') ? obj : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveOcrPrefs(partial) {
+      try {
+        const cur = loadOcrPrefs();
+        const next = { ...cur, ...(partial && typeof partial === 'object' ? partial : {}) };
+        localStorage.setItem(LS_KEY_OCR, JSON.stringify(next));
+      } catch {}
+    }
+
+    function applyOcrTransUi() {
+      try {
+        if (elOcrTransWrap) elOcrTransWrap.style.display = ocrShowTrans ? '' : 'none';
+        if (elBtnOcrTrans) elBtnOcrTrans.textContent = ocrShowTrans ? 'trans: ON' : 'trans: OFF';
+
+        // Make dialog taller when translation is visible.
+        if (dlgOcr) {
+          const vw = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+          const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+          const w = Math.min(OCR_DLG_W, Math.max(220, vw - OCR_DLG_EDGE * 2));
+          const desiredH = ocrShowTrans ? OCR_DLG_H_TRANS : OCR_DLG_H;
+          const h = Math.min(desiredH, Math.max(120, vh - OCR_DLG_EDGE * 2));
+          dlgOcr.style.width = `${w}px`;
+          dlgOcr.style.height = `${h}px`;
+        }
+      } catch {}
+    }
+
+    function getOcrDialogTargetHeight() {
+      return ocrShowTrans ? OCR_DLG_H_TRANS : OCR_DLG_H;
+    }
+
+    function setOcrTranslationText(txt) {
+      try { if (elOcrTextEn) elOcrTextEn.value = cleanStr(txt); } catch {}
+    }
 
     // Buttons
     const btnPrev = document.getElementById('btnPrev');
@@ -697,6 +766,7 @@
         const payload = {
           pageNum: Math.max(1, Math.floor(Number(pageNum) || 1)),
           ocrLang: cleanStr(elOcrLang && elOcrLang.value) || 'eng',
+          showTrans: !!ocrShowTrans,
           updatedAt: Date.now(),
         };
         await pvRtdbRequest(pvGetRtdbUiPath(), 'PUT', payload);
@@ -780,7 +850,7 @@
       }
 
       if (savedLoadInFlightKey === key) return;
-      savedLoadInFlightKey = key;Hi
+      savedLoadInFlightKey = key;
       const path = pvGetRtdbPagePath(pageNum);
 
       try {
@@ -852,7 +922,7 @@
       const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
 
       const w = Math.min(OCR_DLG_W, Math.max(220, vw - OCR_DLG_EDGE * 2));
-      const h = Math.min(OCR_DLG_H, Math.max(120, vh - OCR_DLG_EDGE * 2));
+      const h = Math.min(getOcrDialogTargetHeight(), Math.max(120, vh - OCR_DLG_EDGE * 2));
 
       const spaceAbove = sel.y;
       const spaceBelow = vh - (sel.y + sel.h);
@@ -904,7 +974,7 @@
       const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
 
       const w = Math.min(OCR_DLG_W, Math.max(220, vw - OCR_DLG_EDGE * 2));
-      const h = Math.min(OCR_DLG_H, Math.max(120, vh - OCR_DLG_EDGE * 2));
+      const h = Math.min(getOcrDialogTargetHeight(), Math.max(120, vh - OCR_DLG_EDGE * 2));
 
       const spaceAbove = sel.y;
       const spaceBelow = vh - (sel.y + sel.h);
@@ -1278,6 +1348,13 @@
           const fbLang = stUi && typeof stUi.ocrLang === 'string' ? cleanStr(stUi.ocrLang) : '';
           if (fbLang && elOcrLang) elOcrLang.value = fbLang;
         } catch {}
+        try {
+          if (stUi && typeof stUi.showTrans === 'boolean') {
+            ocrShowTrans = stUi.showTrans;
+            saveOcrPrefs({ showTrans: ocrShowTrans });
+            applyOcrTransUi();
+          }
+        } catch {}
         const fbPage = stUi && Number.isFinite(Number(stUi.pageNum)) ? Math.floor(Number(stUi.pageNum)) : null;
         const desired = Number.isFinite(Number(fbPage)) ? fbPage : pageNum;
         pageNum = clamp(desired, 1, pdfDoc.numPages);
@@ -1469,17 +1546,37 @@
 
       // OCR language persistence
       try {
-        const raw = localStorage.getItem(LS_KEY_OCR);
-        if (raw) {
-          const stOcr = JSON.parse(raw);
-          if (stOcr && typeof stOcr.lang === 'string' && stOcr.lang) elOcrLang.value = stOcr.lang;
-        }
+        const stOcr = loadOcrPrefs();
+        if (stOcr && typeof stOcr.lang === 'string' && stOcr.lang) elOcrLang.value = stOcr.lang;
+        if (stOcr && typeof stOcr.showTrans === 'boolean') ocrShowTrans = stOcr.showTrans;
       } catch {}
 
       elOcrLang.onchange = () => {
-        try { localStorage.setItem(LS_KEY_OCR, JSON.stringify({ lang: String(elOcrLang.value || 'eng') })); } catch {}
+        saveOcrPrefs({ lang: String(elOcrLang.value || 'eng') });
         try { pvScheduleSaveUiState(); } catch {}
       };
+
+      if (elBtnOcrTrans) {
+        elBtnOcrTrans.onclick = () => {
+          ocrShowTrans = !ocrShowTrans;
+          saveOcrPrefs({ showTrans: ocrShowTrans });
+          applyOcrTransUi();
+          try { pvScheduleSaveUiState(); } catch {}
+          try {
+            if (isOcrDialogOpen()) {
+              if (activeSavedRect1) {
+                const rc = rect1ToCanvasRect(activeSavedRect1);
+                if (rc) positionOcrDialogNearCanvasRect(rc);
+                else positionOcrDialog();
+              } else {
+                positionOcrDialog();
+              }
+            }
+          } catch {}
+        };
+      }
+
+      try { applyOcrTransUi(); } catch {}
 
       try { applyOcrHeaderHeight(); } catch {}
 
@@ -1694,6 +1791,8 @@
             activeSavedEntryId = id;
             activeSavedRect1 = entry.rect1 || null;
             if (elOcrText) elOcrText.value = cleanStr(entry.text_sw);
+            setOcrTranslationText(entry.text_en);
+            try { applyOcrTransUi(); } catch {}
 
             clearOcrStatus();
 
@@ -1747,6 +1846,8 @@
           try { dlgOcr.showModal(); } catch {}
         }
         if (elOcrText) elOcrText.value = '';
+        setOcrTranslationText('');
+        try { applyOcrTransUi(); } catch {}
         clearOcrStatus();
         setOcrStatus('OCR: preparing image...');
 
