@@ -1,7 +1,10 @@
 # Transit tool: PDF OCR → db_youtube2
 
 ## Goal
-Create a new HTML page that helps “transit” (copy/migrate) OCR data stored in Firebase RTDB under:
+Create a new HTML page:
+- HTML file: `pdf_viewer/trt_ocr_yt.html`
+
+The page helps “transit” (copy/migrate) OCR data stored in Firebase RTDB under:
 - **FROM**: `/pdf_viewer_ocr_v1/{userId}/{docId}`
 
 …into:
@@ -161,8 +164,3 @@ Resulting item (example):
 	"entryId": "71_481_66_21"
 }
 ```
-
-
-### Example B: doc-level `_ui` → ref_youtube_videos (display + optional update)
-
-**Source doc-level path**

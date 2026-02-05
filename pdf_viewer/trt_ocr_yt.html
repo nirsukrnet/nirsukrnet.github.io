@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transit PDF OCR → db_youtube2</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.35;
+      background: #0b0c10;
+      color: #e8e8e8;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px 16px 40px;
+    }
+
+    h1 { font-size: 28px; margin: 0 0 10px; }
+    .muted { opacity: 0.75; }
+    .mono { font-variant-numeric: tabular-nums; }
+
+    .card {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    label { display: grid; gap: 6px; font-size: 12px; }
+
+    input[type="text"], input[type="number"], textarea {
+      width: min(760px, 100%);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.35);
+      color: inherit;
+      outline: none;
+    }
+
+    input[type="number"] { width: 160px; }
+
+    textarea {
+      width: min(860px, 100%);
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    button {
+      min-height: 42px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.10);
+      color: inherit;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: rgba(56, 139, 253, 0.22);
+      border-color: rgba(56, 139, 253, 0.55);
+    }
+
+    button:disabled { opacity: 0.55; cursor: default; }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 8px 12px;
+      font-size: 13px;
+      margin: 10px 0 0;
+    }
+
+    .kv > div:nth-child(odd) { opacity: 0.75; }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { opacity: 0.8; font-weight: 600; }
+
+    .status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(0, 0, 0, 0.25);
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 22px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 920px) {
+      .split { grid-template-columns: 1fr 1fr; }
+      input[type="number"] { width: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>FROM PDF OCR → <span class="pill mono">/db_youtube2</span></h1>
+    <h1>TO youtube</h1>
+    <div class="muted">Input only <span class="mono">docId</span>. The tool resolves <span class="mono">userId</span> from the signed-in user and copies from <span class="mono">/pdf_viewer_ocr_v1</span> to <span class="mono">/db_youtube2</span>.</div>
+
+    <div class="card">
+      <div class="row">
+        <label style="flex: 1 1 520px;">
+          docId (required)
+          <input id="inDocId" type="text" placeholder="ODU5M2E4..." autocomplete="off" spellcheck="false" />
+        </label>
+        <button id="btnSignIn" class="primary">Sign in</button>
+        <button id="btnLoad" class="primary">Load source doc</button>
+        <button id="btnCheck">Check target</button>
+        <button id="btnTransit" class="primary">Transit (write)</button>
+      </div>
+
+      <div class="kv mono">
+        <div>userId (resolved)</div><div id="outUserId">-</div>
+        <div>itemId</div><div id="outItemId">-</div>
+        <div>FROM</div><div id="outFrom">-</div>
+        <div>TO transcripts</div><div id="outToTr">-</div>
+        <div>TO ref</div><div id="outToRef">-</div>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <strong>Source summary</strong>
+          <span class="pill" id="srcCounts">-</span>
+        </div>
+        <div class="kv mono">
+          <div>_ui.ocrLang</div><div id="outUiLang">-</div>
+          <div>_ui.pageNum</div><div id="outUiPage">-</div>
+          <div>_ui.updatedAt</div><div id="outUiUpdated">-</div>
+        </div>
+        <div style="margin-top: 10px; overflow:auto; max-height: 360px; border-radius: 12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>page</th>
+                <th>entryId</th>
+                <th>text_sw</th>
+                <th>text_en</th>
+              </tr>
+            </thead>
+            <tbody id="srcTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <strong>Target ref_youtube_videos</strong>
+          <span class="pill mono" id="refState">-</span>
+        </div>
+
+        <div class="row">
+          <label style="flex:1 1 220px;">
+            tag
+            <input id="inTag" type="text" value="PDF" autocomplete="off" />
+          </label>
+          <label style="flex:1 1 220px;">
+            order
+            <input id="inOrder" type="number" value="9999" />
+          </label>
+          <label style="flex:1 1 220px;">
+            url
+            <input id="inUrl" type="text" placeholder="pdf://..." autocomplete="off" />
+          </label>
+        </div>
+
+        <label>
+          title
+          <input id="inTitle" type="text" placeholder="PDF 1" autocomplete="off" />
+        </label>
+        <label>
+          short_name
+          <input id="inShort" type="text" placeholder="PDF 1" autocomplete="off" />
+        </label>
+        <label>
+          description
+          <textarea id="inDesc" placeholder="PDF 1"></textarea>
+        </label>
+
+        <div class="row">
+          <label style="display:flex; align-items:center; gap:10px; font-size:13px;">
+            <input id="chkOverwrite" type="checkbox" />
+            overwrite non-empty fields
+          </label>
+          <label style="display:flex; align-items:center; gap:10px; font-size:13px;">
+            <input id="chkAutoTitle" type="checkbox" checked />
+            auto-generate PDF N if title empty
+          </label>
+        </div>
+
+        <div class="row" style="justify-content: space-between;">
+          <strong>Target youtube_transcripts</strong>
+          <span class="pill mono" id="trState">-</span>
+        </div>
+        <div class="muted" style="font-size: 13px;">De-dup key: <span class="mono">pageNum|entryId</span>. No <span class="mono">src</span> stored inside items.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Preview: items to add</strong>
+      <div class="muted" style="margin: 6px 0 10px;">This preview is built from the source doc and filtered by existing target items (duplicates skipped).</div>
+      <div style="overflow:auto; max-height: 320px; border-radius: 12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>t</th>
+              <th>page</th>
+              <th>entryId</th>
+              <th>text_sv</th>
+              <th>text_en</th>
+            </tr>
+          </thead>
+          <tbody id="addTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dependencies (same style as pdf_main.html) -->
+  <script src="../assets/js/global_var.js"></script>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const RTDB_ROOT = 'https://storage-eu-default-rtdb.firebaseio.com';
+
+      const elDocId = document.getElementById('inDocId');
+      const elBtnSignIn = document.getElementById('btnSignIn');
+      const elBtnLoad = document.getElementById('btnLoad');
+      const elBtnCheck = document.getElementById('btnCheck');
+      const elBtnTransit = document.getElementById('btnTransit');
+
+      const elStatus = document.getElementById('status');
+      const elOutUserId = document.getElementById('outUserId');
+      const elOutItemId = document.getElementById('outItemId');
+      const elOutFrom = document.getElementById('outFrom');
+      const elOutToTr = document.getElementById('outToTr');
+      const elOutToRef = document.getElementById('outToRef');
+
+      const elSrcCounts = document.getElementById('srcCounts');
+      const elUiLang = document.getElementById('outUiLang');
+      const elUiPage = document.getElementById('outUiPage');
+      const elUiUpdated = document.getElementById('outUiUpdated');
+      const elSrcTbody = document.getElementById('srcTbody');
+
+      const elRefState = document.getElementById('refState');
+      const elTrState = document.getElementById('trState');
+
+      const elInTag = document.getElementById('inTag');
+      const elInOrder = document.getElementById('inOrder');
+      const elInUrl = document.getElementById('inUrl');
+      const elInTitle = document.getElementById('inTitle');
+      const elInShort = document.getElementById('inShort');
+      const elInDesc = document.getElementById('inDesc');
+      const elChkOverwrite = document.getElementById('chkOverwrite');
+      const elChkAutoTitle = document.getElementById('chkAutoTitle');
+
+      const elAddTbody = document.getElementById('addTbody');
+
+      let _gv = null;
+      let _userId = '';
+      let _docId = '';
+
+      let _sourceDoc = null;
+      let _sourceItems = []; // normalized items extracted from source
+
+      let _targetTranscriptDoc = null;
+      let _targetRefRow = null;
+
+      function cleanStr(x) { return (x == null) ? '' : String(x).trim(); }
+
+      function nowIso() {
+        try { return new Date().toISOString(); } catch { return String(Date.now()); }
+      }
+
+      function base64UrlKey(ident) {
+        const s = cleanStr(ident);
+        if (!s) return '';
+        try {
+          const bytes = new TextEncoder().encode(s);
+          let bin = '';
+          for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+          const b64 = btoa(bin);
+          return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        } catch {
+          try {
+            const b64 = btoa(unescape(encodeURIComponent(s)));
+            return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+          } catch {
+            return '';
+          }
+        }
+      }
+
+      function setStatus(msg) {
+        elStatus.textContent = cleanStr(msg);
+      }
+
+      function appendStatus(line) {
+        const cur = cleanStr(elStatus.textContent);
+        elStatus.textContent = cur ? (cur + '\n' + line) : String(line || '');
+      }
+
+      function ensureGv() {
+        if (_gv && _gv.URL_DS) return _gv;
+        if (window.gv && window.gv.URL_DS) { _gv = window.gv; return _gv; }
+
+        const GVClass = (typeof GlobalVars === 'function')
+          ? GlobalVars
+          : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+            ? globalThis.GlobalVars
+            : (typeof window.GlobalVars === 'function')
+              ? window.GlobalVars
+              : null;
+
+        if (!GVClass) throw new Error('GlobalVars is not available (load ../assets/js/global_var.js first)');
+        _gv = new GVClass();
+        window.gv = _gv;
+        return _gv;
+      }
+
+      async function ensureSignedIn() {
+        const gv = ensureGv();
+        if (gv.URL_DS && gv.URL_DS.idToken) return;
+        if (typeof gv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+        await gv.SignIn_User();
+      }
+
+      function getUserIdResolved() {
+        try {
+          const gv = ensureGv();
+          const email = gv && gv.URL_DS ? cleanStr(gv.URL_DS.email) : '';
+          return base64UrlKey(email) || 'anon';
+        } catch {
+          return 'anon';
+        }
+      }
+
+      function makeRtdbUrl(pathNoSlash) {
+        const p = cleanStr(pathNoSlash).replace(/^\/+/, '');
+        return `${RTDB_ROOT}/${p}.json`;
+      }
+
+      async function rtdbRequest(pathNoSlash, method = 'GET', body = null) {
+        await ensureSignedIn();
+        const gv = ensureGv();
+        const token = gv && gv.URL_DS ? cleanStr(gv.URL_DS.idToken) : '';
+        if (!token) throw new Error('Not authenticated (idToken missing)');
+
+        const url = makeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token)}`;
+        const init = { method: String(method || 'GET') };
+        if (body != null) {
+          init.headers = { 'Content-Type': 'application/json' };
+          init.body = JSON.stringify(body);
+        }
+
+        const res = await fetch(url, init);
+        if (!res.ok) {
+          if (res.status === 401) {
+            try {
+              const gv2 = ensureGv();
+              if (gv2 && typeof gv2.SignIn_User === 'function') await gv2.SignIn_User();
+            } catch {}
+
+            const gv3 = ensureGv();
+            const token2 = gv3 && gv3.URL_DS ? cleanStr(gv3.URL_DS.idToken) : '';
+            const url2 = makeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token2)}`;
+            const res2 = await fetch(url2, init);
+            if (!res2.ok) {
+              const txt2 = await (async () => { try { return await res2.text(); } catch { return ''; } })();
+              throw new Error(`RTDB ${res2.status}: ${txt2}`);
+            }
+            return await res2.json();
+          }
+          const txt = await (async () => { try { return await res.text(); } catch { return ''; } })();
+          throw new Error(`RTDB ${res.status}: ${txt}`);
+        }
+        return await res.json();
+      }
+
+      function updatePathsUI() {
+        _docId = cleanStr(elDocId.value);
+        _userId = getUserIdResolved();
+        const itemId = _docId;
+
+        elOutUserId.textContent = _userId || '-';
+        elOutItemId.textContent = itemId || '-';
+
+        elOutFrom.textContent = (_docId && _userId)
+          ? `/pdf_viewer_ocr_v1/${_userId}/${_docId}`
+          : '-';
+        elOutToTr.textContent = itemId ? `/db_youtube2/youtube_transcripts/${itemId}` : '-';
+        elOutToRef.textContent = itemId ? `/db_youtube2/ref_youtube_videos/${itemId}` : '-';
+
+        if (_docId) {
+          if (!cleanStr(elInUrl.value)) elInUrl.value = `pdf://${_docId}`;
+        }
+      }
+
+      function clearTableBody(tbody) {
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      }
+
+      function renderSourceTable(rows) {
+        clearTableBody(elSrcTbody);
+        const frag = document.createDocumentFragment();
+        for (const r of rows) {
+          const tr = document.createElement('tr');
+          const tdPage = document.createElement('td');
+          const tdId = document.createElement('td');
+          const tdSw = document.createElement('td');
+          const tdEn = document.createElement('td');
+
+          tdPage.textContent = String(r.pageNum);
+          tdId.textContent = String(r.entryId);
+          tdSw.textContent = cleanStr(r.text_sw);
+          tdEn.textContent = cleanStr(r.text_en);
+
+          tr.appendChild(tdPage);
+          tr.appendChild(tdId);
+          tr.appendChild(tdSw);
+          tr.appendChild(tdEn);
+          frag.appendChild(tr);
+        }
+        elSrcTbody.appendChild(frag);
+      }
+
+      function renderAddPreview(items) {
+        clearTableBody(elAddTbody);
+        const frag = document.createDocumentFragment();
+        for (const it of items) {
+          const tr = document.createElement('tr');
+          const tdT = document.createElement('td');
+          const tdPage = document.createElement('td');
+          const tdId = document.createElement('td');
+          const tdSv = document.createElement('td');
+          const tdEn = document.createElement('td');
+
+          tdT.textContent = String(it.t);
+          tdPage.textContent = String(it.pageNum);
+          tdId.textContent = String(it.entryId);
+          tdSv.textContent = cleanStr(it.text_sv);
+          tdEn.textContent = cleanStr(it.text_en);
+
+          tr.appendChild(tdT);
+          tr.appendChild(tdPage);
+          tr.appendChild(tdId);
+          tr.appendChild(tdSv);
+          tr.appendChild(tdEn);
+          frag.appendChild(tr);
+        }
+        elAddTbody.appendChild(frag);
+      }
+
+      function getRectXY(entry) {
+        try {
+          const r = entry && entry.rect1 ? entry.rect1 : null;
+          const x = (r && Number.isFinite(Number(r.x))) ? Number(r.x) : null;
+          const y = (r && Number.isFinite(Number(r.y))) ? Number(r.y) : null;
+          return { x, y };
+        } catch {
+          return { x: null, y: null };
+        }
+      }
+
+      function normalizeSourceDocToRows(sourceDoc) {
+        const rows = [];
+        if (!sourceDoc || typeof sourceDoc !== 'object') return rows;
+
+        for (const [k, v] of Object.entries(sourceDoc)) {
+          if (!v || typeof v !== 'object') continue;
+          if (k === '_ui') continue;
+          if (!/^\d+$/.test(String(k))) continue;
+          const pageNum = Number(k);
+          const pageObj = v;
+
+          for (const [entryId, entry] of Object.entries(pageObj)) {
+            if (!entry || typeof entry !== 'object') continue;
+            if (String(entryId).startsWith('_')) continue;
+            const xy = getRectXY(entry);
+            rows.push({
+              pageNum,
+              entryId: String(entryId),
+              text_sw: cleanStr(entry.text_sw),
+              text_en: cleanStr(entry.text_en),
+              rectX: xy.x,
+              rectY: xy.y
+            });
+          }
+        }
+
+        rows.sort((a, b) => {
+          if (a.pageNum !== b.pageNum) return a.pageNum - b.pageNum;
+          const ay = (a.rectY == null) ? Number.POSITIVE_INFINITY : a.rectY;
+          const by = (b.rectY == null) ? Number.POSITIVE_INFINITY : b.rectY;
+          if (ay !== by) return ay - by;
+          const ax = (a.rectX == null) ? Number.POSITIVE_INFINITY : a.rectX;
+          const bx = (b.rectX == null) ? Number.POSITIVE_INFINITY : b.rectX;
+          if (ax !== bx) return ax - bx;
+          return String(a.entryId).localeCompare(String(b.entryId));
+        });
+
+        return rows;
+      }
+
+      function buildTranscriptItemsFromRows(rows) {
+        // t = (pageNum * 1000) + indexWithinPage
+        const byPage = new Map();
+        for (const r of rows) {
+          const key = String(r.pageNum);
+          if (!byPage.has(key)) byPage.set(key, []);
+          byPage.get(key).push(r);
+        }
+
+        const items = [];
+        const pages = Array.from(byPage.keys()).map(Number).sort((a, b) => a - b);
+        for (const pageNum of pages) {
+          const list = byPage.get(String(pageNum)) || [];
+          for (let i = 0; i < list.length; i++) {
+            const r = list[i];
+            items.push({
+              t: (pageNum * 1000) + i,
+              text_sv: cleanStr(r.text_sw),
+              text_en: cleanStr(r.text_en),
+              pageNum: pageNum,
+              entryId: String(r.entryId)
+            });
+          }
+        }
+        return items;
+      }
+
+      function setUiPreview(ui) {
+        const u = (ui && typeof ui === 'object') ? ui : null;
+        elUiLang.textContent = u ? cleanStr(u.ocrLang) || '-' : '-';
+        elUiPage.textContent = u && u.pageNum != null ? String(u.pageNum) : '-';
+        elUiUpdated.textContent = u && u.updatedAt != null ? String(u.updatedAt) : '-';
+      }
+
+      function setCounts(pages, entries) {
+        elSrcCounts.textContent = `${pages} pages / ${entries} entries`;
+      }
+
+      function getTranscriptExistingKeySet(doc) {
+        const set = new Set();
+        if (!doc || typeof doc !== 'object') return set;
+        const items = Array.isArray(doc.items) ? doc.items : [];
+        for (const it of items) {
+          if (!it || typeof it !== 'object') continue;
+          const p = Number(it.pageNum);
+          const e = cleanStr(it.entryId);
+          if (!Number.isFinite(p) || !e) continue;
+          set.add(`${p}|${e}`);
+        }
+        return set;
+      }
+
+      function parsePdfN(s) {
+        const m = /^\s*pdf\s*(\d+)\s*$/i.exec(cleanStr(s));
+        if (!m) return null;
+        const n = Number(m[1]);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      async function computeNextPdfN() {
+        // Reads /db_youtube2/ref_youtube_videos and finds max PDF N where tag == 'PDF'
+        const all = await rtdbRequest('db_youtube2/ref_youtube_videos', 'GET');
+        let maxN = 0;
+        if (all && typeof all === 'object') {
+          for (const v of Object.values(all)) {
+            if (!v || typeof v !== 'object') continue;
+            const tag = cleanStr(v.tag);
+            if (tag !== 'PDF') continue;
+            const n = parsePdfN(v.title) ?? parsePdfN(v.short_name) ?? parsePdfN(v.description);
+            if (n != null && n > maxN) maxN = n;
+          }
+        }
+        return maxN + 1;
+      }
+
+      function mergeRefRow(existing, inputRow, overwriteNonEmpty) {
+        const ex = (existing && typeof existing === 'object') ? existing : {};
+        const out = { ...ex };
+
+        // Always set these
+        out.indent_id = inputRow.indent_id;
+        out.updatedAt = inputRow.updatedAt;
+
+        const fields = ['tag', 'title', 'short_name', 'description', 'order', 'transListScroll', 'url'];
+        for (const f of fields) {
+          const next = inputRow[f];
+          if (overwriteNonEmpty) {
+            out[f] = next;
+          } else {
+            const cur = ex[f];
+            const curEmpty = (cur == null) || (typeof cur === 'string' && !cur.trim());
+            if (curEmpty) out[f] = next;
+          }
+        }
+
+        return out;
+      }
+
+      async function signInFlow() {
+        setStatus('Signing in...');
+        await ensureSignedIn();
+        updatePathsUI();
+        appendStatus('Signed in OK.');
+      }
+
+      async function loadSourceFlow() {
+        updatePathsUI();
+        const docId = cleanStr(elDocId.value);
+        if (!docId) throw new Error('docId is required');
+
+        setStatus('Loading source doc...');
+        await ensureSignedIn();
+        const userId = getUserIdResolved();
+
+        const path = `pdf_viewer_ocr_v1/${userId}/${docId}`;
+        const data = await rtdbRequest(path, 'GET');
+        _sourceDoc = (data && typeof data === 'object') ? data : null;
+
+        const ui = _sourceDoc && _sourceDoc._ui ? _sourceDoc._ui : null;
+        setUiPreview(ui);
+
+        const rows = normalizeSourceDocToRows(_sourceDoc);
+        _sourceItems = buildTranscriptItemsFromRows(rows);
+
+        const pages = new Set(rows.map(r => r.pageNum)).size;
+        setCounts(pages, rows.length);
+        renderSourceTable(rows);
+
+        // Reset target state
+        _targetTranscriptDoc = null;
+        _targetRefRow = null;
+        elRefState.textContent = '-';
+        elTrState.textContent = '-';
+        renderAddPreview(_sourceItems);
+
+        setStatus(`Loaded source doc. Rows: ${rows.length}`);
+      }
+
+      async function checkTargetFlow() {
+        updatePathsUI();
+        const docId = cleanStr(elDocId.value);
+        if (!docId) throw new Error('docId is required');
+
+        setStatus('Checking target...');
+        await ensureSignedIn();
+
+        const trPath = `db_youtube2/youtube_transcripts/${docId}`;
+        const refPath = `db_youtube2/ref_youtube_videos/${docId}`;
+
+        const [tr, ref] = await Promise.all([
+          rtdbRequest(trPath, 'GET').catch(() => null),
+          rtdbRequest(refPath, 'GET').catch(() => null)
+        ]);
+
+        _targetTranscriptDoc = (tr && typeof tr === 'object') ? tr : null;
+        _targetRefRow = (ref && typeof ref === 'object') ? ref : null;
+
+        elTrState.textContent = _targetTranscriptDoc ? 'exists' : 'missing';
+        elRefState.textContent = _targetRefRow ? 'exists' : 'missing';
+
+        // If a ref row exists, prefill UI with its values (do not overwrite user edits if already typed).
+        if (_targetRefRow) {
+          if (!cleanStr(elInTag.value)) elInTag.value = cleanStr(_targetRefRow.tag);
+          if (!cleanStr(elInTitle.value)) elInTitle.value = cleanStr(_targetRefRow.title);
+          if (!cleanStr(elInShort.value)) elInShort.value = cleanStr(_targetRefRow.short_name);
+          if (!cleanStr(elInDesc.value)) elInDesc.value = cleanStr(_targetRefRow.description);
+          if (!cleanStr(elInUrl.value)) elInUrl.value = cleanStr(_targetRefRow.url);
+          if (!cleanStr(elInOrder.value)) elInOrder.value = String(_targetRefRow.order ?? '');
+        }
+
+        // Update preview of what would be added (de-dup).
+        const set = getTranscriptExistingKeySet(_targetTranscriptDoc);
+        const add = (_sourceItems || []).filter(it => !set.has(`${it.pageNum}|${it.entryId}`));
+        renderAddPreview(add);
+
+        setStatus(`Target check done. transcripts=${_targetTranscriptDoc ? 'exists' : 'missing'}, ref=${_targetRefRow ? 'exists' : 'missing'}`);
+      }
+
+      async function transitFlow() {
+        updatePathsUI();
+        const docId = cleanStr(elDocId.value);
+        if (!docId) throw new Error('docId is required');
+
+        if (!_sourceDoc) {
+          throw new Error('Source is not loaded yet. Click "Load source doc" first.');
+        }
+
+        setStatus('Transiting (writing to db_youtube2)...');
+        await ensureSignedIn();
+
+        // 1) Ensure we have latest target state
+        await checkTargetFlow();
+
+        const overwrite = !!(elChkOverwrite && elChkOverwrite.checked);
+        const autoTitle = !!(elChkAutoTitle && elChkAutoTitle.checked);
+
+        const tag = cleanStr(elInTag.value) || 'PDF';
+        const order = Number(elInOrder.value);
+        const url = cleanStr(elInUrl.value) || `pdf://${docId}`;
+        let title = cleanStr(elInTitle.value);
+        let shortName = cleanStr(elInShort.value);
+        let desc = cleanStr(elInDesc.value);
+
+        if (autoTitle && !title) {
+          appendStatus('Computing next PDF N...');
+          const n = await computeNextPdfN();
+          const auto = `PDF ${n}`;
+          title = title || auto;
+          shortName = shortName || auto;
+          desc = desc || auto;
+          // reflect in UI (only if empty)
+          if (!cleanStr(elInTitle.value)) elInTitle.value = title;
+          if (!cleanStr(elInShort.value)) elInShort.value = shortName;
+          if (!cleanStr(elInDesc.value)) elInDesc.value = desc;
+        }
+
+        const now = nowIso();
+
+        const refInput = {
+          indent_id: docId,
+          tag,
+          title,
+          short_name: shortName,
+          description: desc,
+          order: Number.isFinite(order) ? order : 9999,
+          transListScroll: null,
+          updatedAt: now,
+          url
+        };
+
+        const refMerged = mergeRefRow(_targetRefRow, refInput, overwrite);
+
+        // 2) Merge transcript items
+        const existingSet = getTranscriptExistingKeySet(_targetTranscriptDoc);
+        const toAdd = (_sourceItems || []).filter(it => !existingSet.has(`${it.pageNum}|${it.entryId}`));
+        const skipped = (_sourceItems || []).length - toAdd.length;
+
+        const existingItems = (_targetTranscriptDoc && Array.isArray(_targetTranscriptDoc.items)) ? _targetTranscriptDoc.items : [];
+        const mergedItems = existingItems.concat(toAdd);
+
+        const base = (_targetTranscriptDoc && typeof _targetTranscriptDoc === 'object' && !Array.isArray(_targetTranscriptDoc))
+          ? _targetTranscriptDoc
+          : {};
+
+        const trPayload = {
+          ...base,
+          videoId: docId,
+          source: 'pdf_viewer_ocr_v1',
+          updatedAt: now,
+          items: mergedItems
+        };
+
+        // 3) Write ref and transcript
+        await rtdbRequest(`db_youtube2/ref_youtube_videos/${docId}`, 'PUT', refMerged);
+        await rtdbRequest(`db_youtube2/youtube_transcripts/${docId}`, 'PUT', trPayload);
+
+        // 4) Update local state
+        _targetRefRow = refMerged;
+        _targetTranscriptDoc = trPayload;
+        elRefState.textContent = 'exists';
+        elTrState.textContent = 'exists';
+
+        renderAddPreview([]);
+
+        setStatus(
+          `Transit OK.\n` +
+          `addedItems=${toAdd.length}\n` +
+          `skippedDuplicates=${skipped}\n` +
+          `totalItemsNow=${mergedItems.length}`
+        );
+      }
+
+      async function withBusy(fn) {
+        const prev = {
+          signIn: elBtnSignIn.disabled,
+          load: elBtnLoad.disabled,
+          check: elBtnCheck.disabled,
+          transit: elBtnTransit.disabled
+        };
+        elBtnSignIn.disabled = true;
+        elBtnLoad.disabled = true;
+        elBtnCheck.disabled = true;
+        elBtnTransit.disabled = true;
+        try {
+          await fn();
+        } finally {
+          elBtnSignIn.disabled = prev.signIn;
+          elBtnLoad.disabled = prev.load;
+          elBtnCheck.disabled = prev.check;
+          elBtnTransit.disabled = prev.transit;
+        }
+      }
+
+      elDocId.addEventListener('input', () => {
+        updatePathsUI();
+      });
+
+      elBtnSignIn.addEventListener('click', () => withBusy(async () => {
+        await signInFlow();
+      }).catch(e => setStatus(String(e && e.message ? e.message : e))));
+
+      elBtnLoad.addEventListener('click', () => withBusy(async () => {
+        await loadSourceFlow();
+      }).catch(e => setStatus(String(e && e.message ? e.message : e))));
+
+      elBtnCheck.addEventListener('click', () => withBusy(async () => {
+        await checkTargetFlow();
+      }).catch(e => setStatus(String(e && e.message ? e.message : e))));
+
+      elBtnTransit.addEventListener('click', () => withBusy(async () => {
+        await transitFlow();
+      }).catch(e => setStatus(String(e && e.message ? e.message : e))));
+
+      // Init
+      try {
+        updatePathsUI();
+        setCounts(0, 0);
+        setUiPreview(null);
+        setStatus('Ready. Click Sign in, then Load source doc.');
+      } catch {
+        // ignore
+      }
+
+    })();
+  </script>
+</body>
+</html>
