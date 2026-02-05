@@ -42,7 +42,7 @@
 
     label { display: grid; gap: 6px; font-size: 12px; }
 
-    input[type="text"], input[type="number"], textarea {
+    input[type="text"], input[type="number"], textarea, select {
       width: min(760px, 100%);
       padding: 10px 12px;
       border-radius: 10px;
@@ -50,6 +50,12 @@
       background: rgba(0, 0, 0, 0.35);
       color: inherit;
       outline: none;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
     }
 
     input[type="number"] { width: 160px; }
@@ -143,10 +149,11 @@
     <div class="card">
       <div class="row">
         <label style="flex: 1 1 520px;">
-          docId (required)
-          <input id="inDocId" type="text" placeholder="ODU5M2E4..." autocomplete="off" spellcheck="false" />
+          docId list (from PDF OCR)
+          <select id="inDocId"></select>
         </label>
         <button id="btnSignIn" class="primary">Sign in</button>
+        <button id="btnList" class="primary">Load doc list</button>
         <button id="btnLoad" class="primary">Load source doc</button>
         <button id="btnCheck">Check target</button>
         <button id="btnTransit" class="primary">Transit (write)</button>
@@ -243,17 +250,24 @@
     </div>
 
     <div class="card">
-      <strong>Preview: items to add</strong>
-      <div class="muted" style="margin: 6px 0 10px;">This preview is built from the source doc and filtered by existing target items (duplicates skipped).</div>
+      <div class="row" style="justify-content: space-between;">
+        <strong>Preview: PDF vs YouTube (diff)</strong>
+        <span class="pill mono" id="previewCounts">-</span>
+      </div>
+      <div class="muted" id="previewHint" style="margin: 6px 0 10px;">Load source first, then click Check target to compute duplicates and diffs.</div>
       <div style="overflow:auto; max-height: 320px; border-radius: 12px;">
         <table>
           <thead>
             <tr>
-              <th>t</th>
+              <th>action</th>
+              <th>status</th>
               <th>page</th>
               <th>entryId</th>
-              <th>text_sv</th>
-              <th>text_en</th>
+              <th>pdf text_sv</th>
+              <th>pdf text_en</th>
+              <th>yt text_sv</th>
+              <th>yt text_en</th>
+              <th>diff</th>
             </tr>
           </thead>
           <tbody id="addTbody"></tbody>
@@ -274,6 +288,7 @@
 
       const elDocId = document.getElementById('inDocId');
       const elBtnSignIn = document.getElementById('btnSignIn');
+      const elBtnList = document.getElementById('btnList');
       const elBtnLoad = document.getElementById('btnLoad');
       const elBtnCheck = document.getElementById('btnCheck');
       const elBtnTransit = document.getElementById('btnTransit');
@@ -304,6 +319,8 @@
       const elChkAutoTitle = document.getElementById('chkAutoTitle');
 
       const elAddTbody = document.getElementById('addTbody');
+      const elPreviewCounts = document.getElementById('previewCounts');
+      const elPreviewHint = document.getElementById('previewHint');
 
       let _gv = null;
       let _userId = '';
@@ -314,6 +331,8 @@
 
       let _targetTranscriptDoc = null;
       let _targetRefRow = null;
+
+      let _docListMeta = new Map(); // docId -> { title, hasTarget }
 
       function cleanStr(x) { return (x == null) ? '' : String(x).trim(); }
 
@@ -389,13 +408,28 @@
         return `${RTDB_ROOT}/${p}.json`;
       }
 
+      function buildQueryString(queryObj) {
+        if (!queryObj || typeof queryObj !== 'object') return '';
+        const parts = [];
+        for (const [k, v] of Object.entries(queryObj)) {
+          if (v == null) continue;
+          parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
+        }
+        return parts.length ? parts.join('&') : '';
+      }
+
       async function rtdbRequest(pathNoSlash, method = 'GET', body = null) {
+        return await rtdbRequestWithQuery(pathNoSlash, method, body, null);
+      }
+
+      async function rtdbRequestWithQuery(pathNoSlash, method = 'GET', body = null, queryObj = null) {
         await ensureSignedIn();
         const gv = ensureGv();
         const token = gv && gv.URL_DS ? cleanStr(gv.URL_DS.idToken) : '';
         if (!token) throw new Error('Not authenticated (idToken missing)');
 
-        const url = makeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token)}`;
+        const q = buildQueryString(queryObj);
+        const url = makeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token)}` + (q ? `&${q}` : '');
         const init = { method: String(method || 'GET') };
         if (body != null) {
           init.headers = { 'Content-Type': 'application/json' };
@@ -412,7 +446,7 @@
 
             const gv3 = ensureGv();
             const token2 = gv3 && gv3.URL_DS ? cleanStr(gv3.URL_DS.idToken) : '';
-            const url2 = makeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token2)}`;
+            const url2 = makeRtdbUrl(pathNoSlash) + `?auth=${encodeURIComponent(token2)}` + (q ? `&${q}` : '');
             const res2 = await fetch(url2, init);
             if (!res2.ok) {
               const txt2 = await (async () => { try { return await res2.text(); } catch { return ''; } })();
@@ -424,6 +458,81 @@
           throw new Error(`RTDB ${res.status}: ${txt}`);
         }
         return await res.json();
+      }
+
+      function setDocIdSelectOptions(options, selectedId) {
+        while (elDocId.firstChild) elDocId.removeChild(elDocId.firstChild);
+        const frag = document.createDocumentFragment();
+
+        const addOpt = (value, label, disabled = false) => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = label;
+          opt.disabled = !!disabled;
+          frag.appendChild(opt);
+        };
+
+        const list = Array.isArray(options) ? options : [];
+        if (!list.length) {
+          addOpt('', '(no PDF OCR docs found)', true);
+          elDocId.appendChild(frag);
+          try { elDocId.value = ''; } catch {}
+          return;
+        }
+
+        for (const o of list) {
+          addOpt(o.id, `${o.title}${o.hasTarget ? '' : ' (new in db_youtube2)'}`);
+        }
+
+        elDocId.appendChild(frag);
+
+        const want = cleanStr(selectedId);
+        if (want && list.some(o => o.id === want)) {
+          elDocId.value = want;
+        } else {
+          elDocId.value = list[0].id;
+        }
+      }
+
+      async function loadDocListFlow() {
+        setStatus('Loading docId list from PDF OCR...');
+        await ensureSignedIn();
+
+        const userId = getUserIdResolved();
+        const prevSel = cleanStr(elDocId.value);
+
+        // Source docIds from PDF OCR (fast)
+        const ocrKeysObj = await rtdbRequestWithQuery(`pdf_viewer_ocr_v1/${userId}`, 'GET', null, { shallow: 'true' }).catch(() => null);
+        const srcIds = Object.keys((ocrKeysObj && typeof ocrKeysObj === 'object') ? ocrKeysObj : {});
+
+        // Target existence sets (fast)
+        const [trKeysObj, refAll] = await Promise.all([
+          rtdbRequestWithQuery('db_youtube2/youtube_transcripts', 'GET', null, { shallow: 'true' }).catch(() => null),
+          rtdbRequest('db_youtube2/ref_youtube_videos', 'GET').catch(() => null)
+        ]);
+
+        const trSet = new Set(Object.keys((trKeysObj && typeof trKeysObj === 'object') ? trKeysObj : {}));
+        const refRows = (refAll && typeof refAll === 'object') ? refAll : {};
+
+        const out = [];
+        _docListMeta = new Map();
+
+        for (const id of srcIds) {
+          const refRow = refRows[id];
+          const title = cleanStr(refRow && refRow.title) || cleanStr(refRow && refRow.short_name) || id;
+          const hasTarget = trSet.has(id) || !!refRow;
+          out.push({ id, title, hasTarget });
+          _docListMeta.set(id, { title, hasTarget });
+        }
+
+        out.sort((a, b) => {
+          if (a.hasTarget !== b.hasTarget) return (a.hasTarget ? 1 : -1); // show new first
+          return String(a.title).localeCompare(String(b.title));
+        });
+
+        setDocIdSelectOptions(out, prevSel);
+        updatePathsUI();
+        setStatus(`Doc list loaded. total=${out.length}, newInDb=${out.filter(x => !x.hasTarget).length}`);
       }
 
       function updatePathsUI() {
@@ -473,28 +582,164 @@
         elSrcTbody.appendChild(frag);
       }
 
+      function setPreviewCounts(obj) {
+        try {
+          if (!obj) { elPreviewCounts.textContent = '-'; return; }
+          const parts = [];
+          if (obj.total != null) parts.push(`total=${obj.total}`);
+          if (obj.add != null) parts.push(`add=${obj.add}`);
+          if (obj.existsSame != null) parts.push(`same=${obj.existsSame}`);
+          if (obj.existsDiff != null) parts.push(`diff=${obj.existsDiff}`);
+          if (obj.unknown != null) parts.push(`unknown=${obj.unknown}`);
+          elPreviewCounts.textContent = parts.join(' / ') || '-';
+        } catch {
+          try { elPreviewCounts.textContent = '-'; } catch {}
+        }
+      }
+
+      function setPreviewHint(msg) {
+        try { elPreviewHint.textContent = cleanStr(msg); } catch {}
+      }
+
+      function buildTargetKeyToItemMap(doc) {
+        const map = new Map();
+        if (!doc || typeof doc !== 'object') return map;
+        const items = Array.isArray(doc.items) ? doc.items : [];
+        for (const it of items) {
+          if (!it || typeof it !== 'object') continue;
+          const p = Number(it.pageNum);
+          const e = cleanStr(it.entryId);
+          if (!Number.isFinite(p) || !e) continue;
+          const key = `${p}|${e}`;
+          if (!map.has(key)) {
+            map.set(key, {
+              text_sv: cleanStr(it.text_sv),
+              text_en: cleanStr(it.text_en)
+            });
+          }
+        }
+        return map;
+      }
+
+      function eqText(a, b) {
+        return cleanStr(a) === cleanStr(b);
+      }
+
+      function buildComparePreviewRows(sourceItems, targetTranscriptDoc) {
+        const rows = [];
+        const src = Array.isArray(sourceItems) ? sourceItems : [];
+        const hasTarget = !!(targetTranscriptDoc && typeof targetTranscriptDoc === 'object');
+        const tgtMap = hasTarget ? buildTargetKeyToItemMap(targetTranscriptDoc) : new Map();
+
+        let add = 0;
+        let existsSame = 0;
+        let existsDiff = 0;
+        let unknown = 0;
+
+        for (const it of src) {
+          if (!it || typeof it !== 'object') continue;
+          const key = `${Number(it.pageNum)}|${cleanStr(it.entryId)}`;
+          const pdfSv = cleanStr(it.text_sv);
+          const pdfEn = cleanStr(it.text_en);
+
+          if (!hasTarget) {
+            unknown += 1;
+            rows.push({
+              action: '?',
+              status: 'target not checked',
+              pageNum: it.pageNum,
+              entryId: cleanStr(it.entryId),
+              pdf_sv: pdfSv,
+              pdf_en: pdfEn,
+              yt_sv: '',
+              yt_en: '',
+              diff: '-'
+            });
+            continue;
+          }
+
+          const t = tgtMap.get(key);
+          if (!t) {
+            add += 1;
+            rows.push({
+              action: 'ADD',
+              status: 'missing in yt',
+              pageNum: it.pageNum,
+              entryId: cleanStr(it.entryId),
+              pdf_sv: pdfSv,
+              pdf_en: pdfEn,
+              yt_sv: '',
+              yt_en: '',
+              diff: '-'
+            });
+            continue;
+          }
+
+          const sameSv = eqText(pdfSv, t.text_sv);
+          const sameEn = eqText(pdfEn, t.text_en);
+          const isSame = sameSv && sameEn;
+
+          if (isSame) {
+            existsSame += 1;
+          } else {
+            existsDiff += 1;
+          }
+
+          const diffs = [];
+          if (!sameSv) diffs.push('sv');
+          if (!sameEn) diffs.push('en');
+
+          rows.push({
+            action: 'SKIP',
+            status: isSame ? 'exists' : 'exists (diff)',
+            pageNum: it.pageNum,
+            entryId: cleanStr(it.entryId),
+            pdf_sv: pdfSv,
+            pdf_en: pdfEn,
+            yt_sv: cleanStr(t.text_sv),
+            yt_en: cleanStr(t.text_en),
+            diff: diffs.length ? diffs.join('+') : '-'
+          });
+        }
+
+        setPreviewCounts({ total: rows.length, add, existsSame, existsDiff, unknown });
+        return rows;
+      }
+
       function renderAddPreview(items) {
         clearTableBody(elAddTbody);
         const frag = document.createDocumentFragment();
         for (const it of items) {
           const tr = document.createElement('tr');
-          const tdT = document.createElement('td');
+          const tdAction = document.createElement('td');
+          const tdStatus = document.createElement('td');
           const tdPage = document.createElement('td');
           const tdId = document.createElement('td');
-          const tdSv = document.createElement('td');
-          const tdEn = document.createElement('td');
+          const tdPdfSv = document.createElement('td');
+          const tdPdfEn = document.createElement('td');
+          const tdYtSv = document.createElement('td');
+          const tdYtEn = document.createElement('td');
+          const tdDiff = document.createElement('td');
 
-          tdT.textContent = String(it.t);
+          tdAction.textContent = cleanStr(it.action);
+          tdStatus.textContent = cleanStr(it.status);
           tdPage.textContent = String(it.pageNum);
           tdId.textContent = String(it.entryId);
-          tdSv.textContent = cleanStr(it.text_sv);
-          tdEn.textContent = cleanStr(it.text_en);
+          tdPdfSv.textContent = cleanStr(it.pdf_sv);
+          tdPdfEn.textContent = cleanStr(it.pdf_en);
+          tdYtSv.textContent = cleanStr(it.yt_sv);
+          tdYtEn.textContent = cleanStr(it.yt_en);
+          tdDiff.textContent = cleanStr(it.diff);
 
-          tr.appendChild(tdT);
+          tr.appendChild(tdAction);
+          tr.appendChild(tdStatus);
           tr.appendChild(tdPage);
           tr.appendChild(tdId);
-          tr.appendChild(tdSv);
-          tr.appendChild(tdEn);
+          tr.appendChild(tdPdfSv);
+          tr.appendChild(tdPdfEn);
+          tr.appendChild(tdYtSv);
+          tr.appendChild(tdYtEn);
+          tr.appendChild(tdDiff);
           frag.appendChild(tr);
         }
         elAddTbody.appendChild(frag);
@@ -654,6 +899,12 @@
         await ensureSignedIn();
         updatePathsUI();
         appendStatus('Signed in OK.');
+
+        try {
+          await loadDocListFlow();
+        } catch (e) {
+          appendStatus(`List load skipped: ${String(e && e.message ? e.message : e)}`);
+        }
       }
 
       async function loadSourceFlow() {
@@ -684,7 +935,8 @@
         _targetRefRow = null;
         elRefState.textContent = '-';
         elTrState.textContent = '-';
-        renderAddPreview(_sourceItems);
+        setPreviewHint('Target not checked yet. Click "Check target" to compare with /db_youtube2/youtube_transcripts.');
+        renderAddPreview(buildComparePreviewRows(_sourceItems, null));
 
         setStatus(`Loaded source doc. Rows: ${rows.length}`);
       }
@@ -721,10 +973,11 @@
           if (!cleanStr(elInOrder.value)) elInOrder.value = String(_targetRefRow.order ?? '');
         }
 
-        // Update preview of what would be added (de-dup).
-        const set = getTranscriptExistingKeySet(_targetTranscriptDoc);
-        const add = (_sourceItems || []).filter(it => !set.has(`${it.pageNum}|${it.entryId}`));
-        renderAddPreview(add);
+        // Diff preview (shows both ADD and SKIP rows).
+        const targetForDiff = _targetTranscriptDoc || { items: [] };
+        const rows = buildComparePreviewRows(_sourceItems, targetForDiff);
+        renderAddPreview(rows);
+        setPreviewHint('ADD = missing in yt. SKIP = already exists. diff shows which text fields differ (sv/en).');
 
         setStatus(`Target check done. transcripts=${_targetTranscriptDoc ? 'exists' : 'missing'}, ref=${_targetRefRow ? 'exists' : 'missing'}`);
       }
@@ -813,7 +1066,8 @@
         elRefState.textContent = 'exists';
         elTrState.textContent = 'exists';
 
-        renderAddPreview([]);
+        renderAddPreview(buildComparePreviewRows(_sourceItems, _targetTranscriptDoc));
+        setPreviewHint('After transit: everything should be SKIP (exists) unless source changed.');
 
         setStatus(
           `Transit OK.\n` +
@@ -826,11 +1080,13 @@
       async function withBusy(fn) {
         const prev = {
           signIn: elBtnSignIn.disabled,
+          list: elBtnList.disabled,
           load: elBtnLoad.disabled,
           check: elBtnCheck.disabled,
           transit: elBtnTransit.disabled
         };
         elBtnSignIn.disabled = true;
+        elBtnList.disabled = true;
         elBtnLoad.disabled = true;
         elBtnCheck.disabled = true;
         elBtnTransit.disabled = true;
@@ -838,18 +1094,23 @@
           await fn();
         } finally {
           elBtnSignIn.disabled = prev.signIn;
+          elBtnList.disabled = prev.list;
           elBtnLoad.disabled = prev.load;
           elBtnCheck.disabled = prev.check;
           elBtnTransit.disabled = prev.transit;
         }
       }
 
-      elDocId.addEventListener('input', () => {
+      elDocId.addEventListener('change', () => {
         updatePathsUI();
       });
 
       elBtnSignIn.addEventListener('click', () => withBusy(async () => {
         await signInFlow();
+      }).catch(e => setStatus(String(e && e.message ? e.message : e))));
+
+      elBtnList.addEventListener('click', () => withBusy(async () => {
+        await loadDocListFlow();
       }).catch(e => setStatus(String(e && e.message ? e.message : e))));
 
       elBtnLoad.addEventListener('click', () => withBusy(async () => {
@@ -866,9 +1127,12 @@
 
       // Init
       try {
+        setDocIdSelectOptions([{ id: '', title: '(click Sign in / Load doc list)', hasTarget: true }], '');
         updatePathsUI();
         setCounts(0, 0);
         setUiPreview(null);
+        setPreviewCounts(null);
+        setPreviewHint('Load source first, then click Check target to compute duplicates and diffs.');
         setStatus('Ready. Click Sign in, then Load source doc.');
       } catch {
         // ignore
