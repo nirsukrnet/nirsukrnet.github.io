@@ -466,6 +466,7 @@
           <select id="selLang" aria-label="Language">
             <option value="uk-UA">Ukrainian (uk-UA)</option>
             <option value="en-US" selected>English (en-US)</option>
+            <option value="ru-RU">Russian (ru-RU)</option>
             <option value="sv-SE">Swedish (sv-SE)</option>
           </select>
         </label>
@@ -686,6 +687,34 @@
     let ytLastTranslationText = '';
 
     const SHOW_META_KEY = 'rec_voice_show_meta';
+
+    function setSelectValueLoose(selectEl, desiredValue) {
+      if (!selectEl) return false;
+      const desired = cleanStr(desiredValue);
+      if (!desired) return false;
+
+      // Exact match first.
+      try {
+        const before = String(selectEl.value || '');
+        selectEl.value = desired;
+        if (String(selectEl.value || '') === desired) return true;
+        // Restore if it didn't match any option.
+        selectEl.value = before;
+      } catch {}
+
+      // Case-insensitive match (helps with ru-ru vs ru-RU).
+      try {
+        const want = desired.toLowerCase();
+        const opts = Array.from(selectEl.options || []);
+        const hit = opts.find(o => String(o && o.value || '').toLowerCase() === want);
+        if (hit) {
+          selectEl.value = hit.value;
+          return true;
+        }
+      } catch {}
+
+      return false;
+    }
 
     function pad2(n) {
       const x = Number(n);
@@ -1887,6 +1916,14 @@
       try {
         const data = await requestByPath(UI_STATE_REC_VOICE, 'GET');
         const sid = (data && typeof data.selected_session_id === 'string') ? data.selected_session_id : '';
+
+        // Persisted language selection (best-effort). This affects recognition on next start.
+        const savedLang = (data && typeof data.selected_lang === 'string') ? data.selected_lang : '';
+        if (savedLang) {
+          setSelectValueLoose(selLang, savedLang);
+          updateRecButtonLabel();
+        }
+
         ytShowTranslation = !data ? true : Boolean(data.yt_show_translation === 1 || data.yt_show_translation === true || data.yt_show_translation === '1');
         refreshYtTranslationToggleUI();
         renderYtItemsFromCache();
@@ -1901,6 +1938,7 @@
       await requestByPath(UI_STATE_REC_VOICE, 'PUT', {
         selected_session_id: String(sessionId || ''),
         yt_show_translation: ytShowTranslation ? 1 : 0,
+        selected_lang: String(selLang && selLang.value || ''),
         atupdate: Date.now(),
       });
     }
@@ -2161,6 +2199,16 @@
       // Per spec: language affects recognition on next start.
       setStatus(`Language set to ${selLang.value}.`, 'info');
       updateRecButtonLabel();
+
+      // Persist current settings (best-effort; ignore failures when Firebase is not ready).
+      (async () => {
+        try {
+          if (!fbReady) return;
+          await saveUiStateSelection(activeSessionId);
+        } catch {
+          // ignore
+        }
+      })();
     });
 
     // Init
