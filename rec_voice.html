@@ -6,7 +6,10 @@
   <title>rec_voice — live speech to text</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
+    html {
+      -webkit-text-size-adjust: 100%;
+      height: 100%;
+    }
     body {
       margin: 0;
       padding: 12px;
@@ -14,6 +17,9 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       line-height: 1.4;
       color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
@@ -24,7 +30,15 @@
     h1 { margin: 0; font-size: 18px; }
     .sub { opacity: 0.8; font-size: 13px; }
 
-    main { width: 100%; max-width: none; margin: 0; }
+    main {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0; /* allow children to scroll */
+    }
 
     /* Top-right main menu (sessions) */
     #mainMenu {
@@ -224,7 +238,9 @@
       border-radius: 12px;
       padding: 10px;
       min-height: 220px;
-      max-height: min(70vh, 720px);
+      max-height: none;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       display: grid;
       gap: 10px;
@@ -253,6 +269,11 @@
       display: none;
     }
 
+    /* Pasted visibility (default hidden via data-show-pasted="0") */
+    #history[data-show-pasted="0"] .itemPasted {
+      display: none;
+    }
+
     /* Selected history items */
     .item[data-selected="1"] {
       border-color: color-mix(in srgb, #0ea5e9 55%, #999);
@@ -264,6 +285,14 @@
       gap: 10px;
       align-items: center;
       justify-content: space-between;
+    }
+
+    .itemActions {
+      display: flex;
+      gap: 20px; /* min spacing between buttons */
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
     }
 
     .selBtn {
@@ -286,6 +315,42 @@
       border-radius: 10px;
       border: 1px solid color-mix(in srgb, #111 18%, #999);
       background: color-mix(in srgb, #111 3%, transparent);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .itemTextMain {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .itemPasted {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, #a855f7 35%, #999);
+      background: color-mix(in srgb, #a855f7 7%, transparent);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .itemPastedHead {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+
+    .itemPastedActions {
+      display: flex;
+      gap: 20px; /* min spacing between buttons */
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .itemPastedBody {
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -448,7 +513,7 @@
           <div class="historyTitle">History</div>
           <button id="btnClearSelected" type="button" style="margin-left:auto;" disabled>Clear selected</button>
         </div>
-        <div id="history" data-show-meta="0"></div>
+        <div id="history" data-show-meta="0" data-show-pasted="0"></div>
       </div>
     </div>
   </main>
@@ -475,9 +540,27 @@
 
       <div class="row" style="margin:10px 0 0;">
         <button id="btnYtShowTranslation" type="button" data-state="1" title="Show/hide translation in the transcript items window">YT translation: on</button>
+        <button id="btnToggleShowPasted" type="button" data-state="0" title="Show/hide pasted text under items">Show pasted: off</button>
       </div>
       <div class="sub" style="margin-top:6px;">
         Tip: mic permission often requires HTTPS or <code>localhost</code>.
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgPasteTxt" aria-label="Paste text">
+    <form method="dialog">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <strong>Paste text</strong>
+        <button value="cancel" aria-label="Close" title="Close">Close</button>
+      </div>
+      <div style="margin-top:10px; display:grid; gap:8px;">
+        <textarea id="taPasteTxt" rows="6" placeholder="Paste or edit text here"
+          style="width:100%; box-sizing:border-box; padding:10px; border:1px solid #999; border-radius:10px;"></textarea>
+      </div>
+      <div class="row" style="margin:12px 0 0; justify-content:flex-end; gap:10px;">
+        <button id="btnPasteCancel" value="cancel">Cancel</button>
+        <button id="btnPasteSave" type="button">Save</button>
       </div>
     </form>
   </dialog>
@@ -589,6 +672,18 @@
     /** @type {HTMLButtonElement} */
     const btnYtShowTranslation = document.getElementById('btnYtShowTranslation');
 
+    /** @type {HTMLButtonElement} */
+    const btnToggleShowPasted = document.getElementById('btnToggleShowPasted');
+
+    /** @type {HTMLDialogElement} */
+    const dlgPasteTxt = document.getElementById('dlgPasteTxt');
+    /** @type {HTMLTextAreaElement} */
+    const taPasteTxt = document.getElementById('taPasteTxt');
+    /** @type {HTMLButtonElement} */
+    const btnPasteSave = document.getElementById('btnPasteSave');
+    /** @type {HTMLButtonElement} */
+    const btnPasteCancel = document.getElementById('btnPasteCancel');
+
     /** @type {HTMLSelectElement} */
     const selSession = document.getElementById('selSession');
     /** @type {HTMLButtonElement} */
@@ -655,6 +750,10 @@
     let _lastHistoryText = '';
     let _lastHistoryAtMs = 0;
     let accumulatedFinalText = '';
+
+    // Pasted text view/edit state
+    let showPasted = false;
+    let pasteTargetItem = null; // HTMLElement (history .item)
 
     // Firebase sessions state
     const SESSION_CREATE_VALUE = '__create__';
@@ -1487,20 +1586,214 @@
       scrollIfNearTop();
     }
 
-    function addHistoryItem(text, lang, datetimeMs = null, entryId = null) {
+    async function copyToClipboard(text) {
+      const s = (text == null) ? '' : String(text);
+      if (!s) return false;
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          await navigator.clipboard.writeText(s);
+          return true;
+        }
+      } catch {}
+
+      // Fallback
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = s;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return Boolean(ok);
+      } catch {
+        return false;
+      }
+    }
+
+    function getItemMainText(itemEl) {
+      const el = itemEl ? itemEl.querySelector('.itemTextMain') : null;
+      return el ? String(el.textContent || '').trim() : '';
+    }
+
+    function getItemPastedText(itemEl) {
+      const el = itemEl ? itemEl.querySelector('.itemPastedBody') : null;
+      return el ? String(el.textContent || '').trim() : '';
+    }
+
+    function setItemPastedText(itemEl, textPasted) {
+      if (!itemEl) return;
+      const s = (textPasted == null) ? '' : String(textPasted).trim();
+      let wrap = itemEl.querySelector('.itemPasted');
+
+      if (!s) {
+        if (wrap) wrap.remove();
+        itemEl.dataset.hasPasted = '0';
+        return;
+      }
+
+      if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.className = 'itemPasted';
+
+        const head = document.createElement('div');
+        head.className = 'itemPastedHead';
+
+        const actions = document.createElement('div');
+        actions.className = 'itemPastedActions';
+        head.appendChild(actions);
+
+        const body = document.createElement('div');
+        body.className = 'itemPastedBody';
+
+        wrap.appendChild(head);
+        wrap.appendChild(body);
+        itemEl.appendChild(wrap);
+      }
+
+      const body = wrap.querySelector('.itemPastedBody');
+      if (body) body.textContent = s;
+      itemEl.dataset.hasPasted = '1';
+    }
+
+    async function persistTextPastedForItem(itemEl, textPasted) {
+      if (!itemEl || !fbReady || !activeSessionId) return;
+      const entryId = itemEl.dataset ? String(itemEl.dataset.entryId || '') : '';
+      if (!entryId) {
+        // Item might be in-flight (saved async). Retry briefly.
+        let tries = Number(itemEl.dataset ? itemEl.dataset.pasteRetry || '0' : '0');
+        if (!Number.isFinite(tries)) tries = 0;
+        if (tries >= 3) return;
+        if (itemEl.dataset) itemEl.dataset.pasteRetry = String(tries + 1);
+        setTimeout(() => {
+          persistTextPastedForItem(itemEl, textPasted).catch(() => {});
+        }, 600);
+        return;
+      }
+      const basePath = getRecSessionItemsBasePath(activeSessionId);
+
+      const patch = { text_pasted: String(textPasted || '') };
+      try {
+        await requestByPath(`${basePath}/${entryId}`, 'PATCH', patch);
+        return;
+      } catch {}
+
+      // Fallback: read current and PUT full payload
+      try {
+        const cur = await requestByPath(`${basePath}/${entryId}`, 'GET');
+        const payload = {
+          ...(cur && typeof cur === 'object' ? cur : {}),
+          ...patch,
+        };
+        await requestByPath(`${basePath}/${entryId}`, 'PUT', payload);
+      } catch (err) {
+        setStatus(`Firebase save failed: ${String(err)}`, 'warn');
+      }
+    }
+
+    function openPasteDialogForItem(itemEl) {
+      if (!dlgPasteTxt || !taPasteTxt) return;
+      pasteTargetItem = itemEl || null;
+      taPasteTxt.value = itemEl ? (getItemPastedText(itemEl) || '') : '';
+      try { dlgPasteTxt.showModal(); } catch { /* ignore */ }
+      try { taPasteTxt.focus(); } catch {}
+    }
+
+    function rebuildItemActions(itemEl) {
+      if (!itemEl) return;
+      const head = itemEl.querySelector('.itemHead');
+      if (!head) return;
+
+      let actions = head.querySelector('.itemActions');
+      if (!actions) {
+        actions = document.createElement('div');
+        actions.className = 'itemActions';
+        head.appendChild(actions);
+      }
+      actions.innerHTML = '';
+
+      const sel = document.createElement('button');
+      sel.type = 'button';
+      sel.className = 'selBtn';
+      sel.textContent = (itemEl.dataset.selected === '1') ? 'Selected' : 'Select';
+      sel.dataset.on = (itemEl.dataset.selected === '1') ? '1' : '0';
+      sel.addEventListener('click', (e) => {
+        e.preventDefault();
+        const on = itemEl.dataset.selected === '1';
+        itemEl.dataset.selected = on ? '0' : '1';
+        sel.dataset.on = on ? '0' : '1';
+        sel.textContent = on ? 'Select' : 'Selected';
+        refreshClearSelectedUI();
+      });
+      actions.appendChild(sel);
+
+      const makeBtn = (label, title, onClick) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'selBtn';
+        b.textContent = label;
+        if (title) b.title = title;
+        b.addEventListener('click', (e) => {
+          e.preventDefault();
+          onClick && onClick();
+        });
+        return b;
+      };
+
+
+      // Main text buttons are ALWAYS the same.
+      actions.appendChild(makeBtn('Copy txt', 'Copy main text to clipboard', async () => {
+        const ok = await copyToClipboard(getItemMainText(itemEl));
+        setStatus(ok ? 'Copied.' : 'Copy failed.', ok ? 'ok' : 'warn');
+      }));
+      actions.appendChild(makeBtn('AI 1', 'Copy AI prompt + main text', async () => {
+        const main = getItemMainText(itemEl);
+        const prompt = `Улучший этот текст для лучшего понимания:\n\n${main}`;
+        const ok = await copyToClipboard(prompt);
+        setStatus(ok ? 'Copied.' : 'Copy failed.', ok ? 'ok' : 'warn');
+      }));
+      actions.appendChild(makeBtn('Paste txt', 'Paste/edit additional text for this item', () => openPasteDialogForItem(itemEl)));
+
+      // If pasted block exists, rebuild its own 3-button toolbar.
+      const pastedWrap = itemEl.querySelector('.itemPasted');
+      const pastedActions = pastedWrap ? pastedWrap.querySelector('.itemPastedActions') : null;
+      if (pastedActions) {
+        pastedActions.innerHTML = '';
+        pastedActions.appendChild(makeBtn('Edit', 'Edit pasted text', () => openPasteDialogForItem(itemEl)));
+        pastedActions.appendChild(makeBtn('Copy txt', 'Copy pasted text to clipboard', async () => {
+          const ok = await copyToClipboard(getItemPastedText(itemEl));
+          setStatus(ok ? 'Copied.' : 'Copy failed.', ok ? 'ok' : 'warn');
+        }));
+        pastedActions.appendChild(makeBtn('AI 1', 'Copy AI prompt + pasted text', async () => {
+          const p = getItemPastedText(itemEl);
+          const prompt = `Улучший этот текст для лучшего понимания:\n\n${p}`;
+          const ok = await copyToClipboard(prompt);
+          setStatus(ok ? 'Copied.' : 'Copy failed.', ok ? 'ok' : 'warn');
+        }));
+      }
+    }
+
+    function addHistoryItem(text, lang, datetimeMs = null, entryId = null, textPasted = '') {
       const cleanText = (text == null) ? '' : String(text).trim();
       if (!cleanText) return;
 
       // Prevent double-add when stopping can trigger a final result too.
-      const now = Date.now();
-      const norm = cleanText.replace(/\s+/g, ' ');
-      if (_lastHistoryText === norm && (now - _lastHistoryAtMs) < 1500) return;
-      _lastHistoryText = norm;
-      _lastHistoryAtMs = now;
+      // Only apply to local/unsaved additions (no entryId).
+      if (entryId == null || entryId === '') {
+        const now = Date.now();
+        const norm = cleanText.replace(/\s+/g, ' ');
+        if (_lastHistoryText === norm && (now - _lastHistoryAtMs) < 1500) return;
+        _lastHistoryText = norm;
+        _lastHistoryAtMs = now;
+      }
 
       const item = document.createElement('div');
       item.className = 'item';
       item.dataset.selected = '0';
+      item.dataset.hasPasted = (String(textPasted || '').trim() ? '1' : '0');
 
       const head = document.createElement('div');
       head.className = 'itemHead';
@@ -1517,30 +1810,38 @@
       meta.appendChild(left);
       meta.appendChild(right);
 
-      const sel = document.createElement('button');
-      sel.type = 'button';
-      sel.className = 'selBtn';
-      sel.textContent = 'Select';
-      sel.dataset.on = '0';
-      sel.addEventListener('click', (e) => {
-        e.preventDefault();
-        const on = item.dataset.selected === '1';
-        item.dataset.selected = on ? '0' : '1';
-        sel.dataset.on = on ? '0' : '1';
-        sel.textContent = on ? 'Select' : 'Selected';
-        refreshClearSelectedUI();
-      });
-
       head.appendChild(meta);
-      head.appendChild(sel);
+      item.appendChild(head);
 
       const body = document.createElement('div');
+      body.className = 'itemTextMain';
       body.textContent = cleanText;
 
-      item.appendChild(head);
       item.appendChild(body);
 
+      if (String(textPasted || '').trim()) {
+        const pastedWrap = document.createElement('div');
+        pastedWrap.className = 'itemPasted';
+
+        const pastedHead = document.createElement('div');
+        pastedHead.className = 'itemPastedHead';
+
+        const pastedActions = document.createElement('div');
+        pastedActions.className = 'itemPastedActions';
+        pastedHead.appendChild(pastedActions);
+
+        const pastedBody = document.createElement('div');
+        pastedBody.className = 'itemPastedBody';
+        pastedBody.textContent = String(textPasted || '').trim();
+
+        pastedWrap.appendChild(pastedHead);
+        pastedWrap.appendChild(pastedBody);
+        item.appendChild(pastedWrap);
+      }
+
       if (entryId != null && entryId !== '') item.dataset.entryId = String(entryId);
+
+      rebuildItemActions(item);
 
       // Newest on top
       history.prepend(item);
@@ -1563,6 +1864,16 @@
       btnToggleMeta.dataset.state = v;
       btnToggleMeta.textContent = on ? 'Meta: on' : 'Meta: off';
       try { localStorage.setItem(SHOW_META_KEY, v); } catch { /* ignore */ }
+    }
+
+    function setShowPasted(on) {
+      showPasted = Boolean(on);
+      const v = showPasted ? '1' : '0';
+      if (history && history.dataset) history.dataset.showPasted = v;
+      if (btnToggleShowPasted) {
+        btnToggleShowPasted.dataset.state = v;
+        btnToggleShowPasted.textContent = showPasted ? 'Show pasted: on' : 'Show pasted: off';
+      }
     }
 
     function loadShowMetaSetting() {
@@ -1787,6 +2098,42 @@
       }
     });
 
+    if (btnToggleShowPasted) {
+      btnToggleShowPasted.addEventListener('click', async () => {
+        const cur = history && history.dataset && history.dataset.showPasted === '1';
+        setShowPasted(!cur);
+        try {
+          if (fbReady) await saveUiStateSelection(activeSessionId);
+        } catch {
+          // ignore
+        }
+      });
+    }
+
+    if (dlgPasteTxt) {
+      dlgPasteTxt.addEventListener('close', () => {
+        pasteTargetItem = null;
+      });
+    }
+
+    if (btnPasteSave) {
+      btnPasteSave.addEventListener('click', (e) => {
+        e.preventDefault();
+        (async () => {
+          if (!pasteTargetItem) {
+            try { dlgPasteTxt && dlgPasteTxt.close('cancel'); } catch { /* ignore */ }
+            return;
+          }
+          const v = taPasteTxt ? String(taPasteTxt.value || '') : '';
+          setItemPastedText(pasteTargetItem, v);
+          rebuildItemActions(pasteTargetItem);
+          await persistTextPastedForItem(pasteTargetItem, v);
+          setStatus('Saved pasted text.', 'ok');
+          try { dlgPasteTxt && dlgPasteTxt.close('save'); } catch { /* ignore */ }
+        })();
+      });
+    }
+
     btnToggleMeta.addEventListener('click', () => {
       const cur = history.dataset.showMeta === '1';
       setShowMeta(!cur);
@@ -1924,6 +2271,9 @@
           updateRecButtonLabel();
         }
 
+        const show = !data ? false : Boolean(data.show_pasted === 1 || data.show_pasted === true || data.show_pasted === '1');
+        setShowPasted(show);
+
         ytShowTranslation = !data ? true : Boolean(data.yt_show_translation === 1 || data.yt_show_translation === true || data.yt_show_translation === '1');
         refreshYtTranslationToggleUI();
         renderYtItemsFromCache();
@@ -1939,6 +2289,7 @@
         selected_session_id: String(sessionId || ''),
         yt_show_translation: ytShowTranslation ? 1 : 0,
         selected_lang: String(selLang && selLang.value || ''),
+        show_pasted: showPasted ? 1 : 0,
         atupdate: Date.now(),
       });
     }
@@ -1978,12 +2329,13 @@
             datetime: Number.isFinite(dt) ? dt : 0,
             text: (v && typeof v.text === 'string') ? v.text : '',
             lang: (v && typeof v.lang === 'string') ? v.lang : '',
+            text_pasted: (v && typeof v.text_pasted === 'string') ? v.text_pasted : '',
           });
         }
       }
 
       list.sort((a, b) => (b.datetime - a.datetime) || (String(b.entryId).localeCompare(String(a.entryId))));
-      for (const it of list) addHistoryItem(it.text, it.lang, it.datetime, it.entryId);
+      for (const it of list) addHistoryItem(it.text, it.lang, it.datetime, it.entryId, it.text_pasted);
 
       nextEntryId = computeNextNumericKey(itemsObj);
       setStatus(`Loaded session ${sessionId}: ${list.length} item(s).`, 'ok');
@@ -2049,7 +2401,7 @@
 
       const entryId = String(nextEntryId);
       const datetime = Date.now();
-      const payload = { datetime, text: String(text || ''), lang: String(lang || '') };
+      const payload = { datetime, text: String(text || ''), lang: String(lang || ''), text_pasted: '' };
       try {
         const basePath = getRecSessionItemsBasePath(sid);
         await requestByPath(`${basePath}/${entryId}`, 'PUT', payload);
