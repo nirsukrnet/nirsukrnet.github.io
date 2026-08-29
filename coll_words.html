@@ -26,10 +26,14 @@
     .row.controls {
       flex-wrap: nowrap;
       background: transparent;
+      width: min(980px, calc(100% - 92px));
+      max-width: 980px;
+      min-width: 0;
     }
 
     .row.controls button {
       background: transparent;
+      flex: 0 0 auto;
     }
 
     #btnMainMenu {
@@ -37,6 +41,10 @@
       top: 12px;
       right: 12px;
       z-index: 50;
+    }
+
+    #btnMenu {
+      margin-left: auto;
     }
 
     button {
@@ -64,6 +72,10 @@
     #pageTitle {
       margin: 0;
       font-size: 20px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     #mainInfo {
@@ -149,7 +161,7 @@
 
   <div class="row controls" aria-label="Collection Words Controls">
     <h1 id="pageTitle">Collection Words</h1>
-    <button id="btnMenu" class="yu2-btn yu2-btn--tool" type="button" style="margin-left:auto;">Menu</button>
+    <button id="btnMenu" class="yu2-btn yu2-btn--tool" type="button">Menu</button>
   </div>
 
   <div id="transStatus" class="muted" style="max-width:980px;"></div>
