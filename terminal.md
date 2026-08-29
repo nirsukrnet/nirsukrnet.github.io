@@ -2,6 +2,9 @@ py -m http.server 8080 --bind 127.0.0.1
 c:\Python\AuTr\venv\Scripts\python.exe  -m http.server 8080 --bind 127.0.0.1
 c:\Python\AuTr\venv\Scripts\python.exe -m http.server 8080 -b localhost --directory c:\Python\AuTr\html
 
+www_html
+c:\Python\AuTr\venv\Scripts\python.exe -m http.server 9090 -b localhost --directory C:\Python\AuTr\html\www_html
+
 
 
 git remote add origin https://github.com/nirsukrnet/voicestorage.git
