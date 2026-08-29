@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collection Words</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+      align-items: center;
+    }
+
+    .row.controls {
+      flex-wrap: nowrap;
+      background: transparent;
+    }
+
+    .row.controls button {
+      background: transparent;
+    }
+
+    #btnMainMenu {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 50;
+    }
+
+    button {
+      padding: 10px 12px;
+      min-height: 44px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .yu2-btn { white-space: nowrap; }
+
+    .row.controls button.yu2-btn--tool {
+      user-select: none;
+      color: #fff;
+      border-color: color-mix(in srgb, #502cd4 70%, #ffffff);
+      background-color: rgba(80,44,212,.25);
+      background-color: color-mix(in srgb, #502cd4 90%, transparent);
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+    .muted { opacity: 0.75; }
+
+    #pageTitle {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    #mainInfo {
+      margin-left: auto;
+      text-align: right;
+      min-width: 120px;
+    }
+
+    #transWrap {
+      max-width: 980px;
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 10px;
+      height: 90vh;
+      max-height: 720px;
+      min-height: 420px;
+      overflow-y: auto;
+    }
+
+    #transList {
+      list-style: none;
+      padding: 8px 0 24px;
+      margin: 0;
+      display: grid;
+      gap: 1px;
+    }
+
+    #transList li {
+      padding: 2px 0;
+      border-radius: 0;
+      border: 0 solid transparent;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #transList li[data-active="1"] {
+      box-shadow:
+        inset 0 2px 0 0 color-mix(in srgb, currentColor 55%, transparent),
+        inset 0 -2px 0 0 color-mix(in srgb, currentColor 55%, transparent);
+    }
+
+    #transList .trLine {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    #transList .trLine2 {
+      margin-left: 1px;
+      color: darkolivegreen;
+    }
+
+    #langRowShow1 button[data-selected="1"],
+    #langRowShow2 button[data-selected="1"],
+    #mainMenuTagRow button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    dialog {
+      width: calc(100vw - 16px);
+      max-width: calc(100vw - 16px);
+      height: calc(100vh - 16px);
+      max-height: calc(100vh - 16px);
+      margin: 8px;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <button id="btnMainMenu" type="button">Menu</button>
+
+  <div class="row controls" aria-label="Collection Words Controls">
+    <h1 id="pageTitle">Collection Words</h1>
+    <button id="btnMenu" class="yu2-btn yu2-btn--tool" type="button" style="margin-left:auto;">Menu</button>
+  </div>
+
+  <div id="transStatus" class="muted" style="max-width:980px;"></div>
+  <div id="mainInfo" class="muted"></div>
+
+  <div id="transWrap" data-ts="0" style="display:block;" data-rendered="1">
+    <ul id="transList"></ul>
+  </div>
+
+  <dialog id="dlgMenu">
+    <form method="dialog">
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong>Display languages</strong>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+      </div>
+
+      <div id="transLangInfo" class="muted" style="margin:0 0 10px;"></div>
+
+      <div class="muted" style="margin:0 0 6px; font-size:12px;">Line 1</div>
+      <div id="langRowShow1" class="row" style="margin:0 0 10px;"></div>
+
+      <div class="muted" style="margin:0 0 6px; font-size:12px;">Line 2</div>
+      <div id="langRowShow2" class="row" style="margin:0;"></div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgMainMenu">
+    <form method="dialog">
+      <button id="btnMainMenuClose" value="cancel" aria-label="Close" title="Close"
+        style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">
+        ×
+      </button>
+
+      <div id="mainMenuTagRow" class="row" style="margin:0 0 10px;"></div>
+
+      <div class="row" style="margin:0 0 10px;">
+        <input id="inMainMenuShortFilter" placeholder="type to filter" />
+      </div>
+
+      <div id="refVideosStatus" class="muted" style="margin:0 0 10px;"></div>
+      <div id="refVideosLimitInfo" class="muted" style="margin:0 0 10px;"></div>
+      <ul id="refVideosList" style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;"></ul>
+    </form>
+  </dialog>
+
+  <script src="./yout_pl2/yu2_global_var.js"></script>
+  <script src="./yout_pl2/youtube_transcript_store.js"></script>
+  <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
+
+  <script>
+    'use strict';
+
+    const gv = ytEnsureGv();
+    const UI_STATE_ROOT = gv.cst.getcst('DB_CONST_UI_STATE_YOUT_PL2');
+    const UI_STATE_PATH = `${UI_STATE_ROOT}/coll_words`;
+    const REF_TAGS_SHORT_PATH = gv.cst.getcst('DB_CONST_REF_TAGS_SHORT');
+    const LANG_ROOT_PATH = gv.cst.getcst('DB_CONST_REF_LANGUAGES_SET');
+    const MAIN_MENU_SELECTED_TAG_PATH = `${UI_STATE_PATH}/main_menu_selected_tag`;
+    const MAIN_MENU_SHORT_NAME_FILTER_PATH = `${UI_STATE_PATH}/main_menu_short_name_filter`;
+    const DISPLAY_LANGS_PATH = `${UI_STATE_PATH}/display_langs`;
+
+    let currentVideoId = '';
+    let currentLabel = '';
+    let transcript = [];
+    let activeIndex = -1;
+    let lang1Show = 'sv';
+    let lang2Show = 'en';
+
+    let mainMenuSelectedTag = '';
+    let mainMenuShortNameFilter = '';
+    let _mainMenuSaveTimer = null;
+    let _mainMenuTagsCache = [];
+    let _refVideosLoadSeq = 0;
+    const MAIN_MENU_TAG_PAGE_SIZE = 3;
+    let mainMenuTagPageStart = 0;
+    const TRANS_ACTIVE_ROW_TOP_GAP_PX = 90;
+
+    function ytNowIso() {
+      try { return new Date().toISOString(); } catch { return String(Date.now()); }
+    }
+
+    function cleanStr(x) {
+      return (x == null) ? '' : String(x).trim();
+    }
+
+    function cleanLangCode(x) {
+      const s = cleanStr(x).toLowerCase();
+      if (!s) return '';
+      if (!/^[a-z0-9_-]{2,16}$/.test(s)) return '';
+      return s;
+    }
+
+    function cleanTagCode(x) {
+      const s = cleanStr(x).toUpperCase();
+      if (!s) return '';
+      if (!/^[A-Z0-9_-]{2,12}$/.test(s)) return '';
+      return s;
+    }
+
+    function ytEnsureGv() {
+      if (window.gv && window.gv.URL_DS && window.gv.cst && typeof window.gv.cst.getcst === 'function') return window.gv;
+
+      const GVClass = (typeof GlobalVars === 'function')
+        ? GlobalVars
+        : (typeof globalThis !== 'undefined' && typeof globalThis.GlobalVars === 'function')
+          ? globalThis.GlobalVars
+          : (typeof window.GlobalVars === 'function')
+            ? window.GlobalVars
+            : null;
+
+      if (GVClass) {
+        const nextGv = new GVClass();
+        window.gv = nextGv;
+        return nextGv;
+      }
+      throw new Error('GlobalVars is not available');
+    }
+
+    async function ytEnsureSignedIn() {
+      const curGv = ytEnsureGv();
+      if (curGv.URL_DS && curGv.URL_DS.idToken) return;
+      if (typeof curGv.SignIn_User !== 'function') throw new Error('gv.SignIn_User missing');
+      await curGv.SignIn_User();
+    }
+
+    function ytRequestByPath(addurl, method = 'GET', body = null) {
+      return new Promise((resolve, reject) => {
+        try {
+          const curGv = ytEnsureGv();
+          const ObjRequest = curGv.URL_DS.GetObjForRequest();
+          ObjRequest.addUrl = addurl;
+          ObjRequest.ametod = method;
+          ObjRequest.vobj = body;
+          ObjRequest.CallBackFunction = function(vdata) { resolve(vdata); };
+          ObjRequest.ErrorCallback = function(err) { reject(err || new Error('request failed')); };
+          curGv.URL_DS.requestData_By_URL_Path(ObjRequest);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    function setStatus(msg) {
+      const el = document.getElementById('transStatus');
+      if (el) el.textContent = msg || '';
+    }
+
+    function setRefStatus(msg) {
+      const el = document.getElementById('refVideosStatus');
+      if (el) el.textContent = msg || '';
+    }
+
+    function normalizeLanguagesSet(data) {
+      const rawLanguages = (data && typeof data === 'object') ? data.languages : null;
+      const list = [];
+      if (rawLanguages && typeof rawLanguages === 'object') {
+        for (const [k, v] of Object.entries(rawLanguages)) {
+          const code = cleanLangCode((v && v.code) ? v.code : k);
+          if (!code) continue;
+          const label = cleanStr((v && v.label) || code.toUpperCase());
+          const order = Number.isFinite(Number(v && v.order)) ? Number(v.order) : 9999;
+          list.push({ code, label, order });
+        }
+      }
+      list.sort((a, b) => (a.order - b.order) || a.code.localeCompare(b.code));
+      return list;
+    }
+
+    async function loadOrSeedLanguagesSet() {
+      await ytEnsureSignedIn();
+      let data = null;
+      try {
+        data = await ytRequestByPath(LANG_ROOT_PATH, 'GET');
+      } catch {
+        data = null;
+      }
+
+      let list = normalizeLanguagesSet(data);
+      if (list.length === 0) {
+        const payload = {
+          updatedAt: ytNowIso(),
+          languages: {
+            sv: { code: 'sv', label: 'SV', order: 1 },
+            en: { code: 'en', label: 'EN', order: 2 },
+            uk: { code: 'uk', label: 'UK', order: 3 }
+          }
+        };
+        await ytRequestByPath(LANG_ROOT_PATH, 'PUT', payload);
+        list = normalizeLanguagesSet(payload);
+      }
+      return list;
+    }
+
+    async function loadDisplayLangSettings() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(DISPLAY_LANGS_PATH, 'GET');
+        const l1 = cleanLangCode(data && data.lang1_show);
+        const l2 = cleanLangCode(data && data.lang2_show);
+        if (l1) lang1Show = l1;
+        if (Object.prototype.hasOwnProperty.call(data || {}, 'lang2_show')) lang2Show = l2 || '';
+      } catch {}
+    }
+
+    async function saveDisplayLangSettings() {
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(DISPLAY_LANGS_PATH, 'PUT', {
+          lang1_show: cleanLangCode(lang1Show) || '',
+          lang2_show: cleanLangCode(lang2Show) || '',
+          updatedAt: ytNowIso()
+        });
+      } catch {}
+    }
+
+    function getRowText(row, langCode) {
+      const code = cleanLangCode(langCode);
+      if (row && code) {
+        const v = row[`text_${code}`];
+        if (typeof v === 'string' && v.trim()) return v.trim();
+      }
+      const legacy = row && row.text;
+      if (typeof legacy === 'string' && legacy.trim()) return legacy.trim();
+      return '';
+    }
+
+    function updatePageInfo() {
+      const title = document.getElementById('pageTitle');
+      if (title) title.textContent = currentLabel ? `Collection Words: ${currentLabel}` : 'Collection Words';
+
+      const info = document.getElementById('mainInfo');
+      if (!info) return;
+      const total = Array.isArray(transcript) ? transcript.length : 0;
+      const active = (activeIndex >= 0 && total > 0) ? `${activeIndex + 1}/${total}` : '';
+      info.textContent = active;
+    }
+
+    function updateTransLangInfo() {
+      const el = document.getElementById('transLangInfo');
+      if (!el) return;
+      const l1 = cleanLangCode(lang1Show);
+      const l2 = cleanLangCode(lang2Show);
+      const show = l2 && l2 !== l1 ? `${l1.toUpperCase()} + ${l2.toUpperCase()}` : (l1 || '').toUpperCase();
+      el.textContent = `Show: ${show || '—'}`;
+    }
+
+    function setLang1Show(nextLang) {
+      const code = cleanLangCode(nextLang);
+      if (!code) return;
+      lang1Show = code;
+      if (cleanLangCode(lang2Show) === code) lang2Show = '';
+      syncLanguageButtons();
+      updateTransLangInfo();
+      renderTranscript();
+      Promise.resolve().then(() => saveDisplayLangSettings()).catch(() => {});
+    }
+
+    function setLang2Show(nextLangOrOff) {
+      const code = cleanLangCode(nextLangOrOff);
+      lang2Show = code;
+      if (cleanLangCode(lang2Show) === cleanLangCode(lang1Show)) lang2Show = '';
+      syncLanguageButtons();
+      updateTransLangInfo();
+      renderTranscript();
+      Promise.resolve().then(() => saveDisplayLangSettings()).catch(() => {});
+    }
+
+    function syncLanguageButtons() {
+      const row1 = document.getElementById('langRowShow1');
+      if (row1) {
+        row1.querySelectorAll('button[data-lang]').forEach(btn => {
+          btn.dataset.selected = (cleanLangCode(btn.dataset.lang) === cleanLangCode(lang1Show)) ? '1' : '0';
+        });
+      }
+
+      const row2 = document.getElementById('langRowShow2');
+      if (row2) {
+        row2.querySelectorAll('button[data-lang]').forEach(btn => {
+          const code = cleanLangCode(btn.dataset.lang);
+          btn.disabled = !!code && code === cleanLangCode(lang1Show);
+          btn.dataset.selected = (!!code && code === cleanLangCode(lang2Show) && code !== cleanLangCode(lang1Show)) ? '1' : '0';
+        });
+        row2.querySelectorAll('button[data-off]').forEach(btn => {
+          btn.dataset.selected = (!cleanLangCode(lang2Show)) ? '1' : '0';
+        });
+      }
+    }
+
+    function renderLanguageButtons(list) {
+      const row1 = document.getElementById('langRowShow1');
+      const row2 = document.getElementById('langRowShow2');
+      if (!row1 || !row2) return;
+
+      row1.innerHTML = '';
+      row2.innerHTML = '';
+
+      if (!Array.isArray(list) || list.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'muted';
+        span.textContent = 'No languages set';
+        row1.appendChild(span);
+        updateTransLangInfo();
+        return;
+      }
+
+      list.forEach(l => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.lang = l.code;
+        btn.textContent = l.label || l.code.toUpperCase();
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          setLang1Show(l.code);
+        });
+        row1.appendChild(btn);
+      });
+
+      const btnOff = document.createElement('button');
+      btnOff.type = 'button';
+      btnOff.dataset.off = '1';
+      btnOff.textContent = 'Off';
+      btnOff.addEventListener('click', (e) => {
+        e.preventDefault();
+        setLang2Show('');
+      });
+      row2.appendChild(btnOff);
+
+      list.forEach(l => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.lang = l.code;
+        btn.textContent = l.label || l.code.toUpperCase();
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          setLang2Show(l.code);
+        });
+        row2.appendChild(btn);
+      });
+
+      if (!list.some(l => cleanLangCode(l.code) === cleanLangCode(lang1Show))) lang1Show = cleanLangCode(list[0].code) || 'sv';
+      if (cleanLangCode(lang2Show) && !list.some(l => cleanLangCode(l.code) === cleanLangCode(lang2Show))) lang2Show = '';
+      if (cleanLangCode(lang1Show) === cleanLangCode(lang2Show)) lang2Show = '';
+
+      syncLanguageButtons();
+      updateTransLangInfo();
+    }
+
+    function setActiveIndex(idx, opts = {}) {
+      const scrollIntoView = opts && opts.scrollIntoView === true;
+      const items = Array.isArray(transcript) ? transcript : [];
+      if (items.length === 0) {
+        activeIndex = -1;
+        updatePageInfo();
+        return;
+      }
+      activeIndex = Math.max(0, Math.min(items.length - 1, idx));
+      updateActiveRow({ scrollIntoView });
+    }
+
+    function updateActiveRow(opts = {}) {
+      const scrollIntoView = opts && opts.scrollIntoView === true;
+      const list = document.getElementById('transList');
+      if (!list) return;
+
+      list.querySelectorAll('li[data-idx]').forEach(li => {
+        const idx = Number(li.dataset.idx);
+        li.dataset.active = (idx === activeIndex) ? '1' : '0';
+      });
+
+      updatePageInfo();
+
+      if (!scrollIntoView || activeIndex < 0) return;
+
+      const wrap = document.getElementById('transWrap');
+      const el = list.querySelector(`li[data-idx="${activeIndex}"]`);
+      if (!wrap || !el) return;
+
+      try {
+        const top = el.offsetTop;
+        const cur = wrap.scrollTop;
+        const target = Math.max(0, top - TRANS_ACTIVE_ROW_TOP_GAP_PX);
+        if (Math.abs(cur - target) > 20) wrap.scrollTop = target;
+      } catch {}
+    }
+
+    function renderTranscript() {
+      const list = document.getElementById('transList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      if (!Array.isArray(transcript) || transcript.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = currentVideoId ? 'No transcript loaded.' : 'Open Menu to select a text.';
+        list.appendChild(li);
+        updatePageInfo();
+        return;
+      }
+
+      transcript.forEach((row, idx) => {
+        const li = document.createElement('li');
+        li.dataset.idx = String(idx);
+        li.dataset.active = (idx === activeIndex) ? '1' : '0';
+
+        const line1 = document.createElement('div');
+        line1.className = 'trLine';
+        const sp1 = document.createElement('span');
+        sp1.textContent = getRowText(row, lang1Show) || '';
+        line1.appendChild(sp1);
+        li.appendChild(line1);
+
+        const showSecond = !!cleanLangCode(lang2Show) && cleanLangCode(lang2Show) !== cleanLangCode(lang1Show);
+        const line2Text = showSecond ? getRowText(row, lang2Show) : '';
+        if (line2Text) {
+          const line2 = document.createElement('div');
+          line2.className = 'trLine trLine2';
+          const sp2 = document.createElement('span');
+          sp2.textContent = line2Text;
+          line2.appendChild(sp2);
+          li.appendChild(line2);
+        }
+
+        li.addEventListener('click', () => {
+          setActiveIndex(idx, { scrollIntoView: false });
+        });
+
+        list.appendChild(li);
+      });
+
+      if (activeIndex < 0 || activeIndex >= transcript.length) activeIndex = 0;
+      updateActiveRow({ scrollIntoView: false });
+    }
+
+    function applyTranscriptMetaFromData(data) {
+      const l1 = cleanLangCode(data && data.lang1_show);
+      if (l1) lang1Show = l1;
+      if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'lang2_show')) {
+        lang2Show = cleanLangCode(data.lang2_show) || '';
+      }
+    }
+
+    async function loadTranscriptForVideoId(videoId, label = '') {
+      const vid = cleanStr(videoId);
+      if (!vid) return;
+
+      currentVideoId = vid;
+      currentLabel = cleanStr(label);
+      updatePageInfo();
+      setStatus('Loading text...');
+
+      try {
+        if (!window.YouTubeTranscriptStore || typeof window.YouTubeTranscriptStore.load !== 'function') {
+          setStatus('Transcript store not available');
+          return;
+        }
+
+        const data = await window.YouTubeTranscriptStore.load(vid);
+        const items = (data && Array.isArray(data.items)) ? data.items : [];
+        applyTranscriptMetaFromData(data);
+        transcript = items;
+        renderTranscript();
+        setActiveIndex(items.length ? 0 : -1, { scrollIntoView: true });
+        setStatus(items.length ? `Loaded: ${items.length} items` : 'No transcript loaded');
+      } catch (err) {
+        setStatus('Transcript load failed');
+        try { console.warn('Load transcript failed', err); } catch {}
+      }
+    }
+
+    function looksLikeYouTubeVideoId(s) {
+      const x = cleanStr(s);
+      return /^[a-zA-Z0-9_-]{11}$/.test(x);
+    }
+
+    function getVideoIdFromRefVideo(v) {
+      const byIndent = cleanStr(v && v.indent_id);
+      if (looksLikeYouTubeVideoId(byIndent)) return byIndent;
+      const url = cleanStr(v && v.url);
+      if (url && window.YouTubeRefVideosStore && typeof window.YouTubeRefVideosStore.extractVideoIdFromUrl === 'function') {
+        const vid = cleanStr(window.YouTubeRefVideosStore.extractVideoIdFromUrl(url));
+        if (vid) return vid;
+      }
+      return byIndent;
+    }
+
+    function normalizeRefTagsShort(data) {
+      const rawTags = (data && typeof data === 'object') ? data.tags : null;
+      const list = [];
+      if (rawTags && typeof rawTags === 'object') {
+        for (const [k, v] of Object.entries(rawTags)) {
+          const code = cleanTagCode((v && v.label) ? v.label : k);
+          const keyCode = cleanTagCode(k);
+          const finalCode = code || keyCode;
+          if (!finalCode) continue;
+          const label = cleanStr((v && v.label) || finalCode);
+          const order = Number.isFinite(Number(v && v.order)) ? Number(v.order) : 9999;
+          list.push({ code: finalCode, label, order });
+        }
+      }
+      list.sort((a, b) => (a.order - b.order) || a.code.localeCompare(b.code));
+      return list;
+    }
+
+    async function loadRefTagsShortList() {
+      await ytEnsureSignedIn();
+      let data = null;
+      try {
+        data = await ytRequestByPath(REF_TAGS_SHORT_PATH, 'GET');
+      } catch {
+        data = null;
+      }
+      return normalizeRefTagsShort(data);
+    }
+
+    function scheduleSaveMainMenuFilters() {
+      try { if (_mainMenuSaveTimer) clearTimeout(_mainMenuSaveTimer); } catch {}
+
+      _mainMenuSaveTimer = setTimeout(async () => {
+        try {
+          await ytEnsureSignedIn();
+          await ytRequestByPath(MAIN_MENU_SELECTED_TAG_PATH, 'PUT', { tag: cleanTagCode(mainMenuSelectedTag) || '', updatedAt: ytNowIso() });
+          await ytRequestByPath(MAIN_MENU_SHORT_NAME_FILTER_PATH, 'PUT', { q: cleanStr(mainMenuShortNameFilter), updatedAt: ytNowIso() });
+        } catch {}
+      }, 350);
+    }
+
+    async function loadMainMenuFilterState() {
+      await ytEnsureSignedIn();
+      let tag = '';
+      let q = '';
+      try {
+        const data = await ytRequestByPath(MAIN_MENU_SELECTED_TAG_PATH, 'GET');
+        if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'tag')) tag = cleanStr(data.tag);
+        else if (typeof data === 'string') tag = cleanStr(data);
+      } catch {}
+      try {
+        const data = await ytRequestByPath(MAIN_MENU_SHORT_NAME_FILTER_PATH, 'GET');
+        if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'q')) q = cleanStr(data.q);
+        else if (typeof data === 'string') q = cleanStr(data);
+      } catch {}
+
+      mainMenuSelectedTag = cleanTagCode(tag) || '';
+      mainMenuShortNameFilter = q;
+
+      const input = document.getElementById('inMainMenuShortFilter');
+      if (input) input.value = mainMenuShortNameFilter;
+    }
+
+    function setMainMenuSelectedTag(tagCodeOrEmpty) {
+      mainMenuSelectedTag = cleanTagCode(tagCodeOrEmpty) || '';
+      try { ensureMainMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
+      try { renderMainMenuTagButtons(_mainMenuTagsCache, true); } catch {}
+      scheduleSaveMainMenuFilters();
+      Promise.resolve().then(() => loadRefVideos()).catch(() => {});
+    }
+
+    function setMainMenuShortNameFilter(q) {
+      mainMenuShortNameFilter = cleanStr(q);
+      scheduleSaveMainMenuFilters();
+      Promise.resolve().then(() => loadRefVideos()).catch(() => {});
+    }
+
+    function applyMainMenuFilters(records) {
+      const selectedTag = cleanTagCode(mainMenuSelectedTag);
+      const q = cleanStr(mainMenuShortNameFilter).toLowerCase();
+      return (Array.isArray(records) ? records : []).filter(v => {
+        if (!v) return false;
+        if (selectedTag) {
+          const t = cleanTagCode(v.tag);
+          if (t !== selectedTag) return false;
+        }
+        if (q) {
+          const sn = cleanStr(v.short_name).toLowerCase();
+          if (!sn.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function clampMainMenuTagPageStart(total) {
+      const n = Math.max(0, Math.floor(Number(total) || 0));
+      if (n <= 0) {
+        mainMenuTagPageStart = 0;
+        return;
+      }
+      let s = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0));
+      if (s >= n) s = 0;
+      mainMenuTagPageStart = s;
+    }
+
+    function ensureMainMenuSelectedTagVisible(list) {
+      const selected = cleanTagCode(mainMenuSelectedTag);
+      if (!selected || !Array.isArray(list) || list.length === 0) return;
+      const idx = list.findIndex(t => cleanTagCode(t && t.code) === selected);
+      if (idx < 0) return;
+      mainMenuTagPageStart = idx - (idx % MAIN_MENU_TAG_PAGE_SIZE);
+      clampMainMenuTagPageStart(list.length);
+    }
+
+    function renderMainMenuTagButtons(list, forceSelectedVisible = true) {
+      const row = document.getElementById('mainMenuTagRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      const tags = Array.isArray(list) ? list.filter(Boolean) : [];
+      if (forceSelectedVisible) ensureMainMenuSelectedTagVisible(tags);
+      clampMainMenuTagPageStart(tags.length);
+
+      const mkBtn = (label, tagCode) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        if (tagCode) btn.dataset.tag = tagCode;
+        else btn.dataset.all = '1';
+        btn.dataset.selected = (!tagCode && !cleanTagCode(mainMenuSelectedTag)) || (tagCode && cleanTagCode(mainMenuSelectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
+        btn.onclick = () => setMainMenuSelectedTag(tagCode || '');
+        return btn;
+      };
+
+      const mkArrow = () => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '›';
+        btn.title = 'Next tags';
+        btn.setAttribute('aria-label', 'Next tags');
+        btn.onclick = () => {
+          const total = tags.length;
+          if (total <= MAIN_MENU_TAG_PAGE_SIZE) return;
+          mainMenuTagPageStart = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0)) + MAIN_MENU_TAG_PAGE_SIZE;
+          if (mainMenuTagPageStart >= total) mainMenuTagPageStart = 0;
+          renderMainMenuTagButtons(_mainMenuTagsCache, false);
+        };
+        return btn;
+      };
+
+      if (tags.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'muted';
+        span.textContent = 'No tags';
+        row.appendChild(span);
+        row.appendChild(mkBtn('All', ''));
+        return;
+      }
+
+      const start = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0));
+      const page = tags.slice(start, start + MAIN_MENU_TAG_PAGE_SIZE);
+
+      page.forEach(t => row.appendChild(mkBtn(t.label || t.code, t.code)));
+      row.appendChild(mkBtn('All', ''));
+      if (tags.length > MAIN_MENU_TAG_PAGE_SIZE) row.appendChild(mkArrow());
+    }
+
+    async function loadRefVideos() {
+      const seq = ++_refVideosLoadSeq;
+
+      const list = document.getElementById('refVideosList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      const limitInfo = document.getElementById('refVideosLimitInfo');
+      if (limitInfo) limitInfo.textContent = '';
+
+      if (!window.YouTubeRefVideosStore || typeof window.YouTubeRefVideosStore.listAll !== 'function') {
+        setRefStatus('YouTubeRefVideosStore not available');
+        return;
+      }
+
+      const all = await window.YouTubeRefVideosStore.listAll();
+      const byVideoId = new Map();
+
+      (Array.isArray(all) ? all : []).filter(Boolean).forEach(raw => {
+        const v = {
+          indent_id: cleanStr(raw && raw.indent_id),
+          url: cleanStr(raw && raw.url),
+          short_name: cleanStr(raw && raw.short_name),
+          title: cleanStr(raw && raw.title),
+          tag: cleanStr(raw && raw.tag),
+          order: Number.isFinite(Number(raw && raw.order)) ? Number(raw.order) : 9999
+        };
+        const key = cleanStr(getVideoIdFromRefVideo(v)) || cleanStr(v.url) || `${v.indent_id}::${v.title}`;
+        if (!key) return;
+        const prev = byVideoId.get(key);
+        if (!prev) {
+          byVideoId.set(key, v);
+          return;
+        }
+        prev.order = Math.min(prev.order, v.order);
+        if (!prev.indent_id && v.indent_id) prev.indent_id = v.indent_id;
+        if (!prev.url && v.url) prev.url = v.url;
+        if (!prev.short_name && v.short_name) prev.short_name = v.short_name;
+        if (!prev.title && v.title) prev.title = v.title;
+        if (!prev.tag && v.tag) prev.tag = v.tag;
+      });
+
+      const sorted = Array.from(byVideoId.values())
+        .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
+
+      const filtered = applyMainMenuFilters(sorted);
+
+      if (limitInfo) {
+        const label = cleanTagCode(mainMenuSelectedTag) || 'All';
+        limitInfo.textContent = `${label}: showing ${Math.min(60, filtered.length)} of ${filtered.length} (total ${sorted.length})`;
+      }
+
+      const top = filtered.slice(0, 60);
+      if (seq !== _refVideosLoadSeq) return;
+
+      if (sorted.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'No saved videos yet.';
+        list.appendChild(li);
+        setRefStatus('');
+        return;
+      }
+
+      if (top.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'No videos match.';
+        list.appendChild(li);
+        setRefStatus('');
+        return;
+      }
+
+      top.forEach(v => {
+        const li = document.createElement('li');
+        li.style.padding = '10px';
+        li.style.border = '1px solid currentColor';
+        li.style.borderRadius = '10px';
+        li.style.cursor = 'pointer';
+        const label = v.short_name || v.title || v.indent_id || v.url;
+        li.textContent = label;
+        li.onclick = () => {
+          Promise.resolve().then(async () => {
+            const vid = getVideoIdFromRefVideo(v);
+            if (!vid) {
+              setStatus('Bad video id');
+              return;
+            }
+            closeDialogById('dlgMainMenu');
+            await loadTranscriptForVideoId(vid, label);
+          }).catch(() => setStatus('Switch failed'));
+        };
+        list.appendChild(li);
+      });
+
+      setRefStatus('');
+    }
+
+    function closeDialogById(id) {
+      const dlg = document.getElementById(id);
+      if (!dlg) return;
+      try {
+        if (typeof dlg.close === 'function') dlg.close();
+        else dlg.removeAttribute('open');
+      } catch {}
+    }
+
+    async function openMenuModal() {
+      const dlg = document.getElementById('dlgMenu');
+      if (!dlg) return;
+      try {
+        const list = await loadOrSeedLanguagesSet();
+        renderLanguageButtons(list);
+      } catch {
+        renderLanguageButtons([]);
+      }
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    function openMainMenu() {
+      const dlg = document.getElementById('dlgMainMenu');
+      if (!dlg) return;
+      setRefStatus('Loading...');
+      Promise.resolve().then(async () => {
+        try {
+          await ytEnsureSignedIn();
+          await loadMainMenuFilterState();
+          _mainMenuTagsCache = await loadRefTagsShortList();
+          renderMainMenuTagButtons(_mainMenuTagsCache, true);
+        } catch {
+          renderMainMenuTagButtons([], true);
+        }
+        await loadRefVideos();
+      }).catch(() => setRefStatus('Load failed'));
+
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    function wireUi() {
+      const btnMain = document.getElementById('btnMainMenu');
+      if (btnMain) btnMain.onclick = () => openMainMenu();
+
+      const btnMenu = document.getElementById('btnMenu');
+      if (btnMenu) btnMenu.onclick = (e) => {
+        e.preventDefault();
+        Promise.resolve().then(() => openMenuModal()).catch(() => {});
+      };
+
+      const inMainFilter = document.getElementById('inMainMenuShortFilter');
+      if (inMainFilter && !inMainFilter.dataset.wired) {
+        inMainFilter.dataset.wired = '1';
+        inMainFilter.addEventListener('input', () => {
+          setMainMenuShortNameFilter(inMainFilter.value);
+        });
+      }
+    }
+
+    wireUi();
+    renderTranscript();
+    updatePageInfo();
+    setStatus('Ready. Open Menu to select a text.');
+
+    Promise.resolve().then(async () => {
+      await loadDisplayLangSettings();
+    }).catch(() => {});
+  </script>
+</body>
+</html>
