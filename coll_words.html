@@ -127,12 +127,6 @@
       user-select: none;
     }
 
-    #transList li[data-active="1"] {
-      box-shadow:
-        inset 0 2px 0 0 color-mix(in srgb, currentColor 55%, transparent),
-        inset 0 -2px 0 0 color-mix(in srgb, currentColor 55%, transparent);
-    }
-
     #transList .trLine {
       display: flex;
       gap: 8px;
@@ -146,9 +140,15 @@
 
     #langRowShow1 button[data-selected="1"],
     #langRowShow2 button[data-selected="1"],
-    #mainMenuTagRow button[data-selected="1"] {
+    #mainMenuTagRow button[data-selected="1"],
+    #cwModeRow button[data-selected="1"] {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
+
+    .cw_word { cursor: pointer; }
+    .cw_word_sel { color: rgb(6, 25, 236); font-weight: bold; cursor: pointer; }
+    .cw_word_sav_unknown { color: rgb(229, 15, 22); font-weight: bold; }
+    .cw_word_sav_learned { color: rgb(26, 127, 55); font-weight: bold; }
 
     dialog {
       width: calc(100vw - 16px);
@@ -199,7 +199,12 @@
       <div id="langRowShow1" class="row" style="margin:0 0 10px;"></div>
 
       <div class="muted" style="margin:0 0 6px; font-size:12px;">Line 2</div>
-      <div id="langRowShow2" class="row" style="margin:0;"></div>
+      <div id="langRowShow2" class="row" style="margin:0 0 16px;"></div>
+
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong>Collection words mode</strong>
+      </div>
+      <div id="cwModeRow" class="row" style="margin:0;"></div>
     </form>
   </dialog>
 
@@ -225,6 +230,7 @@
   <script src="./yout_pl2/yu2_global_var.js"></script>
   <script src="./yout_pl2/youtube_transcript_store.js"></script>
   <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
+  <script src="./yout_pl2/collection_words_store.js"></script>
 
   <script>
     'use strict';
@@ -237,13 +243,18 @@
     const MAIN_MENU_SELECTED_TAG_PATH = `${UI_STATE_PATH}/main_menu_selected_tag`;
     const MAIN_MENU_SHORT_NAME_FILTER_PATH = `${UI_STATE_PATH}/main_menu_short_name_filter`;
     const DISPLAY_LANGS_PATH = `${UI_STATE_PATH}/display_langs`;
+    const CW_MODE_PATH = `${UI_STATE_PATH}/collection_words_mode`;
+    const LAST_SELECTED_VIDEO_PATH = `${UI_STATE_PATH}/last_selected_video`;
 
     let currentVideoId = '';
     let currentLabel = '';
     let transcript = [];
+    let collectionWordsDoc = null;
     let activeIndex = -1;
     let lang1Show = 'sv';
     let lang2Show = 'en';
+    let collectionWordsMode = 'off';
+    let _baseStatusMsg = 'Ready. Open Menu to select a text.';
 
     let mainMenuSelectedTag = '';
     let mainMenuShortNameFilter = '';
@@ -319,9 +330,237 @@
       });
     }
 
+    function cwModeLabel(mode) {
+      const m = cleanStr(mode).toLowerCase();
+      if (m === 'unknown') return 'unknown';
+      if (m === 'learned') return 'learned';
+      return 'off';
+    }
+
+    function composeStatusMsg(baseMsg) {
+      const base = cleanStr(baseMsg) || _baseStatusMsg;
+      _baseStatusMsg = base;
+      return `${base} | CW: ${cwModeLabel(collectionWordsMode)}`;
+    }
+
     function setStatus(msg) {
       const el = document.getElementById('transStatus');
-      if (el) el.textContent = msg || '';
+      if (el) el.textContent = composeStatusMsg(msg);
+    }
+
+    function splitStringIntoWords(str) {
+      return String(str || '').split(' ').map(w => w.trim()).filter(Boolean);
+    }
+
+    function normalizeWordField(x) {
+      const s = cleanStr(x);
+      return s || null;
+    }
+
+    function getCollectionItem(sentenceIdx) {
+      const doc = collectionWordsDoc;
+      if (!doc || !Array.isArray(doc.items)) return null;
+      const idx = Number(sentenceIdx);
+      return doc.items.find(it => Number(it && it.sentence_idx) === idx) || null;
+    }
+
+    function findSavedWord(sentenceIdx, wordIdx, wordSv) {
+      const item = getCollectionItem(sentenceIdx);
+      if (!item || !Array.isArray(item.words)) return null;
+      const sv = cleanStr(wordSv);
+      const wi = Number(wordIdx);
+      return item.words.find(w => {
+        if (!w) return false;
+        if (Number.isFinite(wi) && Number(w.word_idx) === wi) return true;
+        return cleanStr(w.word_sv) === sv;
+      }) || null;
+    }
+
+    function ensureCollectionItem(sentenceIdx, row) {
+      if (!collectionWordsDoc || typeof collectionWordsDoc !== 'object') {
+        collectionWordsDoc = window.CollectionWordsStore
+          ? window.CollectionWordsStore.emptyDoc(currentVideoId)
+          : { videoId: currentVideoId, updatedAt: ytNowIso(), items: [] };
+      }
+      if (!Array.isArray(collectionWordsDoc.items)) collectionWordsDoc.items = [];
+
+      let item = getCollectionItem(sentenceIdx);
+      if (!item) {
+        item = {
+          sentence_idx: Number(sentenceIdx),
+          t: Number(row && row.t) || 0,
+          text_sv: getRowText(row, 'sv'),
+          text_en: getRowText(row, 'en'),
+          text_uk: getRowText(row, 'uk'),
+          words: []
+        };
+        collectionWordsDoc.items.push(item);
+      } else {
+        item.t = Number(row && row.t) || item.t || 0;
+        item.text_sv = getRowText(row, 'sv') || item.text_sv || '';
+        item.text_en = getRowText(row, 'en') || item.text_en || '';
+        item.text_uk = getRowText(row, 'uk') || item.text_uk || '';
+        if (!Array.isArray(item.words)) item.words = [];
+      }
+      return item;
+    }
+
+    async function loadCollectionWordsForVideo(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid || !window.CollectionWordsStore || typeof window.CollectionWordsStore.load !== 'function') {
+        collectionWordsDoc = { videoId: vid, updatedAt: ytNowIso(), items: [] };
+        return collectionWordsDoc;
+      }
+      try {
+        collectionWordsDoc = await window.CollectionWordsStore.load(vid);
+      } catch {
+        collectionWordsDoc = window.CollectionWordsStore.emptyDoc(vid);
+      }
+      return collectionWordsDoc;
+    }
+
+    async function saveCollectionWordsDoc() {
+      if (!currentVideoId || !collectionWordsDoc || !window.CollectionWordsStore) return;
+      await window.CollectionWordsStore.save(currentVideoId, collectionWordsDoc);
+    }
+
+    function clearWordSelectionStyles() {
+      document.querySelectorAll('.cw_word_sel').forEach(span => {
+        span.classList.remove('cw_word_sel');
+        const sentenceIdx = Number(span.dataset.sentenceIdx);
+        const wordIdx = Number(span.dataset.wordIdx);
+        const wordSv = cleanStr(span.dataset.wordSv);
+        const saved = findSavedWord(sentenceIdx, wordIdx, wordSv);
+        applyWordSpanState(span, saved);
+      });
+    }
+
+    function applyWordSpanState(span, saved) {
+      span.classList.remove('cw_word', 'cw_word_sel', 'cw_word_sav_unknown', 'cw_word_sav_learned');
+      span.onclick = null;
+      const mode = cleanStr(collectionWordsMode).toLowerCase();
+      const status = cleanStr(saved && saved.status).toLowerCase();
+
+      if (mode === 'unknown') {
+        if (status === 'unknown') {
+          span.className = 'cw_word_sav_unknown';
+          span.removeAttribute('data-clickable');
+          return;
+        }
+        span.className = 'cw_word';
+        span.dataset.clickable = '1';
+        span.onclick = onWordSpanClick;
+        return;
+      }
+
+      if (mode === 'learned') {
+        if (status === 'unknown') {
+          span.className = 'cw_word_sav_unknown';
+          span.dataset.clickable = '1';
+          span.onclick = onWordSpanClick;
+          return;
+        }
+        span.className = 'cw_word';
+        span.removeAttribute('data-clickable');
+      }
+    }
+
+    async function saveWordFromSpan(span) {
+      const sentenceIdx = Number(span.dataset.sentenceIdx);
+      const wordIdx = Number(span.dataset.wordIdx);
+      const wordSv = cleanStr(span.dataset.wordSv || span.textContent);
+      const row = transcript[sentenceIdx];
+      if (!row || !wordSv) return;
+
+      const mode = cleanStr(collectionWordsMode).toLowerCase();
+      if (mode !== 'unknown' && mode !== 'learned') return;
+
+      const item = ensureCollectionItem(sentenceIdx, row);
+      let wordRec = findSavedWord(sentenceIdx, wordIdx, wordSv);
+      const now = ytNowIso();
+
+      if (mode === 'learned') {
+        if (!wordRec || cleanStr(wordRec.status).toLowerCase() !== 'unknown') return;
+        wordRec.status = 'learned';
+        wordRec.learnedAt = now;
+        wordRec.unknownAt = wordRec.unknownAt || null;
+        span.classList.remove('cw_word_sel', 'cw_word_sav_unknown', 'cw_word_sav_learned');
+        applyWordSpanState(span, wordRec);
+        try {
+          await saveCollectionWordsDoc();
+          setStatus(_baseStatusMsg);
+        } catch (err) {
+          setStatus('Save word failed');
+          try { console.warn('Save collection word failed', err); } catch {}
+        }
+        return;
+      }
+
+      if (!wordRec) {
+        wordRec = {
+          word_idx: wordIdx,
+          word_sv: wordSv,
+          word_en: null,
+          word_uk: null,
+          status: 'unknown',
+          createdAt: now,
+          unknownAt: now,
+          learnedAt: null
+        };
+        item.words.push(wordRec);
+      } else {
+        wordRec.word_idx = wordIdx;
+        wordRec.word_sv = wordSv;
+        wordRec.word_en = normalizeWordField(wordRec.word_en);
+        wordRec.word_uk = normalizeWordField(wordRec.word_uk);
+        wordRec.status = 'unknown';
+        if (!wordRec.createdAt) wordRec.createdAt = now;
+        wordRec.unknownAt = wordRec.unknownAt || now;
+        wordRec.learnedAt = null;
+      }
+
+      span.classList.remove('cw_word', 'cw_word_sel', 'cw_word_sav_unknown', 'cw_word_sav_learned');
+      applyWordSpanState(span, wordRec);
+
+      try {
+        await saveCollectionWordsDoc();
+        setStatus(_baseStatusMsg);
+      } catch (err) {
+        setStatus('Save word failed');
+        try { console.warn('Save collection word failed', err); } catch {}
+      }
+    }
+
+    function onWordSpanClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const span = e.currentTarget;
+      if (!span || span.dataset.clickable !== '1') return;
+
+      const isSelected = span.classList.contains('cw_word_sel');
+      if (isSelected) {
+        Promise.resolve().then(() => saveWordFromSpan(span)).catch(() => setStatus('Save word failed'));
+        return;
+      }
+
+      clearWordSelectionStyles();
+      span.classList.remove('cw_word', 'cw_word_sav_unknown');
+      span.classList.add('cw_word_sel');
+    }
+
+    function appendSvWordSpans(container, row, sentenceIdx) {
+      const textSv = getRowText(row, 'sv');
+      const words = splitStringIntoWords(textSv);
+      words.forEach((word, wordIdx) => {
+        const span = document.createElement('span');
+        const saved = findSavedWord(sentenceIdx, wordIdx, word);
+        applyWordSpanState(span, saved);
+        span.textContent = word + ' ';
+        span.dataset.sentenceIdx = String(sentenceIdx);
+        span.dataset.wordIdx = String(wordIdx);
+        span.dataset.wordSv = word;
+        container.appendChild(span);
+      });
     }
 
     function setRefStatus(msg) {
@@ -390,6 +629,69 @@
           updatedAt: ytNowIso()
         });
       } catch {}
+    }
+
+    async function loadCollectionWordsMode() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(CW_MODE_PATH, 'GET');
+        const mode = cleanStr(data && data.mode).toLowerCase();
+        if (mode === 'unknown' || mode === 'learned' || mode === 'off') collectionWordsMode = mode;
+      } catch {}
+    }
+
+    async function saveCollectionWordsMode() {
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(CW_MODE_PATH, 'PUT', {
+          mode: cwModeLabel(collectionWordsMode),
+          updatedAt: ytNowIso()
+        });
+      } catch {}
+    }
+
+    function syncCollectionWordsModeButtons() {
+      const row = document.getElementById('cwModeRow');
+      if (!row) return;
+      row.querySelectorAll('button[data-cw-mode]').forEach(btn => {
+        btn.dataset.selected = (cleanStr(btn.dataset.cwMode).toLowerCase() === collectionWordsMode) ? '1' : '0';
+      });
+    }
+
+    function renderCollectionWordsModeButtons() {
+      const row = document.getElementById('cwModeRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      const modes = [
+        { code: 'off', label: 'Off' },
+        { code: 'unknown', label: 'Mark unknown words' },
+        { code: 'learned', label: 'Mark learned words' }
+      ];
+
+      modes.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.cwMode = m.code;
+        btn.textContent = m.label;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          setCollectionWordsMode(m.code);
+        });
+        row.appendChild(btn);
+      });
+
+      syncCollectionWordsModeButtons();
+    }
+
+    function setCollectionWordsMode(nextMode) {
+      const mode = cleanStr(nextMode).toLowerCase();
+      collectionWordsMode = (mode === 'unknown' || mode === 'learned') ? mode : 'off';
+      clearWordSelectionStyles();
+      syncCollectionWordsModeButtons();
+      renderTranscript();
+      setStatus(_baseStatusMsg);
+      Promise.resolve().then(() => saveCollectionWordsMode()).catch(() => {});
     }
 
     function getRowText(row, langCode) {
@@ -566,6 +868,7 @@
       const list = document.getElementById('transList');
       if (!list) return;
       list.innerHTML = '';
+      clearWordSelectionStyles();
 
       if (!Array.isArray(transcript) || transcript.length === 0) {
         const li = document.createElement('li');
@@ -576,6 +879,8 @@
         return;
       }
 
+      const cwActive = collectionWordsMode === 'unknown' || collectionWordsMode === 'learned';
+
       transcript.forEach((row, idx) => {
         const li = document.createElement('li');
         li.dataset.idx = String(idx);
@@ -583,12 +888,19 @@
 
         const line1 = document.createElement('div');
         line1.className = 'trLine';
-        const sp1 = document.createElement('span');
-        sp1.textContent = getRowText(row, lang1Show) || '';
-        line1.appendChild(sp1);
+
+        if (cwActive) {
+          appendSvWordSpans(line1, row, idx);
+        } else {
+          const sp1 = document.createElement('span');
+          sp1.textContent = getRowText(row, lang1Show) || '';
+          line1.appendChild(sp1);
+        }
         li.appendChild(line1);
 
-        const showSecond = !!cleanLangCode(lang2Show) && cleanLangCode(lang2Show) !== cleanLangCode(lang1Show);
+        const showSecond = cwActive
+          ? !!cleanLangCode(lang2Show)
+          : !!cleanLangCode(lang2Show) && cleanLangCode(lang2Show) !== cleanLangCode(lang1Show);
         const line2Text = showSecond ? getRowText(row, lang2Show) : '';
         if (line2Text) {
           const line2 = document.createElement('div');
@@ -618,12 +930,39 @@
       }
     }
 
+    async function saveLastSelectedVideoId(videoId, label = '') {
+      const vid = cleanStr(videoId);
+      if (!vid) return;
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(LAST_SELECTED_VIDEO_PATH, 'PUT', {
+          videoId: vid,
+          label: cleanStr(label),
+          updatedAt: ytNowIso()
+        });
+      } catch {}
+    }
+
+    async function loadLastSelectedVideoId() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(LAST_SELECTED_VIDEO_PATH, 'GET');
+        return {
+          videoId: cleanStr(data && data.videoId),
+          label: cleanStr(data && data.label)
+        };
+      } catch {
+        return { videoId: '', label: '' };
+      }
+    }
+
     async function loadTranscriptForVideoId(videoId, label = '') {
       const vid = cleanStr(videoId);
       if (!vid) return;
 
       currentVideoId = vid;
       currentLabel = cleanStr(label);
+      Promise.resolve().then(() => saveLastSelectedVideoId(vid, currentLabel)).catch(() => {});
       updatePageInfo();
       setStatus('Loading text...');
 
@@ -636,6 +975,7 @@
         const data = await window.YouTubeTranscriptStore.load(vid);
         const items = (data && Array.isArray(data.items)) ? data.items : [];
         applyTranscriptMetaFromData(data);
+        await loadCollectionWordsForVideo(vid);
         transcript = items;
         renderTranscript();
         setActiveIndex(items.length ? 0 : -1, { scrollIntoView: true });
@@ -945,6 +1285,7 @@
       } catch {
         renderLanguageButtons([]);
       }
+      renderCollectionWordsModeButtons();
       if (typeof dlg.showModal === 'function') dlg.showModal();
       else dlg.setAttribute('open', 'open');
     }
@@ -995,6 +1336,11 @@
 
     Promise.resolve().then(async () => {
       await loadDisplayLangSettings();
+      await loadCollectionWordsMode();
+      renderCollectionWordsModeButtons();
+      setStatus(_baseStatusMsg);
+      const last = await loadLastSelectedVideoId();
+      if (last.videoId) await loadTranscriptForVideoId(last.videoId, last.label);
     }).catch(() => {});
   </script>
 </body>

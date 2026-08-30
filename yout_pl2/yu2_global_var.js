@@ -170,6 +170,7 @@ class GB_Const {
         this._cst.DB_CONST_REF_LANGUAGES_SET = root + '/ref_languages_set';
         this._cst.DB_CONST_REF_TAGS_SHORT = root + '/ref_tags_short';
         this._cst.DB_CONST_YOUTUBE_TRANSCRIPTS = root + '/youtube_transcripts';
+        this._cst.DB_CONST_COLLECTION_WORDS = root + '/collection_words';
         this._cst.DB_CONST_REF_YOUTUBE_VIDEOS = root + '/ref_youtube_videos';
         this._cst.DB_CONST_UI_STATE_YOUT_PL2 = root + '/ui_state/yout_pl2';
 
@@ -182,6 +183,7 @@ class GB_Const {
                 if (typeof src.REF_LANGUAGES_SET === 'string') this._cst.DB_CONST_REF_LANGUAGES_SET = src.REF_LANGUAGES_SET;
                 if (typeof src.REF_TAGS_SHORT === 'string') this._cst.DB_CONST_REF_TAGS_SHORT = src.REF_TAGS_SHORT;
                 if (typeof src.YOUTUBE_TRANSCRIPTS === 'string') this._cst.DB_CONST_YOUTUBE_TRANSCRIPTS = src.YOUTUBE_TRANSCRIPTS;
+                if (typeof src.COLLECTION_WORDS === 'string') this._cst.DB_CONST_COLLECTION_WORDS = src.COLLECTION_WORDS;
                 if (typeof src.REF_YOUTUBE_VIDEOS === 'string') this._cst.DB_CONST_REF_YOUTUBE_VIDEOS = src.REF_YOUTUBE_VIDEOS;
                 if (typeof src.UI_STATE_YOUT_PL2 === 'string') this._cst.DB_CONST_UI_STATE_YOUT_PL2 = src.UI_STATE_YOUT_PL2;
             }
@@ -270,6 +272,7 @@ try {
                 REF_LANGUAGES_SET: DB_YOUTUBE2_ROOT + '/ref_languages_set',
                 REF_TAGS_SHORT: DB_YOUTUBE2_ROOT + '/ref_tags_short',
                 YOUTUBE_TRANSCRIPTS: DB_YOUTUBE2_ROOT + '/youtube_transcripts',
+                COLLECTION_WORDS: DB_YOUTUBE2_ROOT + '/collection_words',
                 REF_YOUTUBE_VIDEOS: DB_YOUTUBE2_ROOT + '/ref_youtube_videos',
                 UI_STATE_YOUT_PL2: DB_YOUTUBE2_ROOT + '/ui_state/yout_pl2'
             };
