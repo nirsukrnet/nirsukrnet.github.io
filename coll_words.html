@@ -352,6 +352,7 @@
     const MAIN_MENU_SELECTED_TAG_PATH = `${UI_STATE_PATH}/main_menu_selected_tag`;
     const MAIN_MENU_SHORT_NAME_FILTER_PATH = `${UI_STATE_PATH}/main_menu_short_name_filter`;
     const DISPLAY_LANGS_PATH = `${UI_STATE_PATH}/display_langs`;
+    const SCROLL_STATE_ROOT_PATH = `${UI_STATE_PATH}/scroll_top_visible`;
     const LINE2_MODE_PATH = `${UI_STATE_PATH}/line2_display_mode`;
     const CW_MODE_PATH = `${UI_STATE_PATH}/collection_words_mode`;
     const LAST_SELECTED_VIDEO_PATH = `${UI_STATE_PATH}/last_selected_video`;
@@ -365,6 +366,9 @@
     let lang2Show = 'en';
     let line2DisplayMode = 'sentence';
     let collectionWordsMode = 'off';
+    let topVisibleIdx = -1;
+    let _lastSavedTopVisibleIdx = null;
+    let _saveTopVisibleTimer = null;
     let _baseStatusMsg = 'Ready. Open List to select a text.';
 
     let mainMenuSelectedTag = '';
@@ -396,6 +400,11 @@
       if (!s) return '';
       if (!/^[A-Z0-9_-]{2,12}$/.test(s)) return '';
       return s;
+    }
+
+    function getScrollStatePath(videoId) {
+      const vid = cleanStr(videoId);
+      return vid ? `${SCROLL_STATE_ROOT_PATH}/${vid}` : SCROLL_STATE_ROOT_PATH;
     }
 
     function ytEnsureGv() {
@@ -991,8 +1000,106 @@
       const info = document.getElementById('mainInfo');
       if (!info) return;
       const total = Array.isArray(transcript) ? transcript.length : 0;
-      const active = (activeIndex >= 0 && total > 0) ? `${activeIndex + 1}/${total}` : '';
-      info.textContent = active;
+      const scrollPos = (topVisibleIdx >= 0 && total > 0) ? `${topVisibleIdx + 1}/${total}` : '';
+      info.textContent = scrollPos;
+    }
+
+    function getTopVisibleTranscriptIdx() {
+      const wrap = document.getElementById('transWrap');
+      const list = document.getElementById('transList');
+      if (!wrap || !list) return -1;
+      const items = Array.from(list.querySelectorAll('li[data-idx]'));
+      if (items.length === 0) return -1;
+      const scrollTop = wrap.scrollTop;
+      for (const li of items) {
+        if ((li.offsetTop + li.offsetHeight) > scrollTop) {
+          return Number(li.dataset.idx);
+        }
+      }
+      return Number(items[items.length - 1].dataset.idx);
+    }
+
+    function refreshTopVisibleIdx() {
+      topVisibleIdx = getTopVisibleTranscriptIdx();
+      updatePageInfo();
+      return topVisibleIdx;
+    }
+
+    async function saveTopVisibleIdx(videoId, idx) {
+      const vid = cleanStr(videoId);
+      const n = Number(idx);
+      if (!vid || !Number.isFinite(n) || n < 0) return;
+      if (_lastSavedTopVisibleIdx === n) return;
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(getScrollStatePath(vid), 'PUT', {
+          videoId: vid,
+          top_visible_idx: n,
+          updatedAt: ytNowIso()
+        });
+        _lastSavedTopVisibleIdx = n;
+      } catch {}
+    }
+
+    async function loadTopVisibleIdx(videoId) {
+      const vid = cleanStr(videoId);
+      if (!vid) return -1;
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(getScrollStatePath(vid), 'GET');
+        const idx = Number(data && data.top_visible_idx);
+        return Number.isFinite(idx) && idx >= 0 ? idx : -1;
+      } catch {
+        return -1;
+      }
+    }
+
+    function scheduleSaveTopVisibleIdx() {
+      try {
+        if (_saveTopVisibleTimer) clearTimeout(_saveTopVisibleTimer);
+      } catch {}
+
+      _saveTopVisibleTimer = setTimeout(() => {
+        const idx = refreshTopVisibleIdx();
+        Promise.resolve().then(() => saveTopVisibleIdx(currentVideoId, idx)).catch(() => {});
+      }, 250);
+    }
+
+    function scrollTranscriptToIdx(idx) {
+      const list = document.getElementById('transList');
+      const wrap = document.getElementById('transWrap');
+      const n = Number(idx);
+      if (!list || !wrap || !Number.isFinite(n) || n < 0) return false;
+      const el = list.querySelector(`li[data-idx="${n}"]`);
+      if (!el) return false;
+      try {
+        wrap.scrollTop = Math.max(0, el.offsetTop);
+        topVisibleIdx = n;
+        updatePageInfo();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    async function restoreScrollPositionForVideo(videoId) {
+      const items = Array.isArray(transcript) ? transcript : [];
+      if (items.length === 0) {
+        topVisibleIdx = -1;
+        updatePageInfo();
+        return;
+      }
+
+      const savedIdx = await loadTopVisibleIdx(videoId);
+      if (Number.isFinite(savedIdx) && savedIdx >= 0 && savedIdx < items.length) {
+        setActiveIndex(savedIdx, { scrollIntoView: false });
+        scrollTranscriptToIdx(savedIdx);
+        _lastSavedTopVisibleIdx = savedIdx;
+        return;
+      }
+
+      setActiveIndex(0, { scrollIntoView: true });
+      refreshTopVisibleIdx();
     }
 
     function updateTransLangInfo() {
@@ -1148,6 +1255,7 @@
       if (!list) return;
       list.innerHTML = '';
       clearWordSelectionStyles();
+      topVisibleIdx = -1;
 
       if (!Array.isArray(transcript) || transcript.length === 0) {
         const li = document.createElement('li');
@@ -1270,7 +1378,7 @@
         await loadCollectionWordsForVideo(vid);
         transcript = items;
         renderTranscript();
-        setActiveIndex(items.length ? 0 : -1, { scrollIntoView: true });
+        await restoreScrollPositionForVideo(vid);
         setStatus(items.length ? `Loaded: ${items.length} items` : 'No transcript loaded');
       } catch (err) {
         setStatus('Transcript load failed');
@@ -1879,6 +1987,15 @@
     function wireUi() {
       const btnList = document.getElementById('btnListMenu');
       if (btnList) btnList.onclick = () => openListMenu();
+
+      const wrap = document.getElementById('transWrap');
+      if (wrap && !wrap.dataset.scrollWired) {
+        wrap.dataset.scrollWired = '1';
+        wrap.addEventListener('scroll', () => {
+          refreshTopVisibleIdx();
+          scheduleSaveTopVisibleIdx();
+        }, { passive: true });
+      }
 
       const btnMenu = document.getElementById('btnMenu');
       if (btnMenu) btnMenu.onclick = (e) => {
