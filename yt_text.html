@@ -56,8 +56,8 @@
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
 
-    /* Top-right MainMenu */
-    #btnMainMenu {
+    /* Top-right ListMenu */
+    #btnListMenu {
       position: fixed;
       top: 12px;
       right: 12px;
@@ -147,7 +147,7 @@
     }
 
     /* Main menu filters */
-    #mainMenuTagRow button[data-selected="1"] {
+    #listMenuTagRow button[data-selected="1"] {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
 
@@ -161,7 +161,7 @@
   </style>
 </head>
 <body>
-  <button id="btnMainMenu" type="button">MainMenu</button>
+  <button id="btnListMenu" type="button">List</button>
 
   <div class="row controls" aria-label="Controls">
     <button id="btnLangSv" type="button">SV</button>
@@ -196,15 +196,15 @@
   </dialog>
 
   <!-- Main menu: pick a videoId from saved refs -->
-  <dialog id="dlgMainMenu">
+  <dialog id="dlgListMenu">
     <form method="dialog">
-      <button id="btnMainMenuClose" value="cancel" aria-label="Close" title="Close"
+      <button id="btnListMenuClose" value="cancel" aria-label="Close" title="Close"
         style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">×</button>
 
-      <div id="mainMenuTagRow" class="row" style="margin:0 0 10px;"></div>
+      <div id="listMenuTagRow" class="row" style="margin:0 0 10px;"></div>
 
       <div class="row" style="margin:0 0 10px;">
-        <input id="inMainMenuShortFilter" placeholder="type to filter" />
+        <input id="inListMenuShortFilter" placeholder="type to filter" />
       </div>
 
       <div id="refVideosStatus" class="muted" style="margin:0 0 10px;"></div>
@@ -654,7 +654,7 @@
       if (!Array.isArray(items) || items.length === 0) {
         const li = document.createElement('li');
         li.className = 'muted';
-        li.textContent = currentVideoId ? 'No transcript loaded.' : 'Open MainMenu to select a video.';
+        li.textContent = currentVideoId ? 'No transcript loaded.' : 'Open List to select a video.';
         list.appendChild(li);
         updateControlsLabels();
         updateMenuLabels();
@@ -859,7 +859,7 @@
       return normalizeRefTagsShort(data);
     }
 
-    function scheduleSaveMainMenuFilters() {
+    function scheduleSaveListMenuFilters() {
       try { if (_mainMenuSaveTimer) clearTimeout(_mainMenuSaveTimer); } catch {}
 
       _mainMenuSaveTimer = setTimeout(async () => {
@@ -873,7 +873,7 @@
       }, 350);
     }
 
-    async function loadMainMenuFilterState() {
+    async function loadListMenuFilterState() {
       await ytEnsureSignedIn();
       let tag = '';
       let q = '';
@@ -891,25 +891,25 @@
       mainMenuSelectedTag = cleanTagCode(tag) || '';
       mainMenuShortNameFilter = q;
 
-      const input = document.getElementById('inMainMenuShortFilter');
+      const input = document.getElementById('inListMenuShortFilter');
       if (input) input.value = mainMenuShortNameFilter;
     }
 
-    function setMainMenuSelectedTag(tagCodeOrEmpty) {
+    function setListMenuSelectedTag(tagCodeOrEmpty) {
       mainMenuSelectedTag = cleanTagCode(tagCodeOrEmpty) || '';
-      try { ensureMainMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
-      try { renderMainMenuTagButtons(_mainMenuTagsCache, true); } catch {}
-      scheduleSaveMainMenuFilters();
+      try { ensureListMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
+      try { renderListMenuTagButtons(_mainMenuTagsCache, true); } catch {}
+      scheduleSaveListMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
     }
 
-    function setMainMenuShortNameFilter(q) {
+    function setListMenuShortNameFilter(q) {
       mainMenuShortNameFilter = cleanStr(q);
-      scheduleSaveMainMenuFilters();
+      scheduleSaveListMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
     }
 
-    function applyMainMenuFilters(records) {
+    function applyListMenuFilters(records) {
       const selectedTag = cleanTagCode(mainMenuSelectedTag);
       const q = cleanStr(mainMenuShortNameFilter).toLowerCase();
       return (Array.isArray(records) ? records : []).filter(v => {
@@ -926,7 +926,7 @@
       });
     }
 
-    function clampMainMenuTagPageStart(total) {
+    function clampListMenuTagPageStart(total) {
       const n = Math.max(0, Math.floor(Number(total) || 0));
       if (n <= 0) {
         mainMenuTagPageStart = 0;
@@ -937,23 +937,23 @@
       mainMenuTagPageStart = s;
     }
 
-    function ensureMainMenuSelectedTagVisible(list) {
+    function ensureListMenuSelectedTagVisible(list) {
       const selected = cleanTagCode(mainMenuSelectedTag);
       if (!selected || !Array.isArray(list) || list.length === 0) return;
       const idx = list.findIndex(t => cleanTagCode(t && t.code) === selected);
       if (idx < 0) return;
       mainMenuTagPageStart = idx - (idx % MAIN_MENU_TAG_PAGE_SIZE);
-      clampMainMenuTagPageStart(list.length);
+      clampListMenuTagPageStart(list.length);
     }
 
-    function renderMainMenuTagButtons(list, forceSelectedVisible = true) {
-      const row = document.getElementById('mainMenuTagRow');
+    function renderListMenuTagButtons(list, forceSelectedVisible = true) {
+      const row = document.getElementById('listMenuTagRow');
       if (!row) return;
       row.innerHTML = '';
 
       const tags = Array.isArray(list) ? list.filter(Boolean) : [];
-      if (forceSelectedVisible) ensureMainMenuSelectedTagVisible(tags);
-      clampMainMenuTagPageStart(tags.length);
+      if (forceSelectedVisible) ensureListMenuSelectedTagVisible(tags);
+      clampListMenuTagPageStart(tags.length);
 
       const mkBtn = (label, tagCode) => {
         const btn = document.createElement('button');
@@ -962,7 +962,7 @@
         if (tagCode) btn.dataset.tag = tagCode;
         else btn.dataset.all = '1';
         btn.dataset.selected = (!tagCode && !cleanTagCode(mainMenuSelectedTag)) || (tagCode && cleanTagCode(mainMenuSelectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
-        btn.onclick = () => setMainMenuSelectedTag(tagCode || '');
+        btn.onclick = () => setListMenuSelectedTag(tagCode || '');
         return btn;
       };
 
@@ -977,7 +977,7 @@
           if (total <= MAIN_MENU_TAG_PAGE_SIZE) return;
           mainMenuTagPageStart = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0)) + MAIN_MENU_TAG_PAGE_SIZE;
           if (mainMenuTagPageStart >= total) mainMenuTagPageStart = 0;
-          renderMainMenuTagButtons(_mainMenuTagsCache, false);
+          renderListMenuTagButtons(_mainMenuTagsCache, false);
         };
         return btn;
       };
@@ -1044,7 +1044,7 @@
       const sorted = Array.from(byVideoId.values())
         .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
 
-      const filtered = applyMainMenuFilters(sorted);
+      const filtered = applyListMenuFilters(sorted);
 
       if (limitInfo) {
         const label = cleanTagCode(mainMenuSelectedTag) || 'All';
@@ -1088,7 +1088,7 @@
               setStatus('Bad video id');
               return;
             }
-            closeDialogById('dlgMainMenu');
+            closeDialogById('dlgListMenu');
             await loadTranscriptForVideoId(vid);
           }).catch(() => setStatus('Switch failed'));
         };
@@ -1116,18 +1116,18 @@
       } catch {}
     }
 
-    function openMainMenu() {
-      const dlg = document.getElementById('dlgMainMenu');
+    function openListMenu() {
+      const dlg = document.getElementById('dlgListMenu');
       if (!dlg) return;
       setRefStatus('Loading...');
       Promise.resolve().then(async () => {
         try {
           await ytEnsureSignedIn();
-          await loadMainMenuFilterState();
+          await loadListMenuFilterState();
           _mainMenuTagsCache = await loadRefTagsShortList();
-          renderMainMenuTagButtons(_mainMenuTagsCache, true);
+          renderListMenuTagButtons(_mainMenuTagsCache, true);
         } catch {
-          renderMainMenuTagButtons([], true);
+          renderListMenuTagButtons([], true);
         }
         await loadRefVideos();
       }).catch(() => setRefStatus('Load failed'));
@@ -1163,8 +1163,8 @@
     // Wire UI
     // -------------------------
     function wireUi() {
-      const btnMain = document.getElementById('btnMainMenu');
-      if (btnMain) btnMain.onclick = () => openMainMenu();
+      const btnMain = document.getElementById('btnListMenu');
+      if (btnMain) btnMain.onclick = () => openListMenu();
 
       const btnSv = document.getElementById('btnLangSv');
       if (btnSv) btnSv.onclick = (e) => { e.preventDefault(); setLang1Show('sv'); };
@@ -1200,11 +1200,11 @@
         try { closeDialogById('dlgMenu'); } catch {}
       };
 
-      const inMainFilter = document.getElementById('inMainMenuShortFilter');
+      const inMainFilter = document.getElementById('inListMenuShortFilter');
       if (inMainFilter && !inMainFilter.dataset.wired) {
         inMainFilter.dataset.wired = '1';
         inMainFilter.addEventListener('input', () => {
-          setMainMenuShortNameFilter(inMainFilter.value);
+          setListMenuShortNameFilter(inMainFilter.value);
         });
       }
 
@@ -1216,7 +1216,7 @@
     // Init
     wireUi();
     renderTranscript();
-    setStatus('Ready. Open MainMenu to pick a transcript.');
+    setStatus('Ready. Open List to pick a transcript.');
 
     // Defaults (keep consistent with yout_pl2.html) + best-effort load
     setControlsDocked(false);

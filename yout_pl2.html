@@ -70,8 +70,8 @@
       color:#111;
     }
 
-    /* Top-right main menu button */
-    #btnMainMenu {
+    /* Top-right ListMenu button */
+    #btnListMenu {
       position: fixed;
       top: 12px;
       right: 12px;
@@ -218,7 +218,7 @@
     }
 
     /* Main menu filters */
-    #mainMenuTagRow button[data-selected="1"] {
+    #listMenuTagRow button[data-selected="1"] {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
 
@@ -307,8 +307,8 @@
       margin: 8px 0 8px 22px;
     }
 
-    /* Wider main menu dialog */
-    #dlgMainMenu {
+    /* Wider ListMenu dialog */
+    #dlgListMenu {
       width: calc(100vw - 2px);
       max-width: calc(100vw - 2px);
       height: calc(100vh - 2px);
@@ -351,7 +351,7 @@
       }
 
       /* On narrow screens, force ~1px side gap for the main menu dialog */
-      #dlgMainMenu {
+      #dlgListMenu {
         width: calc(100vw - 2px);
         max-width: calc(100vw - 2px);
         margin: 1px;
@@ -361,7 +361,7 @@
 </head>
 <body> 
 
-  <button id="btnMainMenu">Menu</button>
+  <button id="btnListMenu" type="button">List</button>
 
   <div id="playerWrap">
     <div id="player"></div>
@@ -466,17 +466,17 @@ English Channel..."></textarea>
   <script src="./yout_pl2/youtube_transcript_store.js"></script>
   <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
 
-  <dialog id="dlgMainMenu">
+  <dialog id="dlgListMenu">
     <form method="dialog">
-      <button id="btnMainMenuClose" value="cancel" aria-label="Close" title="Close"
+      <button id="btnListMenuClose" value="cancel" aria-label="Close" title="Close"
         style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">
         ×
       </button>
       
-      <div id="mainMenuTagRow" class="row" style="margin:0 0 10px;"></div>
+      <div id="listMenuTagRow" class="row" style="margin:0 0 10px;"></div>
       
       <div class="row" style="margin:0 0 10px;">
-        <input id="inMainMenuShortFilter" placeholder="type to filter" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
+        <input id="inListMenuShortFilter" placeholder="type to filter" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid currentColor; border-radius:10px;" />
       </div>
 
       <div id="refVideosStatus" class="muted" style="margin:0 0 10px;"></div>
@@ -649,7 +649,7 @@ English Channel..."></textarea>
       return normalizeRefTagsShort(data);
     }
 
-    function clampMainMenuTagPageStart(total) {
+    function clampListMenuTagPageStart(total) {
       const n = Math.max(0, Math.floor(Number(total) || 0));
       if (n <= 0) {
         mainMenuTagPageStart = 0;
@@ -660,23 +660,23 @@ English Channel..."></textarea>
       mainMenuTagPageStart = s;
     }
 
-    function ensureMainMenuSelectedTagVisible(list) {
+    function ensureListMenuSelectedTagVisible(list) {
       const selected = cleanTagCode(mainMenuSelectedTag);
       if (!selected || !Array.isArray(list) || list.length === 0) return;
       const idx = list.findIndex(t => cleanTagCode(t && t.code) === selected);
       if (idx < 0) return;
       mainMenuTagPageStart = idx - (idx % MAIN_MENU_TAG_PAGE_SIZE);
-      clampMainMenuTagPageStart(list.length);
+      clampListMenuTagPageStart(list.length);
     }
 
-    function renderMainMenuTagButtons(list, forceSelectedVisible = true) {
-      const row = document.getElementById('mainMenuTagRow');
+    function renderListMenuTagButtons(list, forceSelectedVisible = true) {
+      const row = document.getElementById('listMenuTagRow');
       if (!row) return;
       row.innerHTML = '';
 
       const tags = Array.isArray(list) ? list.filter(Boolean) : [];
-      if (forceSelectedVisible) ensureMainMenuSelectedTagVisible(tags);
-      clampMainMenuTagPageStart(tags.length);
+      if (forceSelectedVisible) ensureListMenuSelectedTagVisible(tags);
+      clampListMenuTagPageStart(tags.length);
 
       const mkBtn = (label, tagCode, order) => {
         const btn = document.createElement('button');
@@ -691,7 +691,7 @@ English Channel..."></textarea>
         } catch {}
         btn.dataset.selected = (!tagCode && !cleanTagCode(mainMenuSelectedTag)) || (tagCode && cleanTagCode(mainMenuSelectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
         btn.onclick = () => {
-          setMainMenuSelectedTag(tagCode || '');
+          setListMenuSelectedTag(tagCode || '');
         };
         return btn;
       };
@@ -708,7 +708,7 @@ English Channel..."></textarea>
           mainMenuTagPageStart = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0)) + MAIN_MENU_TAG_PAGE_SIZE;
           if (mainMenuTagPageStart >= total) mainMenuTagPageStart = 0;
           // Do NOT snap back to selected tag when user is paging.
-          renderMainMenuTagButtons(_mainMenuTagsCache, false);
+          renderListMenuTagButtons(_mainMenuTagsCache, false);
         };
         return btn;
       };
@@ -737,7 +737,7 @@ English Channel..."></textarea>
       if (tags.length > MAIN_MENU_TAG_PAGE_SIZE) row.appendChild(mkArrow());
     }
 
-    function scheduleSaveMainMenuFilters() {
+    function scheduleSaveListMenuFilters() {
       try {
         if (_mainMenuSaveTimer) clearTimeout(_mainMenuSaveTimer);
       } catch {}
@@ -759,24 +759,24 @@ English Channel..."></textarea>
       }, 350);
     }
 
-    function setMainMenuSelectedTag(tagCodeOrEmpty) {
+    function setListMenuSelectedTag(tagCodeOrEmpty) {
       mainMenuSelectedTag = cleanTagCode(tagCodeOrEmpty) || '';
 
       // Ensure selected tag is visible in the pager.
-      try { ensureMainMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
-      try { renderMainMenuTagButtons(_mainMenuTagsCache, true); } catch {}
+      try { ensureListMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
+      try { renderListMenuTagButtons(_mainMenuTagsCache, true); } catch {}
 
-      scheduleSaveMainMenuFilters();
+      scheduleSaveListMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
     }
 
-    function setMainMenuShortNameFilter(q) {
+    function setListMenuShortNameFilter(q) {
       mainMenuShortNameFilter = cleanStr(q);
-      scheduleSaveMainMenuFilters();
+      scheduleSaveListMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
     }
 
-    async function loadMainMenuFilterState() {
+    async function loadListMenuFilterState() {
       await ytEnsureSignedIn();
       let tag = '';
       let q = '';
@@ -794,11 +794,11 @@ English Channel..."></textarea>
       mainMenuSelectedTag = cleanTagCode(tag) || '';
       mainMenuShortNameFilter = q;
 
-      const input = document.getElementById('inMainMenuShortFilter');
+      const input = document.getElementById('inListMenuShortFilter');
       if (input) input.value = mainMenuShortNameFilter;
     }
 
-    function applyMainMenuFilters(records) {
+    function applyListMenuFilters(records) {
       const selectedTag = cleanTagCode(mainMenuSelectedTag);
       const q = cleanStr(mainMenuShortNameFilter).toLowerCase();
       return (Array.isArray(records) ? records : []).filter(v => {
@@ -2750,21 +2750,21 @@ English Channel..."></textarea>
       else dlg.setAttribute('open', 'open');
     }
 
-    function openMainMenu() {
-      const dlg = document.getElementById('dlgMainMenu');
+    function openListMenu() {
+      const dlg = document.getElementById('dlgListMenu');
       if (!dlg) return;
       setRefStatus('Loading...');
       Promise.resolve().then(async () => {
         try {
           await ytEnsureSignedIn();
-          await loadMainMenuFilterState();
+          await loadListMenuFilterState();
           _mainMenuTagsCache = await loadRefTagsShortList();
           try {
             console.log('Main menu tags (sorted):', (_mainMenuTagsCache || []).map(t => ({ code: t.code, order: t.order, label: t.label })));
           } catch {}
-          renderMainMenuTagButtons(_mainMenuTagsCache);
+          renderListMenuTagButtons(_mainMenuTagsCache);
         } catch {
-          renderMainMenuTagButtons([]);
+          renderListMenuTagButtons([]);
         }
         await loadRefVideos();
       }).catch(() => setRefStatus('Load failed'));
@@ -3023,7 +3023,7 @@ English Channel..."></textarea>
       const selectedTag = cleanTagCode(mainMenuSelectedTag);
       const limitBase = selectedTag ? REF_VIDEOS_MENU_LIMIT : REF_VIDEOS_MENU_LIMIT_ALL;
       const limit = Math.max(0, Math.floor(Number(limitBase) || 0));
-      const filtered = applyMainMenuFilters(sorted);
+      const filtered = applyListMenuFilters(sorted);
       const top = filtered.slice(0, limit);
 
       if (limitInfo) {
@@ -3067,7 +3067,7 @@ English Channel..."></textarea>
               setMainStatus('Bad video id');
               return;
             }
-            closeDialogById('dlgMainMenu');
+            closeDialogById('dlgListMenu');
             await switchToVideoId(vid);
           }).catch(() => setMainStatus('Switch failed'));
         };
@@ -3422,8 +3422,8 @@ English Channel..."></textarea>
       } catch {}
 
       // Main menu (reference videos)
-      const btnMain = document.getElementById('btnMainMenu');
-      if (btnMain) btnMain.onclick = () => openMainMenu();
+      const btnMain = document.getElementById('btnListMenu');
+      if (btnMain) btnMain.onclick = () => openListMenu();
 
       const btnAdd = document.getElementById('btnAddVideo');
       if (btnAdd) btnAdd.onclick = (e) => { e.preventDefault(); openAddVideoDialog(); };
@@ -3464,11 +3464,11 @@ English Channel..."></textarea>
       };
 
       // Main menu filters
-      const inMainFilter = document.getElementById('inMainMenuShortFilter');
+      const inMainFilter = document.getElementById('inListMenuShortFilter');
       if (inMainFilter && !inMainFilter.dataset.wired) {
         inMainFilter.dataset.wired = '1';
         inMainFilter.addEventListener('input', () => {
-          setMainMenuShortNameFilter(inMainFilter.value);
+          setListMenuShortNameFilter(inMainFilter.value);
         });
       }
 

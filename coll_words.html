@@ -52,7 +52,7 @@
       max-height: calc(720px - 80px);
     }
 
-    #btnMainMenu {
+    #btnListMenu {
       position: fixed;
       top: 12px;
       right: 12px;
@@ -108,6 +108,7 @@
       height: 90vh;
       max-height: 720px;
       min-height: 420px;
+      overflow-x: hidden;
       overflow-y: auto;
     }
 
@@ -117,20 +118,35 @@
       margin: 0;
       display: grid;
       gap: 1px;
+      min-width: 0;
     }
 
     #transList li {
       padding: 2px 0;
       border-radius: 0;
       border: 0 solid transparent;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
       cursor: pointer;
       user-select: none;
+      min-width: 0;
+    }
+
+    #transList li:last-child {
+      border-bottom: 0;
     }
 
     #transList .trLine {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       align-items: baseline;
+      min-width: 0;
+    }
+
+    #transList .trLine > span {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-wrap: break-word;
     }
 
     #transList .trLine2 {
@@ -140,10 +156,15 @@
 
     #langRowShow1 button[data-selected="1"],
     #langRowShow2 button[data-selected="1"],
-    #mainMenuTagRow button[data-selected="1"],
+    #line2ModeRow button[data-selected="1"],
+    #listMenuTagRow button[data-selected="1"],
     #cwModeRow button[data-selected="1"] {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
+
+    .cw_line2_word--0 { color: rgb(6, 25, 236); }
+    .cw_line2_word--1 { color: rgb(153, 120, 0); }
+    .cw_line2_word--2 { color: rgb(26, 127, 55); }
 
     .cw_word { cursor: pointer; }
     .cw_word_sel { color: rgb(6, 25, 236); font-weight: bold; cursor: pointer; }
@@ -168,10 +189,30 @@
       border: 1px solid currentColor;
       border-radius: 10px;
     }
+
+    dialog.tm-dialog-sm {
+      width: min(680px, calc(100vw - 32px));
+      height: auto;
+      max-height: calc(100vh - 32px);
+    }
+
+    #tmReportText {
+      width: 100%;
+      min-height: 180px;
+      max-height: 50vh;
+      overflow: auto;
+      margin: 0 0 12px;
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body data-controls-docked="1">
-  <button id="btnMainMenu" type="button">Menu</button>
+  <button id="btnListMenu" type="button">List</button>
 
   <h1 id="pageTitle">Collection Words</h1>
 
@@ -189,6 +230,7 @@
   <dialog id="dlgMenu">
     <form method="dialog">
       <div class="row" style="margin:0 0 8px; align-items:center;">
+        <button id="btnMenuHome" type="button" title="Home">Home</button>
         <strong>Display languages</strong>
         <button value="cancel" style="margin-left:auto;">Close</button>
       </div>
@@ -202,23 +244,89 @@
       <div id="langRowShow2" class="row" style="margin:0 0 16px;"></div>
 
       <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong>Line 2 display mode</strong>
+      </div>
+      <div id="line2ModeRow" class="row" style="margin:0 0 16px;"></div>
+
+      <div class="row" style="margin:0 0 8px; align-items:center;">
         <strong>Collection words mode</strong>
       </div>
-      <div id="cwModeRow" class="row" style="margin:0;"></div>
+      <div id="cwModeRow" class="row" style="margin:0 0 16px;"></div>
+
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong>Translation mode</strong>
+      </div>
+      <div class="row" style="margin:0;">
+        <button id="btnOpenTranslationMode" type="button">Open Translation Mode</button>
+      </div>
     </form>
   </dialog>
 
-  <dialog id="dlgMainMenu">
+  <dialog id="dlgTranslationMode" class="tm-dialog-sm">
     <form method="dialog">
-      <button id="btnMainMenuClose" value="cancel" aria-label="Close" title="Close"
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong>Translation Mode</strong>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+      </div>
+      <div id="tmVideoInfo" class="muted" style="margin:0 0 12px;"></div>
+      <div class="row" style="margin:0;">
+        <button id="btnTmExport" type="button">Export full JSON</button>
+        <button id="btnTmImport" type="button">Import full JSON</button>
+        <input id="tmImportFile" type="file" accept=".json,application/json" hidden />
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgTmNotice" class="tm-dialog-sm">
+    <form method="dialog">
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong id="tmNoticeTitle">Notice</strong>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+      </div>
+      <pre id="tmNoticeBody" style="margin:0; white-space:pre-wrap; font-family:inherit;"></pre>
+    </form>
+  </dialog>
+
+  <dialog id="dlgTmConfirm" class="tm-dialog-sm">
+    <form method="dialog">
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong id="tmConfirmTitle">Confirm</strong>
+      </div>
+      <pre id="tmConfirmBody" style="margin:0 0 12px; white-space:pre-wrap; font-family:inherit;"></pre>
+      <div class="row" style="margin:0;">
+        <button id="btnTmConfirmContinue" type="button">Продовжити завантаження</button>
+        <button id="btnTmConfirmAbort" type="button">Перервати завантаження</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgTmReport" class="tm-dialog-sm">
+    <form method="dialog">
+      <div class="row" style="margin:0 0 8px; align-items:center;">
+        <strong>Translation report</strong>
+        <button value="cancel" style="margin-left:auto;">Close</button>
+      </div>
+      <pre id="tmReportText"></pre>
+      <div class="row" style="margin:0;">
+        <button id="btnTmReportCopy" type="button">Copy to clipboard</button>
+        <button id="btnTmReportDownload" type="button">Download report</button>
+        <button id="btnTmReportContinue" type="button">Продовжити завантаження</button>
+        <button value="cancel" type="button">Перервати завантаження</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgListMenu">
+    <form method="dialog">
+      <button id="btnListMenuClose" value="cancel" aria-label="Close" title="Close"
         style="position:absolute; top:8px; right:8px; width:32px; min-height:32px; padding:0; border-radius:10px; line-height:1; font-size:18px;">
         ×
       </button>
 
-      <div id="mainMenuTagRow" class="row" style="margin:0 0 10px;"></div>
+      <div id="listMenuTagRow" class="row" style="margin:0 0 10px;"></div>
 
       <div class="row" style="margin:0 0 10px;">
-        <input id="inMainMenuShortFilter" placeholder="type to filter" />
+        <input id="inListMenuShortFilter" placeholder="type to filter" />
       </div>
 
       <div id="refVideosStatus" class="muted" style="margin:0 0 10px;"></div>
@@ -231,6 +339,7 @@
   <script src="./yout_pl2/youtube_transcript_store.js"></script>
   <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
   <script src="./yout_pl2/collection_words_store.js"></script>
+  <script src="./yout_pl2/translation_mode.js"></script>
 
   <script>
     'use strict';
@@ -243,6 +352,7 @@
     const MAIN_MENU_SELECTED_TAG_PATH = `${UI_STATE_PATH}/main_menu_selected_tag`;
     const MAIN_MENU_SHORT_NAME_FILTER_PATH = `${UI_STATE_PATH}/main_menu_short_name_filter`;
     const DISPLAY_LANGS_PATH = `${UI_STATE_PATH}/display_langs`;
+    const LINE2_MODE_PATH = `${UI_STATE_PATH}/line2_display_mode`;
     const CW_MODE_PATH = `${UI_STATE_PATH}/collection_words_mode`;
     const LAST_SELECTED_VIDEO_PATH = `${UI_STATE_PATH}/last_selected_video`;
 
@@ -253,8 +363,9 @@
     let activeIndex = -1;
     let lang1Show = 'sv';
     let lang2Show = 'en';
+    let line2DisplayMode = 'sentence';
     let collectionWordsMode = 'off';
-    let _baseStatusMsg = 'Ready. Open Menu to select a text.';
+    let _baseStatusMsg = 'Ready. Open List to select a text.';
 
     let mainMenuSelectedTag = '';
     let mainMenuShortNameFilter = '';
@@ -335,6 +446,11 @@
       if (m === 'unknown') return 'unknown';
       if (m === 'learned') return 'learned';
       return 'off';
+    }
+
+    function line2ModeLabel(mode) {
+      const m = cleanStr(mode).toLowerCase();
+      return (m === 'unknown_words') ? 'unknown_words' : 'sentence';
     }
 
     function composeStatusMsg(baseMsg) {
@@ -422,6 +538,108 @@
     async function saveCollectionWordsDoc() {
       if (!currentVideoId || !collectionWordsDoc || !window.CollectionWordsStore) return;
       await window.CollectionWordsStore.save(currentVideoId, collectionWordsDoc);
+    }
+
+    function formatUnknownWordLine(word) {
+      const sv = cleanStr(word && word.word_sv);
+      const uk = cleanStr(word && word.word_uk);
+      const en = cleanStr(word && word.word_en);
+      const parts = [];
+      if (uk) parts.push(uk);
+      if (en) parts.push(en);
+      if (sv && parts.length) return `${sv} - ${parts.join(', ')}`;
+      if (sv) return sv;
+      return parts.join(', ');
+    }
+
+    function formatUnknownPhraseLine(phrase) {
+      const sv = cleanStr(phrase && phrase.phrase_sv);
+      const uk = cleanStr(phrase && phrase.phrase_uk);
+      const en = cleanStr(phrase && phrase.phrase_en);
+      const parts = [];
+      if (uk) parts.push(uk);
+      if (en) parts.push(en);
+      if (sv && parts.length) return `${sv} - ${parts.join(', ')}`;
+      if (sv) return sv;
+      return parts.join(', ');
+    }
+
+    function normalizeTokenForMatch(x) {
+      return cleanStr(x).replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    function buildLine2DisplaySegments(sentenceIdx) {
+      const item = getCollectionItem(sentenceIdx);
+      if (!item) return [];
+
+      const words = Array.isArray(item.words) ? item.words : [];
+      const phrases = Array.isArray(item.phrase) ? item.phrase : [];
+      const usedWordIdx = new Set();
+      const segments = [];
+
+      const wordEntries = words.map((word, idx) => ({
+        idx,
+        sv: cleanStr(word && word.word_sv),
+        norm: normalizeTokenForMatch(word && word.word_sv),
+        word
+      }));
+
+      const phraseEntries = phrases
+        .map(phrase => {
+          const sv = cleanStr(phrase && phrase.phrase_sv);
+          const tokens = sv.split(/\s+/).map(normalizeTokenForMatch).filter(Boolean);
+          return { phrase, sv, tokens, len: tokens.length };
+        })
+        .filter(x => x.sv && x.len >= 1 && x.len <= 3)
+        .sort((a, b) => b.len - a.len);
+
+      let wi = 0;
+      while (wi < wordEntries.length) {
+        if (usedWordIdx.has(wi)) {
+          wi += 1;
+          continue;
+        }
+
+        let matched = null;
+        for (const candidate of phraseEntries) {
+          if (wi + candidate.len > wordEntries.length) continue;
+          let ok = true;
+          for (let k = 0; k < candidate.len; k += 1) {
+            if (usedWordIdx.has(wi + k) || wordEntries[wi + k].norm !== candidate.tokens[k]) {
+              ok = false;
+              break;
+            }
+          }
+          if (ok) {
+            matched = candidate;
+            break;
+          }
+        }
+
+        if (matched) {
+          segments.push({ type: 'phrase', text: formatUnknownPhraseLine(matched.phrase) });
+          for (let k = 0; k < matched.len; k += 1) usedWordIdx.add(wi + k);
+          wi += matched.len;
+          continue;
+        }
+
+        segments.push({ type: 'word', text: formatUnknownWordLine(wordEntries[wi].word) });
+        usedWordIdx.add(wi);
+        wi += 1;
+      }
+
+      return segments.filter(seg => cleanStr(seg && seg.text));
+    }
+
+    function appendUnknownWordsLine2(container, sentenceIdx) {
+      const lines = buildLine2DisplaySegments(sentenceIdx).map(seg => seg.text);
+
+      lines.forEach((text, idx) => {
+        const span = document.createElement('span');
+        span.className = `cw_line2_word cw_line2_word--${idx % 3}`;
+        span.textContent = (idx < lines.length - 1) ? `${text}; ` : text;
+        container.appendChild(span);
+      });
     }
 
     function clearWordSelectionStyles() {
@@ -551,6 +769,7 @@
     function appendSvWordSpans(container, row, sentenceIdx) {
       const textSv = getRowText(row, 'sv');
       const words = splitStringIntoWords(textSv);
+      const lineText = document.createElement('span');
       words.forEach((word, wordIdx) => {
         const span = document.createElement('span');
         const saved = findSavedWord(sentenceIdx, wordIdx, word);
@@ -559,8 +778,9 @@
         span.dataset.sentenceIdx = String(sentenceIdx);
         span.dataset.wordIdx = String(wordIdx);
         span.dataset.wordSv = word;
-        container.appendChild(span);
+        lineText.appendChild(span);
       });
+      container.appendChild(lineText);
     }
 
     function setRefStatus(msg) {
@@ -648,6 +868,65 @@
           updatedAt: ytNowIso()
         });
       } catch {}
+    }
+
+    async function loadLine2DisplayMode() {
+      try {
+        await ytEnsureSignedIn();
+        const data = await ytRequestByPath(LINE2_MODE_PATH, 'GET');
+        line2DisplayMode = line2ModeLabel(data && data.mode);
+      } catch {}
+    }
+
+    async function saveLine2DisplayMode() {
+      try {
+        await ytEnsureSignedIn();
+        await ytRequestByPath(LINE2_MODE_PATH, 'PUT', {
+          mode: line2ModeLabel(line2DisplayMode),
+          updatedAt: ytNowIso()
+        });
+      } catch {}
+    }
+
+    function syncLine2ModeButtons() {
+      const row = document.getElementById('line2ModeRow');
+      if (!row) return;
+      row.querySelectorAll('button[data-line2-mode]').forEach(btn => {
+        btn.dataset.selected = (cleanStr(btn.dataset.line2Mode).toLowerCase() === line2DisplayMode) ? '1' : '0';
+      });
+    }
+
+    function renderLine2ModeButtons() {
+      const row = document.getElementById('line2ModeRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      const modes = [
+        { code: 'sentence', label: 'Sentence translation' },
+        { code: 'unknown_words', label: 'Unknown words translation' }
+      ];
+
+      modes.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.line2Mode = m.code;
+        btn.textContent = m.label;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          setLine2DisplayMode(m.code);
+        });
+        row.appendChild(btn);
+      });
+
+      syncLine2ModeButtons();
+    }
+
+    function setLine2DisplayMode(nextMode) {
+      line2DisplayMode = line2ModeLabel(nextMode);
+      syncLine2ModeButtons();
+      renderTranscript();
+      setStatus(_baseStatusMsg);
+      Promise.resolve().then(() => saveLine2DisplayMode()).catch(() => {});
     }
 
     function syncCollectionWordsModeButtons() {
@@ -873,7 +1152,7 @@
       if (!Array.isArray(transcript) || transcript.length === 0) {
         const li = document.createElement('li');
         li.className = 'muted';
-        li.textContent = currentVideoId ? 'No transcript loaded.' : 'Open Menu to select a text.';
+        li.textContent = currentVideoId ? 'No transcript loaded.' : 'Open List to select a text.';
         list.appendChild(li);
         updatePageInfo();
         return;
@@ -898,16 +1177,29 @@
         }
         li.appendChild(line1);
 
+        const itemForLine2 = getCollectionItem(idx);
+        const hasUnknownWords = !!(
+          itemForLine2 &&
+          (
+            (Array.isArray(itemForLine2.words) && itemForLine2.words.length > 0) ||
+            (Array.isArray(itemForLine2.phrase) && itemForLine2.phrase.length > 0)
+          )
+        );
         const showSecond = cwActive
           ? !!cleanLangCode(lang2Show)
           : !!cleanLangCode(lang2Show) && cleanLangCode(lang2Show) !== cleanLangCode(lang1Show);
-        const line2Text = showSecond ? getRowText(row, lang2Show) : '';
-        if (line2Text) {
+        const showUnknownWordsLine2 = line2DisplayMode === 'unknown_words' && hasUnknownWords;
+        const line2Text = (!showUnknownWordsLine2 && showSecond) ? getRowText(row, lang2Show) : '';
+        if (showUnknownWordsLine2 || line2Text) {
           const line2 = document.createElement('div');
           line2.className = 'trLine trLine2';
-          const sp2 = document.createElement('span');
-          sp2.textContent = line2Text;
-          line2.appendChild(sp2);
+          if (showUnknownWordsLine2) {
+            appendUnknownWordsLine2(line2, idx);
+          } else {
+            const sp2 = document.createElement('span');
+            sp2.textContent = line2Text;
+            line2.appendChild(sp2);
+          }
           li.appendChild(line2);
         }
 
@@ -1031,7 +1323,7 @@
       return normalizeRefTagsShort(data);
     }
 
-    function scheduleSaveMainMenuFilters() {
+    function scheduleSaveListMenuFilters() {
       try { if (_mainMenuSaveTimer) clearTimeout(_mainMenuSaveTimer); } catch {}
 
       _mainMenuSaveTimer = setTimeout(async () => {
@@ -1043,7 +1335,7 @@
       }, 350);
     }
 
-    async function loadMainMenuFilterState() {
+    async function loadListMenuFilterState() {
       await ytEnsureSignedIn();
       let tag = '';
       let q = '';
@@ -1061,25 +1353,25 @@
       mainMenuSelectedTag = cleanTagCode(tag) || '';
       mainMenuShortNameFilter = q;
 
-      const input = document.getElementById('inMainMenuShortFilter');
+      const input = document.getElementById('inListMenuShortFilter');
       if (input) input.value = mainMenuShortNameFilter;
     }
 
-    function setMainMenuSelectedTag(tagCodeOrEmpty) {
+    function setListMenuSelectedTag(tagCodeOrEmpty) {
       mainMenuSelectedTag = cleanTagCode(tagCodeOrEmpty) || '';
-      try { ensureMainMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
-      try { renderMainMenuTagButtons(_mainMenuTagsCache, true); } catch {}
-      scheduleSaveMainMenuFilters();
+      try { ensureListMenuSelectedTagVisible(_mainMenuTagsCache); } catch {}
+      try { renderListMenuTagButtons(_mainMenuTagsCache, true); } catch {}
+      scheduleSaveListMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
     }
 
-    function setMainMenuShortNameFilter(q) {
+    function setListMenuShortNameFilter(q) {
       mainMenuShortNameFilter = cleanStr(q);
-      scheduleSaveMainMenuFilters();
+      scheduleSaveListMenuFilters();
       Promise.resolve().then(() => loadRefVideos()).catch(() => {});
     }
 
-    function applyMainMenuFilters(records) {
+    function applyListMenuFilters(records) {
       const selectedTag = cleanTagCode(mainMenuSelectedTag);
       const q = cleanStr(mainMenuShortNameFilter).toLowerCase();
       return (Array.isArray(records) ? records : []).filter(v => {
@@ -1096,7 +1388,7 @@
       });
     }
 
-    function clampMainMenuTagPageStart(total) {
+    function clampListMenuTagPageStart(total) {
       const n = Math.max(0, Math.floor(Number(total) || 0));
       if (n <= 0) {
         mainMenuTagPageStart = 0;
@@ -1107,23 +1399,23 @@
       mainMenuTagPageStart = s;
     }
 
-    function ensureMainMenuSelectedTagVisible(list) {
+    function ensureListMenuSelectedTagVisible(list) {
       const selected = cleanTagCode(mainMenuSelectedTag);
       if (!selected || !Array.isArray(list) || list.length === 0) return;
       const idx = list.findIndex(t => cleanTagCode(t && t.code) === selected);
       if (idx < 0) return;
       mainMenuTagPageStart = idx - (idx % MAIN_MENU_TAG_PAGE_SIZE);
-      clampMainMenuTagPageStart(list.length);
+      clampListMenuTagPageStart(list.length);
     }
 
-    function renderMainMenuTagButtons(list, forceSelectedVisible = true) {
-      const row = document.getElementById('mainMenuTagRow');
+    function renderListMenuTagButtons(list, forceSelectedVisible = true) {
+      const row = document.getElementById('listMenuTagRow');
       if (!row) return;
       row.innerHTML = '';
 
       const tags = Array.isArray(list) ? list.filter(Boolean) : [];
-      if (forceSelectedVisible) ensureMainMenuSelectedTagVisible(tags);
-      clampMainMenuTagPageStart(tags.length);
+      if (forceSelectedVisible) ensureListMenuSelectedTagVisible(tags);
+      clampListMenuTagPageStart(tags.length);
 
       const mkBtn = (label, tagCode) => {
         const btn = document.createElement('button');
@@ -1132,7 +1424,7 @@
         if (tagCode) btn.dataset.tag = tagCode;
         else btn.dataset.all = '1';
         btn.dataset.selected = (!tagCode && !cleanTagCode(mainMenuSelectedTag)) || (tagCode && cleanTagCode(mainMenuSelectedTag) === cleanTagCode(tagCode)) ? '1' : '0';
-        btn.onclick = () => setMainMenuSelectedTag(tagCode || '');
+        btn.onclick = () => setListMenuSelectedTag(tagCode || '');
         return btn;
       };
 
@@ -1147,7 +1439,7 @@
           if (total <= MAIN_MENU_TAG_PAGE_SIZE) return;
           mainMenuTagPageStart = Math.max(0, Math.floor(Number(mainMenuTagPageStart) || 0)) + MAIN_MENU_TAG_PAGE_SIZE;
           if (mainMenuTagPageStart >= total) mainMenuTagPageStart = 0;
-          renderMainMenuTagButtons(_mainMenuTagsCache, false);
+          renderListMenuTagButtons(_mainMenuTagsCache, false);
         };
         return btn;
       };
@@ -1214,7 +1506,7 @@
       const sorted = Array.from(byVideoId.values())
         .sort((a, b) => (a.order - b.order) || a.indent_id.localeCompare(b.indent_id));
 
-      const filtered = applyMainMenuFilters(sorted);
+      const filtered = applyListMenuFilters(sorted);
 
       if (limitInfo) {
         const label = cleanTagCode(mainMenuSelectedTag) || 'All';
@@ -1257,7 +1549,7 @@
               setStatus('Bad video id');
               return;
             }
-            closeDialogById('dlgMainMenu');
+            closeDialogById('dlgListMenu');
             await loadTranscriptForVideoId(vid, label);
           }).catch(() => setStatus('Switch failed'));
         };
@@ -1276,6 +1568,279 @@
       } catch {}
     }
 
+    function showDialogById(id) {
+      const dlg = document.getElementById(id);
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', 'open');
+    }
+
+    function tmApi() {
+      return window.TranslationMode || null;
+    }
+
+    function showTmNotice(title, body) {
+      const t = document.getElementById('tmNoticeTitle');
+      const b = document.getElementById('tmNoticeBody');
+      if (t) t.textContent = cleanStr(title) || 'Notice';
+      if (b) b.textContent = cleanStr(body);
+      showDialogById('dlgTmNotice');
+    }
+
+    function showTmNoticeAsync(title, body) {
+      return new Promise((resolve) => {
+        const dlg = document.getElementById('dlgTmNotice');
+        showTmNotice(title, body);
+        if (!dlg) {
+          resolve();
+          return;
+        }
+        dlg.addEventListener('close', () => resolve(), { once: true });
+      });
+    }
+
+    function askTmConfirm(title, body) {
+      return new Promise((resolve) => {
+        const t = document.getElementById('tmConfirmTitle');
+        const b = document.getElementById('tmConfirmBody');
+        const btnGo = document.getElementById('btnTmConfirmContinue');
+        const btnStop = document.getElementById('btnTmConfirmAbort');
+        const dlg = document.getElementById('dlgTmConfirm');
+        if (!dlg || !btnGo || !btnStop) {
+          resolve(false);
+          return;
+        }
+
+        if (t) t.textContent = cleanStr(title) || 'Confirm';
+        if (b) b.textContent = cleanStr(body);
+
+        const finish = (val) => {
+          btnGo.onclick = null;
+          btnStop.onclick = null;
+          closeDialogById('dlgTmConfirm');
+          resolve(!!val);
+        };
+
+        btnGo.onclick = (e) => { e.preventDefault(); finish(true); };
+        btnStop.onclick = (e) => { e.preventDefault(); finish(false); };
+        showDialogById('dlgTmConfirm');
+      });
+    }
+
+    function showTmReport(reportText) {
+      return new Promise((resolve) => {
+        const pre = document.getElementById('tmReportText');
+        const btnCopy = document.getElementById('btnTmReportCopy');
+        const btnDownload = document.getElementById('btnTmReportDownload');
+        const btnContinue = document.getElementById('btnTmReportContinue');
+        const dlg = document.getElementById('dlgTmReport');
+        if (!dlg || !pre || !btnCopy || !btnDownload || !btnContinue) {
+          resolve(false);
+          return;
+        }
+
+        const text = String(reportText || '');
+        pre.textContent = text;
+        let settled = false;
+
+        const finish = (val) => {
+          if (settled) return;
+          settled = true;
+          btnCopy.onclick = null;
+          btnDownload.onclick = null;
+          btnContinue.onclick = null;
+          closeDialogById('dlgTmReport');
+          resolve(!!val);
+        };
+
+        btnCopy.onclick = (e) => {
+          e.preventDefault();
+          Promise.resolve().then(async () => {
+            try {
+              await navigator.clipboard.writeText(text);
+              setStatus('Report copied to clipboard');
+            } catch {
+              showTmNotice('Copy failed', 'Could not copy report to clipboard.');
+            }
+          }).catch(() => {});
+        };
+
+        btnDownload.onclick = (e) => {
+          e.preventDefault();
+          const tm = tmApi();
+          const name = `translation_report_${cleanStr(currentVideoId) || 'video'}.txt`;
+          if (tm && typeof tm.downloadText === 'function') tm.downloadText(name, text);
+        };
+
+        btnContinue.onclick = (e) => {
+          e.preventDefault();
+          finish(true);
+        };
+
+        dlg.addEventListener('close', () => finish(false), { once: true });
+        showDialogById('dlgTmReport');
+      });
+    }
+
+    function updateTranslationModeInfo() {
+      const el = document.getElementById('tmVideoInfo');
+      if (!el) return;
+      if (!currentVideoId) {
+        el.textContent = 'No video selected. Open List and choose a video first.';
+        return;
+      }
+      const label = currentLabel ? `${currentLabel} — ` : '';
+      el.textContent = `${label}videoId: ${currentVideoId}`;
+    }
+
+    function openTranslationModeDialog() {
+      if (!currentVideoId) {
+        showTmNotice('No video selected', 'Open List and choose a video/topic first.');
+        return;
+      }
+      closeDialogById('dlgMenu');
+      updateTranslationModeInfo();
+      showDialogById('dlgTranslationMode');
+    }
+
+    async function runTranslationExport() {
+      const tm = tmApi();
+      if (!tm || !currentVideoId) {
+        showTmNotice('Export unavailable', 'Select a video and ensure TranslationMode is loaded.');
+        return;
+      }
+
+      try {
+        setStatus('Exporting JSON...');
+        await ytEnsureSignedIn();
+        const freshDoc = window.CollectionWordsStore
+          ? await window.CollectionWordsStore.load(currentVideoId)
+          : (collectionWordsDoc || { videoId: currentVideoId, items: [] });
+
+        const payload = tm.buildExportPayload(freshDoc);
+        payload.videoId = currentVideoId;
+
+        const errors = tm.validateExportSwedish(payload);
+        if (errors.length > 0) {
+          await showTmNoticeAsync(
+            'Export warnings (Swedish fields)',
+            errors.join('\n') + '\n\nExport will continue anyway.'
+          );
+        }
+
+        const filename = `collection_words_${currentVideoId}.json`;
+        tm.downloadJson(filename, payload);
+        setStatus(`Exported JSON: ${payload.items.length} items`);
+      } catch (err) {
+        showTmNotice('Export failed', cleanStr(err && err.message) || 'Unknown error');
+        setStatus('Export failed');
+      }
+    }
+
+    async function applyTranslationImport(payload, dbDoc) {
+      const tm = tmApi();
+      if (!tm) throw new Error('TranslationMode missing');
+
+      const mergedDoc = tm.mergeImportIntoDbDoc(dbDoc, payload);
+      await window.CollectionWordsStore.save(currentVideoId, mergedDoc);
+      collectionWordsDoc = mergedDoc;
+
+      if (window.YouTubeTranscriptStore && typeof window.YouTubeTranscriptStore.load === 'function') {
+        const trData = await window.YouTubeTranscriptStore.load(currentVideoId);
+        const mergedTranscript = tm.mergeImportIntoTranscript(
+          (trData && Array.isArray(trData.items)) ? trData.items : transcript,
+          payload
+        );
+        await window.YouTubeTranscriptStore.save(
+          currentVideoId,
+          mergedTranscript,
+          trData && trData.rawText,
+          {
+            lang1_show: lang1Show,
+            lang2_show: lang2Show
+          }
+        );
+        transcript = mergedTranscript;
+      }
+
+      renderTranscript();
+      setStatus(`Import complete: ${payload.items.length} items`);
+    }
+
+    async function runTranslationImportFile(file) {
+      const tm = tmApi();
+      if (!tm || !currentVideoId || !file) return;
+
+      let parsed = null;
+      try {
+        const text = await file.text();
+        parsed = JSON.parse(text);
+      } catch {
+        showTmNotice('Import failed', 'Invalid JSON file.');
+        return;
+      }
+
+      const schemaErrors = tm.validateImportSchema(parsed);
+      if (schemaErrors.length > 0) {
+        showTmNotice('Schema validation failed', schemaErrors.join('\n'));
+        return;
+      }
+
+      if (cleanStr(parsed.videoId) !== cleanStr(currentVideoId)) {
+        showTmNotice(
+          'Video mismatch',
+          `JSON videoId "${parsed.videoId}" does not match selected video "${currentVideoId}".`
+        );
+        return;
+      }
+
+      try {
+        setStatus('Validating import...');
+        await ytEnsureSignedIn();
+
+        const dbDoc = window.CollectionWordsStore
+          ? await window.CollectionWordsStore.load(currentVideoId)
+          : (collectionWordsDoc || { videoId: currentVideoId, items: [] });
+
+        const svMismatches = tm.validateImportSwedishMatch(parsed, dbDoc, transcript);
+        if (svMismatches.length > 0) {
+          const ok = await askTmConfirm(
+            'Swedish text mismatch',
+            svMismatches.join('\n') + '\n\nContinue import anyway?'
+          );
+          if (!ok) {
+            setStatus('Import cancelled');
+            return;
+          }
+        }
+
+        const analysis = tm.analyzeImportTranslations(parsed);
+        if (analysis.translatedWordCount < 5) {
+          showTmNotice(
+            'Critical translation error',
+            `Only ${analysis.translatedWordCount} translated words found (minimum ~5 required).\nImport stopped.`
+          );
+          setStatus('Import blocked: insufficient translation');
+          return;
+        }
+
+        if (analysis.missing.length > 5) {
+          const report = tm.buildImportReport(analysis.missing);
+          const proceed = await showTmReport(report);
+          if (!proceed) {
+            setStatus('Import cancelled');
+            return;
+          }
+        }
+
+        await applyTranslationImport(parsed, dbDoc);
+        closeDialogById('dlgTranslationMode');
+      } catch (err) {
+        showTmNotice('Import failed', cleanStr(err && err.message) || 'Unknown error');
+        setStatus('Import failed');
+      }
+    }
+
     async function openMenuModal() {
       const dlg = document.getElementById('dlgMenu');
       if (!dlg) return;
@@ -1285,23 +1850,24 @@
       } catch {
         renderLanguageButtons([]);
       }
+      renderLine2ModeButtons();
       renderCollectionWordsModeButtons();
       if (typeof dlg.showModal === 'function') dlg.showModal();
       else dlg.setAttribute('open', 'open');
     }
 
-    function openMainMenu() {
-      const dlg = document.getElementById('dlgMainMenu');
+    function openListMenu() {
+      const dlg = document.getElementById('dlgListMenu');
       if (!dlg) return;
       setRefStatus('Loading...');
       Promise.resolve().then(async () => {
         try {
           await ytEnsureSignedIn();
-          await loadMainMenuFilterState();
+          await loadListMenuFilterState();
           _mainMenuTagsCache = await loadRefTagsShortList();
-          renderMainMenuTagButtons(_mainMenuTagsCache, true);
+          renderListMenuTagButtons(_mainMenuTagsCache, true);
         } catch {
-          renderMainMenuTagButtons([], true);
+          renderListMenuTagButtons([], true);
         }
         await loadRefVideos();
       }).catch(() => setRefStatus('Load failed'));
@@ -1311,8 +1877,8 @@
     }
 
     function wireUi() {
-      const btnMain = document.getElementById('btnMainMenu');
-      if (btnMain) btnMain.onclick = () => openMainMenu();
+      const btnList = document.getElementById('btnListMenu');
+      if (btnList) btnList.onclick = () => openListMenu();
 
       const btnMenu = document.getElementById('btnMenu');
       if (btnMenu) btnMenu.onclick = (e) => {
@@ -1320,11 +1886,54 @@
         Promise.resolve().then(() => openMenuModal()).catch(() => {});
       };
 
-      const inMainFilter = document.getElementById('inMainMenuShortFilter');
+      const btnHome = document.getElementById('btnMenuHome');
+      if (btnHome) btnHome.onclick = (e) => {
+        e.preventDefault();
+        try {
+          const origin = String(window.location && window.location.origin ? window.location.origin : '');
+          if (origin && origin !== 'null') window.location.href = origin;
+          else window.location.href = './index.html';
+        } catch {
+          try { window.location.href = './index.html'; } catch {}
+        }
+      };
+
+      const btnOpenTm = document.getElementById('btnOpenTranslationMode');
+      if (btnOpenTm) btnOpenTm.onclick = (e) => {
+        e.preventDefault();
+        openTranslationModeDialog();
+      };
+
+      const btnTmExport = document.getElementById('btnTmExport');
+      if (btnTmExport) btnTmExport.onclick = (e) => {
+        e.preventDefault();
+        Promise.resolve().then(() => runTranslationExport()).catch(() => setStatus('Export failed'));
+      };
+
+      const btnTmImport = document.getElementById('btnTmImport');
+      const tmImportFile = document.getElementById('tmImportFile');
+      if (btnTmImport && tmImportFile) {
+        btnTmImport.onclick = (e) => {
+          e.preventDefault();
+          if (!currentVideoId) {
+            showTmNotice('No video selected', 'Open List and choose a video/topic first.');
+            return;
+          }
+          tmImportFile.value = '';
+          tmImportFile.click();
+        };
+        tmImportFile.onchange = () => {
+          const file = tmImportFile.files && tmImportFile.files[0];
+          if (!file) return;
+          Promise.resolve().then(() => runTranslationImportFile(file)).catch(() => setStatus('Import failed'));
+        };
+      }
+
+      const inMainFilter = document.getElementById('inListMenuShortFilter');
       if (inMainFilter && !inMainFilter.dataset.wired) {
         inMainFilter.dataset.wired = '1';
         inMainFilter.addEventListener('input', () => {
-          setMainMenuShortNameFilter(inMainFilter.value);
+          setListMenuShortNameFilter(inMainFilter.value);
         });
       }
     }
@@ -1332,11 +1941,13 @@
     wireUi();
     renderTranscript();
     updatePageInfo();
-    setStatus('Ready. Open Menu to select a text.');
+    setStatus('Ready. Open List to select a text.');
 
     Promise.resolve().then(async () => {
       await loadDisplayLangSettings();
+      await loadLine2DisplayMode();
       await loadCollectionWordsMode();
+      renderLine2ModeButtons();
       renderCollectionWordsModeButtons();
       setStatus(_baseStatusMsg);
       const last = await loadLastSelectedVideoId();

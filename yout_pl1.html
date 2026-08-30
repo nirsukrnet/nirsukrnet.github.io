@@ -36,8 +36,8 @@
       text-align: center;
     }
 
-    /* Top-right main menu button */
-    #btnMainMenu {
+    /* Top-right ListMenu button */
+    #btnListMenu {
       position: fixed;
       top: 12px;
       right: 12px;
@@ -140,7 +140,7 @@
 </head>
 <body> 
 
-  <button id="btnMainMenu">Menu</button>
+  <button id="btnListMenu" type="button">List</button>
 
   <div id="playerWrap">
     <div id="player"></div>
@@ -197,7 +197,7 @@ English Channel..."></textarea>
   <script src="./yout_pl1/youtube_transcript_store.js"></script>
   <script src="./yout_pl1/youtube_ref_videos_store.js"></script>
 
-  <dialog id="dlgMainMenu">
+  <dialog id="dlgListMenu">
     <form method="dialog">
       <h3 style="margin:0 0 8px; font-size:16px;">YouTube menu</h3>
       <div class="row" style="margin:8px 0 0;">
@@ -601,8 +601,8 @@ English Channel..."></textarea>
       else dlg.setAttribute('open', 'open');
     }
 
-    function openMainMenu() {
-      const dlg = document.getElementById('dlgMainMenu');
+    function openListMenu() {
+      const dlg = document.getElementById('dlgListMenu');
       if (!dlg) return;
       setRefStatus('Loading...');
       Promise.resolve().then(() => loadRefVideos()).catch(() => setRefStatus('Load failed'));
@@ -728,7 +728,7 @@ English Channel..."></textarea>
               setMainStatus('Bad video id');
               return;
             }
-            closeDialogById('dlgMainMenu');
+            closeDialogById('dlgListMenu');
             await switchToVideoId(vid);
           }).catch(() => setMainStatus('Switch failed'));
         };
@@ -897,8 +897,8 @@ English Channel..."></textarea>
       updateMenuLabels();
 
       // Main menu (reference videos)
-      const btnMain = document.getElementById('btnMainMenu');
-      if (btnMain) btnMain.onclick = () => openMainMenu();
+      const btnMain = document.getElementById('btnListMenu');
+      if (btnMain) btnMain.onclick = () => openListMenu();
 
       const btnAdd = document.getElementById('btnAddVideo');
       if (btnAdd) btnAdd.onclick = (e) => { e.preventDefault(); openAddVideoDialog(); };
