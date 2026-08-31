@@ -19,12 +19,15 @@
     .dialog {
       width: calc(100vw - 16px);
       max-width: 560px;
-      min-height: calc(100vh - 16px);
+      height: calc(100vh - 16px);
       margin: 8px auto;
       border: 1px solid currentColor;
       border-radius: 12px;
       padding: 12px;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     h1 {
@@ -58,6 +61,16 @@
       cursor: not-allowed;
     }
 
+    input[type="number"] {
+      width: 72px;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      font-size: 14px;
+      min-height: 36px;
+    }
+
     .muted {
       opacity: 0.7;
       font-size: 14px;
@@ -78,6 +91,9 @@
       margin: 10px 0 0;
       display: grid;
       gap: 6px;
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
     }
 
     li {
@@ -90,6 +106,11 @@
 
     li[data-active="1"] {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    li[data-saved="1"] {
+      outline: 2px solid currentColor;
+      outline-offset: -2px;
     }
 
     .kind {
@@ -109,8 +130,10 @@
     <div class="spacer"></div>
 
     <div class="row">
-      <button id="btnPlayAll" type="button">Play all</button>
-      <button id="btnStop" type="button">Stop</button>
+      <span class="muted">N:</span>
+      <input id="inPos" type="number" min="1" step="1" value="1" />
+      <button id="btnGoN" type="button">Go to N</button>
+      <button id="btnPlayFromN" type="button">Play from N</button>
     </div>
 
     <div class="row" style="margin-top: 10px;">
@@ -119,16 +142,20 @@
       <button id="btnModeSequential" type="button">sequential</button>
     </div>
 
+    <div id="savedCard" class="muted">Saved: none</div>
     <div id="currentCard" class="current muted">Натисніть Play або картку в списку.</div>
 
     <ul id="cardList"></ul>
   </div>
 
+  <script src="../yu2_global_var.js"></script>
   <script>
     'use strict';
 
     const AUDIO_BASE = 'audio/';
     const MARKS_URL = `${AUDIO_BASE}marks_dict1.json`;
+    const LS_KEY = 'dual_tts1_cardIndex';
+    const DB_PATH = '../db_youtube2/ui_state/dual_tts1';
 
     const DEFAULTS = {
       SV_START_DELAY_SEC: 0,
@@ -153,17 +180,195 @@
       activeSources: [],
       nextTimer: null,
       currentIndex: -1,
+      lastPlayedIndex: -1,
+      savedIndex: -1,
     };
 
     const elCurrent = document.getElementById('currentCard');
+    const elSaved = document.getElementById('savedCard');
     const elCardList = document.getElementById('cardList');
-    const btnPlayAll = document.getElementById('btnPlayAll');
-    const btnStop = document.getElementById('btnStop');
+    const inPos = document.getElementById('inPos');
+    const btnGoN = document.getElementById('btnGoN');
+    const btnPlayFromN = document.getElementById('btnPlayFromN');
     const btnModeOverlap = document.getElementById('btnModeOverlap');
     const btnModeSequential = document.getElementById('btnModeSequential');
 
     function readConfig() {
       return { ...DEFAULTS };
+    }
+
+    function ensureGv() {
+      if (window.gv && window.gv.URL_DS) return window.gv;
+      if (typeof GlobalVars !== 'function') return null;
+      window.gv = new GlobalVars();
+      return window.gv;
+    }
+
+    function clampIndex(index) {
+      const n = state.marks?.items?.length || 0;
+      const num = Number(index);
+      if (!n || !Number.isFinite(num) || num < 0) return -1;
+      return Math.min(Math.trunc(num), n - 1);
+    }
+
+    function readLocalSavedIndex() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw == null || raw === '') return -1;
+        return clampIndex(raw);
+      } catch {
+        return -1;
+      }
+    }
+
+    function applySavedIndex(index) {
+      const cardIndex = clampIndex(index);
+      markSavedCard(cardIndex);
+      if (cardIndex >= 0) {
+        setPosInput(cardIndex);
+        scrollCardIntoView(cardIndex);
+      }
+      return cardIndex;
+    }
+
+    function setPosInput(index) {
+      if (!inPos || index < 0) return;
+      inPos.value = String(index + 1);
+    }
+
+    function readPosIndex() {
+      const n = state.marks?.items?.length || 0;
+      if (inPos) inPos.max = String(Math.max(1, n));
+      const oneBased = Number.parseInt(inPos.value, 10);
+      if (!Number.isFinite(oneBased)) return -1;
+      return clampIndex(oneBased - 1);
+    }
+
+    function goToN() {
+      const index = readPosIndex();
+      if (index < 0) {
+        elCurrent.textContent = 'Enter a card number N.';
+        return -1;
+      }
+      setPosInput(index);
+      scrollCardIntoView(index);
+      const item = state.marks.items[index];
+      elCurrent.textContent = `At #${index + 1} ${item.sv} — ${item.uk}`;
+      return index;
+    }
+
+    function updateSavedLabel() {
+      const index = state.savedIndex;
+      if (index < 0 || !state.marks?.items?.[index]) {
+        elSaved.textContent = 'Saved: none';
+        return;
+      }
+      const item = state.marks.items[index];
+      elSaved.textContent = `Saved: #${index + 1} ${item.sv} — ${item.uk}`;
+    }
+
+    function setPlayFromNLabel(playing) {
+      btnPlayFromN.textContent = playing ? 'Pause' : 'Play from N';
+    }
+
+    function markSavedCard(index) {
+      state.savedIndex = clampIndex(index);
+      for (const li of elCardList.querySelectorAll('li')) {
+        li.dataset.saved = li.dataset.index === String(state.savedIndex) ? '1' : '0';
+      }
+      updateSavedLabel();
+    }
+
+    function scrollCardIntoView(index) {
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      if (li) {
+        li.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    }
+
+    async function ensureSignedIn() {
+      const gv = ensureGv();
+      if (!gv) throw new Error('GlobalVars is not available');
+      if (gv.URL_DS.idToken) return gv;
+      await gv.SignIn_User();
+      return gv;
+    }
+
+    function requestByPath(addurl, method, body) {
+      return new Promise((resolve, reject) => {
+        const gv = ensureGv();
+        if (!gv) {
+          reject(new Error('GlobalVars is not available'));
+          return;
+        }
+        const req = gv.URL_DS.GetObjForRequest();
+        req.addUrl = addurl;
+        req.ametod = method;
+        req.vobj = body;
+        req.CallBackFunction = (data) => resolve(data);
+        req.ErrorCallback = (err) => reject(err || new Error('DB request failed'));
+        gv.URL_DS.requestData_By_URL_Path(req);
+      });
+    }
+
+    async function savePositionToDb(index) {
+      const cardIndex = clampIndex(index);
+      if (cardIndex < 0) return;
+      try {
+        localStorage.setItem(LS_KEY, String(cardIndex));
+      } catch {
+        // ignore
+      }
+      try {
+        await ensureSignedIn();
+        await requestByPath(DB_PATH, 'PUT', {
+          marksFile: 'marks_dict1.json',
+          cardIndex,
+          playMode: state.playMode,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error('Save position failed', err);
+      }
+    }
+
+    async function loadSavedPositionFromDb() {
+      try {
+        await ensureSignedIn();
+        const data = await requestByPath(DB_PATH, 'GET', null);
+        if (data && (data.playMode === 'overlap' || data.playMode === 'sequential')) {
+          setPlayMode(data.playMode);
+        }
+        if (data && data.cardIndex != null) {
+          return clampIndex(data.cardIndex);
+        }
+      } catch (err) {
+        console.error('Load position failed', err);
+      }
+      return -1;
+    }
+
+    let persistChain = Promise.resolve();
+    let persistQueued = null;
+
+    function persistPosition(index) {
+      const cardIndex = clampIndex(index);
+      if (cardIndex < 0) return;
+      markSavedCard(cardIndex);
+      try {
+        localStorage.setItem(LS_KEY, String(cardIndex));
+      } catch {
+        // ignore
+      }
+      persistQueued = cardIndex;
+      persistChain = persistChain
+        .then(async () => {
+          const toSave = persistQueued;
+          persistQueued = null;
+          if (toSave == null) return;
+          await savePositionToDb(toSave);
+        })
+        .catch((err) => console.error('Auto-save failed', err));
     }
 
     async function ensureAudioContext() {
@@ -185,15 +390,19 @@
       return state.audioCtx.decodeAudioData(arr);
     }
 
-    async function ensureAssetsLoaded() {
-      await ensureAudioContext();
-      if (!state.marks) {
-        const res = await fetch(MARKS_URL);
-        if (!res.ok) {
-          throw new Error(`Failed to fetch marks: ${res.status}`);
-        }
-        state.marks = await res.json();
+    async function loadMarks() {
+      if (state.marks) return state.marks;
+      const res = await fetch(MARKS_URL);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch marks: ${res.status}`);
       }
+      state.marks = await res.json();
+      return state.marks;
+    }
+
+    async function ensureAssetsLoaded() {
+      await loadMarks();
+      await ensureAudioContext();
       if (!state.svBuffer) {
         state.svBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.sv_file}`);
       }
@@ -225,7 +434,11 @@
       return src;
     }
 
-    function stopAll() {
+    function pausePlayback() {
+      if (state.lastPlayedIndex >= 0) {
+        persistPosition(state.lastPlayedIndex);
+        setPosInput(state.lastPlayedIndex);
+      }
       state.stopRequested = true;
       state.playing = false;
       if (state.nextTimer) {
@@ -240,15 +453,26 @@
         }
       }
       state.activeSources = [];
-      setActiveCard(-1);
-      elCurrent.textContent = 'Stopped.';
-      btnPlayAll.disabled = false;
+      setPlayFromNLabel(false);
+      if (state.lastPlayedIndex >= 0) {
+        const item = state.marks.items[state.lastPlayedIndex];
+        elCurrent.textContent = `Paused at #${state.lastPlayedIndex + 1} ${item.sv} — ${item.uk}`;
+        setActiveCard(state.lastPlayedIndex);
+      } else {
+        elCurrent.textContent = 'Paused.';
+      }
     }
 
     function setActiveCard(index) {
       state.currentIndex = index;
+      if (index >= 0) {
+        state.lastPlayedIndex = index;
+      }
       for (const li of elCardList.querySelectorAll('li')) {
         li.dataset.active = li.dataset.index === String(index) ? '1' : '0';
+      }
+      if (index >= 0) {
+        scrollCardIntoView(index);
       }
     }
 
@@ -267,7 +491,8 @@
         li.dataset.index = String(index);
         li.innerHTML = `<div class="kind">${item.kind}</div><div>${item.sv} — ${item.uk}</div>`;
         li.addEventListener('click', () => {
-          playFromIndex(index, false);
+          setPosInput(index);
+          goToN();
         });
         elCardList.appendChild(li);
       });
@@ -315,6 +540,8 @@
       const ukPlayDur = ukDur / Math.max(cfg.UK_PLAYBACK_RATE, 0.01);
 
       setActiveCard(index);
+      setPosInput(index);
+      persistPosition(index);
       elCurrent.textContent = renderCardLabel(item, index);
 
       const t0 = state.audioCtx.currentTime;
@@ -390,14 +617,15 @@
       await waitMs(cfg.AFTER_UK_END_BEFORE_NEXT_DELAY_SEC * 1000);
     }
 
-    async function playFromIndex(startIndex, playAll) {
+    async function playFromIndex(startIndex) {
       if (state.playing) {
-        stopAll();
+        pausePlayback();
+        return;
       }
 
       state.stopRequested = false;
       state.playing = true;
-      btnPlayAll.disabled = true;
+      setPlayFromNLabel(true);
 
       try {
         await ensureAssetsLoaded();
@@ -406,7 +634,7 @@
         }
 
         const cfg = readConfig();
-        const endIndex = playAll ? state.marks.items.length - 1 : startIndex;
+        const endIndex = state.marks.items.length - 1;
 
         for (let i = startIndex; i <= endIndex; i += 1) {
           if (state.stopRequested) {
@@ -417,14 +645,14 @@
 
         if (!state.stopRequested) {
           setActiveCard(-1);
-          elCurrent.textContent = playAll ? 'Finished all cards.' : 'Finished.';
+          elCurrent.textContent = 'Finished.';
         }
       } catch (err) {
         console.error(err);
         elCurrent.textContent = `Error: ${err.message}`;
       } finally {
         state.playing = false;
-        btnPlayAll.disabled = false;
+        setPlayFromNLabel(false);
       }
     }
 
@@ -434,15 +662,52 @@
       btnModeSequential.dataset.selected = mode === 'sequential' ? '1' : '0';
     }
 
-    btnPlayAll.addEventListener('click', () => playFromIndex(0, true));
-    btnStop.addEventListener('click', stopAll);
+    btnGoN.addEventListener('click', goToN);
+    btnPlayFromN.addEventListener('click', () => {
+      if (state.playing) {
+        pausePlayback();
+        return;
+      }
+      const index = goToN();
+      if (index < 0) return;
+      playFromIndex(index);
+    });
+    inPos.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (state.playing) return;
+        const index = goToN();
+        if (index >= 0) playFromIndex(index);
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && state.lastPlayedIndex >= 0) {
+        persistPosition(state.lastPlayedIndex);
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      if (state.lastPlayedIndex >= 0) {
+        persistPosition(state.lastPlayedIndex);
+      }
+    });
     btnModeOverlap.addEventListener('click', () => setPlayMode('overlap'));
     btnModeSequential.addEventListener('click', () => setPlayMode('sequential'));
 
-    ensureAssetsLoaded()
+    loadMarks()
       .then(() => {
         renderCardList();
-        elCurrent.textContent = 'Ready. Play all or click a card.';
+        inPos.max = String(state.marks.items.length);
+        inPos.min = '1';
+        const local = applySavedIndex(readLocalSavedIndex());
+        elCurrent.textContent = local >= 0
+          ? `At saved #${local + 1}.`
+          : 'Ready.';
+        loadSavedPositionFromDb().then((dbIndex) => {
+          if (dbIndex < 0) return;
+          applySavedIndex(dbIndex);
+          elCurrent.textContent = `At saved #${dbIndex + 1}.`;
+        });
       })
       .catch((err) => {
         console.error(err);
