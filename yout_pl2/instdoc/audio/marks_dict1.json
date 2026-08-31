@@ -1,0 +1,2879 @@
+{
+  "gap_sec": 1.0,
+  "sv_file": "sv_dict1.mp3",
+  "uk_file": "uk_dict1.mp3",
+  "sv_voice": "sv-SE-SofieNeural",
+  "uk_voice": "uk-UA-PolinaNeural",
+  "items": [
+    {
+      "kind": "word",
+      "sv": "utanför",
+      "uk": "поза",
+      "sv_start": 0.0,
+      "sv_end": 2.064,
+      "uk_start": 0.0,
+      "uk_end": 1.776,
+      "en": "outside"
+    },
+    {
+      "kind": "word",
+      "sv": "stod",
+      "uk": "були",
+      "sv_start": 3.064,
+      "sv_end": 4.84,
+      "uk_start": 2.776,
+      "uk_end": 4.552,
+      "en": "were"
+    },
+    {
+      "kind": "word",
+      "sv": "nästan",
+      "uk": "майже",
+      "sv_start": 5.84,
+      "sv_end": 7.76,
+      "uk_start": 5.552,
+      "uk_end": 7.328,
+      "en": "almost"
+    },
+    {
+      "kind": "word",
+      "sv": "dörrhandtaget.",
+      "uk": "ручку",
+      "sv_start": 8.76,
+      "sv_end": 11.088,
+      "uk_start": 8.328,
+      "uk_end": 10.104,
+      "en": "doorknob"
+    },
+    {
+      "kind": "word",
+      "sv": "hålla",
+      "uk": "триматися",
+      "sv_start": 12.088,
+      "sv_end": 13.864,
+      "uk_start": 11.104,
+      "uk_end": 12.904,
+      "en": "hold"
+    },
+    {
+      "kind": "word",
+      "sv": "räcker",
+      "uk": "досить",
+      "sv_start": 14.864,
+      "sv_end": 16.664,
+      "uk_start": 13.904,
+      "uk_end": 15.68,
+      "en": "enough"
+    },
+    {
+      "kind": "word",
+      "sv": "Hörförståelse",
+      "uk": "Слухове сприйняття",
+      "sv_start": 17.664,
+      "sv_end": 19.896,
+      "uk_start": 16.68,
+      "uk_end": 18.984,
+      "en": "Listening comprehension"
+    },
+    {
+      "kind": "word",
+      "sv": "från",
+      "uk": "з",
+      "sv_start": 20.896,
+      "sv_end": 22.672,
+      "uk_start": 19.984,
+      "uk_end": 21.76,
+      "en": "from"
+    },
+    {
+      "kind": "word",
+      "sv": "ger",
+      "uk": "відмовляюся",
+      "sv_start": 23.672,
+      "sv_end": 25.448,
+      "uk_start": 22.76,
+      "uk_end": 24.752,
+      "en": "give"
+    },
+    {
+      "kind": "word",
+      "sv": "upp",
+      "uk": "від",
+      "sv_start": 26.448,
+      "sv_end": 28.224,
+      "uk_start": 25.752,
+      "uk_end": 27.528,
+      "en": "up"
+    },
+    {
+      "kind": "word",
+      "sv": "trodde",
+      "uk": "думала",
+      "sv_start": 29.224,
+      "sv_end": 31.0,
+      "uk_start": 28.528,
+      "uk_end": 30.304,
+      "en": "thought"
+    },
+    {
+      "kind": "word",
+      "sv": "några",
+      "uk": "кілька",
+      "sv_start": 32.0,
+      "sv_end": 33.896,
+      "uk_start": 31.304,
+      "uk_end": 33.08,
+      "en": "a few"
+    },
+    {
+      "kind": "word",
+      "sv": "ord",
+      "uk": "слів",
+      "sv_start": 34.896,
+      "sv_end": 36.672,
+      "uk_start": 34.08,
+      "uk_end": 35.856,
+      "en": "words"
+    },
+    {
+      "kind": "word",
+      "sv": "månaderna",
+      "uk": "місяці",
+      "sv_start": 37.672,
+      "sv_end": 39.664,
+      "uk_start": 36.856,
+      "uk_end": 38.632,
+      "en": "the months"
+    },
+    {
+      "kind": "word",
+      "sv": "gick.",
+      "uk": "проходили",
+      "sv_start": 40.664,
+      "sv_end": 42.44,
+      "uk_start": 39.632,
+      "uk_end": 41.408,
+      "en": "went"
+    },
+    {
+      "kind": "word",
+      "sv": "förstod",
+      "uk": "розуміла",
+      "sv_start": 43.44,
+      "sv_end": 45.24,
+      "uk_start": 42.408,
+      "uk_end": 44.184,
+      "en": "understood"
+    },
+    {
+      "kind": "word",
+      "sv": "mer",
+      "uk": "більше",
+      "sv_start": 46.24,
+      "sv_end": 48.016,
+      "uk_start": 45.184,
+      "uk_end": 46.96,
+      "en": "more"
+    },
+    {
+      "kind": "word",
+      "sv": "skulle",
+      "uk": "мала",
+      "sv_start": 49.016,
+      "sv_end": 50.864,
+      "uk_start": 47.96,
+      "uk_end": 49.736,
+      "en": "would"
+    },
+    {
+      "kind": "word",
+      "sv": "prata",
+      "uk": "говорити",
+      "sv_start": 51.864,
+      "sv_end": 53.64,
+      "uk_start": 50.736,
+      "uk_end": 52.56,
+      "en": "speak"
+    },
+    {
+      "kind": "word",
+      "sv": "blev",
+      "uk": "ставало",
+      "sv_start": 54.64,
+      "sv_end": 56.416,
+      "uk_start": 53.56,
+      "uk_end": 55.336,
+      "en": "became"
+    },
+    {
+      "kind": "word",
+      "sv": "det",
+      "uk": "це",
+      "sv_start": 57.416,
+      "sv_end": 59.192,
+      "uk_start": 56.336,
+      "uk_end": 58.112,
+      "en": "it"
+    },
+    {
+      "kind": "word",
+      "sv": "tomt",
+      "uk": "порожньо",
+      "sv_start": 60.192,
+      "sv_end": 61.968,
+      "uk_start": 59.112,
+      "uk_end": 60.888,
+      "en": "empty"
+    },
+    {
+      "kind": "word",
+      "sv": "i",
+      "uk": "в",
+      "sv_start": 62.968,
+      "sv_end": 64.744,
+      "uk_start": 61.888,
+      "uk_end": 63.664,
+      "en": "in"
+    },
+    {
+      "kind": "word",
+      "sv": "huvudet.",
+      "uk": "голові",
+      "sv_start": 65.744,
+      "sv_end": 67.712,
+      "uk_start": 64.664,
+      "uk_end": 66.44,
+      "en": "head"
+    },
+    {
+      "kind": "word",
+      "sv": "fanns",
+      "uk": "були",
+      "sv_start": 68.712,
+      "sv_end": 70.488,
+      "uk_start": 67.44,
+      "uk_end": 69.216,
+      "en": "were"
+    },
+    {
+      "kind": "word",
+      "sv": "någonstans.",
+      "uk": "десь",
+      "sv_start": 71.488,
+      "sv_end": 73.72,
+      "uk_start": 70.216,
+      "uk_end": 71.992,
+      "en": "somewhere"
+    },
+    {
+      "kind": "word",
+      "sv": "där",
+      "uk": "там",
+      "sv_start": 74.72,
+      "sv_end": 76.496,
+      "uk_start": 72.992,
+      "uk_end": 74.768,
+      "en": "there"
+    },
+    {
+      "kind": "word",
+      "sv": "långsamt.",
+      "uk": "повільно",
+      "sv_start": 77.496,
+      "sv_end": 79.56,
+      "uk_start": 75.768,
+      "uk_end": 77.544,
+      "en": "slowly"
+    },
+    {
+      "kind": "word",
+      "sv": "någon",
+      "uk": "хтось",
+      "sv_start": 80.56,
+      "sv_end": 82.528,
+      "uk_start": 78.544,
+      "uk_end": 80.32,
+      "en": "someone"
+    },
+    {
+      "kind": "word",
+      "sv": "tittade",
+      "uk": "дивився",
+      "sv_start": 83.528,
+      "sv_end": 85.304,
+      "uk_start": 81.32,
+      "uk_end": 83.096,
+      "en": "looked"
+    },
+    {
+      "kind": "word",
+      "sv": "försvann",
+      "uk": "зникало",
+      "sv_start": 86.304,
+      "sv_end": 88.2,
+      "uk_start": 84.096,
+      "uk_end": 85.872,
+      "en": "disappeared"
+    },
+    {
+      "kind": "word",
+      "sv": "mun",
+      "uk": "рот",
+      "sv_start": 89.2,
+      "sv_end": 90.976,
+      "uk_start": 86.872,
+      "uk_end": 88.648,
+      "en": "mouth"
+    },
+    {
+      "kind": "word",
+      "sv": "slog",
+      "uk": "билося",
+      "sv_start": 91.976,
+      "sv_end": 93.752,
+      "uk_start": 89.648,
+      "uk_end": 91.424,
+      "en": "beat"
+    },
+    {
+      "kind": "word",
+      "sv": "hårt.",
+      "uk": "сильно",
+      "sv_start": 94.752,
+      "sv_end": 96.528,
+      "uk_start": 92.424,
+      "uk_end": 94.2,
+      "en": "hard"
+    },
+    {
+      "kind": "word",
+      "sv": "log",
+      "uk": "усміхалася",
+      "sv_start": 97.528,
+      "sv_end": 99.304,
+      "uk_start": 95.2,
+      "uk_end": 97.216,
+      "en": "smiled"
+    },
+    {
+      "kind": "word",
+      "sv": "utan",
+      "uk": "а",
+      "sv_start": 100.304,
+      "sv_end": 102.248,
+      "uk_start": 98.216,
+      "uk_end": 99.992,
+      "en": "but"
+    },
+    {
+      "kind": "word",
+      "sv": "längst",
+      "uk": "найдалі",
+      "sv_start": 103.248,
+      "sv_end": 105.096,
+      "uk_start": 100.992,
+      "uk_end": 102.768,
+      "en": "furthest"
+    },
+    {
+      "kind": "word",
+      "sv": "bak.",
+      "uk": "ззаду",
+      "sv_start": 106.096,
+      "sv_end": 107.872,
+      "uk_start": 103.768,
+      "uk_end": 105.544,
+      "en": "back"
+    },
+    {
+      "kind": "word",
+      "sv": "tidigt,",
+      "uk": "раніше",
+      "sv_start": 108.872,
+      "sv_end": 110.816,
+      "uk_start": 106.544,
+      "uk_end": 108.32,
+      "en": "early"
+    },
+    {
+      "kind": "word",
+      "sv": "nästan",
+      "uk": "майже",
+      "sv_start": 111.816,
+      "sv_end": 113.736,
+      "uk_start": 109.32,
+      "uk_end": 111.096,
+      "en": "almost"
+    },
+    {
+      "kind": "word",
+      "sv": "aldrig.",
+      "uk": "ніколи",
+      "sv_start": 114.736,
+      "sv_end": 116.512,
+      "uk_start": 112.096,
+      "uk_end": 113.872,
+      "en": "never"
+    },
+    {
+      "kind": "word",
+      "sv": "anteckningsbok",
+      "uk": "блокнот",
+      "sv_start": 117.512,
+      "sv_end": 119.84,
+      "uk_start": 114.872,
+      "uk_end": 116.648,
+      "en": "notebook"
+    },
+    {
+      "kind": "word",
+      "sv": "våga,",
+      "uk": "наважитися",
+      "sv_start": 120.84,
+      "sv_end": 122.616,
+      "uk_start": 117.648,
+      "uk_end": 119.592,
+      "en": "dare"
+    },
+    {
+      "kind": "word",
+      "sv": "misslyckas,",
+      "uk": "зазнати невдачі",
+      "sv_start": 123.616,
+      "sv_end": 125.728,
+      "uk_start": 120.592,
+      "uk_end": 122.848,
+      "en": "fail"
+    },
+    {
+      "kind": "word",
+      "sv": "fortsätta.",
+      "uk": "продовжувати",
+      "sv_start": 126.728,
+      "sv_end": 128.768,
+      "uk_start": 123.848,
+      "uk_end": 125.768,
+      "en": "continue"
+    },
+    {
+      "kind": "word",
+      "sv": "berättade",
+      "uk": "розповіла",
+      "sv_start": 129.768,
+      "sv_end": 131.616,
+      "uk_start": 126.768,
+      "uk_end": 128.616,
+      "en": "told"
+    },
+    {
+      "kind": "word",
+      "sv": "muntliga",
+      "uk": "усні",
+      "sv_start": 132.616,
+      "sv_end": 134.632,
+      "uk_start": 129.616,
+      "uk_end": 131.392,
+      "en": "oral"
+    },
+    {
+      "kind": "word",
+      "sv": "äldreboende",
+      "uk": "будинок літніх",
+      "sv_start": 135.632,
+      "sv_end": 137.744,
+      "uk_start": 132.392,
+      "uk_end": 134.456,
+      "en": "nursing home"
+    },
+    {
+      "kind": "word",
+      "sv": "närheten.",
+      "uk": "поблизу",
+      "sv_start": 138.744,
+      "sv_end": 140.856,
+      "uk_start": 135.456,
+      "uk_end": 137.232,
+      "en": "nearby"
+    },
+    {
+      "kind": "word",
+      "sv": "blicken.",
+      "uk": "погляд",
+      "sv_start": 141.856,
+      "sv_end": 143.656,
+      "uk_start": 138.232,
+      "uk_end": 140.008,
+      "en": "gaze"
+    },
+    {
+      "kind": "word",
+      "sv": "lyfte",
+      "uk": "підняла",
+      "sv_start": 144.656,
+      "sv_end": 146.48,
+      "uk_start": 141.008,
+      "uk_end": 142.784,
+      "en": "lifted"
+    },
+    {
+      "kind": "word",
+      "sv": "verkligen",
+      "uk": "справді",
+      "sv_start": 147.48,
+      "sv_end": 149.52,
+      "uk_start": 143.784,
+      "uk_end": 145.56,
+      "en": "really"
+    },
+    {
+      "kind": "word",
+      "sv": "ville",
+      "uk": "хотіла",
+      "sv_start": 150.52,
+      "sv_end": 152.296,
+      "uk_start": 146.56,
+      "uk_end": 148.336,
+      "en": "wanted"
+    },
+    {
+      "kind": "word",
+      "sv": "varit",
+      "uk": "була",
+      "sv_start": 153.296,
+      "sv_end": 155.264,
+      "uk_start": 149.336,
+      "uk_end": 151.112,
+      "en": "been"
+    },
+    {
+      "kind": "word",
+      "sv": "likadan",
+      "uk": "однаково",
+      "sv_start": 156.264,
+      "sv_end": 158.352,
+      "uk_start": 152.112,
+      "uk_end": 153.936,
+      "en": "the same"
+    },
+    {
+      "kind": "word",
+      "sv": "vågar",
+      "uk": "наважуєтеся",
+      "sv_start": 159.352,
+      "sv_end": 161.248,
+      "uk_start": 154.936,
+      "uk_end": 156.976,
+      "en": "dare"
+    },
+    {
+      "kind": "word",
+      "sv": "Men",
+      "uk": "Але",
+      "sv_start": 162.248,
+      "sv_end": 164.024,
+      "uk_start": 157.976,
+      "uk_end": 159.752,
+      "en": "But"
+    },
+    {
+      "kind": "word",
+      "sv": "sedan",
+      "uk": "потім",
+      "sv_start": 165.024,
+      "sv_end": 166.968,
+      "uk_start": 160.752,
+      "uk_end": 162.528,
+      "en": "then"
+    },
+    {
+      "kind": "word",
+      "sv": "sjönk",
+      "uk": "опустилося",
+      "sv_start": 167.968,
+      "sv_end": 169.744,
+      "uk_start": 163.528,
+      "uk_end": 165.496,
+      "en": "sank"
+    },
+    {
+      "kind": "word",
+      "sv": "Framför",
+      "uk": "Перед",
+      "sv_start": 170.744,
+      "sv_end": 172.664,
+      "uk_start": 166.496,
+      "uk_end": 168.272,
+      "en": "In front of"
+    },
+    {
+      "kind": "word",
+      "sv": "knappt",
+      "uk": "ледве",
+      "sv_start": 173.664,
+      "sv_end": 175.44,
+      "uk_start": 169.272,
+      "uk_end": 171.048,
+      "en": "barely"
+    },
+    {
+      "kind": "word",
+      "sv": "mjukt.",
+      "uk": "м'яко",
+      "sv_start": 176.44,
+      "sv_end": 178.288,
+      "uk_start": 172.048,
+      "uk_end": 173.824,
+      "en": "softly"
+    },
+    {
+      "kind": "word",
+      "sv": "log",
+      "uk": "усміхнулася",
+      "sv_start": 179.288,
+      "sv_end": 181.064,
+      "uk_start": 174.824,
+      "uk_end": 176.84,
+      "en": "smiled"
+    },
+    {
+      "kind": "word",
+      "sv": "stod",
+      "uk": "стояла",
+      "sv_start": 182.064,
+      "sv_end": 183.84,
+      "uk_start": 177.84,
+      "uk_end": 179.616,
+      "en": "stood"
+    },
+    {
+      "kind": "word",
+      "sv": "stannade",
+      "uk": "залишалися",
+      "sv_start": 184.84,
+      "sv_end": 186.856,
+      "uk_start": 180.616,
+      "uk_end": 182.608,
+      "en": "stayed"
+    },
+    {
+      "kind": "word",
+      "sv": "möjligt.",
+      "uk": "можливо",
+      "sv_start": 187.856,
+      "sv_end": 189.896,
+      "uk_start": 183.608,
+      "uk_end": 185.384,
+      "en": "possible"
+    },
+    {
+      "kind": "word",
+      "sv": "köksbordet.",
+      "uk": "кухонний стіл",
+      "sv_start": 190.896,
+      "sv_end": 193.128,
+      "uk_start": 186.384,
+      "uk_end": 188.448,
+      "en": "kitchen table"
+    },
+    {
+      "kind": "word",
+      "sv": "rättade",
+      "uk": "виправляв",
+      "sv_start": 194.128,
+      "sv_end": 195.976,
+      "uk_start": 189.448,
+      "uk_end": 191.296,
+      "en": "corrected"
+    },
+    {
+      "kind": "word",
+      "sv": "stolt.",
+      "uk": "горда",
+      "sv_start": 196.976,
+      "sv_end": 198.896,
+      "uk_start": 192.296,
+      "uk_end": 194.072,
+      "en": "proud"
+    },
+    {
+      "kind": "word",
+      "sv": "ledsen.",
+      "uk": "засмучена",
+      "sv_start": 199.896,
+      "sv_end": 201.84,
+      "uk_start": 195.072,
+      "uk_end": 196.992,
+      "en": "sad"
+    },
+    {
+      "kind": "word",
+      "sv": "tyst",
+      "uk": "мовчиш",
+      "sv_start": 202.84,
+      "sv_end": 204.616,
+      "uk_start": 197.992,
+      "uk_end": 199.768,
+      "en": "quiet"
+    },
+    {
+      "kind": "word",
+      "sv": "aldrig",
+      "uk": "ніколи",
+      "sv_start": 205.616,
+      "sv_end": 207.392,
+      "uk_start": 200.768,
+      "uk_end": 202.544,
+      "en": "never"
+    },
+    {
+      "kind": "word",
+      "sv": "klokt,",
+      "uk": "розумне",
+      "sv_start": 208.392,
+      "sv_end": 210.168,
+      "uk_start": 203.544,
+      "uk_end": 205.32,
+      "en": "wise"
+    },
+    {
+      "kind": "word",
+      "sv": "hittade",
+      "uk": "знаходила",
+      "sv_start": 211.168,
+      "sv_end": 212.944,
+      "uk_start": 206.32,
+      "uk_end": 208.192,
+      "en": "found"
+    },
+    {
+      "kind": "word",
+      "sv": "sanningen.",
+      "uk": "правду",
+      "sv_start": 213.944,
+      "sv_end": 215.96,
+      "uk_start": 209.192,
+      "uk_end": 210.968,
+      "en": "the truth"
+    },
+    {
+      "kind": "word",
+      "sv": "rädd.",
+      "uk": "боюся",
+      "sv_start": 216.96,
+      "sv_end": 218.736,
+      "uk_start": 211.968,
+      "uk_end": 213.744,
+      "en": "scared"
+    },
+    {
+      "kind": "word",
+      "sv": "tog",
+      "uk": "взяв",
+      "sv_start": 219.736,
+      "sv_end": 221.512,
+      "uk_start": 214.744,
+      "uk_end": 216.52,
+      "en": "took"
+    },
+    {
+      "kind": "word",
+      "sv": "fel.",
+      "uk": "неправильно",
+      "sv_start": 222.512,
+      "sv_end": 224.288,
+      "uk_start": 217.52,
+      "uk_end": 219.464,
+      "en": "wrong"
+    },
+    {
+      "kind": "word",
+      "sv": "sköt",
+      "uk": "посунув",
+      "sv_start": 225.288,
+      "sv_end": 227.088,
+      "uk_start": 220.464,
+      "uk_end": 222.24,
+      "en": "pushed"
+    },
+    {
+      "kind": "word",
+      "sv": "ögonen",
+      "uk": "очі",
+      "sv_start": 228.088,
+      "sv_end": 229.984,
+      "uk_start": 223.24,
+      "uk_end": 225.016,
+      "en": "eyes"
+    },
+    {
+      "kind": "word",
+      "sv": "Hörförståelse",
+      "uk": "Слухове сприйняття",
+      "sv_start": 230.984,
+      "sv_end": 233.216,
+      "uk_start": 226.016,
+      "uk_end": 228.32,
+      "en": "Listening comprehension"
+    },
+    {
+      "kind": "word",
+      "sv": "bestämmer",
+      "uk": "вирішує",
+      "sv_start": 234.216,
+      "sv_end": 236.064,
+      "uk_start": 229.32,
+      "uk_end": 231.12,
+      "en": "decides"
+    },
+    {
+      "kind": "word",
+      "sv": "barnslig.",
+      "uk": "дитяче",
+      "sv_start": 237.064,
+      "sv_end": 238.936,
+      "uk_start": 232.12,
+      "uk_end": 233.896,
+      "en": "childish"
+    },
+    {
+      "kind": "word",
+      "sv": "precis",
+      "uk": "саме",
+      "sv_start": 239.936,
+      "sv_end": 241.832,
+      "uk_start": 234.896,
+      "uk_end": 236.672,
+      "en": "exactly"
+    },
+    {
+      "kind": "word",
+      "sv": "bestämde",
+      "uk": "вирішила",
+      "sv_start": 242.832,
+      "sv_end": 244.656,
+      "uk_start": 237.672,
+      "uk_end": 239.448,
+      "en": "decided"
+    },
+    {
+      "kind": "word",
+      "sv": "liv",
+      "uk": "життя",
+      "sv_start": 245.656,
+      "sv_end": 247.432,
+      "uk_start": 240.448,
+      "uk_end": 242.224,
+      "en": "life"
+    },
+    {
+      "kind": "word",
+      "sv": "människa,",
+      "uk": "людині",
+      "sv_start": 248.432,
+      "sv_end": 250.4,
+      "uk_start": 243.224,
+      "uk_end": 245.0,
+      "en": "person"
+    },
+    {
+      "kind": "word",
+      "sv": "rösten",
+      "uk": "голос",
+      "sv_start": 251.4,
+      "sv_end": 253.248,
+      "uk_start": 246.0,
+      "uk_end": 247.776,
+      "en": "voice"
+    },
+    {
+      "kind": "word",
+      "sv": "även",
+      "uk": "навіть",
+      "sv_start": 254.248,
+      "sv_end": 256.096,
+      "uk_start": 248.776,
+      "uk_end": 250.552,
+      "en": "even"
+    },
+    {
+      "kind": "word",
+      "sv": "busschauffören:",
+      "uk": "водію автобуса",
+      "sv_start": 257.096,
+      "sv_end": 259.28,
+      "uk_start": 251.552,
+      "uk_end": 253.76,
+      "en": "bus driver"
+    },
+    {
+      "kind": "word",
+      "sv": "nästan",
+      "uk": "майже",
+      "sv_start": 260.28,
+      "sv_end": 262.2,
+      "uk_start": 254.76,
+      "uk_end": 256.536,
+      "en": "almost"
+    },
+    {
+      "kind": "word",
+      "sv": "yr.",
+      "uk": "запамороченим",
+      "sv_start": 263.2,
+      "sv_end": 264.976,
+      "uk_start": 257.536,
+      "uk_end": 259.648,
+      "en": "dizzy"
+    },
+    {
+      "kind": "word",
+      "sv": "hörde",
+      "uk": "почула",
+      "sv_start": 265.976,
+      "sv_end": 267.752,
+      "uk_start": 260.648,
+      "uk_end": 262.424,
+      "en": "heard"
+    },
+    {
+      "kind": "word",
+      "sv": "jag",
+      "uk": "я",
+      "sv_start": 268.752,
+      "sv_end": 270.528,
+      "uk_start": 263.424,
+      "uk_end": 265.2,
+      "en": "I"
+    },
+    {
+      "kind": "word",
+      "sv": "fick",
+      "uk": "довелося",
+      "sv_start": 271.528,
+      "sv_end": 273.304,
+      "uk_start": 266.2,
+      "uk_end": 268.0,
+      "en": "had to"
+    },
+    {
+      "kind": "word",
+      "sv": "ansiktet.",
+      "uk": "обличчя",
+      "sv_start": 274.304,
+      "sv_end": 276.32,
+      "uk_start": 269.0,
+      "uk_end": 270.776,
+      "en": "face"
+    },
+    {
+      "kind": "word",
+      "sv": "röd",
+      "uk": "червоний",
+      "sv_start": 277.32,
+      "sv_end": 279.096,
+      "uk_start": 271.776,
+      "uk_end": 273.552,
+      "en": "red"
+    },
+    {
+      "kind": "word",
+      "sv": "Bakom",
+      "uk": "За",
+      "sv_start": 280.096,
+      "sv_end": 281.944,
+      "uk_start": 274.552,
+      "uk_end": 276.328,
+      "en": "Behind"
+    },
+    {
+      "kind": "word",
+      "sv": "suckade.",
+      "uk": "зітхав",
+      "sv_start": 282.944,
+      "sv_end": 284.84,
+      "uk_start": 277.328,
+      "uk_end": 279.104,
+      "en": "sighed"
+    },
+    {
+      "kind": "word",
+      "sv": "försvinna.",
+      "uk": "зникнути",
+      "sv_start": 285.84,
+      "sv_end": 287.808,
+      "uk_start": 280.104,
+      "uk_end": 281.904,
+      "en": "disappear"
+    },
+    {
+      "kind": "word",
+      "sv": "dog",
+      "uk": "помер",
+      "sv_start": 288.808,
+      "sv_end": 290.584,
+      "uk_start": 282.904,
+      "uk_end": 284.68,
+      "en": "died"
+    },
+    {
+      "kind": "word",
+      "sv": "sämre.",
+      "uk": "гірше",
+      "sv_start": 291.584,
+      "sv_end": 293.408,
+      "uk_start": 285.68,
+      "uk_end": 287.456,
+      "en": "worse"
+    },
+    {
+      "kind": "word",
+      "sv": "gick",
+      "uk": "пішло",
+      "sv_start": 294.408,
+      "sv_end": 296.184,
+      "uk_start": 288.456,
+      "uk_end": 290.232,
+      "en": "went"
+    },
+    {
+      "kind": "word",
+      "sv": "det",
+      "uk": "це",
+      "sv_start": 297.184,
+      "sv_end": 298.96,
+      "uk_start": 291.232,
+      "uk_end": 293.008,
+      "en": "it"
+    },
+    {
+      "kind": "word",
+      "sv": "granne",
+      "uk": "сусід",
+      "sv_start": 299.96,
+      "sv_end": 301.736,
+      "uk_start": 294.008,
+      "uk_end": 295.784,
+      "en": "neighbor"
+    },
+    {
+      "kind": "word",
+      "sv": "trappan.",
+      "uk": "сходи",
+      "sv_start": 302.736,
+      "sv_end": 304.56,
+      "uk_start": 296.784,
+      "uk_end": 298.56,
+      "en": "stairwell"
+    },
+    {
+      "kind": "word",
+      "sv": "svarade",
+      "uk": "відповів",
+      "sv_start": 305.56,
+      "sv_end": 307.6,
+      "uk_start": 299.56,
+      "uk_end": 301.384,
+      "en": "answered"
+    },
+    {
+      "kind": "word",
+      "sv": "förvirrad",
+      "uk": "збентеженою",
+      "sv_start": 308.6,
+      "sv_end": 310.544,
+      "uk_start": 302.384,
+      "uk_end": 304.4,
+      "en": "confused"
+    },
+    {
+      "kind": "word",
+      "sv": "skammen",
+      "uk": "сором",
+      "sv_start": 311.544,
+      "sv_end": 313.44,
+      "uk_start": 305.4,
+      "uk_end": 307.176,
+      "en": "shame"
+    },
+    {
+      "kind": "word",
+      "sv": "våg.",
+      "uk": "хвиля",
+      "sv_start": 314.44,
+      "sv_end": 316.216,
+      "uk_start": 308.176,
+      "uk_end": 309.952,
+      "en": "wave"
+    },
+    {
+      "kind": "word",
+      "sv": "kroppen",
+      "uk": "тіло",
+      "sv_start": 317.216,
+      "sv_end": 318.992,
+      "uk_start": 310.952,
+      "uk_end": 312.728,
+      "en": "body"
+    },
+    {
+      "kind": "word",
+      "sv": "allvarliga",
+      "uk": "серйозними",
+      "sv_start": 319.992,
+      "sv_end": 321.984,
+      "uk_start": 313.728,
+      "uk_end": 315.672,
+      "en": "serious"
+    },
+    {
+      "kind": "word",
+      "sv": "emot.",
+      "uk": "проти",
+      "sv_start": 322.984,
+      "sv_end": 324.88,
+      "uk_start": 316.672,
+      "uk_end": 318.448,
+      "en": "against"
+    },
+    {
+      "kind": "word",
+      "sv": "våga.",
+      "uk": "наважитися",
+      "sv_start": 325.88,
+      "sv_end": 327.656,
+      "uk_start": 319.448,
+      "uk_end": 321.392,
+      "en": "dare"
+    },
+    {
+      "kind": "word",
+      "sv": "försökte",
+      "uk": "намагалася",
+      "sv_start": 328.656,
+      "sv_end": 330.576,
+      "uk_start": 322.392,
+      "uk_end": 324.408,
+      "en": "tried"
+    },
+    {
+      "kind": "word",
+      "sv": "saker.",
+      "uk": "речі",
+      "sv_start": 331.576,
+      "sv_end": 333.424,
+      "uk_start": 325.408,
+      "uk_end": 327.184,
+      "en": "things"
+    },
+    {
+      "kind": "word",
+      "sv": "upprepa?",
+      "uk": "повторити",
+      "sv_start": 334.424,
+      "sv_end": 336.32,
+      "uk_start": 328.184,
+      "uk_end": 329.984,
+      "en": "repeat"
+    },
+    {
+      "kind": "word",
+      "sv": "lyfta",
+      "uk": "піднімати",
+      "sv_start": 337.32,
+      "sv_end": 339.144,
+      "uk_start": 330.984,
+      "uk_end": 332.808,
+      "en": "lift"
+    },
+    {
+      "kind": "word",
+      "sv": "tung",
+      "uk": "важкий",
+      "sv_start": 340.144,
+      "sv_end": 341.92,
+      "uk_start": 333.808,
+      "uk_end": 335.584,
+      "en": "heavy"
+    },
+    {
+      "kind": "word",
+      "sv": "sten.",
+      "uk": "камінь",
+      "sv_start": 342.92,
+      "sv_end": 344.696,
+      "uk_start": 336.584,
+      "uk_end": 338.36,
+      "en": "stone"
+    },
+    {
+      "kind": "word",
+      "sv": "en",
+      "uk": "один",
+      "sv_start": 345.696,
+      "sv_end": 347.472,
+      "uk_start": 339.36,
+      "uk_end": 341.136,
+      "en": "a"
+    },
+    {
+      "kind": "word",
+      "sv": "lättare.",
+      "uk": "легшим",
+      "sv_start": 348.472,
+      "sv_end": 350.296,
+      "uk_start": 342.136,
+      "uk_end": 343.912,
+      "en": "lighter"
+    },
+    {
+      "kind": "word",
+      "sv": "par.",
+      "uk": "парах",
+      "sv_start": 351.296,
+      "sv_end": 353.072,
+      "uk_start": 344.912,
+      "uk_end": 346.688,
+      "en": "pairs"
+    },
+    {
+      "kind": "word",
+      "sv": "hamnade",
+      "uk": "опинилася",
+      "sv_start": 354.072,
+      "sv_end": 355.992,
+      "uk_start": 347.688,
+      "uk_end": 349.584,
+      "en": "ended up"
+    },
+    {
+      "kind": "word",
+      "sv": "långsamt",
+      "uk": "повільно",
+      "sv_start": 356.992,
+      "sv_end": 359.032,
+      "uk_start": 350.584,
+      "uk_end": 352.36,
+      "en": "slowly"
+    },
+    {
+      "kind": "word",
+      "sv": "ansiktet.",
+      "uk": "обличчям",
+      "sv_start": 360.032,
+      "sv_end": 362.048,
+      "uk_start": 353.36,
+      "uk_end": 355.136,
+      "en": "face"
+    },
+    {
+      "kind": "word",
+      "sv": "log",
+      "uk": "усміхалася",
+      "sv_start": 363.048,
+      "sv_end": 364.824,
+      "uk_start": 356.136,
+      "uk_end": 358.152,
+      "en": "smiled"
+    },
+    {
+      "kind": "word",
+      "sv": "viskade",
+      "uk": "прошепотіла",
+      "sv_start": 365.824,
+      "sv_end": 367.696,
+      "uk_start": 359.152,
+      "uk_end": 361.096,
+      "en": "whispered"
+    },
+    {
+      "kind": "word",
+      "sv": "samtidigt.",
+      "uk": "одночасно",
+      "sv_start": 368.696,
+      "sv_end": 370.904,
+      "uk_start": 362.096,
+      "uk_end": 364.016,
+      "en": "at once"
+    },
+    {
+      "kind": "word",
+      "sv": "förändrade",
+      "uk": "змінило",
+      "sv_start": 371.904,
+      "sv_end": 373.944,
+      "uk_start": 365.016,
+      "uk_end": 366.792,
+      "en": "changed"
+    },
+    {
+      "kind": "word",
+      "sv": "modiga",
+      "uk": "сміливі",
+      "sv_start": 374.944,
+      "sv_end": 376.912,
+      "uk_start": 367.792,
+      "uk_end": 369.568,
+      "en": "brave"
+    },
+    {
+      "kind": "word",
+      "sv": "trott",
+      "uk": "думала",
+      "sv_start": 377.912,
+      "sv_end": 379.688,
+      "uk_start": 370.568,
+      "uk_end": 372.344,
+      "en": "thought"
+    },
+    {
+      "kind": "word",
+      "sv": "ändå",
+      "uk": "все ж",
+      "sv_start": 380.688,
+      "sv_end": 382.488,
+      "uk_start": 373.344,
+      "uk_end": 375.12,
+      "en": "still"
+    },
+    {
+      "kind": "word",
+      "sv": "skaka",
+      "uk": "тремтіти",
+      "sv_start": 383.488,
+      "sv_end": 385.408,
+      "uk_start": 376.12,
+      "uk_end": 377.896,
+      "en": "shake"
+    },
+    {
+      "kind": "word",
+      "sv": "ändå",
+      "uk": "все ж",
+      "sv_start": 386.408,
+      "sv_end": 388.208,
+      "uk_start": 378.896,
+      "uk_end": 380.672,
+      "en": "still"
+    },
+    {
+      "kind": "word",
+      "sv": "fortsätta.",
+      "uk": "продовжувати",
+      "sv_start": 389.208,
+      "sv_end": 391.248,
+      "uk_start": 381.672,
+      "uk_end": 383.592,
+      "en": "continue"
+    },
+    {
+      "kind": "word",
+      "sv": "varandra",
+      "uk": "одне одному",
+      "sv_start": 392.248,
+      "sv_end": 394.216,
+      "uk_start": 384.592,
+      "uk_end": 386.56,
+      "en": "each other"
+    },
+    {
+      "kind": "word",
+      "sv": "kort.",
+      "uk": "коротко",
+      "sv_start": 395.216,
+      "sv_end": 396.992,
+      "uk_start": 387.56,
+      "uk_end": 389.336,
+      "en": "briefly"
+    },
+    {
+      "kind": "word",
+      "sv": "åt",
+      "uk": "за",
+      "sv_start": 397.992,
+      "sv_end": 399.768,
+      "uk_start": 390.336,
+      "uk_end": 392.112,
+      "en": "for"
+    },
+    {
+      "kind": "word",
+      "sv": "mig.",
+      "uk": "мене",
+      "sv_start": 400.768,
+      "sv_end": 402.544,
+      "uk_start": 393.112,
+      "uk_end": 394.888,
+      "en": "me"
+    },
+    {
+      "kind": "word",
+      "sv": "fyllde",
+      "uk": "заповнювала",
+      "sv_start": 403.544,
+      "sv_end": 405.44,
+      "uk_start": 395.888,
+      "uk_end": 397.88,
+      "en": "filled"
+    },
+    {
+      "kind": "word",
+      "sv": "leta",
+      "uk": "шукати",
+      "sv_start": 406.44,
+      "sv_end": 408.288,
+      "uk_start": 398.88,
+      "uk_end": 400.656,
+      "en": "search"
+    },
+    {
+      "kind": "word",
+      "sv": "lät",
+      "uk": "дозволяла",
+      "sv_start": 409.288,
+      "sv_end": 411.136,
+      "uk_start": 401.656,
+      "uk_end": 403.552,
+      "en": "let"
+    },
+    {
+      "kind": "word",
+      "sv": "andetag.",
+      "uk": "вдих",
+      "sv_start": 412.136,
+      "sv_end": 414.056,
+      "uk_start": 404.552,
+      "uk_end": 406.328,
+      "en": "breath"
+    },
+    {
+      "kind": "word",
+      "sv": "tog",
+      "uk": "зробила",
+      "sv_start": 415.056,
+      "sv_end": 416.832,
+      "uk_start": 407.328,
+      "uk_end": 409.104,
+      "en": "took"
+    },
+    {
+      "kind": "word",
+      "sv": "långsamt.",
+      "uk": "повільно",
+      "sv_start": 417.832,
+      "sv_end": 419.896,
+      "uk_start": 410.104,
+      "uk_end": 411.88,
+      "en": "slowly"
+    },
+    {
+      "kind": "word",
+      "sv": "tyst.",
+      "uk": "замовкла",
+      "sv_start": 420.896,
+      "sv_end": 422.672,
+      "uk_start": 412.88,
+      "uk_end": 414.728,
+      "en": "silent"
+    },
+    {
+      "kind": "word",
+      "sv": "sanna.",
+      "uk": "правдивими",
+      "sv_start": 423.672,
+      "sv_end": 425.448,
+      "uk_start": 415.728,
+      "uk_end": 417.552,
+      "en": "true"
+    },
+    {
+      "kind": "word",
+      "sv": "gömde",
+      "uk": "ховалася",
+      "sv_start": 426.448,
+      "sv_end": 428.296,
+      "uk_start": 418.552,
+      "uk_end": 420.4,
+      "en": "hid"
+    },
+    {
+      "kind": "word",
+      "sv": "rak.",
+      "uk": "прямим",
+      "sv_start": 429.296,
+      "sv_end": 431.072,
+      "uk_start": 421.4,
+      "uk_end": 423.176,
+      "en": "straight"
+    },
+    {
+      "kind": "word",
+      "sv": "vårdcentralen",
+      "uk": "медичний центр",
+      "sv_start": 432.072,
+      "sv_end": 434.376,
+      "uk_start": 424.176,
+      "uk_end": 426.264,
+      "en": "health center"
+    },
+    {
+      "kind": "word",
+      "sv": "övat.",
+      "uk": "практикувалася",
+      "sv_start": 435.376,
+      "sv_end": 437.224,
+      "uk_start": 427.264,
+      "uk_end": 429.352,
+      "en": "practiced"
+    },
+    {
+      "kind": "word",
+      "sv": "Ändå",
+      "uk": "Проте",
+      "sv_start": 438.224,
+      "sv_end": 440.024,
+      "uk_start": 430.352,
+      "uk_end": 432.128,
+      "en": "Still"
+    },
+    {
+      "kind": "word",
+      "sv": "henne",
+      "uk": "її",
+      "sv_start": 441.024,
+      "sv_end": 442.8,
+      "uk_start": 433.128,
+      "uk_end": 434.904,
+      "en": "her"
+    },
+    {
+      "kind": "word",
+      "sv": "upprepa.",
+      "uk": "повторити",
+      "sv_start": 443.8,
+      "sv_end": 445.696,
+      "uk_start": 435.904,
+      "uk_end": 437.704,
+      "en": "repeat"
+    },
+    {
+      "kind": "word",
+      "sv": "lät",
+      "uk": "звучала",
+      "sv_start": 446.696,
+      "sv_end": 448.544,
+      "uk_start": 438.704,
+      "uk_end": 440.48,
+      "en": "sounded"
+    },
+    {
+      "kind": "word",
+      "sv": "bytte",
+      "uk": "перейшла",
+      "sv_start": 449.544,
+      "sv_end": 451.32,
+      "uk_start": 441.48,
+      "uk_end": 443.256,
+      "en": "switched"
+    },
+    {
+      "kind": "word",
+      "sv": "Efteråt",
+      "uk": "Потім",
+      "sv_start": 452.32,
+      "sv_end": 454.264,
+      "uk_start": 444.256,
+      "uk_end": 446.032,
+      "en": "Afterward"
+    },
+    {
+      "kind": "word",
+      "sv": "skämdes",
+      "uk": "соромилася",
+      "sv_start": 455.264,
+      "sv_end": 457.208,
+      "uk_start": 447.032,
+      "uk_end": 448.952,
+      "en": "felt ashamed"
+    },
+    {
+      "kind": "word",
+      "sv": "röst",
+      "uk": "голос",
+      "sv_start": 458.208,
+      "sv_end": 459.984,
+      "uk_start": 449.952,
+      "uk_end": 451.728,
+      "en": "voice"
+    },
+    {
+      "kind": "word",
+      "sv": "aldrig",
+      "uk": "ніколи",
+      "sv_start": 460.984,
+      "sv_end": 462.76,
+      "uk_start": 452.728,
+      "uk_end": 454.504,
+      "en": "never"
+    },
+    {
+      "kind": "word",
+      "sv": "flera",
+      "uk": "кілька",
+      "sv_start": 463.76,
+      "sv_end": 465.584,
+      "uk_start": 455.504,
+      "uk_end": 457.28,
+      "en": "several"
+    },
+    {
+      "kind": "word",
+      "sv": "eftermiddagen",
+      "uk": "вдень",
+      "sv_start": 466.584,
+      "sv_end": 468.792,
+      "uk_start": 458.28,
+      "uk_end": 460.056,
+      "en": "afternoon"
+    },
+    {
+      "kind": "word",
+      "sv": "skickade",
+      "uk": "надіслала",
+      "sv_start": 469.792,
+      "sv_end": 471.592,
+      "uk_start": 461.056,
+      "uk_end": 462.976,
+      "en": "sent"
+    },
+    {
+      "kind": "word",
+      "sv": "dåligt",
+      "uk": "погана",
+      "sv_start": 472.592,
+      "sv_end": 474.512,
+      "uk_start": 463.976,
+      "uk_end": 465.752,
+      "en": "bad"
+    },
+    {
+      "kind": "word",
+      "sv": "läste",
+      "uk": "читала",
+      "sv_start": 475.512,
+      "sv_end": 477.456,
+      "uk_start": 466.752,
+      "uk_end": 468.528,
+      "en": "read"
+    },
+    {
+      "kind": "word",
+      "sv": "borde",
+      "uk": "повинна",
+      "sv_start": 478.456,
+      "sv_end": 480.232,
+      "uk_start": 469.528,
+      "uk_end": 471.304,
+      "en": "should"
+    },
+    {
+      "kind": "word",
+      "sv": "skämdes",
+      "uk": "соромилася",
+      "sv_start": 481.232,
+      "sv_end": 483.176,
+      "uk_start": 472.304,
+      "uk_end": 474.224,
+      "en": "felt ashamed"
+    },
+    {
+      "kind": "word",
+      "sv": "inför",
+      "uk": "перед",
+      "sv_start": 484.176,
+      "sv_end": 486.0,
+      "uk_start": 475.224,
+      "uk_end": 477.0,
+      "en": "in front of"
+    },
+    {
+      "kind": "word",
+      "sv": "hände?",
+      "uk": "сталося",
+      "sv_start": 487.0,
+      "sv_end": 488.776,
+      "uk_start": 478.0,
+      "uk_end": 479.776,
+      "en": "happened"
+    },
+    {
+      "kind": "word",
+      "sv": "berättade",
+      "uk": "розповіла",
+      "sv_start": 489.776,
+      "sv_end": 491.624,
+      "uk_start": 480.776,
+      "uk_end": 482.624,
+      "en": "told"
+    },
+    {
+      "kind": "word",
+      "sv": "kämpa",
+      "uk": "старатися",
+      "sv_start": 492.624,
+      "sv_end": 494.544,
+      "uk_start": 483.624,
+      "uk_end": 485.472,
+      "en": "try"
+    },
+    {
+      "kind": "word",
+      "sv": "ritade",
+      "uk": "намалювала",
+      "sv_start": 495.544,
+      "sv_end": 497.416,
+      "uk_start": 486.472,
+      "uk_end": 488.368,
+      "en": "drew"
+    },
+    {
+      "kind": "word",
+      "sv": "rutor.",
+      "uk": "квадрати",
+      "sv_start": 498.416,
+      "sv_end": 500.384,
+      "uk_start": 489.368,
+      "uk_end": 491.144,
+      "en": "boxes"
+    },
+    {
+      "kind": "word",
+      "sv": "rutan",
+      "uk": "квадраті",
+      "sv_start": 501.384,
+      "sv_end": 503.328,
+      "uk_start": 492.144,
+      "uk_end": 493.92,
+      "en": "box"
+    },
+    {
+      "kind": "word",
+      "sv": "sann?",
+      "uk": "правдивий",
+      "sv_start": 504.328,
+      "sv_end": 506.104,
+      "uk_start": 494.92,
+      "uk_end": 496.696,
+      "en": "true"
+    },
+    {
+      "kind": "word",
+      "sv": "fortsätta?",
+      "uk": "продовжити",
+      "sv_start": 507.104,
+      "sv_end": 509.048,
+      "uk_start": 497.696,
+      "uk_end": 499.544,
+      "en": "continue"
+    },
+    {
+      "kind": "word",
+      "sv": "pekade",
+      "uk": "вказала",
+      "sv_start": 510.048,
+      "sv_end": 511.824,
+      "uk_start": 500.544,
+      "uk_end": 502.32,
+      "en": "pointed"
+    },
+    {
+      "kind": "word",
+      "sv": "närmare.",
+      "uk": "ближче",
+      "sv_start": 512.824,
+      "sv_end": 514.744,
+      "uk_start": 503.32,
+      "uk_end": 505.096,
+      "en": "closer"
+    },
+    {
+      "kind": "word",
+      "sv": "kom",
+      "uk": "підійшов",
+      "sv_start": 515.744,
+      "sv_end": 517.52,
+      "uk_start": 506.096,
+      "uk_end": 507.872,
+      "en": "came"
+    },
+    {
+      "kind": "word",
+      "sv": "fortfarande",
+      "uk": "все ще",
+      "sv_start": 518.52,
+      "sv_end": 520.656,
+      "uk_start": 508.872,
+      "uk_end": 510.648,
+      "en": "still"
+    },
+    {
+      "kind": "word",
+      "sv": "spegeln",
+      "uk": "дзеркало",
+      "sv_start": 521.656,
+      "sv_end": 523.672,
+      "uk_start": 511.648,
+      "uk_end": 513.424,
+      "en": "mirror"
+    },
+    {
+      "kind": "word",
+      "sv": "grät",
+      "uk": "плакала",
+      "sv_start": 524.672,
+      "sv_end": 526.496,
+      "uk_start": 514.424,
+      "uk_end": 516.2,
+      "en": "cried"
+    },
+    {
+      "kind": "word",
+      "sv": "sorgligt,",
+      "uk": "сумно",
+      "sv_start": 527.496,
+      "sv_end": 529.56,
+      "uk_start": 517.2,
+      "uk_end": 518.976,
+      "en": "sad"
+    },
+    {
+      "kind": "word",
+      "sv": "egen",
+      "uk": "власний",
+      "sv_start": 530.56,
+      "sv_end": 532.36,
+      "uk_start": 519.976,
+      "uk_end": 521.752,
+      "en": "own"
+    },
+    {
+      "kind": "word",
+      "sv": "kastade",
+      "uk": "кинула",
+      "sv_start": 533.36,
+      "sv_end": 535.184,
+      "uk_start": 522.752,
+      "uk_end": 524.528,
+      "en": "threw"
+    },
+    {
+      "kind": "word",
+      "sv": "elakt.",
+      "uk": "злісно",
+      "sv_start": 536.184,
+      "sv_end": 538.08,
+      "uk_start": 525.528,
+      "uk_end": 527.304,
+      "en": "mean"
+    },
+    {
+      "kind": "word",
+      "sv": "mindes",
+      "uk": "пам'ятало",
+      "sv_start": 539.08,
+      "sv_end": 541.048,
+      "uk_start": 528.304,
+      "uk_end": 530.104,
+      "en": "remembered"
+    },
+    {
+      "kind": "word",
+      "sv": "Skammen.",
+      "uk": "Сором",
+      "sv_start": 542.048,
+      "sv_end": 543.944,
+      "uk_start": 531.104,
+      "uk_end": 532.88,
+      "en": "The shame"
+    },
+    {
+      "kind": "word",
+      "sv": "låste",
+      "uk": "замкнула",
+      "sv_start": 544.944,
+      "sv_end": 546.888,
+      "uk_start": 533.88,
+      "uk_end": 535.704,
+      "en": "locked"
+    },
+    {
+      "kind": "word",
+      "sv": "tvinga",
+      "uk": "змусити",
+      "sv_start": 547.888,
+      "sv_end": 549.664,
+      "uk_start": 536.704,
+      "uk_end": 538.48,
+      "en": "force"
+    },
+    {
+      "kind": "word",
+      "sv": "viskande.",
+      "uk": "шепотом",
+      "sv_start": 550.664,
+      "sv_end": 552.608,
+      "uk_start": 539.48,
+      "uk_end": 541.256,
+      "en": "whispering"
+    },
+    {
+      "kind": "word",
+      "sv": "ropade",
+      "uk": "покликала",
+      "sv_start": 553.608,
+      "sv_end": 555.552,
+      "uk_start": 542.256,
+      "uk_end": 544.056,
+      "en": "called"
+    },
+    {
+      "kind": "word",
+      "sv": "svaga",
+      "uk": "слабкими",
+      "sv_start": 556.552,
+      "sv_end": 558.4,
+      "uk_start": 545.056,
+      "uk_end": 546.856,
+      "en": "weak"
+    },
+    {
+      "kind": "word",
+      "sv": "ben",
+      "uk": "ноги",
+      "sv_start": 559.4,
+      "sv_end": 561.176,
+      "uk_start": 547.856,
+      "uk_end": 549.632,
+      "en": "legs"
+    },
+    {
+      "kind": "word",
+      "sv": "sak.",
+      "uk": "річ",
+      "sv_start": 562.176,
+      "sv_end": 563.976,
+      "uk_start": 550.632,
+      "uk_end": 552.408,
+      "en": "thing"
+    },
+    {
+      "kind": "word",
+      "sv": "mitten",
+      "uk": "середині",
+      "sv_start": 564.976,
+      "sv_end": 566.8,
+      "uk_start": 553.408,
+      "uk_end": 555.232,
+      "en": "middle"
+    },
+    {
+      "kind": "word",
+      "sv": "tappade",
+      "uk": "забула",
+      "sv_start": 567.8,
+      "sv_end": 569.576,
+      "uk_start": 556.232,
+      "uk_end": 558.008,
+      "en": "lost"
+    },
+    {
+      "kind": "word",
+      "sv": "andades.",
+      "uk": "дихала",
+      "sv_start": 570.576,
+      "sv_end": 572.496,
+      "uk_start": 559.008,
+      "uk_end": 560.784,
+      "en": "breathed"
+    },
+    {
+      "kind": "word",
+      "sv": "klappa.",
+      "uk": "аплодувати",
+      "sv_start": 573.496,
+      "sv_end": 575.272,
+      "uk_start": 561.784,
+      "uk_end": 563.704,
+      "en": "clap"
+    },
+    {
+      "kind": "word",
+      "sv": "tårar",
+      "uk": "сльози",
+      "sv_start": 576.272,
+      "sv_end": 578.048,
+      "uk_start": 564.704,
+      "uk_end": 566.48,
+      "en": "tears"
+    },
+    {
+      "kind": "word",
+      "sv": "äldreboendet.",
+      "uk": "будинок літніх",
+      "sv_start": 579.048,
+      "sv_end": 581.28,
+      "uk_start": 567.48,
+      "uk_end": 569.544,
+      "en": "nursing home"
+    },
+    {
+      "kind": "word",
+      "sv": "Hörförståelse",
+      "uk": "Розуміння на слух",
+      "sv_start": 582.28,
+      "sv_end": 584.512,
+      "uk_start": 570.544,
+      "uk_end": 572.8,
+      "en": "Listening comprehension"
+    },
+    {
+      "kind": "word",
+      "sv": "gömde",
+      "uk": "ховалася",
+      "sv_start": 585.512,
+      "sv_end": 587.36,
+      "uk_start": 573.8,
+      "uk_end": 575.648,
+      "en": "hid"
+    },
+    {
+      "kind": "word",
+      "sv": "äldre",
+      "uk": "старший",
+      "sv_start": 588.36,
+      "sv_end": 590.136,
+      "uk_start": 576.648,
+      "uk_end": 578.424,
+      "en": "elderly"
+    },
+    {
+      "kind": "word",
+      "sv": "vände",
+      "uk": "повернувся",
+      "sv_start": 591.136,
+      "sv_end": 592.96,
+      "uk_start": 579.424,
+      "uk_end": 581.248,
+      "en": "turned"
+    },
+    {
+      "kind": "word",
+      "sv": "stund.",
+      "uk": "мить",
+      "sv_start": 593.96,
+      "sv_end": 595.76,
+      "uk_start": 582.248,
+      "uk_end": 584.024,
+      "en": "moment"
+    },
+    {
+      "kind": "word",
+      "sv": "lätt.",
+      "uk": "легше",
+      "sv_start": 596.76,
+      "sv_end": 598.536,
+      "uk_start": 585.024,
+      "uk_end": 586.8,
+      "en": "easy"
+    },
+    {
+      "kind": "word",
+      "sv": "bjudit",
+      "uk": "запрошувала",
+      "sv_start": 599.536,
+      "sv_end": 601.576,
+      "uk_start": 587.8,
+      "uk_end": 589.72,
+      "en": "invited"
+    },
+    {
+      "kind": "word",
+      "sv": "nära",
+      "uk": "близька",
+      "sv_start": 602.576,
+      "sv_end": 604.376,
+      "uk_start": 590.72,
+      "uk_end": 592.496,
+      "en": "close"
+    },
+    {
+      "kind": "word",
+      "sv": "mod.",
+      "uk": "відвага",
+      "sv_start": 605.376,
+      "sv_end": 607.152,
+      "uk_start": 593.496,
+      "uk_end": 595.272,
+      "en": "courage"
+    },
+    {
+      "kind": "word",
+      "sv": "framåt.",
+      "uk": "вперед",
+      "sv_start": 608.152,
+      "sv_end": 610.12,
+      "uk_start": 596.272,
+      "uk_end": 598.048,
+      "en": "forward"
+    },
+    {
+      "kind": "word",
+      "sv": "ihåg:",
+      "uk": "пам'ятай",
+      "sv_start": 611.12,
+      "sv_end": 612.944,
+      "uk_start": 599.048,
+      "uk_end": 600.824,
+      "en": "remember"
+    },
+    {
+      "kind": "word",
+      "sv": "förändra",
+      "uk": "змінити",
+      "sv_start": 613.944,
+      "sv_end": 615.912,
+      "uk_start": 601.824,
+      "uk_end": 603.6,
+      "en": "change"
+    },
+    {
+      "kind": "word",
+      "sv": "bestämmer",
+      "uk": "вирішує",
+      "sv_start": 616.912,
+      "sv_end": 618.76,
+      "uk_start": 604.6,
+      "uk_end": 606.4,
+      "en": "decides"
+    },
+    {
+      "kind": "word",
+      "sv": "även",
+      "uk": "навіть",
+      "sv_start": 619.76,
+      "sv_end": 621.608,
+      "uk_start": 607.4,
+      "uk_end": 609.176,
+      "en": "even"
+    },
+    {
+      "kind": "word",
+      "sv": "rör",
+      "uk": "рухається",
+      "sv_start": 622.608,
+      "sv_end": 624.384,
+      "uk_start": 610.176,
+      "uk_end": 612.0,
+      "en": "moves"
+    },
+    {
+      "kind": "word",
+      "sv": "frusen.",
+      "uk": "замерз",
+      "sv_start": 625.384,
+      "sv_end": 627.328,
+      "uk_start": 613.0,
+      "uk_end": 614.776,
+      "en": "cold"
+    },
+    {
+      "kind": "word",
+      "sv": "säker.",
+      "uk": "впевнений",
+      "sv_start": 628.328,
+      "sv_end": 630.152,
+      "uk_start": 615.776,
+      "uk_end": 617.6,
+      "en": "sure"
+    },
+    {
+      "kind": "word",
+      "sv": "även",
+      "uk": "навіть",
+      "sv_start": 631.152,
+      "sv_end": 633.0,
+      "uk_start": 618.6,
+      "uk_end": 620.376,
+      "en": "even"
+    },
+    {
+      "kind": "word",
+      "sv": "försvann.",
+      "uk": "зник",
+      "sv_start": 634.0,
+      "sv_end": 635.896,
+      "uk_start": 621.376,
+      "uk_end": 623.152,
+      "en": "disappeared"
+    },
+    {
+      "kind": "word",
+      "sv": "hitta.",
+      "uk": "знайти",
+      "sv_start": 636.896,
+      "sv_end": 638.672,
+      "uk_start": 624.152,
+      "uk_end": 625.928,
+      "en": "find"
+    },
+    {
+      "kind": "word",
+      "sv": "att",
+      "uk": "щоб",
+      "sv_start": 639.672,
+      "sv_end": 641.448,
+      "uk_start": 626.928,
+      "uk_end": 628.704,
+      "en": "to"
+    },
+    {
+      "kind": "word",
+      "sv": "räcker",
+      "uk": "досить",
+      "sv_start": 642.448,
+      "sv_end": 644.248,
+      "uk_start": 629.704,
+      "uk_end": 631.48,
+      "en": "enough"
+    },
+    {
+      "kind": "word",
+      "sv": "knappt.",
+      "uk": "ледве",
+      "sv_start": 645.248,
+      "sv_end": 647.024,
+      "uk_start": 632.48,
+      "uk_end": 634.256,
+      "en": "barely"
+    },
+    {
+      "kind": "word",
+      "sv": "väldigt",
+      "uk": "дуже",
+      "sv_start": 648.024,
+      "sv_end": 650.016,
+      "uk_start": 635.256,
+      "uk_end": 637.032,
+      "en": "very"
+    },
+    {
+      "kind": "word",
+      "sv": "beslut.",
+      "uk": "рішення",
+      "sv_start": 651.016,
+      "sv_end": 652.936,
+      "uk_start": 638.032,
+      "uk_end": 639.808,
+      "en": "decision"
+    },
+    {
+      "kind": "word",
+      "sv": "Bestämde",
+      "uk": "Вирішив",
+      "sv_start": 653.936,
+      "sv_end": 655.832,
+      "uk_start": 640.808,
+      "uk_end": 642.584,
+      "en": "Decided"
+    },
+    {
+      "kind": "word",
+      "sv": "valde",
+      "uk": "вибрав",
+      "sv_start": 656.832,
+      "sv_end": 658.728,
+      "uk_start": 643.584,
+      "uk_end": 645.36,
+      "en": "chose"
+    },
+    {
+      "kind": "word",
+      "sv": "Suckade",
+      "uk": "Зітхнув",
+      "sv_start": 659.728,
+      "sv_end": 661.624,
+      "uk_start": 646.36,
+      "uk_end": 648.136,
+      "en": "Sighed"
+    },
+    {
+      "kind": "word",
+      "sv": "andades",
+      "uk": "видихнув",
+      "sv_start": 662.624,
+      "sv_end": 664.544,
+      "uk_start": 649.136,
+      "uk_end": 650.912,
+      "en": "breathed"
+    },
+    {
+      "kind": "word",
+      "sv": "tungt,",
+      "uk": "важко",
+      "sv_start": 665.544,
+      "sv_end": 667.32,
+      "uk_start": 651.912,
+      "uk_end": 653.688,
+      "en": "heavily"
+    },
+    {
+      "kind": "word",
+      "sv": "irriterad.",
+      "uk": "роздратований",
+      "sv_start": 668.32,
+      "sv_end": 670.312,
+      "uk_start": 654.688,
+      "uk_end": 656.752,
+      "en": "irritated"
+    },
+    {
+      "kind": "word",
+      "sv": "tomt",
+      "uk": "порожньо",
+      "sv_start": 671.312,
+      "sv_end": 673.088,
+      "uk_start": 657.752,
+      "uk_end": 659.528,
+      "en": "blank"
+    },
+    {
+      "kind": "word",
+      "sv": "plötsligt",
+      "uk": "раптом",
+      "sv_start": 674.088,
+      "sv_end": 676.032,
+      "uk_start": 660.528,
+      "uk_end": 662.304,
+      "en": "suddenly"
+    },
+    {
+      "kind": "word",
+      "sv": "tankarna.",
+      "uk": "думки",
+      "sv_start": 677.032,
+      "sv_end": 678.88,
+      "uk_start": 663.304,
+      "uk_end": 665.08,
+      "en": "thoughts"
+    },
+    {
+      "kind": "word",
+      "sv": "Förvirrad",
+      "uk": "Заплутаний",
+      "sv_start": 679.88,
+      "sv_end": 681.848,
+      "uk_start": 666.08,
+      "uk_end": 668.048,
+      "en": "Confused"
+    },
+    {
+      "kind": "word",
+      "sv": "osäker.",
+      "uk": "невпевнено",
+      "sv_start": 682.848,
+      "sv_end": 684.792,
+      "uk_start": 669.048,
+      "uk_end": 670.968,
+      "en": "uncertain"
+    },
+    {
+      "kind": "word",
+      "sv": "Hamnade",
+      "uk": "Опинився",
+      "sv_start": 685.792,
+      "sv_end": 687.712,
+      "uk_start": 671.968,
+      "uk_end": 673.744,
+      "en": "Ended up"
+    },
+    {
+      "kind": "word",
+      "sv": "Modiga",
+      "uk": "Відважні",
+      "sv_start": 688.712,
+      "sv_end": 690.656,
+      "uk_start": 674.744,
+      "uk_end": 676.568,
+      "en": "Brave"
+    },
+    {
+      "kind": "word",
+      "sv": "läskigt.",
+      "uk": "страшно",
+      "sv_start": 691.656,
+      "sv_end": 693.648,
+      "uk_start": 677.568,
+      "uk_end": 679.344,
+      "en": "scary"
+    },
+    {
+      "kind": "word",
+      "sv": "fast",
+      "uk": "навіть якщо",
+      "sv_start": 694.648,
+      "sv_end": 696.424,
+      "uk_start": 680.344,
+      "uk_end": 682.312,
+      "en": "even if"
+    },
+    {
+      "kind": "word",
+      "sv": "vardagsmening",
+      "uk": "повсякденне речення",
+      "sv_start": 697.424,
+      "sv_end": 699.656,
+      "uk_start": 683.312,
+      "uk_end": 685.76,
+      "en": "everyday sentence"
+    },
+    {
+      "kind": "word",
+      "sv": "stunden",
+      "uk": "момент",
+      "sv_start": 700.656,
+      "sv_end": 702.624,
+      "uk_start": 686.76,
+      "uk_end": 688.536,
+      "en": "moment"
+    },
+    {
+      "kind": "word",
+      "sv": "mottagning",
+      "uk": "приймальня",
+      "sv_start": 703.624,
+      "sv_end": 705.712,
+      "uk_start": 689.536,
+      "uk_end": 691.312,
+      "en": "clinic"
+    },
+    {
+      "kind": "word",
+      "sv": "vanliga",
+      "uk": "поширені",
+      "sv_start": 706.712,
+      "sv_end": 708.728,
+      "uk_start": 692.312,
+      "uk_end": 694.088,
+      "en": "common"
+    },
+    {
+      "kind": "word",
+      "sv": "hälsoproblem.",
+      "uk": "проблеми здоров'я",
+      "sv_start": 709.728,
+      "sv_end": 711.936,
+      "uk_start": 695.088,
+      "uk_end": 697.2,
+      "en": "health issues"
+    },
+    {
+      "kind": "word",
+      "sv": "Skämdes",
+      "uk": "Соромився",
+      "sv_start": 712.936,
+      "sv_end": 714.88,
+      "uk_start": 698.2,
+      "uk_end": 700.048,
+      "en": "Felt ashamed"
+    },
+    {
+      "kind": "word",
+      "sv": "generad",
+      "uk": "збентежений",
+      "sv_start": 715.88,
+      "sv_end": 717.824,
+      "uk_start": 701.048,
+      "uk_end": 703.04,
+      "en": "embarrassed"
+    },
+    {
+      "kind": "word",
+      "sv": "över",
+      "uk": "через",
+      "sv_start": 718.824,
+      "sv_end": 720.6,
+      "uk_start": 704.04,
+      "uk_end": 705.816,
+      "en": "about"
+    },
+    {
+      "kind": "word",
+      "sv": "försvinna.",
+      "uk": "зникнути",
+      "sv_start": 721.6,
+      "sv_end": 723.568,
+      "uk_start": 706.816,
+      "uk_end": 708.616,
+      "en": "disappear"
+    },
+    {
+      "kind": "word",
+      "sv": "helst",
+      "uk": "краще",
+      "sv_start": 724.568,
+      "sv_end": 726.344,
+      "uk_start": 709.616,
+      "uk_end": 711.392,
+      "en": "rather"
+    },
+    {
+      "kind": "word",
+      "sv": "slippa",
+      "uk": "уникнути",
+      "sv_start": 727.344,
+      "sv_end": 729.24,
+      "uk_start": 712.392,
+      "uk_end": 714.192,
+      "en": "avoid"
+    },
+    {
+      "kind": "word",
+      "sv": "synas.",
+      "uk": "з'являтися",
+      "sv_start": 730.24,
+      "sv_end": 732.256,
+      "uk_start": 715.192,
+      "uk_end": 717.112,
+      "en": "be seen"
+    },
+    {
+      "kind": "word",
+      "sv": "vana",
+      "uk": "звичка",
+      "sv_start": 733.256,
+      "sv_end": 735.032,
+      "uk_start": 718.112,
+      "uk_end": 719.888,
+      "en": "habit"
+    },
+    {
+      "kind": "word",
+      "sv": "daglig",
+      "uk": "щоденна",
+      "sv_start": 736.032,
+      "sv_end": 737.832,
+      "uk_start": 720.888,
+      "uk_end": 722.736,
+      "en": "daily"
+    },
+    {
+      "kind": "word",
+      "sv": "munnen.",
+      "uk": "ротом",
+      "sv_start": 738.832,
+      "sv_end": 740.632,
+      "uk_start": 723.736,
+      "uk_end": 725.512,
+      "en": "mouth"
+    },
+    {
+      "kind": "word",
+      "sv": "Uttalade",
+      "uk": "Вимовлене",
+      "sv_start": 741.632,
+      "sv_end": 743.672,
+      "uk_start": 726.512,
+      "uk_end": 728.312,
+      "en": "Pronounced"
+    },
+    {
+      "kind": "word",
+      "sv": "utveckling.",
+      "uk": "розвиток",
+      "sv_start": 744.672,
+      "sv_end": 746.712,
+      "uk_start": 729.312,
+      "uk_end": 731.088,
+      "en": "development"
+    },
+    {
+      "kind": "word",
+      "sv": "eget",
+      "uk": "власний",
+      "sv_start": 747.712,
+      "sv_end": 749.536,
+      "uk_start": 732.088,
+      "uk_end": 733.864,
+      "en": "own"
+    },
+    {
+      "kind": "word",
+      "sv": "framsteg",
+      "uk": "прогрес",
+      "sv_start": 750.536,
+      "sv_end": 752.528,
+      "uk_start": 734.864,
+      "uk_end": 736.64,
+      "en": "progress"
+    },
+    {
+      "kind": "phrase",
+      "sv": "ger upp",
+      "uk": "відмовляюся від",
+      "sv_start": 753.528,
+      "sv_end": 755.664,
+      "uk_start": 737.64,
+      "uk_end": 739.848,
+      "en": "give up"
+    },
+    {
+      "kind": "phrase",
+      "sv": "några ord",
+      "uk": "кілька слів",
+      "sv_start": 756.664,
+      "sv_end": 758.848,
+      "uk_start": 740.848,
+      "uk_end": 742.768,
+      "en": "a few words"
+    },
+    {
+      "kind": "phrase",
+      "sv": "månaderna gick.",
+      "uk": "місяці проходили",
+      "sv_start": 759.848,
+      "sv_end": 762.128,
+      "uk_start": 743.768,
+      "uk_end": 746.0,
+      "en": "the months went by"
+    },
+    {
+      "kind": "phrase",
+      "sv": "förstod mer",
+      "uk": "розуміла більше",
+      "sv_start": 763.128,
+      "sv_end": 765.216,
+      "uk_start": 747.0,
+      "uk_end": 749.136,
+      "en": "understood more"
+    },
+    {
+      "kind": "phrase",
+      "sv": "skulle prata",
+      "uk": "мала говорити",
+      "sv_start": 766.216,
+      "sv_end": 768.424,
+      "uk_start": 750.136,
+      "uk_end": 752.176,
+      "en": "had to speak"
+    },
+    {
+      "kind": "phrase",
+      "sv": "tomt i huvudet",
+      "uk": "порожньо в голові",
+      "sv_start": 769.424,
+      "sv_end": 771.824,
+      "uk_start": 753.176,
+      "uk_end": 755.264,
+      "en": "blank in my head"
+    },
+    {
+      "kind": "phrase",
+      "sv": "där någonstans.",
+      "uk": "десь там",
+      "sv_start": 772.824,
+      "sv_end": 775.368,
+      "uk_start": 756.264,
+      "uk_end": 758.04,
+      "en": "there somewhere"
+    },
+    {
+      "kind": "phrase",
+      "sv": "någon tittade",
+      "uk": "хтось дивився",
+      "sv_start": 776.368,
+      "sv_end": 778.744,
+      "uk_start": 759.04,
+      "uk_end": 761.032,
+      "en": "someone looked"
+    },
+    {
+      "kind": "phrase",
+      "sv": "slog hårt.",
+      "uk": "билося сильно",
+      "sv_start": 779.744,
+      "sv_end": 781.928,
+      "uk_start": 762.032,
+      "uk_end": 764.072,
+      "en": "beat hard"
+    },
+    {
+      "kind": "phrase",
+      "sv": "längst bak.",
+      "uk": "на задній парті",
+      "sv_start": 782.928,
+      "sv_end": 785.04,
+      "uk_start": 765.072,
+      "uk_end": 767.208,
+      "en": "at the back"
+    },
+    {
+      "kind": "phrase",
+      "sv": "nästan aldrig.",
+      "uk": "майже ніколи",
+      "sv_start": 786.04,
+      "sv_end": 788.296,
+      "uk_start": 768.208,
+      "uk_end": 770.176,
+      "en": "almost never"
+    },
+    {
+      "kind": "phrase",
+      "sv": "ville verkligen",
+      "uk": "справді хотіла",
+      "sv_start": 789.296,
+      "sv_end": 791.648,
+      "uk_start": 771.176,
+      "uk_end": 773.288,
+      "en": "really wanted"
+    },
+    {
+      "kind": "phrase",
+      "sv": "Men sedan",
+      "uk": "Але потім",
+      "sv_start": 792.648,
+      "sv_end": 794.904,
+      "uk_start": 774.288,
+      "uk_end": 776.088,
+      "en": "But then"
+    },
+    {
+      "kind": "phrase",
+      "sv": "nästan yr.",
+      "uk": "майже запамороченим",
+      "sv_start": 795.904,
+      "sv_end": 797.992,
+      "uk_start": 777.088,
+      "uk_end": 779.512,
+      "en": "almost dizzy"
+    },
+    {
+      "kind": "phrase",
+      "sv": "jag fick",
+      "uk": "мені довелося",
+      "sv_start": 798.992,
+      "sv_end": 800.936,
+      "uk_start": 780.512,
+      "uk_end": 782.528,
+      "en": "I had to"
+    },
+    {
+      "kind": "phrase",
+      "sv": "gick det sämre.",
+      "uk": "все пішло гірше",
+      "sv_start": 801.936,
+      "sv_end": 804.168,
+      "uk_start": 783.528,
+      "uk_end": 785.688,
+      "en": "it went worse"
+    },
+    {
+      "kind": "phrase",
+      "sv": "en tung sten.",
+      "uk": "важкий камінь",
+      "sv_start": 805.168,
+      "sv_end": 807.304,
+      "uk_start": 786.688,
+      "uk_end": 788.68,
+      "en": "a heavy stone"
+    },
+    {
+      "kind": "phrase",
+      "sv": "ändå fortsätta.",
+      "uk": "все ж продовжувати",
+      "sv_start": 808.304,
+      "sv_end": 810.776,
+      "uk_start": 789.68,
+      "uk_end": 791.936,
+      "en": "still continue"
+    },
+    {
+      "kind": "phrase",
+      "sv": "åt mig.",
+      "uk": "за мене",
+      "sv_start": 811.776,
+      "sv_end": 813.576,
+      "uk_start": 792.936,
+      "uk_end": 794.712,
+      "en": "for me"
+    },
+    {
+      "kind": "phrase",
+      "sv": "Efteråt skämdes",
+      "uk": "потім соромилася",
+      "sv_start": 814.576,
+      "sv_end": 817.024,
+      "uk_start": 795.712,
+      "uk_end": 797.896,
+      "en": "felt ashamed afterward"
+    },
+    {
+      "kind": "phrase",
+      "sv": "kom närmare.",
+      "uk": "наближався",
+      "sv_start": 818.024,
+      "sv_end": 820.208,
+      "uk_start": 798.896,
+      "uk_end": 800.792,
+      "en": "drew closer"
+    },
+    {
+      "kind": "phrase",
+      "sv": "att hitta.",
+      "uk": "знайти",
+      "sv_start": 821.208,
+      "sv_end": 823.2,
+      "uk_start": 801.792,
+      "uk_end": 803.568,
+      "en": "to find"
+    },
+    {
+      "kind": "phrase",
+      "sv": "vanliga hälsoproblem.",
+      "uk": "поширені проблеми здоров'я",
+      "sv_start": 824.2,
+      "sv_end": 826.912,
+      "uk_start": 804.568,
+      "uk_end": 807.256,
+      "en": "common health issues"
+    },
+    {
+      "kind": "phrase",
+      "sv": "generad över",
+      "uk": "збентежений через",
+      "sv_start": 827.912,
+      "sv_end": 830.216,
+      "uk_start": 808.256,
+      "uk_end": 810.512,
+      "en": "embarrassed about"
+    },
+    {
+      "kind": "phrase",
+      "sv": "slippa synas.",
+      "uk": "не з'являтися",
+      "sv_start": 831.216,
+      "sv_end": 833.616,
+      "uk_start": 811.512,
+      "uk_end": 813.576,
+      "en": "not be seen"
+    },
+    {
+      "kind": "phrase",
+      "sv": "daglig vana",
+      "uk": "щоденна звичка",
+      "sv_start": 834.616,
+      "sv_end": 836.728,
+      "uk_start": 814.576,
+      "uk_end": 816.784,
+      "en": "daily habit"
+    }
+  ]
+}

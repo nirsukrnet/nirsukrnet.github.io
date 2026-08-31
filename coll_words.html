@@ -272,9 +272,19 @@
       <div class="row" style="margin:0;">
         <button id="btnTmExport" type="button">Export full JSON</button>
         <button id="btnTmImport" type="button">Import full JSON</button>
-        <input id="tmImportFile" type="file" accept=".json,application/json" hidden />
       </div>
     </form>
+  </dialog>
+  <input id="tmImportFile" type="file" accept=".json,application/json" hidden />
+
+  <dialog id="dlgTmImportSuccess" class="tm-dialog-sm">
+    <div class="row" style="margin:0 0 8px; align-items:center;">
+      <strong>Import complete</strong>
+    </div>
+    <pre id="tmImportSuccessBody" style="margin:0 0 12px; white-space:pre-wrap; font-family:inherit; font-size:14px;"></pre>
+    <div class="row" style="margin:0; justify-content:flex-end;">
+      <button id="btnTmImportSuccessClose" type="button">Закрити</button>
+    </div>
   </dialog>
 
   <dialog id="dlgTmNotice" class="tm-dialog-sm">
@@ -386,6 +396,18 @@
 
     function cleanStr(x) {
       return (x == null) ? '' : String(x).trim();
+    }
+
+    function exportStampLocal() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return (
+        pad(d.getDate()) +
+        pad(d.getMonth() + 1) +
+        String(d.getFullYear()).slice(-2) +
+        pad(d.getHours()) +
+        pad(d.getMinutes())
+      );
     }
 
     function cleanLangCode(x) {
@@ -1695,6 +1717,45 @@
       showDialogById('dlgTmNotice');
     }
 
+    function buildImportSuccessSummary(payload, analysis) {
+      const items = Array.isArray(payload && payload.items) ? payload.items : [];
+      let wordCount = 0;
+      let phraseCount = 0;
+      items.forEach((it) => {
+        wordCount += (it.words || []).length;
+        phraseCount += (it.phrase || []).length;
+      });
+      const missing = (analysis && Array.isArray(analysis.missing)) ? analysis.missing.length : 0;
+      const lines = [
+        'Імпорт завершено успішно.',
+        '',
+        `Video: ${cleanStr(payload && payload.videoId)}`,
+        `Items: ${items.length}`,
+        `Words in import: ${wordCount}`,
+        `Words with translation: ${analysis ? analysis.translatedWordCount : wordCount}`,
+        `Phrases: ${phraseCount}`,
+        `Missing translations: ${missing}`,
+        '',
+        'Дані збережено в базу.'
+      ];
+      return lines.join('\n');
+    }
+
+    function showTmImportSuccess(body) {
+      const pre = document.getElementById('tmImportSuccessBody');
+      const btn = document.getElementById('btnTmImportSuccessClose');
+      const dlg = document.getElementById('dlgTmImportSuccess');
+      if (!dlg) return;
+      if (pre) pre.textContent = cleanStr(body);
+      if (btn) {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          closeDialogById('dlgTmImportSuccess');
+        };
+      }
+      showDialogById('dlgTmImportSuccess');
+    }
+
     function showTmNoticeAsync(title, body) {
       return new Promise((resolve) => {
         const dlg = document.getElementById('dlgTmNotice');
@@ -1836,7 +1897,7 @@
           );
         }
 
-        const filename = `collection_words_${currentVideoId}.json`;
+        const filename = `collection_words_${currentVideoId}_${exportStampLocal()}.json`;
         tm.downloadJson(filename, payload);
         setStatus(`Exported JSON: ${payload.items.length} items`);
       } catch (err) {
@@ -1942,7 +2003,7 @@
         }
 
         await applyTranslationImport(parsed, dbDoc);
-        closeDialogById('dlgTranslationMode');
+        showTmImportSuccess(buildImportSuccessSummary(parsed, analysis));
       } catch (err) {
         showTmNotice('Import failed', cleanStr(err && err.message) || 'Unknown error');
         setStatus('Import failed');

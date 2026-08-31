@@ -1,0 +1,41 @@
+{
+  "sections": [
+    {
+      "title": "Main:",
+      "items": [
+        { "label": "Dictionary", "href": "yout_pl2/instdoc/dual_tts1.html" },        
+        { "label": "YouTube Player 2 + Transcript", "href": "yout_pl2.html" },
+        { "label": "Collection Words", "href": "coll_words.html" },
+        { "label": "Translation Tools", "href": "transl.html" },
+        { "label": "Voice Recognition", "href": "rec_voice.html" },
+        { "label": "YT Trans Text Tools", "href": "yt_text.html" },
+        { "label": "PDF Viewer", "href": "pdf_viewer/pdf_main.html" },
+        { "label": "Phrase Audio Player", "href": "mp3.html" }
+      ]
+    },
+    {
+      "title": "pdf_viewer:",
+      "items": [
+        { "label": "PDF Viewer", "href": "pdf_viewer/pdf_main.html" },
+        {
+          "label": "Move/Transit from PDF OCR DATA to YouTube (for further translation)",
+          "href": "pdf_viewer/trt_ocr_yt.html"
+        },
+        {
+          "label": "Move-transit from YouTube to OCR (new DATA)",
+          "href": "pdf_viewer/youtube_trt_ocr.html"
+        }
+      ]
+    },
+    {
+      "title": "Debuging TOOLS:",
+      "items": [
+        { "label": "Test Embed YouTube", "href": "yout_test.html" },
+        { "label": "GCP DataEng", "href": "www_html/gcp_base01.html" },
+        { "label": "Service Test", "href": "service_test/test_service.html" },
+        { "label": "Librosa MP3 Test", "href": "test_librosa/librosa_mp3_1.html" },
+        { "label": "Final Librosa Test", "href": "test_librosa/final_librosa1.html" }
+      ]
+    }
+  ]
+}

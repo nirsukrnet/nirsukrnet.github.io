@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dictionary — dual TTS</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #fff;
+      color: #111;
+    }
+
+    .dialog {
+      width: calc(100vw - 16px);
+      max-width: 560px;
+      min-height: calc(100vh - 16px);
+      margin: 8px auto;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid currentColor;
+      background: transparent;
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-height: 36px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .muted {
+      opacity: 0.7;
+      font-size: 14px;
+    }
+
+    .current {
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    li {
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    li[data-active="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    .kind {
+      font-size: 12px;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    .spacer { height: 10px; }
+  </style>
+</head>
+<body>
+  <div class="dialog">
+    <h1>Dictionary</h1>
+    <div class="muted">SV → ліве вухо, UK → праве. marks_dict1.json (287 cards)</div>
+
+    <div class="spacer"></div>
+
+    <div class="row">
+      <button id="btnPlayAll" type="button">Play all</button>
+      <button id="btnStop" type="button">Stop</button>
+    </div>
+
+    <div class="row" style="margin-top: 10px;">
+      <span class="muted">Mode:</span>
+      <button id="btnModeOverlap" type="button" data-selected="1">overlap</button>
+      <button id="btnModeSequential" type="button">sequential</button>
+    </div>
+
+    <div id="currentCard" class="current muted">Натисніть Play або картку в списку.</div>
+
+    <ul id="cardList"></ul>
+  </div>
+
+  <script>
+    'use strict';
+
+    const AUDIO_BASE = 'audio/';
+    const MARKS_URL = `${AUDIO_BASE}marks_dict1.json`;
+
+    const DEFAULTS = {
+      SV_START_DELAY_SEC: 0,
+      UK_START_DELAY_SEC: 0.3,
+      SV_VOLUME: 1.0,
+      UK_VOLUME: 0.6,
+      SV_PLAYBACK_RATE: 1,
+      UK_PLAYBACK_RATE: 1,
+      AFTER_SV_END_BEFORE_UK_DELAY_SEC: 0.3,
+      AFTER_UK_END_BEFORE_NEXT_DELAY_SEC: 0.5,
+      CLIP_TAIL_PAD_SEC: 0.2,
+    };
+
+    const state = {
+      audioCtx: null,
+      svBuffer: null,
+      ukBuffer: null,
+      marks: null,
+      playMode: 'overlap',
+      playing: false,
+      stopRequested: false,
+      activeSources: [],
+      nextTimer: null,
+      currentIndex: -1,
+    };
+
+    const elCurrent = document.getElementById('currentCard');
+    const elCardList = document.getElementById('cardList');
+    const btnPlayAll = document.getElementById('btnPlayAll');
+    const btnStop = document.getElementById('btnStop');
+    const btnModeOverlap = document.getElementById('btnModeOverlap');
+    const btnModeSequential = document.getElementById('btnModeSequential');
+
+    function readConfig() {
+      return { ...DEFAULTS };
+    }
+
+    async function ensureAudioContext() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (state.audioCtx.state === 'suspended') {
+        await state.audioCtx.resume();
+      }
+      return state.audioCtx;
+    }
+
+    async function loadBuffer(url) {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch ${url}: ${res.status}`);
+      }
+      const arr = await res.arrayBuffer();
+      return state.audioCtx.decodeAudioData(arr);
+    }
+
+    async function ensureAssetsLoaded() {
+      await ensureAudioContext();
+      if (!state.marks) {
+        const res = await fetch(MARKS_URL);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch marks: ${res.status}`);
+        }
+        state.marks = await res.json();
+      }
+      if (!state.svBuffer) {
+        state.svBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.sv_file}`);
+      }
+      if (!state.ukBuffer) {
+        state.ukBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.uk_file}`);
+      }
+    }
+
+    function startClip(buffer, when, offset, duration, volume, pan, rate) {
+      const src = state.audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.playbackRate.value = rate;
+
+      const gain = state.audioCtx.createGain();
+      gain.gain.value = volume;
+
+      const panner = state.audioCtx.createStereoPanner();
+      panner.pan.value = pan;
+
+      src.connect(gain);
+      gain.connect(panner);
+      panner.connect(state.audioCtx.destination);
+
+      src.start(when, offset, duration);
+      state.activeSources.push(src);
+      src.onended = () => {
+        state.activeSources = state.activeSources.filter((s) => s !== src);
+      };
+      return src;
+    }
+
+    function stopAll() {
+      state.stopRequested = true;
+      state.playing = false;
+      if (state.nextTimer) {
+        clearTimeout(state.nextTimer);
+        state.nextTimer = null;
+      }
+      for (const src of state.activeSources) {
+        try {
+          src.stop();
+        } catch {
+          // already stopped
+        }
+      }
+      state.activeSources = [];
+      setActiveCard(-1);
+      elCurrent.textContent = 'Stopped.';
+      btnPlayAll.disabled = false;
+    }
+
+    function setActiveCard(index) {
+      state.currentIndex = index;
+      for (const li of elCardList.querySelectorAll('li')) {
+        li.dataset.active = li.dataset.index === String(index) ? '1' : '0';
+      }
+    }
+
+    function renderCardLabel(item, index) {
+      const en = item.en ? ` (${item.en})` : '';
+      return `#${index + 1} [${item.kind}] ${item.sv} — ${item.uk}${en}`;
+    }
+
+    function renderCardList() {
+      elCardList.innerHTML = '';
+      if (!state.marks?.items?.length) {
+        return;
+      }
+      state.marks.items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.dataset.index = String(index);
+        li.innerHTML = `<div class="kind">${item.kind}</div><div>${item.sv} — ${item.uk}</div>`;
+        li.addEventListener('click', () => {
+          playFromIndex(index, false);
+        });
+        elCardList.appendChild(li);
+      });
+    }
+
+    function waitMs(ms) {
+      return new Promise((resolve) => {
+        state.nextTimer = setTimeout(() => {
+          state.nextTimer = null;
+          resolve();
+        }, ms);
+      });
+    }
+
+    function waitForSourceEnd(src) {
+      return new Promise((resolve) => {
+        src.onended = () => {
+          state.activeSources = state.activeSources.filter((s) => s !== src);
+          resolve();
+        };
+      });
+    }
+
+    function clipSourceDuration(start, end, pad, bufferDuration) {
+      const paddedEnd = Math.min(end + pad, bufferDuration);
+      return Math.max(0, paddedEnd - start);
+    }
+
+    async function playCard(index, cfg) {
+      const item = state.marks.items[index];
+      const pad = cfg.CLIP_TAIL_PAD_SEC;
+      const svDur = clipSourceDuration(
+        item.sv_start,
+        item.sv_end,
+        pad,
+        state.svBuffer.duration,
+      );
+      const ukDur = clipSourceDuration(
+        item.uk_start,
+        item.uk_end,
+        pad,
+        state.ukBuffer.duration,
+      );
+      const svPlayDur = svDur / Math.max(cfg.SV_PLAYBACK_RATE, 0.01);
+      const ukPlayDur = ukDur / Math.max(cfg.UK_PLAYBACK_RATE, 0.01);
+
+      setActiveCard(index);
+      elCurrent.textContent = renderCardLabel(item, index);
+
+      const t0 = state.audioCtx.currentTime;
+
+      if (state.playMode === 'overlap') {
+        const svWhen = t0 + cfg.SV_START_DELAY_SEC;
+        const ukWhen = t0 + cfg.UK_START_DELAY_SEC;
+
+        startClip(
+          state.svBuffer,
+          svWhen,
+          item.sv_start,
+          svDur,
+          cfg.SV_VOLUME,
+          -1,
+          cfg.SV_PLAYBACK_RATE,
+        );
+
+        startClip(
+          state.ukBuffer,
+          ukWhen,
+          item.uk_start,
+          ukDur,
+          cfg.UK_VOLUME,
+          1,
+          cfg.UK_PLAYBACK_RATE,
+        );
+
+        const svEndAt = svWhen + svPlayDur;
+        const ukEndAt = ukWhen + ukPlayDur;
+        const cardEndAt = Math.max(svEndAt, ukEndAt);
+        const waitSec = Math.max(0, cardEndAt - state.audioCtx.currentTime);
+        await waitMs(waitSec * 1000);
+      } else {
+        const svWhen = state.audioCtx.currentTime + cfg.SV_START_DELAY_SEC;
+        const svSrc = startClip(
+          state.svBuffer,
+          svWhen,
+          item.sv_start,
+          svDur,
+          cfg.SV_VOLUME,
+          -1,
+          cfg.SV_PLAYBACK_RATE,
+        );
+        await waitForSourceEnd(svSrc);
+
+        if (state.stopRequested) {
+          return;
+        }
+
+        await waitMs(cfg.AFTER_SV_END_BEFORE_UK_DELAY_SEC * 1000);
+        if (state.stopRequested) {
+          return;
+        }
+
+        const ukWhen = state.audioCtx.currentTime + cfg.UK_START_DELAY_SEC;
+        const ukSrc = startClip(
+          state.ukBuffer,
+          ukWhen,
+          item.uk_start,
+          ukDur,
+          cfg.UK_VOLUME,
+          1,
+          cfg.UK_PLAYBACK_RATE,
+        );
+        await waitForSourceEnd(ukSrc);
+      }
+
+      if (state.stopRequested) {
+        return;
+      }
+
+      await waitMs(cfg.AFTER_UK_END_BEFORE_NEXT_DELAY_SEC * 1000);
+    }
+
+    async function playFromIndex(startIndex, playAll) {
+      if (state.playing) {
+        stopAll();
+      }
+
+      state.stopRequested = false;
+      state.playing = true;
+      btnPlayAll.disabled = true;
+
+      try {
+        await ensureAssetsLoaded();
+        if (!state.marks?.items?.length) {
+          throw new Error('No items in marks JSON');
+        }
+
+        const cfg = readConfig();
+        const endIndex = playAll ? state.marks.items.length - 1 : startIndex;
+
+        for (let i = startIndex; i <= endIndex; i += 1) {
+          if (state.stopRequested) {
+            break;
+          }
+          await playCard(i, cfg);
+        }
+
+        if (!state.stopRequested) {
+          setActiveCard(-1);
+          elCurrent.textContent = playAll ? 'Finished all cards.' : 'Finished.';
+        }
+      } catch (err) {
+        console.error(err);
+        elCurrent.textContent = `Error: ${err.message}`;
+      } finally {
+        state.playing = false;
+        btnPlayAll.disabled = false;
+      }
+    }
+
+    function setPlayMode(mode) {
+      state.playMode = mode;
+      btnModeOverlap.dataset.selected = mode === 'overlap' ? '1' : '0';
+      btnModeSequential.dataset.selected = mode === 'sequential' ? '1' : '0';
+    }
+
+    btnPlayAll.addEventListener('click', () => playFromIndex(0, true));
+    btnStop.addEventListener('click', stopAll);
+    btnModeOverlap.addEventListener('click', () => setPlayMode('overlap'));
+    btnModeSequential.addEventListener('click', () => setPlayMode('sequential'));
+
+    ensureAssetsLoaded()
+      .then(() => {
+        renderCardList();
+        elCurrent.textContent = 'Ready. Play all or click a card.';
+      })
+      .catch((err) => {
+        console.error(err);
+        elCurrent.textContent = `Load error: ${err.message}. Use http://localhost:8080/...`;
+      });
+  </script>
+</body>
+</html>

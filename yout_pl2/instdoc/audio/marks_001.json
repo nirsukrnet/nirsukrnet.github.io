@@ -1,0 +1,69 @@
+{
+  "gap_sec": 1.0,
+  "sv_file": "sv_001.mp3",
+  "uk_file": "uk_001.mp3",
+  "sv_voice": "sv-SE-SofieNeural",
+  "uk_voice": "uk-UA-PolinaNeural",
+  "items": [
+    {
+      "kind": "word",
+      "sv": "nästan",
+      "uk": "майже",
+      "sv_start": 0.0,
+      "sv_end": 1.92,
+      "uk_start": 0.0,
+      "uk_end": 1.776,
+      "en": "almost"
+    },
+    {
+      "kind": "word",
+      "sv": "dörrhandtaget.",
+      "uk": "ручку",
+      "sv_start": 2.92,
+      "sv_end": 5.248,
+      "uk_start": 2.776,
+      "uk_end": 4.552,
+      "en": "doorknob"
+    },
+    {
+      "kind": "word",
+      "sv": "hålla",
+      "uk": "триматися",
+      "sv_start": 6.248,
+      "sv_end": 8.024,
+      "uk_start": 5.552,
+      "uk_end": 7.352,
+      "en": "hold"
+    },
+    {
+      "kind": "phrase",
+      "sv": "förstod mer",
+      "uk": "розуміла більше",
+      "sv_start": 9.024,
+      "sv_end": 11.112,
+      "uk_start": 8.352,
+      "uk_end": 10.488,
+      "en": "understood more"
+    },
+    {
+      "kind": "phrase",
+      "sv": "skulle prata",
+      "uk": "мала говорити",
+      "sv_start": 12.112,
+      "sv_end": 14.32,
+      "uk_start": 11.488,
+      "uk_end": 13.528,
+      "en": "had to speak"
+    },
+    {
+      "kind": "phrase",
+      "sv": "tomt i huvudet",
+      "uk": "порожньо в голові",
+      "sv_start": 15.32,
+      "sv_end": 17.72,
+      "uk_start": 14.528,
+      "uk_end": 16.616,
+      "en": "blank in my head"
+    }
+  ]
+}
