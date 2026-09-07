@@ -286,7 +286,6 @@
     #dlgResp[data-mode="edit"] #respPreview { display: none; }
 
     #respPreview pre {
-      background: color-mix(in srgb, black 8%, transparent);
       padding: 10px;
       border-radius: 10px;
       overflow: auto;
@@ -304,14 +303,54 @@
       padding: 4px 8px;
       font-size: 15px;
       line-height: 1.6;
+      color-scheme: light;
       background: transparent;
-      color: inherit;
+      color: #1f2328;
     }
 
     #respPreview .markdown-body table {
-      display: block;
+      display: table;
       width: 100%;
+      border-collapse: collapse;
       overflow: auto;
+    }
+
+    #respPreview .markdown-body table th,
+    #respPreview .markdown-body table td {
+      color: #1f2328;
+      border: 1px solid #d0d7de;
+      padding: 6px 10px;
+      vertical-align: top;
+    }
+
+    #respPreview .markdown-body table tr {
+      background-color: #ffffff;
+    }
+
+    #respPreview .markdown-body table tr:nth-child(even) {
+      background-color: #f6f8fa;
+    }
+
+    #respPreview .markdown-body table th {
+      background-color: #f6f8fa;
+      font-weight: 600;
+    }
+
+    #respPreview .markdown-body code {
+      color: #1f2328;
+      background-color: #f6f8fa;
+      padding: 0.15em 0.35em;
+      border-radius: 4px;
+    }
+
+    #respPreview .markdown-body pre {
+      background: #f6f8fa;
+      color: #1f2328;
+    }
+
+    #respPreview .markdown-body pre code {
+      background: transparent;
+      color: inherit;
     }
 
     #respPreview h1, #respPreview h2, #respPreview h3 {
