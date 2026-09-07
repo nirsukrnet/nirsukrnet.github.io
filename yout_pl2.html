@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>YouTube Player + Transcript (yout_pl2)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -295,6 +297,23 @@
       font-size: 12.5px;
     }
 
+    #respPreview .markdown-body {
+      box-sizing: border-box;
+      min-width: 0;
+      max-width: none;
+      padding: 4px 8px;
+      font-size: 15px;
+      line-height: 1.6;
+      background: transparent;
+      color: inherit;
+    }
+
+    #respPreview .markdown-body table {
+      display: block;
+      width: 100%;
+      overflow: auto;
+    }
+
     #respPreview h1, #respPreview h2, #respPreview h3 {
       margin: 10px 0 6px;
     }
@@ -443,13 +462,13 @@ English Channel..."></textarea>
     </form>
   </dialog>
 
-  <dialog id="dlgResp" data-mode="edit">
+  <dialog id="dlgResp" data-mode="html">
     <form method="dialog">      
       <div id="respInfo" class="muted" style="margin-bottom:6px;"></div>
       <div class="row respActionRow" style="margin:0 0 10px;">
         <div class="respModeRow">
-          <button id="btnRespEdit" type="button" class="is-active" title="Edit Markdown">Edit</button>
-          <button id="btnRespHtml" type="button" title="Preview as HTML">Html</button>
+          <button id="btnRespEdit" type="button" title="Edit Markdown">Edit</button>
+          <button id="btnRespHtml" type="button" class="is-active" title="Preview as HTML">Html</button>
         </div>
         <button id="btnRespSave" type="button">Save</button>
         <button value="cancel">Close</button>
@@ -465,6 +484,12 @@ English Channel..."></textarea>
   <script src="./yout_pl2/yu2_global_var.js"></script>
   <script src="./yout_pl2/youtube_transcript_store.js"></script>
   <script src="./yout_pl2/youtube_ref_videos_store.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-bash.min.js"></script>
 
   <dialog id="dlgListMenu">
     <form method="dialog">
@@ -544,7 +569,7 @@ English Channel..."></textarea>
     let _respIdxSet = new Set();
 
     // Resp dialog mode: 'edit' | 'html'
-    let _respMode = 'edit';
+    let _respMode = 'html';
     let _respPreviewTimer = null;
 
     // Multi-language transcript settings
@@ -1185,127 +1210,32 @@ English Channel..."></textarea>
       } catch {}
     }
 
-    function escapeHtml(s) {
-      return String(s == null ? '' : s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+    let _markedRespConfigured = false;
 
-    function mdInlineToHtml(escapedText) {
-      let s = String(escapedText == null ? '' : escapedText);
-      // Inline code
-      s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-      // Bold
-      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      // Italic (simple)
-      s = s.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, (m, p1, p2) => `${p1}<em>${p2}</em>`);
-      return s;
-    }
-
-    function markdownToSafeHtml(md) {
-      const src = String(md == null ? '' : md).replace(/\r\n?/g, '\n');
-      const lines = src.split('\n');
-      const out = [];
-      let para = [];
-      let listType = null; // 'ul' | 'ol'
-      let inCode = false;
-      let codeBuf = [];
-
-      const flushPara = () => {
-        if (!para.length) return;
-        const body = para.map(l => mdInlineToHtml(escapeHtml(l))).join('<br>');
-        out.push(`<p>${body}</p>`);
-        para = [];
-      };
-
-      const closeList = () => {
-        if (!listType) return;
-        out.push(listType === 'ol' ? '</ol>' : '</ul>');
-        listType = null;
-      };
-
-      const openListIfNeeded = (type) => {
-        if (listType === type) return;
-        closeList();
-        listType = type;
-        out.push(type === 'ol' ? '<ol>' : '<ul>');
-      };
-
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const trimmed = String(line || '').trimEnd();
-
-        if (inCode) {
-          if (/^```/.test(trimmed.trim())) {
-            out.push(`<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`);
-            codeBuf = [];
-            inCode = false;
-            continue;
+    function ensureMarkedForResp() {
+      if (_markedRespConfigured) return;
+      _markedRespConfigured = true;
+      if (!window.marked || typeof window.marked.setOptions !== 'function') return;
+      window.marked.setOptions({
+        gfm: true,
+        breaks: false,
+        highlight(code, lang) {
+          const language = lang && window.Prism && window.Prism.languages[lang] ? lang : null;
+          if (language) {
+            return window.Prism.highlight(code, window.Prism.languages[language], language);
           }
-          codeBuf.push(line);
-          continue;
+          return code;
         }
+      });
+    }
 
-        if (/^```/.test(trimmed.trim())) {
-          flushPara();
-          closeList();
-          inCode = true;
-          codeBuf = [];
-          continue;
-        }
-
-        if (!trimmed.trim()) {
-          flushPara();
-          closeList();
-          continue;
-        }
-
-        if (/^---+$/.test(trimmed.trim())) {
-          flushPara();
-          closeList();
-          out.push('<hr>');
-          continue;
-        }
-
-        const h = /^(#{1,3})\s+(.*)$/.exec(trimmed.trim());
-        if (h) {
-          flushPara();
-          closeList();
-          const level = h[1].length;
-          const text = mdInlineToHtml(escapeHtml(h[2] || ''));
-          out.push(`<h${level}>${text}</h${level}>`);
-          continue;
-        }
-
-        const ol = /^\s*(\d+)\.\s+(.*)$/.exec(trimmed);
-        if (ol) {
-          flushPara();
-          openListIfNeeded('ol');
-          out.push(`<li>${mdInlineToHtml(escapeHtml(ol[2] || ''))}</li>`);
-          continue;
-        }
-
-        const ul = /^\s*[-*]\s+(.*)$/.exec(trimmed);
-        if (ul) {
-          flushPara();
-          openListIfNeeded('ul');
-          out.push(`<li>${mdInlineToHtml(escapeHtml(ul[1] || ''))}</li>`);
-          continue;
-        }
-
-        para.push(trimmed);
+    function renderMarkdownToHtml(md) {
+      ensureMarkedForResp();
+      const text = String(md == null ? '' : md);
+      if (window.marked && typeof window.marked.parse === 'function') {
+        return window.marked.parse(text);
       }
-
-      if (inCode) {
-        out.push(`<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`);
-      }
-      flushPara();
-      closeList();
-
-      return out.join('\n');
+      return text;
     }
 
     function renderRespPreviewNow() {
@@ -1313,8 +1243,19 @@ English Channel..."></textarea>
       const preview = document.getElementById('respPreview');
       if (!preview) return;
       const md = ta ? String(ta.value || '') : '';
-      const html = markdownToSafeHtml(md);
-      preview.innerHTML = html || '<div class="muted">(empty)</div>';
+      if (!md.trim()) {
+        preview.innerHTML = '<div class="muted">(empty)</div>';
+        return;
+      }
+      const html = renderMarkdownToHtml(md);
+      preview.innerHTML = `<article class="markdown-body">${html}</article>`;
+      try {
+        if (window.Prism && typeof window.Prism.highlightAllUnder === 'function') {
+          window.Prism.highlightAllUnder(preview);
+        } else if (window.Prism && typeof window.Prism.highlightAll === 'function') {
+          window.Prism.highlightAll();
+        }
+      } catch {}
     }
 
     function scheduleRespPreviewRender() {
@@ -1517,8 +1458,6 @@ English Channel..."></textarea>
       setRespStatus('');
       const ta = document.getElementById('taResp');
       const info = document.getElementById('respInfo');
-      // Always start in Edit mode on open.
-      setRespMode('edit');
 
       const vid = cleanStr(currentVideoId);
       const idx = getActiveIdxSafe();
@@ -1536,11 +1475,13 @@ English Channel..."></textarea>
       if (!vid) {
         ta.value = '';
         setRespStatus('No videoId');
+        setRespMode('html');
         return;
       }
       if (idx == null) {
         ta.value = '';
         setRespStatus('Select a transcript line first');
+        setRespMode('html');
         return;
       }
 
@@ -1558,6 +1499,7 @@ English Channel..."></textarea>
         setRespStatus('Load failed (check console)');
         try { console.warn('Resp load failed', e); } catch {}
       }
+      setRespMode('html');
     }
 
     async function saveRespFromModal() {
