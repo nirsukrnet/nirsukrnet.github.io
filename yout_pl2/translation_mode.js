@@ -7,6 +7,19 @@
     return (x == null) ? '' : String(x).trim();
   }
 
+  const EDGE_PUNCT_RE = /^[\s.,!?;:«»"'""''…—–\-–()[\]{}]+|[\s.,!?;:«»"'""''…—–\-–()[\]{}]+$/g;
+
+  function normalizeSurfaceSv(s) {
+    let text = cleanStr(s);
+    if (!text) return '';
+    let prev = null;
+    while (prev !== text) {
+      prev = text;
+      text = text.replace(EDGE_PUNCT_RE, '');
+    }
+    return text.replace(/\s+/g, ' ').trim();
+  }
+
   function nowIso() {
     try { return new Date().toISOString(); } catch { return String(Date.now()); }
   }
@@ -26,7 +39,7 @@
   function stripWordForExport(word) {
     if (!word || typeof word !== 'object') return { word_sv: '', word_en: null, word_uk: null };
     return {
-      word_sv: cleanStr(word.word_sv),
+      word_sv: normalizeSurfaceSv(word.word_sv),
       word_en: hasTranslationValue(word.word_en) ? cleanStr(word.word_en) : null,
       word_uk: hasTranslationValue(word.word_uk) ? cleanStr(word.word_uk) : null
     };
@@ -43,7 +56,7 @@
       words: (Array.isArray(item.words) ? item.words : []).map(stripWordForExport),
       phrase: (Array.isArray(item.phrase) ? item.phrase : [])
         .map(p => ({
-          phrase_sv: cleanStr(p && p.phrase_sv),
+          phrase_sv: normalizeSurfaceSv(p && p.phrase_sv),
           phrase_en: hasTranslationValue(p && p.phrase_en) ? cleanStr(p.phrase_en) : null,
           phrase_uk: hasTranslationValue(p && p.phrase_uk) ? cleanStr(p.phrase_uk) : null
         }))

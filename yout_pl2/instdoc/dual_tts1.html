@@ -124,7 +124,8 @@
 </head>
 <body>
   <div class="dialog">
-    <h1>Dictionary</h1>
+    <h1 id="elMediaLog">Dictionary</h1>
+    <div class="muted" id="elMediaHint">Медіа-кнопки: F8 play/pause · F9 nexttrack · F7 previoustrack · Volume ± не в JS</div>
     <div class="muted">SV → ліве вухо, UK → праве. marks_dict1.json (287 cards)</div>
 
     <div class="spacer"></div>
@@ -147,6 +148,15 @@
 
     <ul id="cardList"></ul>
   </div>
+
+  <audio
+    id="sessionKeeper"
+    loop
+    playsinline
+    preload="auto"
+    style="display:none"
+    src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAA=="
+  ></audio>
 
   <script src="../yu2_global_var.js"></script>
   <script>
@@ -192,6 +202,92 @@
     const btnPlayFromN = document.getElementById('btnPlayFromN');
     const btnModeOverlap = document.getElementById('btnModeOverlap');
     const btnModeSequential = document.getElementById('btnModeSequential');
+    const elMediaLog = document.getElementById('elMediaLog');
+    const sessionKeeper = document.getElementById('sessionKeeper');
+
+    let mediaSessionReady = false;
+
+    const MEDIA_ACTION_NOTES = {
+      play: 'F8 / ○',
+      pause: 'F8 / ○',
+      nexttrack: 'F9 / + ?',
+      previoustrack: 'F7 / − ?',
+    };
+
+    function logMedia(action, note) {
+      if (!elMediaLog) return;
+      const t = new Date().toLocaleTimeString('uk-UA', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      elMediaLog.textContent = note ? `${action} — ${note} · ${t}` : `${action} · ${t}`;
+    }
+
+    function syncMediaPlaybackState() {
+      if (!('mediaSession' in navigator)) return;
+      navigator.mediaSession.playbackState = state.playing ? 'playing' : 'paused';
+    }
+
+    function ensureMediaSession() {
+      if (mediaSessionReady) return;
+      mediaSessionReady = true;
+      if (!('mediaSession' in navigator)) {
+        logMedia('Dictionary', 'Media Session недоступний');
+        return;
+      }
+      navigator.mediaSession.metadata = new MediaMetadata({ title: 'Dictionary dual TTS' });
+      for (const action of ['play', 'pause', 'nexttrack', 'previoustrack']) {
+        try {
+          navigator.mediaSession.setActionHandler(action, () => onMediaAction(action));
+        } catch {
+          // unsupported action on this browser
+        }
+      }
+      syncMediaPlaybackState();
+    }
+
+    function startMediaKeeper() {
+      if (!sessionKeeper) return Promise.resolve();
+      sessionKeeper.volume = 0.01;
+      return sessionKeeper.play().catch(() => {});
+    }
+
+    function stepCard(delta) {
+      const base = readPosIndex() >= 0 ? readPosIndex() : Math.max(0, state.lastPlayedIndex);
+      const next = clampIndex(base + delta);
+      if (next < 0) return;
+      setPosInput(next);
+      goToN();
+    }
+
+    function onMediaAction(action) {
+      logMedia(action, MEDIA_ACTION_NOTES[action] || '');
+      switch (action) {
+        case 'play':
+          if (!state.playing) {
+            const i = readPosIndex() >= 0 ? readPosIndex() : Math.max(0, state.lastPlayedIndex);
+            if (i >= 0) {
+              ensureMediaSession();
+              void startMediaKeeper();
+              playFromIndex(i);
+            }
+          }
+          break;
+        case 'pause':
+          if (state.playing) pausePlayback();
+          break;
+        case 'nexttrack':
+          stepCard(1);
+          break;
+        case 'previoustrack':
+          stepCard(-1);
+          break;
+        default:
+          break;
+      }
+      syncMediaPlaybackState();
+    }
 
     function readConfig() {
       return { ...DEFAULTS };
@@ -461,6 +557,7 @@
       } else {
         elCurrent.textContent = 'Paused.';
       }
+      syncMediaPlaybackState();
     }
 
     function setActiveCard(index) {
@@ -633,6 +730,10 @@
           throw new Error('No items in marks JSON');
         }
 
+        ensureMediaSession();
+        await startMediaKeeper();
+        syncMediaPlaybackState();
+
         const cfg = readConfig();
         const endIndex = state.marks.items.length - 1;
 
@@ -653,6 +754,7 @@
       } finally {
         state.playing = false;
         setPlayFromNLabel(false);
+        syncMediaPlaybackState();
       }
     }
 
@@ -664,8 +766,10 @@
 
     btnGoN.addEventListener('click', goToN);
     btnPlayFromN.addEventListener('click', () => {
+      ensureMediaSession();
       if (state.playing) {
         pausePlayback();
+        logMedia('pause', MEDIA_ACTION_NOTES.pause);
         return;
       }
       const index = goToN();
@@ -675,6 +779,7 @@
     inPos.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
+        ensureMediaSession();
         if (state.playing) return;
         const index = goToN();
         if (index >= 0) playFromIndex(index);
