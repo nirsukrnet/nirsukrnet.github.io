@@ -28,6 +28,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
     }
 
     h1 {
@@ -119,13 +120,28 @@
       text-transform: uppercase;
     }
 
+    li[data-mark] .kind {
+      opacity: 1;
+      font-weight: 700;
+      color: #1565c0;
+    }
+
     .spacer { height: 10px; }
+
+    .card-audio {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <div class="dialog">
     <h1 id="elMediaLog">Dictionary</h1>
-    <div class="muted" id="elMediaHint">Медіа-кнопки: F8 play/pause · F9 nexttrack · F7 previoustrack · Volume ± не в JS</div>
+    <div class="muted" id="elMediaHint">Панель N керує картками. Тихий трек лише ловить EarPods у заголовок. Volume ± не в JS</div>
+    <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
     <div class="muted">SV → ліве вухо, UK → праве. marks_dict1.json (287 cards)</div>
 
     <div class="spacer"></div>
@@ -135,6 +151,7 @@
       <input id="inPos" type="number" min="1" step="1" value="1" />
       <button id="btnGoN" type="button">Go to N</button>
       <button id="btnPlayFromN" type="button">Play from N</button>
+      <button id="btnGap" type="button">Gap 1s</button>
     </div>
 
     <div class="row" style="margin-top: 10px;">
@@ -149,15 +166,6 @@
     <ul id="cardList"></ul>
   </div>
 
-  <audio
-    id="sessionKeeper"
-    loop
-    playsinline
-    preload="auto"
-    style="display:none"
-    src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAA=="
-  ></audio>
-
   <script src="../yu2_global_var.js"></script>
   <script>
     'use strict';
@@ -165,6 +173,8 @@
     const AUDIO_BASE = 'audio/';
     const MARKS_URL = `${AUDIO_BASE}marks_dict1.json`;
     const LS_KEY = 'dual_tts1_cardIndex';
+    const LS_GAP_KEY = 'dual_tts1_gapSec';
+    const GAP_STEPS = [1, 2, 3, 4];
     const DB_PATH = '../db_youtube2/ui_state/dual_tts1';
 
     const DEFAULTS = {
@@ -175,7 +185,7 @@
       SV_PLAYBACK_RATE: 1,
       UK_PLAYBACK_RATE: 1,
       AFTER_SV_END_BEFORE_UK_DELAY_SEC: 0.3,
-      AFTER_UK_END_BEFORE_NEXT_DELAY_SEC: 0.5,
+      AFTER_UK_END_BEFORE_NEXT_DELAY_SEC: 1,
       CLIP_TAIL_PAD_SEC: 0.2,
     };
 
@@ -192,6 +202,8 @@
       currentIndex: -1,
       lastPlayedIndex: -1,
       savedIndex: -1,
+      kindMarks: {},
+      gapSec: 1,
     };
 
     const elCurrent = document.getElementById('currentCard');
@@ -200,6 +212,7 @@
     const inPos = document.getElementById('inPos');
     const btnGoN = document.getElementById('btnGoN');
     const btnPlayFromN = document.getElementById('btnPlayFromN');
+    const btnGap = document.getElementById('btnGap');
     const btnModeOverlap = document.getElementById('btnModeOverlap');
     const btnModeSequential = document.getElementById('btnModeSequential');
     const elMediaLog = document.getElementById('elMediaLog');
@@ -226,71 +239,113 @@
 
     function syncMediaPlaybackState() {
       if (!('mediaSession' in navigator)) return;
-      navigator.mediaSession.playbackState = state.playing ? 'playing' : 'paused';
+      const keeperOn = sessionKeeper && !sessionKeeper.paused;
+      navigator.mediaSession.playbackState = keeperOn ? 'playing' : 'paused';
     }
 
-    function ensureMediaSession() {
-      if (mediaSessionReady) return;
-      mediaSessionReady = true;
+    function bindMediaHandlers() {
       if (!('mediaSession' in navigator)) {
-        logMedia('Dictionary', 'Media Session недоступний');
-        return;
+        if (!mediaSessionReady) {
+          logMedia('no-session', 'Media Session недоступний');
+        }
+        mediaSessionReady = true;
+        return false;
       }
-      navigator.mediaSession.metadata = new MediaMetadata({ title: 'Dictionary dual TTS' });
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'EarPods receiver',
+        artist: 'silent track',
+      });
       for (const action of ['play', 'pause', 'nexttrack', 'previoustrack']) {
         try {
           navigator.mediaSession.setActionHandler(action, () => onMediaAction(action));
-        } catch {
-          // unsupported action on this browser
+        } catch (err) {
+          console.warn(`Media Session ${action} unsupported`, err);
         }
       }
+      mediaSessionReady = true;
+      syncMediaPlaybackState();
+      return true;
+    }
+
+    async function startSilentKeeper() {
+      if (!sessionKeeper) return;
+      sessionKeeper.muted = false;
+      sessionKeeper.volume = 0.01;
+      sessionKeeper.loop = true;
+      try {
+        await sessionKeeper.play();
+      } catch (err) {
+        logMedia('keeper-error', err.message);
+        return;
+      }
+      bindMediaHandlers();
       syncMediaPlaybackState();
     }
 
-    function startMediaKeeper() {
-      if (!sessionKeeper) return Promise.resolve();
-      sessionKeeper.volume = 0.01;
-      return sessionKeeper.play().catch(() => {});
-    }
+    let resumingKeeper = false;
 
-    function stepCard(delta) {
-      const base = readPosIndex() >= 0 ? readPosIndex() : Math.max(0, state.lastPlayedIndex);
-      const next = clampIndex(base + delta);
-      if (next < 0) return;
-      setPosInput(next);
-      goToN();
+    function keepSilentKeeperPlaying() {
+      if (!sessionKeeper || resumingKeeper) return;
+      if (sessionKeeper.paused) {
+        resumingKeeper = true;
+        sessionKeeper.play().finally(() => {
+          resumingKeeper = false;
+          bindMediaHandlers();
+          syncMediaPlaybackState();
+        });
+        return;
+      }
+      bindMediaHandlers();
+      syncMediaPlaybackState();
     }
 
     function onMediaAction(action) {
       logMedia(action, MEDIA_ACTION_NOTES[action] || '');
-      switch (action) {
-        case 'play':
-          if (!state.playing) {
-            const i = readPosIndex() >= 0 ? readPosIndex() : Math.max(0, state.lastPlayedIndex);
-            if (i >= 0) {
-              ensureMediaSession();
-              void startMediaKeeper();
-              playFromIndex(i);
-            }
-          }
-          break;
-        case 'pause':
-          if (state.playing) pausePlayback();
-          break;
-        case 'nexttrack':
-          stepCard(1);
-          break;
-        case 'previoustrack':
-          stepCard(-1);
-          break;
-        default:
-          break;
+      keepSilentKeeperPlaying();
+      if (action === 'pause') {
+        markCurrentKind('pause');
+      } else if (action === 'nexttrack') {
+        markCurrentKind('nexttrack');
       }
-      syncMediaPlaybackState();
+    }
+
+    function markCurrentKind(label) {
+      let index = state.lastPlayedIndex;
+      if (index < 0) index = readPosIndex();
+      setKindMark(index, label);
     }
 
     function readConfig() {
-      return { ...DEFAULTS };
+      return {
+        ...DEFAULTS,
+        AFTER_UK_END_BEFORE_NEXT_DELAY_SEC: state.gapSec,
+      };
+    }
+
+    function syncGapButton() {
+      if (btnGap) btnGap.textContent = `Gap ${state.gapSec}s`;
+    }
+
+    function cycleGap() {
+      const i = GAP_STEPS.indexOf(state.gapSec);
+      const next = GAP_STEPS[(i < 0 ? 0 : i + 1) % GAP_STEPS.length];
+      state.gapSec = next;
+      try {
+        localStorage.setItem(LS_GAP_KEY, String(next));
+      } catch {
+        // ignore
+      }
+      syncGapButton();
+    }
+
+    function readSavedGap() {
+      try {
+        const raw = Number.parseInt(localStorage.getItem(LS_GAP_KEY) || '', 10);
+        if (GAP_STEPS.includes(raw)) return raw;
+      } catch {
+        // ignore
+      }
+      return 1;
     }
 
     function ensureGv() {
@@ -467,6 +522,16 @@
         .catch((err) => console.error('Auto-save failed', err));
     }
 
+    async function loadMarks() {
+      if (state.marks) return state.marks;
+      const res = await fetch(MARKS_URL);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch marks: ${res.status}`);
+      }
+      state.marks = await res.json();
+      return state.marks;
+    }
+
     async function ensureAudioContext() {
       if (!state.audioCtx) {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -484,16 +549,6 @@
       }
       const arr = await res.arrayBuffer();
       return state.audioCtx.decodeAudioData(arr);
-    }
-
-    async function loadMarks() {
-      if (state.marks) return state.marks;
-      const res = await fetch(MARKS_URL);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch marks: ${res.status}`);
-      }
-      state.marks = await res.json();
-      return state.marks;
     }
 
     async function ensureAssetsLoaded() {
@@ -554,10 +609,20 @@
         const item = state.marks.items[state.lastPlayedIndex];
         elCurrent.textContent = `Paused at #${state.lastPlayedIndex + 1} ${item.sv} — ${item.uk}`;
         setActiveCard(state.lastPlayedIndex);
+        setKindMark(state.lastPlayedIndex, 'pause');
       } else {
         elCurrent.textContent = 'Paused.';
       }
-      syncMediaPlaybackState();
+    }
+
+    function setKindMark(index, label) {
+      if (index < 0 || !label) return;
+      state.kindMarks[index] = label;
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      if (!li) return;
+      li.dataset.mark = label;
+      const kind = li.querySelector('.kind');
+      if (kind) kind.textContent = label;
     }
 
     function setActiveCard(index) {
@@ -586,7 +651,10 @@
       state.marks.items.forEach((item, index) => {
         const li = document.createElement('li');
         li.dataset.index = String(index);
-        li.innerHTML = `<div class="kind">${item.kind}</div><div>${item.sv} — ${item.uk}</div>`;
+        li.dataset.kind = item.kind;
+        const mark = state.kindMarks[index];
+        li.innerHTML = `<div class="kind">${mark || item.kind}</div><div>${item.sv} — ${item.uk}</div>`;
+        if (mark) li.dataset.mark = mark;
         li.addEventListener('click', () => {
           setPosInput(index);
           goToN();
@@ -730,18 +798,15 @@
           throw new Error('No items in marks JSON');
         }
 
-        ensureMediaSession();
-        await startMediaKeeper();
-        syncMediaPlaybackState();
+        await startSilentKeeper();
 
-        const cfg = readConfig();
         const endIndex = state.marks.items.length - 1;
 
         for (let i = startIndex; i <= endIndex; i += 1) {
           if (state.stopRequested) {
             break;
           }
-          await playCard(i, cfg);
+          await playCard(i, readConfig());
         }
 
         if (!state.stopRequested) {
@@ -754,7 +819,6 @@
       } finally {
         state.playing = false;
         setPlayFromNLabel(false);
-        syncMediaPlaybackState();
       }
     }
 
@@ -766,20 +830,26 @@
 
     btnGoN.addEventListener('click', goToN);
     btnPlayFromN.addEventListener('click', () => {
-      ensureMediaSession();
       if (state.playing) {
         pausePlayback();
-        logMedia('pause', MEDIA_ACTION_NOTES.pause);
         return;
       }
       const index = goToN();
       if (index < 0) return;
       playFromIndex(index);
     });
+    if (sessionKeeper) {
+      sessionKeeper.addEventListener('playing', () => {
+        bindMediaHandlers();
+        syncMediaPlaybackState();
+      });
+      sessionKeeper.addEventListener('pause', () => {
+        keepSilentKeeperPlaying();
+      });
+    }
     inPos.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        ensureMediaSession();
         if (state.playing) return;
         const index = goToN();
         if (index >= 0) playFromIndex(index);
@@ -798,9 +868,14 @@
     });
     btnModeOverlap.addEventListener('click', () => setPlayMode('overlap'));
     btnModeSequential.addEventListener('click', () => setPlayMode('sequential'));
+    if (btnGap) {
+      btnGap.addEventListener('click', cycleGap);
+    }
 
     loadMarks()
       .then(() => {
+        state.gapSec = readSavedGap();
+        syncGapButton();
         renderCardList();
         inPos.max = String(state.marks.items.length);
         inPos.min = '1';
