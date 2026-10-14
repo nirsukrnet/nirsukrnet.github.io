@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>YouTube Player + Transcript (yout_pl1)</title>
   <style>
     body {
@@ -934,6 +935,10 @@ English Channel..."></textarea>
         playerVars: { rel: 0, modestbranding: 1, origin: location.origin },
         events: {
           onReady: () => {
+            try {
+              const iframe = player.getIframe && player.getIframe();
+              if (iframe) iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+            } catch (_) {}
             wireControls();
           },
           onStateChange: (e) => {

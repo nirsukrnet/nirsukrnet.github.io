@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>YouTube Player + Transcript (yout_pl2)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -95,9 +96,9 @@
     .row.controls button.yu2-btn--tool{
       user-select:none;
       color: #fff;
-      border-color: color-mix(in srgb, #502cd4 70%, #ffffff);
-      background-color: rgba(80,44,212,.25); /* fallback */
-      background-color: color-mix(in srgb, #502cd4 90%, transparent);
+      border-color: color-mix(in srgb, #084273 70%, #ffffff);
+      background-color: rgba(8,66,115,.25); /* fallback */
+      background-color: color-mix(in srgb, #084273 90%, transparent);
     }
 
     .yu2-btn--play { font-variant-numeric: tabular-nums; }
@@ -3489,6 +3490,10 @@ English Channel..."></textarea>
         playerVars: { rel: 0, modestbranding: 1, playsinline: 1, origin: location.origin },
         events: {
           onReady: () => {
+            try {
+              const iframe = player.getIframe && player.getIframe();
+              if (iframe) iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+            } catch (_) {}
             wireControls();
           },
           onStateChange: (e) => {
