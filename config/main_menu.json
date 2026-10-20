@@ -3,7 +3,9 @@
     {
       "title": "Main:",
       "items": [
-        { "label": "Dictionary", "href": "yout_pl2/instdoc/dual_tts1.html" },        
+        { "label": "VoiceTraining", "href": "voicetrain/voicetrain.html" },
+        { "label": "Dictionary", "href": "yout_pl2/instdoc/dual_tts1.html" },
+        { "label": "Lesson 1 TTS", "href": "yout_pl2/instdoc/lesson_tts1.html" },        
         { "label": "YouTube Player 2 + Transcript", "href": "yout_pl2.html" },
         { "label": "Collection Words", "href": "coll_words.html" },
         { "label": "Translation Tools", "href": "transl.html" },

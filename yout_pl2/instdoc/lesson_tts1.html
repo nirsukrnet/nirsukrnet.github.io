@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lesson — step TTS</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #fff;
+      color: #111;
+    }
+
+    .dialog {
+      width: calc(100vw - 16px);
+      max-width: 560px;
+      height: calc(100vh - 16px);
+      margin: 8px auto;
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    h1 {
+      margin: 0 0 2px;
+      font-size: 18px;
+    }
+
+    .total {
+      margin: 0 0 8px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid currentColor;
+      background: transparent;
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-height: 36px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    button[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    .flag {
+      min-width: 52px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    input[type="number"] {
+      width: 72px;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      font-size: 14px;
+      min-height: 36px;
+    }
+
+    .muted {
+      opacity: 0.7;
+      font-size: 14px;
+    }
+
+    .current {
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0;
+      display: grid;
+      gap: 6px;
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    li {
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    li[data-active="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    li[data-saved="1"] {
+      outline: 2px solid currentColor;
+      outline-offset: -2px;
+    }
+
+    .kind {
+      font-size: 12px;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    .kind:empty {
+      display: none;
+    }
+
+    .tr {
+      margin-top: 4px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .tr-en { color: #243e6b; }
+    .tr-uk { color: #6a3114; }
+
+    li[data-mark] .kind {
+      opacity: 1;
+      font-weight: 700;
+      color: #1565c0;
+    }
+
+    .card-audio {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
+    }
+
+    .pos-wrap {
+      position: relative;
+    }
+
+    .pos-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: 2;
+      width: max-content;
+      min-width: 100%;
+      box-sizing: border-box;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: #fff;
+      padding: 4px;
+      display: none;
+      box-shadow: 0 4px 12px color-mix(in srgb, currentColor 18%, transparent);
+    }
+
+    .pos-wrap.is-open .pos-menu {
+      display: block;
+    }
+
+    .pos-menu button {
+      width: 100%;
+      text-align: left;
+      white-space: nowrap;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-height: 32px;
+    }
+
+    .pos-menu button:hover {
+      background-color: color-mix(in srgb, currentColor 10%, transparent);
+    }
+  </style>
+</head>
+<body>
+  <div class="dialog">
+    <h1 id="elMediaLog">Lesson 1</h1>
+    <p class="muted total" id="elTotal"></p>
+    <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
+
+    <div class="row">
+      <button id="btnEn" class="flag" type="button" data-selected="0" aria-pressed="false">EN</button>
+      <button id="btnUk" class="flag" type="button" data-selected="0" aria-pressed="false">UK</button>
+    </div>
+
+    <div class="row">
+      <span class="muted">N:</span>
+      <div class="pos-wrap" id="posWrap">
+        <input id="inPos" type="number" min="1" step="1" value="1" autocomplete="off" />
+        <div class="pos-menu" id="posMenu" role="menu">
+          <button type="button" id="posGoStart" role="menuitem">На початок (1)</button>
+        </div>
+      </div>
+      <button id="btnGoN" type="button">Go to N</button>
+      <button id="btnPlayFromN" type="button">Play from N</button>
+    </div>
+
+    <div id="currentCard" class="current muted">Натисніть Play або крок у списку.</div>
+
+    <ul id="cardList"></ul>
+  </div>
+
+  <script src="../yu2_global_var.js"></script>
+  <script>
+    'use strict';
+
+    const AUDIO_BASE = 'audio/';
+    const MARKS_URL = `${AUDIO_BASE}marks_lesson1.json`;
+    const LS_KEY = 'lesson_tts1_stepIndex';
+    const LS_MARKS_KEY = 'lesson_tts1_userMarks';
+    const LS_EN_KEY = 'lesson_tts1_showEn';
+    const LS_UK_KEY = 'lesson_tts1_showUk';
+    const DB_PATH = '../db_youtube2/ui_state/lesson_tts1';
+
+    const DEFAULTS = {
+      PLAYBACK_RATE: 1,
+      CLIP_TAIL_PAD_SEC: 0.2,
+      VOLUME: 1,
+    };
+
+    const state = {
+      audioCtx: null,
+      svBuffer: null,
+      ukBuffer: null,
+      marks: null,
+      playing: false,
+      stopRequested: false,
+      activeSources: [],
+      nextTimer: null,
+      currentIndex: -1,
+      lastPlayedIndex: -1,
+      savedIndex: -1,
+      userMarks: {},
+      showEn: false,
+      showUk: false,
+    };
+
+    const elCurrent = document.getElementById('currentCard');
+    const elCardList = document.getElementById('cardList');
+    const inPos = document.getElementById('inPos');
+    const posWrap = document.getElementById('posWrap');
+    const posMenu = document.getElementById('posMenu');
+    const posGoStart = document.getElementById('posGoStart');
+    const btnEn = document.getElementById('btnEn');
+    const btnUk = document.getElementById('btnUk');
+    const btnGoN = document.getElementById('btnGoN');
+    const btnPlayFromN = document.getElementById('btnPlayFromN');
+    const elMediaLog = document.getElementById('elMediaLog');
+    const sessionKeeper = document.getElementById('sessionKeeper');
+
+    let mediaSessionReady = false;
+
+    const MEDIA_ACTION_NOTES = {
+      play: 'F8 / ○',
+      pause: 'F8 / ○ → skip',
+      nexttrack: 'F9 / + → focus',
+      previoustrack: 'F7 / −',
+    };
+
+    function logMedia(action, note) {
+      if (!elMediaLog) return;
+      const t = new Date().toLocaleTimeString('uk-UA', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      elMediaLog.textContent = note ? `${action} — ${note} · ${t}` : `${action} · ${t}`;
+    }
+
+    function syncMediaPlaybackState() {
+      if (!('mediaSession' in navigator)) return;
+      const keeperOn = sessionKeeper && !sessionKeeper.paused;
+      navigator.mediaSession.playbackState = keeperOn ? 'playing' : 'paused';
+    }
+
+    function bindMediaHandlers() {
+      if (!('mediaSession' in navigator)) {
+        if (!mediaSessionReady) {
+          logMedia('no-session', 'Media Session недоступний');
+        }
+        mediaSessionReady = true;
+        return false;
+      }
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'EarPods receiver',
+        artist: 'Lesson 1',
+      });
+      for (const action of ['play', 'pause', 'nexttrack', 'previoustrack']) {
+        try {
+          navigator.mediaSession.setActionHandler(action, () => onMediaAction(action));
+        } catch (err) {
+          console.warn(`Media Session ${action} unsupported`, err);
+        }
+      }
+      mediaSessionReady = true;
+      syncMediaPlaybackState();
+      return true;
+    }
+
+    async function startSilentKeeper() {
+      if (!sessionKeeper) return;
+      sessionKeeper.muted = false;
+      sessionKeeper.volume = 0.01;
+      sessionKeeper.loop = true;
+      try {
+        await sessionKeeper.play();
+      } catch (err) {
+        logMedia('keeper-error', err.message);
+        return;
+      }
+      bindMediaHandlers();
+      syncMediaPlaybackState();
+    }
+
+    let resumingKeeper = false;
+
+    function keepSilentKeeperPlaying() {
+      if (!sessionKeeper || resumingKeeper) return;
+      if (sessionKeeper.paused) {
+        resumingKeeper = true;
+        sessionKeeper.play().finally(() => {
+          resumingKeeper = false;
+          bindMediaHandlers();
+          syncMediaPlaybackState();
+        });
+        return;
+      }
+      bindMediaHandlers();
+      syncMediaPlaybackState();
+    }
+
+    function onMediaAction(action) {
+      logMedia(action, MEDIA_ACTION_NOTES[action] || '');
+      keepSilentKeeperPlaying();
+      if (action === 'pause') {
+        markCurrentUserMark('skip');
+      } else if (action === 'nexttrack') {
+        markCurrentUserMark('focus');
+      }
+    }
+
+    function stepIdForIndex(index) {
+      const item = state.marks?.items?.[index];
+      if (!item) return null;
+      return String(item.step);
+    }
+
+    function userMarkForIndex(index) {
+      const id = stepIdForIndex(index);
+      if (!id) return '';
+      return state.userMarks[id] || '';
+    }
+
+    function markCurrentUserMark(label) {
+      let index = state.lastPlayedIndex;
+      if (index < 0) index = readPosIndex();
+      if (index < 0) return;
+      const stepId = stepIdForIndex(index);
+      if (!stepId) return;
+      state.userMarks[stepId] = label;
+      setKindMark(index, label);
+      persistState(index);
+    }
+
+    function ensureGv() {
+      if (window.gv && window.gv.URL_DS) return window.gv;
+      if (typeof GlobalVars !== 'function') return null;
+      window.gv = new GlobalVars();
+      return window.gv;
+    }
+
+    function clampIndex(index) {
+      const n = state.marks?.items?.length || 0;
+      const num = Number(index);
+      if (!n || !Number.isFinite(num) || num < 0) return -1;
+      return Math.min(Math.trunc(num), n - 1);
+    }
+
+    function readLocalSavedIndex() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw == null || raw === '') return -1;
+        return clampIndex(raw);
+      } catch {
+        return -1;
+      }
+    }
+
+    function readLocalUserMarks() {
+      try {
+        const raw = localStorage.getItem(LS_MARKS_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function applySavedIndex(index) {
+      const stepIndex = clampIndex(index);
+      markSavedCard(stepIndex);
+      if (stepIndex >= 0) {
+        setPosInput(stepIndex);
+        scrollCardIntoView(stepIndex);
+      }
+      return stepIndex;
+    }
+
+    function setPosInput(index) {
+      if (!inPos || index < 0) return;
+      inPos.value = String(index + 1);
+    }
+
+    function readPosIndex() {
+      const n = state.marks?.items?.length || 0;
+      if (inPos) inPos.max = String(Math.max(1, n));
+      const oneBased = Number.parseInt(inPos.value, 10);
+      if (!Number.isFinite(oneBased)) return -1;
+      return clampIndex(oneBased - 1);
+    }
+
+    function esc(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function translationBits(item) {
+      const bits = [];
+      if (state.showEn && item.en && item.en !== item.text) bits.push(item.en);
+      if (state.showUk && item.uk && item.uk !== item.text) bits.push(item.uk);
+      return bits;
+    }
+
+    function translationHtml(item) {
+      const parts = [];
+      if (state.showEn && item.en && item.en !== item.text) {
+        parts.push(`<div class="tr tr-en">${esc(item.en)}</div>`);
+      }
+      if (state.showUk && item.uk && item.uk !== item.text) {
+        parts.push(`<div class="tr tr-uk">${esc(item.uk)}</div>`);
+      }
+      return parts.join('');
+    }
+
+    function formatDuration(sec) {
+      const total = Math.max(0, Math.round(sec));
+      const minutes = Math.floor(total / 60);
+      const seconds = total % 60;
+      return `${minutes} хв ${seconds} с`;
+    }
+
+    function lessonDurationSec(marks) {
+      const items = marks.items || [];
+      const rate = Math.max(DEFAULTS.PLAYBACK_RATE, 0.01);
+      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      const lastOnTrack = {};
+      items.forEach((item, index) => {
+        lastOnTrack[item.lang] = index;
+      });
+      let sum = 0;
+      items.forEach((item, index) => {
+        const speech = Math.max(0, Number(item.end) - Number(item.start));
+        const pause = Number(item.pause_sec);
+        const after = Number.isFinite(pause) && pause >= 0
+          ? pause
+          : (marks.pause_sec ?? 0.6);
+        const tail = index === lastOnTrack[item.lang] ? 0 : pad;
+        sum += (speech + tail) / rate + after;
+      });
+      return sum;
+    }
+
+    function showTotal() {
+      const el = document.getElementById('elTotal');
+      if (!el || !state.marks?.items?.length) return;
+      el.textContent = `Без перерви ${formatDuration(lessonDurationSec(state.marks))}`;
+    }
+
+    function renderStepLabel(item, index) {
+      const extra = translationBits(item);
+      const tail = extra.length ? ` — ${extra.join(' · ')}` : '';
+      return `#${index + 1} ${item.text}${tail}`;
+    }
+
+    function goToN() {
+      const index = readPosIndex();
+      if (index < 0) {
+        elCurrent.textContent = 'Enter step number N.';
+        return -1;
+      }
+      setPosInput(index);
+      scrollCardIntoView(index);
+      const item = state.marks.items[index];
+      elCurrent.textContent = renderStepLabel(item, index);
+      return index;
+    }
+
+    function setPlayFromNLabel(playing) {
+      btnPlayFromN.textContent = playing ? 'Pause' : 'Play from N';
+    }
+
+    function markSavedCard(index) {
+      state.savedIndex = clampIndex(index);
+      for (const li of elCardList.querySelectorAll('li')) {
+        li.dataset.saved = li.dataset.index === String(state.savedIndex) ? '1' : '0';
+      }
+    }
+
+    function scrollCardIntoView(index) {
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      if (li) {
+        li.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    }
+
+    async function ensureSignedIn() {
+      const gv = ensureGv();
+      if (!gv) throw new Error('GlobalVars is not available');
+      if (gv.URL_DS.idToken) return gv;
+      await gv.SignIn_User();
+      return gv;
+    }
+
+    function requestByPath(addurl, method, body) {
+      return new Promise((resolve, reject) => {
+        const gv = ensureGv();
+        if (!gv) {
+          reject(new Error('GlobalVars is not available'));
+          return;
+        }
+        const req = gv.URL_DS.GetObjForRequest();
+        req.addUrl = addurl;
+        req.ametod = method;
+        req.vobj = body;
+        req.CallBackFunction = (data) => resolve(data);
+        req.ErrorCallback = (err) => reject(err || new Error('DB request failed'));
+        gv.URL_DS.requestData_By_URL_Path(req);
+      });
+    }
+
+    async function saveStateToDb(stepIndex) {
+      const index = clampIndex(stepIndex);
+      if (index < 0) return;
+      try {
+        localStorage.setItem(LS_KEY, String(index));
+        localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
+      } catch {
+        // ignore
+      }
+      try {
+        await ensureSignedIn();
+        await requestByPath(DB_PATH, 'PUT', {
+          marksFile: 'marks_lesson1.json',
+          stepIndex: index,
+          marks: state.userMarks,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error('Save state failed', err);
+      }
+    }
+
+    async function loadSavedStateFromDb() {
+      try {
+        await ensureSignedIn();
+        const data = await requestByPath(DB_PATH, 'GET', null);
+        if (data && data.marks && typeof data.marks === 'object') {
+          state.userMarks = { ...data.marks };
+          try {
+            localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
+          } catch {
+            // ignore
+          }
+        }
+        if (data && data.stepIndex != null) {
+          return clampIndex(data.stepIndex);
+        }
+      } catch (err) {
+        console.error('Load state failed', err);
+      }
+      return -1;
+    }
+
+    let persistChain = Promise.resolve();
+    let persistQueued = null;
+
+    function persistState(index) {
+      const stepIndex = clampIndex(index);
+      if (stepIndex < 0) return;
+      markSavedCard(stepIndex);
+      try {
+        localStorage.setItem(LS_KEY, String(stepIndex));
+        localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
+      } catch {
+        // ignore
+      }
+      persistQueued = stepIndex;
+      persistChain = persistChain
+        .then(async () => {
+          const toSave = persistQueued;
+          persistQueued = null;
+          if (toSave == null) return;
+          await saveStateToDb(toSave);
+        })
+        .catch((err) => console.error('Auto-save failed', err));
+    }
+
+    async function loadMarks() {
+      if (state.marks) return state.marks;
+      const res = await fetch(MARKS_URL);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch marks: ${res.status}`);
+      }
+      state.marks = await res.json();
+      return state.marks;
+    }
+
+    async function ensureAudioContext() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (state.audioCtx.state === 'suspended') {
+        await state.audioCtx.resume();
+      }
+      return state.audioCtx;
+    }
+
+    async function loadBuffer(url) {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch ${url}: ${res.status}`);
+      }
+      const arr = await res.arrayBuffer();
+      return state.audioCtx.decodeAudioData(arr);
+    }
+
+    async function ensureAssetsLoaded() {
+      await loadMarks();
+      await ensureAudioContext();
+      if (!state.svBuffer) {
+        state.svBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.sv_file}`);
+      }
+      if (!state.ukBuffer) {
+        state.ukBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.uk_file}`);
+      }
+    }
+
+    function bufferForItem(item) {
+      return item.lang === 'sv' ? state.svBuffer : state.ukBuffer;
+    }
+
+    function startClip(buffer, when, offset, duration, volume, rate) {
+      const src = state.audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.playbackRate.value = rate;
+
+      const gain = state.audioCtx.createGain();
+      gain.gain.value = volume;
+
+      src.connect(gain);
+      gain.connect(state.audioCtx.destination);
+
+      src.start(when, offset, duration);
+      state.activeSources.push(src);
+      src.onended = () => {
+        state.activeSources = state.activeSources.filter((s) => s !== src);
+      };
+      return src;
+    }
+
+    function pausePlayback() {
+      if (state.lastPlayedIndex >= 0) {
+        persistState(state.lastPlayedIndex);
+        setPosInput(state.lastPlayedIndex);
+      }
+      state.stopRequested = true;
+      state.playing = false;
+      if (state.nextTimer) {
+        clearTimeout(state.nextTimer);
+        state.nextTimer = null;
+      }
+      for (const src of state.activeSources) {
+        try {
+          src.stop();
+        } catch {
+          // already stopped
+        }
+      }
+      state.activeSources = [];
+      setPlayFromNLabel(false);
+      if (state.lastPlayedIndex >= 0) {
+        const item = state.marks.items[state.lastPlayedIndex];
+        elCurrent.textContent = `Paused at ${renderStepLabel(item, state.lastPlayedIndex)}`;
+        setActiveCard(state.lastPlayedIndex);
+      } else {
+        elCurrent.textContent = 'Paused.';
+      }
+    }
+
+    function setKindMark(index, label) {
+      if (index < 0 || !label) return;
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      if (!li) return;
+      li.dataset.mark = label;
+      const kind = li.querySelector('.kind');
+      if (kind) kind.textContent = label;
+    }
+
+    function setActiveCard(index) {
+      state.currentIndex = index;
+      if (index >= 0) {
+        state.lastPlayedIndex = index;
+      }
+      for (const li of elCardList.querySelectorAll('li')) {
+        li.dataset.active = li.dataset.index === String(index) ? '1' : '0';
+      }
+      if (index >= 0) {
+        scrollCardIntoView(index);
+      }
+    }
+
+    function renderCardList() {
+      elCardList.innerHTML = '';
+      if (!state.marks?.items?.length) {
+        return;
+      }
+      state.marks.items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.dataset.index = String(index);
+        const mark = userMarkForIndex(index);
+        li.innerHTML = `<div class="kind">${esc(mark)}</div><div class="line">${esc(item.text)}</div>${translationHtml(item)}`;
+        if (mark) li.dataset.mark = mark;
+        li.addEventListener('click', () => {
+          setPosInput(index);
+          goToN();
+        });
+        elCardList.appendChild(li);
+      });
+      if (state.savedIndex >= 0) {
+        markSavedCard(state.savedIndex);
+      }
+    }
+
+    function waitMs(ms) {
+      return new Promise((resolve) => {
+        state.nextTimer = setTimeout(() => {
+          state.nextTimer = null;
+          resolve();
+        }, ms);
+      });
+    }
+
+    function waitForSourceEnd(src) {
+      return new Promise((resolve) => {
+        src.onended = () => {
+          state.activeSources = state.activeSources.filter((s) => s !== src);
+          resolve();
+        };
+      });
+    }
+
+    function clipSourceDuration(start, end, pad, bufferDuration) {
+      const paddedEnd = Math.min(end + pad, bufferDuration);
+      return Math.max(0, paddedEnd - start);
+    }
+
+    async function playStep(index) {
+      const item = state.marks.items[index];
+      const buffer = bufferForItem(item);
+      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      const rate = DEFAULTS.PLAYBACK_RATE;
+      const dur = clipSourceDuration(item.start, item.end, pad, buffer.duration);
+      const pauseSec = Number(item.pause_sec);
+      const afterSec = Number.isFinite(pauseSec) && pauseSec >= 0
+        ? pauseSec
+        : (state.marks.pause_sec ?? 0.6);
+
+      setActiveCard(index);
+      setPosInput(index);
+      persistState(index);
+      elCurrent.textContent = renderStepLabel(item, index);
+
+      const when = state.audioCtx.currentTime;
+      const src = startClip(
+        buffer,
+        when,
+        item.start,
+        dur,
+        DEFAULTS.VOLUME,
+        rate,
+      );
+      await waitForSourceEnd(src);
+
+      if (state.stopRequested) {
+        return;
+      }
+
+      await waitMs(afterSec * 1000);
+    }
+
+    async function playFromIndex(startIndex) {
+      if (state.playing) {
+        pausePlayback();
+        return;
+      }
+
+      state.stopRequested = false;
+      state.playing = true;
+      setPlayFromNLabel(true);
+
+      try {
+        await ensureAssetsLoaded();
+        if (!state.marks?.items?.length) {
+          throw new Error('No items in marks JSON');
+        }
+
+        await startSilentKeeper();
+
+        const endIndex = state.marks.items.length - 1;
+
+        for (let i = startIndex; i <= endIndex; i += 1) {
+          if (state.stopRequested) {
+            break;
+          }
+          await playStep(i);
+        }
+
+        if (!state.stopRequested) {
+          setActiveCard(-1);
+          elCurrent.textContent = 'Finished.';
+        }
+      } catch (err) {
+        console.error(err);
+        elCurrent.textContent = `Error: ${err.message}`;
+      } finally {
+        state.playing = false;
+        setPlayFromNLabel(false);
+      }
+    }
+
+    function setPosMenuOpen(open) {
+      if (!posWrap) return;
+      posWrap.classList.toggle('is-open', open);
+    }
+
+    if (posWrap && inPos) {
+      inPos.addEventListener('focus', () => setPosMenuOpen(true));
+      inPos.addEventListener('click', () => setPosMenuOpen(true));
+      if (posMenu) {
+        posMenu.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+        });
+      }
+      if (posGoStart) {
+        posGoStart.addEventListener('click', () => {
+          inPos.value = '1';
+          setPosMenuOpen(false);
+          goToN();
+        });
+      }
+      document.addEventListener('click', (e) => {
+        if (!posWrap.contains(e.target)) {
+          setPosMenuOpen(false);
+        }
+      });
+    }
+
+    function readFlag(key) {
+      try {
+        return localStorage.getItem(key) === '1';
+      } catch {
+        return false;
+      }
+    }
+
+    function paintFlag(button, on) {
+      button.dataset.selected = on ? '1' : '0';
+      button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    function applyFlags() {
+      paintFlag(btnEn, state.showEn);
+      paintFlag(btnUk, state.showUk);
+      if (state.marks) renderCardList();
+      const index = state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex;
+      if (index >= 0 && state.marks?.items?.[index]) {
+        elCurrent.textContent = renderStepLabel(state.marks.items[index], index);
+      }
+    }
+
+    function toggleFlag(which) {
+      if (which === 'en') state.showEn = !state.showEn;
+      if (which === 'uk') state.showUk = !state.showUk;
+      try {
+        localStorage.setItem(LS_EN_KEY, state.showEn ? '1' : '0');
+        localStorage.setItem(LS_UK_KEY, state.showUk ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      applyFlags();
+    }
+
+    btnEn.addEventListener('click', () => toggleFlag('en'));
+    btnUk.addEventListener('click', () => toggleFlag('uk'));
+
+    btnGoN.addEventListener('click', goToN);
+    btnPlayFromN.addEventListener('click', () => {
+      if (state.playing) {
+        pausePlayback();
+        return;
+      }
+      const index = goToN();
+      if (index < 0) return;
+      playFromIndex(index);
+    });
+    if (sessionKeeper) {
+      sessionKeeper.addEventListener('playing', () => {
+        bindMediaHandlers();
+        syncMediaPlaybackState();
+      });
+      sessionKeeper.addEventListener('pause', () => {
+        keepSilentKeeperPlaying();
+      });
+    }
+    inPos.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (state.playing) return;
+        const index = goToN();
+        if (index >= 0) playFromIndex(index);
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && state.lastPlayedIndex >= 0) {
+        persistState(state.lastPlayedIndex);
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      if (state.lastPlayedIndex >= 0) {
+        persistState(state.lastPlayedIndex);
+      }
+    });
+
+    loadMarks()
+      .then(() => {
+        state.userMarks = readLocalUserMarks();
+        state.showEn = readFlag(LS_EN_KEY);
+        state.showUk = readFlag(LS_UK_KEY);
+        paintFlag(btnEn, state.showEn);
+        paintFlag(btnUk, state.showUk);
+        showTotal();
+        renderCardList();
+        inPos.max = String(state.marks.items.length);
+        inPos.min = '1';
+        const local = applySavedIndex(readLocalSavedIndex());
+        elCurrent.textContent = local >= 0
+          ? `At saved #${local + 1}.`
+          : 'Ready.';
+        loadSavedStateFromDb().then((dbIndex) => {
+          if (Object.keys(state.userMarks).length) {
+            renderCardList();
+          }
+          if (dbIndex < 0) return;
+          applySavedIndex(dbIndex);
+          elCurrent.textContent = `At saved #${dbIndex + 1}.`;
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        elCurrent.textContent = `Load error: ${err.message}. Use http://localhost:8080/...`;
+      });
+  </script>
+</body>
+</html>
