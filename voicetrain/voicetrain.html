@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VoiceTraining — dual TTS</title>
+  <title>VoiceTraining — lesson steps</title>
   <style>
     :root {
       color-scheme: light;
@@ -20,6 +20,7 @@
       width: calc(100vw - 16px);
       max-width: 560px;
       height: calc(100vh - 16px);
+      height: calc(100dvh - 16px);
       margin: 8px auto;
       border: 1px solid currentColor;
       border-radius: 12px;
@@ -32,8 +33,12 @@
     }
 
     h1 {
-      margin: 0 0 8px;
+      margin: 0 0 2px;
       font-size: 18px;
+    }
+
+    .total {
+      margin: 0 0 8px;
     }
 
     .row {
@@ -53,13 +58,19 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     button[data-selected="1"] {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
 
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
+    .flag {
+      min-width: 52px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
 
     input[type="number"] {
@@ -68,7 +79,7 @@
       padding: 8px 10px;
       border: 1px solid currentColor;
       border-radius: 10px;
-      font-size: 14px;
+      font-size: 16px;
       min-height: 36px;
     }
 
@@ -120,13 +131,24 @@
       text-transform: uppercase;
     }
 
+    .kind:empty {
+      display: none;
+    }
+
+    .tr {
+      margin-top: 4px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .tr-en { color: #243e6b; }
+    .tr-uk { color: #6a3114; }
+
     li[data-mark] .kind {
       opacity: 1;
       font-weight: 700;
       color: #1565c0;
     }
-
-    .spacer { height: 10px; }
 
     .card-audio {
       position: absolute;
@@ -135,33 +157,70 @@
       opacity: 0.01;
       pointer-events: none;
     }
+
+    .pos-wrap {
+      position: relative;
+    }
+
+    .pos-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: 2;
+      width: max-content;
+      min-width: 100%;
+      box-sizing: border-box;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      background: #fff;
+      padding: 4px;
+      display: none;
+      box-shadow: 0 4px 12px color-mix(in srgb, currentColor 18%, transparent);
+    }
+
+    .pos-wrap.is-open .pos-menu {
+      display: block;
+    }
+
+    .pos-menu button {
+      width: 100%;
+      text-align: left;
+      white-space: nowrap;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-height: 32px;
+    }
+
+    .pos-menu button:hover {
+      background-color: color-mix(in srgb, currentColor 10%, transparent);
+    }
   </style>
 </head>
 <body>
   <div class="dialog">
     <h1 id="elMediaLog">VoiceTraining</h1>
-    <div class="muted" id="elMediaHint">Панель N керує картками. Тихий трек лише ловить EarPods у заголовок. Volume ± не в JS</div>
+    <p class="muted total" id="elTotal"></p>
     <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
-    <div class="muted">SV → ліве вухо, UK → праве. audio/marks.json</div>
 
-    <div class="spacer"></div>
+    <div class="row">
+      <button id="btnEn" class="flag" type="button" data-selected="0" aria-pressed="false">EN</button>
+      <button id="btnUk" class="flag" type="button" data-selected="0" aria-pressed="false">UK</button>
+    </div>
 
     <div class="row">
       <span class="muted">N:</span>
-      <input id="inPos" type="number" min="1" step="1" value="1" />
+      <div class="pos-wrap" id="posWrap">
+        <input id="inPos" type="number" min="1" step="1" value="1" autocomplete="off" />
+        <div class="pos-menu" id="posMenu" role="menu">
+          <button type="button" id="posGoStart" role="menuitem">На початок (1)</button>
+        </div>
+      </div>
       <button id="btnGoN" type="button">Go to N</button>
       <button id="btnPlayFromN" type="button">Play from N</button>
-      <button id="btnGap" type="button">Gap 1s</button>
     </div>
 
-    <div class="row" style="margin-top: 10px;">
-      <span class="muted">Mode:</span>
-      <button id="btnModeOverlap" type="button" data-selected="1">overlap</button>
-      <button id="btnModeSequential" type="button">sequential</button>
-    </div>
-
-    <div id="savedCard" class="muted">Saved: none</div>
-    <div id="currentCard" class="current muted">Натисніть Play або картку в списку.</div>
+    <div id="currentCard" class="current muted">Натисніть Play або крок у списку.</div>
 
     <ul id="cardList"></ul>
   </div>
@@ -172,21 +231,16 @@
 
     const AUDIO_BASE = 'audio/';
     const MARKS_URL = `${AUDIO_BASE}marks.json`;
-    const LS_KEY = 'voicetrain_cardIndex';
-    const LS_GAP_KEY = 'voicetrain_gapSec';
-    const GAP_STEPS = [1, 2, 3, 4];
+    const LS_KEY = 'voicetrain_stepIndex';
+    const LS_MARKS_KEY = 'voicetrain_userMarks';
+    const LS_EN_KEY = 'voicetrain_showEn';
+    const LS_UK_KEY = 'voicetrain_showUk';
     const DB_PATH = '../db_youtube2/ui_state/voicetrain';
 
     const DEFAULTS = {
-      SV_START_DELAY_SEC: 0,
-      UK_START_DELAY_SEC: 0.3,
-      SV_VOLUME: 1.0,
-      UK_VOLUME: 0.6,
-      SV_PLAYBACK_RATE: 1,
-      UK_PLAYBACK_RATE: 1,
-      AFTER_SV_END_BEFORE_UK_DELAY_SEC: 0.3,
-      AFTER_UK_END_BEFORE_NEXT_DELAY_SEC: 1,
+      PLAYBACK_RATE: 1,
       CLIP_TAIL_PAD_SEC: 0.2,
+      VOLUME: 1,
     };
 
     const state = {
@@ -194,7 +248,6 @@
       svBuffer: null,
       ukBuffer: null,
       marks: null,
-      playMode: 'overlap',
       playing: false,
       stopRequested: false,
       activeSources: [],
@@ -202,19 +255,21 @@
       currentIndex: -1,
       lastPlayedIndex: -1,
       savedIndex: -1,
-      kindMarks: {},
-      gapSec: 1,
+      userMarks: {},
+      showEn: false,
+      showUk: false,
     };
 
     const elCurrent = document.getElementById('currentCard');
-    const elSaved = document.getElementById('savedCard');
     const elCardList = document.getElementById('cardList');
     const inPos = document.getElementById('inPos');
+    const posWrap = document.getElementById('posWrap');
+    const posMenu = document.getElementById('posMenu');
+    const posGoStart = document.getElementById('posGoStart');
+    const btnEn = document.getElementById('btnEn');
+    const btnUk = document.getElementById('btnUk');
     const btnGoN = document.getElementById('btnGoN');
     const btnPlayFromN = document.getElementById('btnPlayFromN');
-    const btnGap = document.getElementById('btnGap');
-    const btnModeOverlap = document.getElementById('btnModeOverlap');
-    const btnModeSequential = document.getElementById('btnModeSequential');
     const elMediaLog = document.getElementById('elMediaLog');
     const sessionKeeper = document.getElementById('sessionKeeper');
 
@@ -222,9 +277,9 @@
 
     const MEDIA_ACTION_NOTES = {
       play: 'F8 / ○',
-      pause: 'F8 / ○',
-      nexttrack: 'F9 / + ?',
-      previoustrack: 'F7 / − ?',
+      pause: 'F8 / ○ → skip',
+      nexttrack: 'F9 / + → focus',
+      previoustrack: 'F7 / −',
     };
 
     function logMedia(action, note) {
@@ -253,7 +308,7 @@
       }
       navigator.mediaSession.metadata = new MediaMetadata({
         title: 'EarPods receiver',
-        artist: 'silent track',
+        artist: 'VoiceTraining',
       });
       for (const action of ['play', 'pause', 'nexttrack', 'previoustrack']) {
         try {
@@ -303,49 +358,33 @@
       logMedia(action, MEDIA_ACTION_NOTES[action] || '');
       keepSilentKeeperPlaying();
       if (action === 'pause') {
-        markCurrentKind('pause');
+        markCurrentUserMark('skip');
       } else if (action === 'nexttrack') {
-        markCurrentKind('nexttrack');
+        markCurrentUserMark('focus');
       }
     }
 
-    function markCurrentKind(label) {
+    function stepIdForIndex(index) {
+      const item = state.marks?.items?.[index];
+      if (!item) return null;
+      return String(item.step);
+    }
+
+    function userMarkForIndex(index) {
+      const id = stepIdForIndex(index);
+      if (!id) return '';
+      return state.userMarks[id] || '';
+    }
+
+    function markCurrentUserMark(label) {
       let index = state.lastPlayedIndex;
       if (index < 0) index = readPosIndex();
+      if (index < 0) return;
+      const stepId = stepIdForIndex(index);
+      if (!stepId) return;
+      state.userMarks[stepId] = label;
       setKindMark(index, label);
-    }
-
-    function readConfig() {
-      return {
-        ...DEFAULTS,
-        AFTER_UK_END_BEFORE_NEXT_DELAY_SEC: state.gapSec,
-      };
-    }
-
-    function syncGapButton() {
-      if (btnGap) btnGap.textContent = `Gap ${state.gapSec}s`;
-    }
-
-    function cycleGap() {
-      const i = GAP_STEPS.indexOf(state.gapSec);
-      const next = GAP_STEPS[(i < 0 ? 0 : i + 1) % GAP_STEPS.length];
-      state.gapSec = next;
-      try {
-        localStorage.setItem(LS_GAP_KEY, String(next));
-      } catch {
-        // ignore
-      }
-      syncGapButton();
-    }
-
-    function readSavedGap() {
-      try {
-        const raw = Number.parseInt(localStorage.getItem(LS_GAP_KEY) || '', 10);
-        if (GAP_STEPS.includes(raw)) return raw;
-      } catch {
-        // ignore
-      }
-      return 1;
+      persistState(index);
     }
 
     function ensureGv() {
@@ -372,14 +411,25 @@
       }
     }
 
-    function applySavedIndex(index) {
-      const cardIndex = clampIndex(index);
-      markSavedCard(cardIndex);
-      if (cardIndex >= 0) {
-        setPosInput(cardIndex);
-        scrollCardIntoView(cardIndex);
+    function readLocalUserMarks() {
+      try {
+        const raw = localStorage.getItem(LS_MARKS_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
       }
-      return cardIndex;
+    }
+
+    function applySavedIndex(index) {
+      const stepIndex = clampIndex(index);
+      markSavedCard(stepIndex);
+      if (stepIndex >= 0) {
+        setPosInput(stepIndex);
+        scrollCardIntoView(stepIndex);
+      }
+      return stepIndex;
     }
 
     function setPosInput(index) {
@@ -395,27 +445,82 @@
       return clampIndex(oneBased - 1);
     }
 
+    function esc(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function translationBits(item) {
+      const bits = [];
+      if (state.showEn && item.en && item.en !== item.text) bits.push(item.en);
+      if (state.showUk && item.uk && item.uk !== item.text) bits.push(item.uk);
+      return bits;
+    }
+
+    function translationHtml(item) {
+      const parts = [];
+      if (state.showEn && item.en && item.en !== item.text) {
+        parts.push(`<div class="tr tr-en">${esc(item.en)}</div>`);
+      }
+      if (state.showUk && item.uk && item.uk !== item.text) {
+        parts.push(`<div class="tr tr-uk">${esc(item.uk)}</div>`);
+      }
+      return parts.join('');
+    }
+
+    function formatDuration(sec) {
+      const total = Math.max(0, Math.round(sec));
+      const minutes = Math.floor(total / 60);
+      const seconds = total % 60;
+      return `${minutes} хв ${seconds} с`;
+    }
+
+    function lessonDurationSec(marks) {
+      const items = marks.items || [];
+      const rate = Math.max(DEFAULTS.PLAYBACK_RATE, 0.01);
+      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      const lastOnTrack = {};
+      items.forEach((item, index) => {
+        lastOnTrack[item.lang] = index;
+      });
+      let sum = 0;
+      items.forEach((item, index) => {
+        const speech = Math.max(0, Number(item.end) - Number(item.start));
+        const pause = Number(item.pause_sec);
+        const after = Number.isFinite(pause) && pause >= 0
+          ? pause
+          : (marks.pause_sec ?? 0.6);
+        const tail = index === lastOnTrack[item.lang] ? 0 : pad;
+        sum += (speech + tail) / rate + after;
+      });
+      return sum;
+    }
+
+    function showTotal() {
+      const el = document.getElementById('elTotal');
+      if (!el || !state.marks?.items?.length) return;
+      el.textContent = `Без перерви ${formatDuration(lessonDurationSec(state.marks))}`;
+    }
+
+    function renderStepLabel(item, index) {
+      const extra = translationBits(item);
+      const tail = extra.length ? ` — ${extra.join(' · ')}` : '';
+      return `#${index + 1} ${item.text}${tail}`;
+    }
+
     function goToN() {
       const index = readPosIndex();
       if (index < 0) {
-        elCurrent.textContent = 'Enter a card number N.';
+        elCurrent.textContent = 'Enter step number N.';
         return -1;
       }
       setPosInput(index);
       scrollCardIntoView(index);
       const item = state.marks.items[index];
-      elCurrent.textContent = `At #${index + 1} ${item.sv} — ${item.uk}`;
+      elCurrent.textContent = renderStepLabel(item, index);
       return index;
-    }
-
-    function updateSavedLabel() {
-      const index = state.savedIndex;
-      if (index < 0 || !state.marks?.items?.[index]) {
-        elSaved.textContent = 'Saved: none';
-        return;
-      }
-      const item = state.marks.items[index];
-      elSaved.textContent = `Saved: #${index + 1} ${item.sv} — ${item.uk}`;
     }
 
     function setPlayFromNLabel(playing) {
@@ -427,7 +532,6 @@
       for (const li of elCardList.querySelectorAll('li')) {
         li.dataset.saved = li.dataset.index === String(state.savedIndex) ? '1' : '0';
       }
-      updateSavedLabel();
     }
 
     function scrollCardIntoView(index) {
@@ -462,39 +566,45 @@
       });
     }
 
-    async function savePositionToDb(index) {
-      const cardIndex = clampIndex(index);
-      if (cardIndex < 0) return;
+    async function saveStateToDb(stepIndex) {
+      const index = clampIndex(stepIndex);
+      if (index < 0) return;
       try {
-        localStorage.setItem(LS_KEY, String(cardIndex));
+        localStorage.setItem(LS_KEY, String(index));
+        localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
       } catch {
         // ignore
       }
       try {
         await ensureSignedIn();
         await requestByPath(DB_PATH, 'PUT', {
-          marksFile: 'marks.json',
-          cardIndex,
-          playMode: state.playMode,
+          marksFile: 'marks_lesson1.json',
+          stepIndex: index,
+          marks: state.userMarks,
           updatedAt: new Date().toISOString(),
         });
       } catch (err) {
-        console.error('Save position failed', err);
+        console.error('Save state failed', err);
       }
     }
 
-    async function loadSavedPositionFromDb() {
+    async function loadSavedStateFromDb() {
       try {
         await ensureSignedIn();
         const data = await requestByPath(DB_PATH, 'GET', null);
-        if (data && (data.playMode === 'overlap' || data.playMode === 'sequential')) {
-          setPlayMode(data.playMode);
+        if (data && data.marks && typeof data.marks === 'object') {
+          state.userMarks = { ...data.marks };
+          try {
+            localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
+          } catch {
+            // ignore
+          }
         }
-        if (data && data.cardIndex != null) {
-          return clampIndex(data.cardIndex);
+        if (data && data.stepIndex != null) {
+          return clampIndex(data.stepIndex);
         }
       } catch (err) {
-        console.error('Load position failed', err);
+        console.error('Load state failed', err);
       }
       return -1;
     }
@@ -502,22 +612,23 @@
     let persistChain = Promise.resolve();
     let persistQueued = null;
 
-    function persistPosition(index) {
-      const cardIndex = clampIndex(index);
-      if (cardIndex < 0) return;
-      markSavedCard(cardIndex);
+    function persistState(index) {
+      const stepIndex = clampIndex(index);
+      if (stepIndex < 0) return;
+      markSavedCard(stepIndex);
       try {
-        localStorage.setItem(LS_KEY, String(cardIndex));
+        localStorage.setItem(LS_KEY, String(stepIndex));
+        localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
       } catch {
         // ignore
       }
-      persistQueued = cardIndex;
+      persistQueued = stepIndex;
       persistChain = persistChain
         .then(async () => {
           const toSave = persistQueued;
           persistQueued = null;
           if (toSave == null) return;
-          await savePositionToDb(toSave);
+          await saveStateToDb(toSave);
         })
         .catch((err) => console.error('Auto-save failed', err));
     }
@@ -532,9 +643,34 @@
       return state.marks;
     }
 
+    function unlockAudio() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (navigator.audioSession) {
+        try {
+          navigator.audioSession.type = 'playback';
+        } catch {
+          // ignore
+        }
+      }
+      const resumePromise = state.audioCtx.state === 'suspended'
+        ? state.audioCtx.resume()
+        : Promise.resolve();
+      const keeperPromise = startSilentKeeper();
+      return Promise.all([resumePromise, keeperPromise]);
+    }
+
     async function ensureAudioContext() {
       if (!state.audioCtx) {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (navigator.audioSession) {
+        try {
+          navigator.audioSession.type = 'playback';
+        } catch {
+          // ignore
+        }
       }
       if (state.audioCtx.state === 'suspended') {
         await state.audioCtx.resume();
@@ -562,7 +698,11 @@
       }
     }
 
-    function startClip(buffer, when, offset, duration, volume, pan, rate) {
+    function bufferForItem(item) {
+      return item.lang === 'sv' ? state.svBuffer : state.ukBuffer;
+    }
+
+    function startClip(buffer, when, offset, duration, volume, rate) {
       const src = state.audioCtx.createBufferSource();
       src.buffer = buffer;
       src.playbackRate.value = rate;
@@ -570,12 +710,8 @@
       const gain = state.audioCtx.createGain();
       gain.gain.value = volume;
 
-      const panner = state.audioCtx.createStereoPanner();
-      panner.pan.value = pan;
-
       src.connect(gain);
-      gain.connect(panner);
-      panner.connect(state.audioCtx.destination);
+      gain.connect(state.audioCtx.destination);
 
       src.start(when, offset, duration);
       state.activeSources.push(src);
@@ -587,7 +723,7 @@
 
     function pausePlayback() {
       if (state.lastPlayedIndex >= 0) {
-        persistPosition(state.lastPlayedIndex);
+        persistState(state.lastPlayedIndex);
         setPosInput(state.lastPlayedIndex);
       }
       state.stopRequested = true;
@@ -607,9 +743,8 @@
       setPlayFromNLabel(false);
       if (state.lastPlayedIndex >= 0) {
         const item = state.marks.items[state.lastPlayedIndex];
-        elCurrent.textContent = `Paused at #${state.lastPlayedIndex + 1} ${item.sv} — ${item.uk}`;
+        elCurrent.textContent = `Paused at ${renderStepLabel(item, state.lastPlayedIndex)}`;
         setActiveCard(state.lastPlayedIndex);
-        setKindMark(state.lastPlayedIndex, 'pause');
       } else {
         elCurrent.textContent = 'Paused.';
       }
@@ -617,7 +752,6 @@
 
     function setKindMark(index, label) {
       if (index < 0 || !label) return;
-      state.kindMarks[index] = label;
       const li = elCardList.querySelector(`li[data-index="${index}"]`);
       if (!li) return;
       li.dataset.mark = label;
@@ -638,11 +772,6 @@
       }
     }
 
-    function renderCardLabel(item, index) {
-      const en = item.en ? ` (${item.en})` : '';
-      return `#${index + 1} [${item.kind}] ${item.sv} — ${item.uk}${en}`;
-    }
-
     function renderCardList() {
       elCardList.innerHTML = '';
       if (!state.marks?.items?.length) {
@@ -651,9 +780,8 @@
       state.marks.items.forEach((item, index) => {
         const li = document.createElement('li');
         li.dataset.index = String(index);
-        li.dataset.kind = item.kind;
-        const mark = state.kindMarks[index];
-        li.innerHTML = `<div class="kind">${mark || item.kind}</div><div>${item.sv} — ${item.uk}</div>`;
+        const mark = userMarkForIndex(index);
+        li.innerHTML = `<div class="kind">${esc(mark)}</div><div class="line">${esc(item.text)}</div>${translationHtml(item)}`;
         if (mark) li.dataset.mark = mark;
         li.addEventListener('click', () => {
           setPosInput(index);
@@ -661,6 +789,9 @@
         });
         elCardList.appendChild(li);
       });
+      if (state.savedIndex >= 0) {
+        markSavedCard(state.savedIndex);
+      }
     }
 
     function waitMs(ms) {
@@ -686,100 +817,38 @@
       return Math.max(0, paddedEnd - start);
     }
 
-    async function playCard(index, cfg) {
+    async function playStep(index) {
       const item = state.marks.items[index];
-      const pad = cfg.CLIP_TAIL_PAD_SEC;
-      const svDur = clipSourceDuration(
-        item.sv_start,
-        item.sv_end,
-        pad,
-        state.svBuffer.duration,
-      );
-      const ukDur = clipSourceDuration(
-        item.uk_start,
-        item.uk_end,
-        pad,
-        state.ukBuffer.duration,
-      );
-      const svPlayDur = svDur / Math.max(cfg.SV_PLAYBACK_RATE, 0.01);
-      const ukPlayDur = ukDur / Math.max(cfg.UK_PLAYBACK_RATE, 0.01);
+      const buffer = bufferForItem(item);
+      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      const rate = DEFAULTS.PLAYBACK_RATE;
+      const dur = clipSourceDuration(item.start, item.end, pad, buffer.duration);
+      const pauseSec = Number(item.pause_sec);
+      const afterSec = Number.isFinite(pauseSec) && pauseSec >= 0
+        ? pauseSec
+        : (state.marks.pause_sec ?? 0.6);
 
       setActiveCard(index);
       setPosInput(index);
-      persistPosition(index);
-      elCurrent.textContent = renderCardLabel(item, index);
+      persistState(index);
+      elCurrent.textContent = renderStepLabel(item, index);
 
-      const t0 = state.audioCtx.currentTime;
-
-      if (state.playMode === 'overlap') {
-        const svWhen = t0 + cfg.SV_START_DELAY_SEC;
-        const ukWhen = t0 + cfg.UK_START_DELAY_SEC;
-
-        startClip(
-          state.svBuffer,
-          svWhen,
-          item.sv_start,
-          svDur,
-          cfg.SV_VOLUME,
-          -1,
-          cfg.SV_PLAYBACK_RATE,
-        );
-
-        startClip(
-          state.ukBuffer,
-          ukWhen,
-          item.uk_start,
-          ukDur,
-          cfg.UK_VOLUME,
-          1,
-          cfg.UK_PLAYBACK_RATE,
-        );
-
-        const svEndAt = svWhen + svPlayDur;
-        const ukEndAt = ukWhen + ukPlayDur;
-        const cardEndAt = Math.max(svEndAt, ukEndAt);
-        const waitSec = Math.max(0, cardEndAt - state.audioCtx.currentTime);
-        await waitMs(waitSec * 1000);
-      } else {
-        const svWhen = state.audioCtx.currentTime + cfg.SV_START_DELAY_SEC;
-        const svSrc = startClip(
-          state.svBuffer,
-          svWhen,
-          item.sv_start,
-          svDur,
-          cfg.SV_VOLUME,
-          -1,
-          cfg.SV_PLAYBACK_RATE,
-        );
-        await waitForSourceEnd(svSrc);
-
-        if (state.stopRequested) {
-          return;
-        }
-
-        await waitMs(cfg.AFTER_SV_END_BEFORE_UK_DELAY_SEC * 1000);
-        if (state.stopRequested) {
-          return;
-        }
-
-        const ukWhen = state.audioCtx.currentTime + cfg.UK_START_DELAY_SEC;
-        const ukSrc = startClip(
-          state.ukBuffer,
-          ukWhen,
-          item.uk_start,
-          ukDur,
-          cfg.UK_VOLUME,
-          1,
-          cfg.UK_PLAYBACK_RATE,
-        );
-        await waitForSourceEnd(ukSrc);
-      }
+      const when = state.audioCtx.currentTime;
+      const src = startClip(
+        buffer,
+        when,
+        item.start,
+        dur,
+        DEFAULTS.VOLUME,
+        rate,
+      );
+      await waitForSourceEnd(src);
 
       if (state.stopRequested) {
         return;
       }
 
-      await waitMs(cfg.AFTER_UK_END_BEFORE_NEXT_DELAY_SEC * 1000);
+      await waitMs(afterSec * 1000);
     }
 
     async function playFromIndex(startIndex) {
@@ -791,9 +860,10 @@
       state.stopRequested = false;
       state.playing = true;
       setPlayFromNLabel(true);
+      const unlocked = unlockAudio();
 
       try {
-        await ensureAssetsLoaded();
+        await Promise.all([ensureAssetsLoaded(), unlocked]);
         if (!state.marks?.items?.length) {
           throw new Error('No items in marks JSON');
         }
@@ -806,7 +876,7 @@
           if (state.stopRequested) {
             break;
           }
-          await playCard(i, readConfig());
+          await playStep(i);
         }
 
         if (!state.stopRequested) {
@@ -822,11 +892,70 @@
       }
     }
 
-    function setPlayMode(mode) {
-      state.playMode = mode;
-      btnModeOverlap.dataset.selected = mode === 'overlap' ? '1' : '0';
-      btnModeSequential.dataset.selected = mode === 'sequential' ? '1' : '0';
+    function setPosMenuOpen(open) {
+      if (!posWrap) return;
+      posWrap.classList.toggle('is-open', open);
     }
+
+    if (posWrap && inPos) {
+      inPos.addEventListener('focus', () => setPosMenuOpen(true));
+      inPos.addEventListener('click', () => setPosMenuOpen(true));
+      if (posMenu) {
+        posMenu.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+        });
+      }
+      if (posGoStart) {
+        posGoStart.addEventListener('click', () => {
+          inPos.value = '1';
+          setPosMenuOpen(false);
+          goToN();
+        });
+      }
+      document.addEventListener('click', (e) => {
+        if (!posWrap.contains(e.target)) {
+          setPosMenuOpen(false);
+        }
+      });
+    }
+
+    function readFlag(key) {
+      try {
+        return localStorage.getItem(key) === '1';
+      } catch {
+        return false;
+      }
+    }
+
+    function paintFlag(button, on) {
+      button.dataset.selected = on ? '1' : '0';
+      button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    function applyFlags() {
+      paintFlag(btnEn, state.showEn);
+      paintFlag(btnUk, state.showUk);
+      if (state.marks) renderCardList();
+      const index = state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex;
+      if (index >= 0 && state.marks?.items?.[index]) {
+        elCurrent.textContent = renderStepLabel(state.marks.items[index], index);
+      }
+    }
+
+    function toggleFlag(which) {
+      if (which === 'en') state.showEn = !state.showEn;
+      if (which === 'uk') state.showUk = !state.showUk;
+      try {
+        localStorage.setItem(LS_EN_KEY, state.showEn ? '1' : '0');
+        localStorage.setItem(LS_UK_KEY, state.showUk ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      applyFlags();
+    }
+
+    btnEn.addEventListener('click', () => toggleFlag('en'));
+    btnUk.addEventListener('click', () => toggleFlag('uk'));
 
     btnGoN.addEventListener('click', goToN);
     btnPlayFromN.addEventListener('click', () => {
@@ -858,24 +987,23 @@
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && state.lastPlayedIndex >= 0) {
-        persistPosition(state.lastPlayedIndex);
+        persistState(state.lastPlayedIndex);
       }
     });
     window.addEventListener('pagehide', () => {
       if (state.lastPlayedIndex >= 0) {
-        persistPosition(state.lastPlayedIndex);
+        persistState(state.lastPlayedIndex);
       }
     });
-    btnModeOverlap.addEventListener('click', () => setPlayMode('overlap'));
-    btnModeSequential.addEventListener('click', () => setPlayMode('sequential'));
-    if (btnGap) {
-      btnGap.addEventListener('click', cycleGap);
-    }
 
     loadMarks()
       .then(() => {
-        state.gapSec = readSavedGap();
-        syncGapButton();
+        state.userMarks = readLocalUserMarks();
+        state.showEn = readFlag(LS_EN_KEY);
+        state.showUk = readFlag(LS_UK_KEY);
+        paintFlag(btnEn, state.showEn);
+        paintFlag(btnUk, state.showUk);
+        showTotal();
         renderCardList();
         inPos.max = String(state.marks.items.length);
         inPos.min = '1';
@@ -883,7 +1011,10 @@
         elCurrent.textContent = local >= 0
           ? `At saved #${local + 1}.`
           : 'Ready.';
-        loadSavedPositionFromDb().then((dbIndex) => {
+        loadSavedStateFromDb().then((dbIndex) => {
+          if (Object.keys(state.userMarks).length) {
+            renderCardList();
+          }
           if (dbIndex < 0) return;
           applySavedIndex(dbIndex);
           elCurrent.textContent = `At saved #${dbIndex + 1}.`;
