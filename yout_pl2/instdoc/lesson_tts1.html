@@ -20,6 +20,7 @@
       width: calc(100vw - 16px);
       max-width: 560px;
       height: calc(100vh - 16px);
+      height: calc(100dvh - 16px);
       margin: 8px auto;
       border: 1px solid currentColor;
       border-radius: 12px;
@@ -78,7 +79,7 @@
       padding: 8px 10px;
       border: 1px solid currentColor;
       border-radius: 10px;
-      font-size: 14px;
+      font-size: 16px;
       min-height: 36px;
     }
 
@@ -642,9 +643,34 @@
       return state.marks;
     }
 
+    function unlockAudio() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (navigator.audioSession) {
+        try {
+          navigator.audioSession.type = 'playback';
+        } catch {
+          // ignore
+        }
+      }
+      const resumePromise = state.audioCtx.state === 'suspended'
+        ? state.audioCtx.resume()
+        : Promise.resolve();
+      const keeperPromise = startSilentKeeper();
+      return Promise.all([resumePromise, keeperPromise]);
+    }
+
     async function ensureAudioContext() {
       if (!state.audioCtx) {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (navigator.audioSession) {
+        try {
+          navigator.audioSession.type = 'playback';
+        } catch {
+          // ignore
+        }
       }
       if (state.audioCtx.state === 'suspended') {
         await state.audioCtx.resume();
@@ -834,9 +860,10 @@
       state.stopRequested = false;
       state.playing = true;
       setPlayFromNLabel(true);
+      const unlocked = unlockAudio();
 
       try {
-        await ensureAssetsLoaded();
+        await Promise.all([ensureAssetsLoaded(), unlocked]);
         if (!state.marks?.items?.length) {
           throw new Error('No items in marks JSON');
         }
