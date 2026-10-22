@@ -166,7 +166,7 @@
       position: absolute;
       top: calc(100% + 4px);
       left: 0;
-      z-index: 2;
+      z-index: 5;
       width: max-content;
       min-width: 100%;
       box-sizing: border-box;
@@ -178,7 +178,8 @@
       box-shadow: 0 4px 12px color-mix(in srgb, currentColor 18%, transparent);
     }
 
-    .pos-wrap.is-open .pos-menu {
+    .pos-wrap.is-open .pos-menu,
+    .ico-wrap.is-open .pos-menu {
       display: block;
     }
 
@@ -195,6 +196,14 @@
     .pos-menu button:hover {
       background-color: color-mix(in srgb, currentColor 10%, transparent);
     }
+
+    .pos-menu button[aria-checked="true"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    .ico-wrap {
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -206,22 +215,22 @@
     <div class="row" id="rowLegacyFlags">
       <button id="btnEn" class="flag" type="button" data-selected="0" aria-pressed="false">EN</button>
       <button id="btnUk" class="flag" type="button" data-selected="0" aria-pressed="false">UK</button>
-    </div>
-    <div class="row" id="rowAutoSettings" hidden>
-      <label class="muted">Мова перекладу
-        <select id="selTransLang">
-          <option value="uk">укр.</option>
-          <option value="en">англ.</option>
-          <option value="off">немає</option>
-        </select>
-      </label>
-      <label class="muted">Мітка на уроці
-        <select id="selTransFocus">
-          <option value="f1">f1</option>
-          <option value="f2">f2</option>
-          <option value="f3">f3</option>
-        </select>
-      </label>
+      <div class="ico-wrap" id="langWrap" hidden>
+        <button type="button" id="btnTransLang" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мова перекладу">укр.</button>
+        <div class="pos-menu" id="langMenu" role="menu">
+          <button type="button" role="menuitemradio" data-lang="uk">укр.</button>
+          <button type="button" role="menuitemradio" data-lang="en">англ.</button>
+          <button type="button" role="menuitemradio" data-lang="off">немає</button>
+        </div>
+      </div>
+      <div class="ico-wrap" id="focusWrap" hidden>
+        <button type="button" id="btnTransFocus" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мітка на уроці">f1</button>
+        <div class="pos-menu" id="focusMenu" role="menu">
+          <button type="button" role="menuitemradio" data-focus="f1">f1</button>
+          <button type="button" role="menuitemradio" data-focus="f2">f2</button>
+          <button type="button" role="menuitemradio" data-focus="f3">f3</button>
+        </div>
+      </div>
     </div>
 
     <div class="row">
@@ -289,10 +298,14 @@
     const posGoStart = document.getElementById('posGoStart');
     const btnEn = document.getElementById('btnEn');
     const btnUk = document.getElementById('btnUk');
-    const rowLegacyFlags = document.getElementById('rowLegacyFlags');
-    const rowAutoSettings = document.getElementById('rowAutoSettings');
-    const selTransLang = document.getElementById('selTransLang');
-    const selTransFocus = document.getElementById('selTransFocus');
+    const langWrap = document.getElementById('langWrap');
+    const focusWrap = document.getElementById('focusWrap');
+    const btnTransLang = document.getElementById('btnTransLang');
+    const btnTransFocus = document.getElementById('btnTransFocus');
+    const langMenu = document.getElementById('langMenu');
+    const focusMenu = document.getElementById('focusMenu');
+    const LANG_LABEL = { uk: 'укр.', en: 'англ.', off: '—' };
+    const FOCUS_LABEL = { f1: 'f1', f2: 'f2', f3: 'f3' };
     const btnGoN = document.getElementById('btnGoN');
     const btnPlayFromN = document.getElementById('btnPlayFromN');
     const elMediaLog = document.getElementById('elMediaLog');
@@ -483,8 +496,8 @@
 
     function applyPlaybackUi() {
       const auto = isAutoMode();
-      if (rowLegacyFlags) rowLegacyFlags.hidden = auto;
-      if (rowAutoSettings) rowAutoSettings.hidden = !auto;
+      if (langWrap) langWrap.hidden = !auto;
+      if (focusWrap) focusWrap.hidden = !auto;
     }
 
     function readStoredLang() {
@@ -506,9 +519,18 @@
     }
 
     function syncAutoPlaybackControls() {
-      if (!selTransLang || !selTransFocus) return;
-      selTransLang.value = state.translationLang;
-      selTransFocus.value = state.translationFocus;
+      if (btnTransLang) {
+        btnTransLang.textContent = LANG_LABEL[state.translationLang] || LANG_LABEL.uk;
+      }
+      if (btnTransFocus) {
+        btnTransFocus.textContent = FOCUS_LABEL[state.translationFocus] || FOCUS_LABEL.f1;
+      }
+      langMenu?.querySelectorAll('[data-lang]').forEach((btn) => {
+        btn.setAttribute('aria-checked', btn.dataset.lang === state.translationLang ? 'true' : 'false');
+      });
+      focusMenu?.querySelectorAll('[data-focus]').forEach((btn) => {
+        btn.setAttribute('aria-checked', btn.dataset.focus === state.translationFocus ? 'true' : 'false');
+      });
     }
 
     function initAutoPlaybackFromMarks() {
@@ -1087,9 +1109,27 @@
       posWrap.classList.toggle('is-open', open);
     }
 
+    function setIcoMenuOpen(wrap, btn, open) {
+      if (!wrap || !btn) return;
+      wrap.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function closeAllMenus(exceptWrap) {
+      if (exceptWrap !== posWrap) setPosMenuOpen(false);
+      if (exceptWrap !== langWrap) setIcoMenuOpen(langWrap, btnTransLang, false);
+      if (exceptWrap !== focusWrap) setIcoMenuOpen(focusWrap, btnTransFocus, false);
+    }
+
     if (posWrap && inPos) {
-      inPos.addEventListener('focus', () => setPosMenuOpen(true));
-      inPos.addEventListener('click', () => setPosMenuOpen(true));
+      inPos.addEventListener('focus', () => {
+        closeAllMenus(posWrap);
+        setPosMenuOpen(true);
+      });
+      inPos.addEventListener('click', () => {
+        closeAllMenus(posWrap);
+        setPosMenuOpen(true);
+      });
       if (posMenu) {
         posMenu.addEventListener('mousedown', (e) => {
           e.preventDefault();
@@ -1102,12 +1142,47 @@
           goToN();
         });
       }
-      document.addEventListener('click', (e) => {
-        if (!posWrap.contains(e.target)) {
-          setPosMenuOpen(false);
-        }
+    }
+
+    function bindIcoMenu(wrap, btn, onPick) {
+      if (!wrap || !btn) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !wrap.classList.contains('is-open');
+        closeAllMenus(wrap);
+        setIcoMenuOpen(wrap, btn, open);
+      });
+      wrap.querySelector('.pos-menu')?.addEventListener('click', (e) => {
+        const item = e.target.closest('[role="menuitemradio"]');
+        if (!item || !wrap.contains(item)) return;
+        onPick(item);
+        setIcoMenuOpen(wrap, btn, false);
       });
     }
+
+    bindIcoMenu(langWrap, btnTransLang, (item) => {
+      const lang = item.dataset.lang;
+      state.translationLang = lang === 'en' || lang === 'off' ? lang : 'uk';
+      syncAutoPlaybackControls();
+      onAutoPlaybackChange();
+    });
+    bindIcoMenu(focusWrap, btnTransFocus, (item) => {
+      const focus = item.dataset.focus;
+      state.translationFocus = focus === 'f2' || focus === 'f3' ? focus : 'f1';
+      syncAutoPlaybackControls();
+      onAutoPlaybackChange();
+    });
+
+    document.addEventListener('click', (e) => {
+      const t = e.target;
+      if (posWrap && posWrap.contains(t)) return;
+      if (langWrap && langWrap.contains(t)) return;
+      if (focusWrap && focusWrap.contains(t)) return;
+      closeAllMenus();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAllMenus();
+    });
 
     function readFlag(key) {
       try {
@@ -1188,12 +1263,6 @@
 
     function onAutoPlaybackChange() {
       if (!isAutoMode()) return;
-      state.translationLang = selTransLang?.value === 'en' || selTransLang?.value === 'off'
-        ? selTransLang.value
-        : 'uk';
-      state.translationFocus = selTransFocus?.value === 'f2' || selTransFocus?.value === 'f3'
-        ? selTransFocus.value
-        : 'f1';
       try {
         localStorage.setItem(LS_TRANS_LANG_KEY, state.translationLang);
         localStorage.setItem(LS_TRANS_FOCUS_KEY, state.translationFocus);
@@ -1210,9 +1279,6 @@
         elCurrent.textContent = renderStepLabel(state.marks.items[index], index);
       }
     }
-
-    selTransLang?.addEventListener('change', onAutoPlaybackChange);
-    selTransFocus?.addEventListener('change', onAutoPlaybackChange);
 
     loadMarks()
       .then(() => {
