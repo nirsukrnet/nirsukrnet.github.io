@@ -437,8 +437,9 @@
     }
 
     function stepIdForIndex(index) {
-      const item = state.marks?.items?.[index];
+      const item = playList()[index];
       if (!item) return null;
+      if (isAutoMode()) return `${item.step}:${item.lang}`;
       return String(item.step);
     }
 
@@ -466,8 +467,67 @@
       return window.gv;
     }
 
+    function playList() {
+      if (isAutoMode()) return state.queue || [];
+      return state.marks?.items || [];
+    }
+
+    function rebuildQueue() {
+      if (!state.marks || !isAutoMode()) {
+        state.queue = null;
+        return;
+      }
+      const items = (state.marks.items || []).slice().sort((a, b) => {
+        const stage = (a.stage_index || 0) - (b.stage_index || 0);
+        if (stage) return stage;
+        const word = (a.word_n || 0) - (b.word_n || 0);
+        if (word) return word;
+        return (a.step || 0) - (b.step || 0);
+      });
+      const queue = [];
+      const playLang = state.translationLang;
+      for (const item of items) {
+        const plays = autoItemShowsTranslation(item);
+        const hints = [];
+        if (state.showUk && item.uk && !(plays && playLang === 'uk')) {
+          hints.push({ text: item.uk });
+        }
+        if (state.showEn && item.en && !(plays && playLang === 'en')) {
+          hints.push({ text: item.en });
+        }
+        if (item.sv_start != null && item.sv_end != null) {
+          queue.push({
+            lang: 'sv',
+            role: 'sv',
+            text: item.sv || '',
+            start: item.sv_start,
+            end: item.sv_end,
+            pause_sec: item.pause_sec,
+            step: item.step,
+            hints,
+          });
+        }
+        if (!plays) continue;
+        const start = playLang === 'en' ? item.en_start : item.uk_start;
+        const end = playLang === 'en' ? item.en_end : item.uk_end;
+        const text = playLang === 'en' ? item.en : item.uk;
+        if (start == null || end == null || !text) continue;
+        queue.push({
+          lang: playLang,
+          role: 'tr',
+          text,
+          start,
+          end,
+          pause_sec: item.pause_sec,
+          step: item.step,
+          hints: [],
+        });
+      }
+      state.queue = queue;
+    }
+
     function clampIndex(index) {
-      const n = state.marks?.items?.length || 0;
+      const n = playList().length;
       const num = Number(index);
       if (!n || !Number.isFinite(num) || num < 0) return -1;
       return Math.min(Math.trunc(num), n - 1);
@@ -510,7 +570,7 @@
     }
 
     function readPosIndex() {
-      const n = state.marks?.items?.length || 0;
+      const n = playList().length;
       if (inPos) inPos.max = String(Math.max(1, n));
       const oneBased = Number.parseInt(inPos.value, 10);
       if (!Number.isFinite(oneBased)) return -1;
@@ -671,18 +731,13 @@
       const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
       if (marks.mode === 'auto') {
         let sum = 0;
-        items.forEach((item, index) => {
-          const segments = buildAutoPlaySegments(item);
-          segments.forEach((seg, segIndex) => {
-            const speech = Math.max(0, Number(seg.end) - Number(seg.start));
-            const tail = segIndex < segments.length - 1 ? pad : 0;
-            sum += (speech + tail) / rate;
-          });
+        (state.queue || []).forEach((item) => {
+          const speech = Math.max(0, Number(item.end) - Number(item.start));
           const pause = Number(item.pause_sec);
           const after = Number.isFinite(pause) && pause >= 0
             ? pause
             : (marks.pause_sec ?? 0.6);
-          sum += after;
+          sum += speech / rate + after;
         });
         return sum;
       }
@@ -710,10 +765,10 @@
     }
 
     function renderStepLabel(item, index) {
+      if (isAutoMode()) return `#${index + 1} ${item.text || ''}`;
       const extra = translationBits(item);
       const tail = extra.length ? ` — ${extra.join(' · ')}` : '';
-      const line = isAutoMode() ? (item.sv || '') : item.text;
-      return `#${index + 1} ${line}${tail}`;
+      return `#${index + 1} ${item.text}${tail}`;
     }
 
     function goToN() {
@@ -724,7 +779,7 @@
       }
       setPosInput(index);
       scrollCardIntoView(index);
-      const item = state.marks.items[index];
+      const item = playList()[index];
       elCurrent.textContent = renderStepLabel(item, index);
       return index;
     }
@@ -957,7 +1012,7 @@
       state.activeSources = [];
       setPlayFromNLabel(false);
       if (state.lastPlayedIndex >= 0) {
-        const item = state.marks.items[state.lastPlayedIndex];
+        const item = playList()[state.lastPlayedIndex];
         elCurrent.textContent = `Paused at ${renderStepLabel(item, state.lastPlayedIndex)}`;
         setActiveCard(state.lastPlayedIndex);
       } else {
@@ -998,13 +1053,16 @@
       if (!state.marks?.items?.length) {
         return;
       }
-      state.marks.items.forEach((item, index) => {
+      playList().forEach((item, index) => {
         const li = document.createElement('li');
         li.dataset.index = String(index);
         const mark = userMarkForIndex(index);
         const line = isAutoMode() ? '' : item.text;
+        const hints = isAutoMode()
+          ? (item.hints || []).map((hint) => `<p class="line hint">${esc(hint.text)}</p>`).join('')
+          : '';
         li.innerHTML = isAutoMode()
-          ? autoCardHtml(item)
+          ? `<p class="line ${item.role === 'tr' ? 'voiced' : 'say'}" data-seg="${item.lang}">${esc(item.text)}</p>${hints}`
           : `<div class="line">${esc(line)}</div>${translationHtml(item)}`;
         if (mark) li.dataset.mark = mark;
         li.addEventListener('click', () => {
@@ -1041,46 +1099,11 @@
       return Math.max(0, paddedEnd - start);
     }
 
-    async function playAutoStep(index) {
-      const item = state.marks.items[index];
-      const segments = buildAutoPlaySegments(item);
-      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
-      const rate = DEFAULTS.PLAYBACK_RATE;
-      const pauseSec = Number(item.pause_sec);
-      const afterSec = Number.isFinite(pauseSec) && pauseSec >= 0
-        ? pauseSec
-        : (state.marks.pause_sec ?? 0.6);
-
-      setPosInput(index);
-      persistState(index);
-      elCurrent.textContent = renderStepLabel(item, index);
-
-      for (let segIndex = 0; segIndex < segments.length; segIndex += 1) {
-        if (state.stopRequested) return;
-        const seg = segments[segIndex];
-        setPlayingLine(index, seg.lang);
-        const buffer = bufferForLang(seg.lang);
-        const tailPad = segIndex < segments.length - 1 ? pad : 0;
-        const dur = clipSourceDuration(seg.start, seg.end, tailPad, buffer.duration);
-        const when = state.audioCtx.currentTime;
-        const src = startClip(buffer, when, seg.start, dur, DEFAULTS.VOLUME, rate);
-        await waitForSourceEnd(src);
-      }
-
-      if (state.stopRequested) {
-        return;
-      }
-
-      await waitMs(afterSec * 1000);
-    }
-
     async function playStep(index) {
-      if (isAutoMode()) {
-        await playAutoStep(index);
-        return;
-      }
-      const item = state.marks.items[index];
-      const buffer = bufferForItem(item);
+      const item = playList()[index];
+      if (!item) return;
+      if (isAutoMode()) setPlayingLine(index, item.lang);
+      const buffer = isAutoMode() ? bufferForLang(item.lang) : bufferForItem(item);
       const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
       const rate = DEFAULTS.PLAYBACK_RATE;
       const dur = clipSourceDuration(item.start, item.end, pad, buffer.duration);
@@ -1125,13 +1148,13 @@
 
       try {
         await Promise.all([ensureAssetsLoaded(), unlocked]);
-        if (!state.marks?.items?.length) {
+        if (!playList().length) {
           throw new Error('No items in marks JSON');
         }
 
         await startSilentKeeper();
 
-        const endIndex = state.marks.items.length - 1;
+        const endIndex = playList().length - 1;
 
         for (let i = startIndex; i <= endIndex; i += 1) {
           if (state.stopRequested) {
@@ -1249,10 +1272,13 @@
     function applyFlags() {
       paintFlag(btnEn, state.showEn);
       paintFlag(btnUk, state.showUk);
-      if (state.marks) renderCardList();
+      if (state.marks) {
+        rebuildQueue();
+        renderCardList();
+      }
       const index = state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex;
-      if (index >= 0 && state.marks?.items?.[index]) {
-        elCurrent.textContent = renderStepLabel(state.marks.items[index], index);
+      if (index >= 0 && playList()[index]) {
+        elCurrent.textContent = renderStepLabel(playList()[index], index);
       }
     }
 
@@ -1321,11 +1347,12 @@
       if (state.playing) {
         pausePlayback();
       }
+      rebuildQueue();
       showTotal();
       renderCardList();
-      const index = state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex;
-      if (index >= 0 && state.marks?.items?.[index]) {
-        elCurrent.textContent = renderStepLabel(state.marks.items[index], index);
+      const index = clampIndex(state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex);
+      if (index >= 0 && playList()[index]) {
+        elCurrent.textContent = renderStepLabel(playList()[index], index);
       }
     }
 
@@ -1338,9 +1365,10 @@
         state.showUk = readFlag(LS_UK_KEY);
         paintFlag(btnEn, state.showEn);
         paintFlag(btnUk, state.showUk);
+        rebuildQueue();
         showTotal();
         renderCardList();
-        inPos.max = String(state.marks.items.length);
+        inPos.max = String(playList().length);
         inPos.min = '1';
         const local = applySavedIndex(readLocalSavedIndex());
         elCurrent.textContent = local >= 0
