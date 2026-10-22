@@ -48,6 +48,10 @@
       flex-wrap: wrap;
     }
 
+    #rowLegacyFlags {
+      margin-bottom: 5px;
+    }
+
     button {
       border: 1px solid currentColor;
       background: transparent;
@@ -116,8 +120,42 @@
       user-select: none;
     }
 
-    li[data-active="1"] {
+    li[data-active="1"]:not(:has(.say)) {
       background-color: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    .line.say,
+    .line.voiced,
+    .line.hint {
+      margin: 0;
+      border-radius: 4px;
+      line-height: 1.35;
+    }
+
+    .line.say {
+      font-weight: 700;
+      background: #fff4d6;
+      color: #3d3424;
+    }
+
+    .line.voiced {
+      margin-top: 4px;
+      font-weight: 700;
+      background: #fff6e4;
+      color: #8a3d12;
+    }
+
+    .line.hint {
+      margin-top: 4px;
+      font-weight: 400;
+      font-size: 14px;
+      background: #f3f1ee;
+      color: #6e7a86;
+    }
+
+    .line.on {
+      outline: 1px solid #c4b48a;
+      outline-offset: 2px;
     }
 
     li[data-saved="1"] {
@@ -126,13 +164,15 @@
     }
 
     .kind {
-      font-size: 12px;
-      opacity: 0.7;
-      text-transform: uppercase;
+      display: none;
     }
 
-    .kind:empty {
-      display: none;
+    li[data-mark="skip"] {
+      box-shadow: inset 0 0 0 3px #1565c0;
+    }
+
+    li[data-mark="focus"] {
+      box-shadow: inset 0 0 0 3px #c45d28;
     }
 
     .tr {
@@ -143,12 +183,6 @@
 
     .tr-en { color: #243e6b; }
     .tr-uk { color: #6a3114; }
-
-    li[data-mark] .kind {
-      opacity: 1;
-      font-weight: 700;
-      color: #1565c0;
-    }
 
     .card-audio {
       position: absolute;
@@ -595,19 +629,26 @@
       return bits;
     }
 
+    function autoCardHtml(item) {
+      const parts = [`<p class="line say" data-seg="sv">${esc(item.sv || '')}</p>`];
+      const playLang = state.translationLang;
+      const plays = autoItemShowsTranslation(item);
+      function add(lang, text) {
+        if (!text) return;
+        if (plays && playLang === lang) {
+          parts.push(`<p class="line voiced" data-seg="${lang}">${esc(text)}</p>`);
+          return;
+        }
+        const show = (lang === 'en' && state.showEn) || (lang === 'uk' && state.showUk);
+        if (show) parts.push(`<p class="line hint" data-seg="${lang}">${esc(text)}</p>`);
+      }
+      add('uk', item.uk);
+      add('en', item.en);
+      return parts.join('');
+    }
+
     function translationHtml(item) {
       const parts = [];
-      if (isAutoMode()) {
-        if (!autoItemShowsTranslation(item)) return '';
-        const lang = state.translationLang;
-        if (lang === 'en' && item.en) {
-          parts.push(`<div class="tr tr-en">${esc(item.en)}</div>`);
-        }
-        if (lang === 'uk' && item.uk) {
-          parts.push(`<div class="tr tr-uk">${esc(item.uk)}</div>`);
-        }
-        return parts.join('');
-      }
       if (state.showEn && item.en && item.en !== item.text) {
         parts.push(`<div class="tr tr-en">${esc(item.en)}</div>`);
       }
@@ -929,8 +970,6 @@
       const li = elCardList.querySelector(`li[data-index="${index}"]`);
       if (!li) return;
       li.dataset.mark = label;
-      const kind = li.querySelector('.kind');
-      if (kind) kind.textContent = label;
     }
 
     function setActiveCard(index) {
@@ -946,6 +985,14 @@
       }
     }
 
+    function setPlayingLine(index, seg) {
+      setActiveCard(index);
+      elCardList.querySelectorAll('.line.on').forEach((el) => el.classList.remove('on'));
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      const line = li && seg ? li.querySelector(`.line[data-seg="${seg}"]`) : null;
+      if (line) line.classList.add('on');
+    }
+
     function renderCardList() {
       elCardList.innerHTML = '';
       if (!state.marks?.items?.length) {
@@ -955,8 +1002,10 @@
         const li = document.createElement('li');
         li.dataset.index = String(index);
         const mark = userMarkForIndex(index);
-        const line = isAutoMode() ? (item.sv || '') : item.text;
-        li.innerHTML = `<div class="kind">${esc(mark)}</div><div class="line">${esc(line)}</div>${translationHtml(item)}`;
+        const line = isAutoMode() ? '' : item.text;
+        li.innerHTML = isAutoMode()
+          ? autoCardHtml(item)
+          : `<div class="line">${esc(line)}</div>${translationHtml(item)}`;
         if (mark) li.dataset.mark = mark;
         li.addEventListener('click', () => {
           setPosInput(index);
@@ -1002,7 +1051,6 @@
         ? pauseSec
         : (state.marks.pause_sec ?? 0.6);
 
-      setActiveCard(index);
       setPosInput(index);
       persistState(index);
       elCurrent.textContent = renderStepLabel(item, index);
@@ -1010,6 +1058,7 @@
       for (let segIndex = 0; segIndex < segments.length; segIndex += 1) {
         if (state.stopRequested) return;
         const seg = segments[segIndex];
+        setPlayingLine(index, seg.lang);
         const buffer = bufferForLang(seg.lang);
         const tailPad = segIndex < segments.length - 1 ? pad : 0;
         const dur = clipSourceDuration(seg.start, seg.end, tailPad, buffer.duration);
