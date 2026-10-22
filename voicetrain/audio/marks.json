@@ -16,11 +16,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "aldrig",
+      "en": "never",
+      "uk": "ніколи",
       "pause_sec": 0.6,
       "start": 0.0,
-      "end": 1.872,
-      "en": "never",
-      "uk": "ніколи"
+      "end": 1.872
     },
     {
       "step": 2,
@@ -32,11 +32,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "ніколи",
+      "en": "never",
+      "uk": "ніколи",
       "pause_sec": 0.6,
       "start": 0.0,
-      "end": 1.872,
-      "en": "never",
-      "uk": "ніколи"
+      "end": 1.872
     },
     {
       "step": 3,
@@ -48,11 +48,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Aldrig mer.",
+      "en": "Never again.",
+      "uk": "Ніколи більше.",
       "pause_sec": 0.6,
       "start": 2.872,
-      "end": 4.888,
-      "en": "Never again.",
-      "uk": "Ніколи більше."
+      "end": 4.888
     },
     {
       "step": 4,
@@ -64,11 +64,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Ніколи більше.",
+      "en": "Never again.",
+      "uk": "Ніколи більше.",
       "pause_sec": 0.6,
       "start": 2.872,
-      "end": 4.912,
-      "en": "Never again.",
-      "uk": "Ніколи більше."
+      "end": 4.912
     },
     {
       "step": 5,
@@ -80,11 +80,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Jag äter aldrig godis.",
+      "en": "I never eat candy.",
+      "uk": "Я ніколи не їм солодощі.",
       "pause_sec": 0.6,
       "start": 5.888,
-      "end": 8.744,
-      "en": "I never eat candy.",
-      "uk": "Я ніколи не їм солодощі."
+      "end": 8.744
     },
     {
       "step": 6,
@@ -96,11 +96,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Du säger aldrig hej.",
+      "en": "You never say hello.",
+      "uk": "Ти ніколи не кажеш привіт.",
       "pause_sec": 0.6,
       "start": 9.744,
-      "end": 12.144,
-      "en": "You never say hello.",
-      "uk": "Ти ніколи не кажеш привіт."
+      "end": 12.144
     },
     {
       "step": 7,
@@ -112,11 +112,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "allmänna",
+      "en": "general",
+      "uk": "загальні",
       "pause_sec": 0.6,
       "start": 13.144,
-      "end": 15.016,
-      "en": "general",
-      "uk": "загальні"
+      "end": 15.016
     },
     {
       "step": 8,
@@ -128,11 +128,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "загальні",
+      "en": "general",
+      "uk": "загальні",
       "pause_sec": 0.6,
       "start": 5.912,
-      "end": 7.784,
-      "en": "general",
-      "uk": "загальні"
+      "end": 7.784
     },
     {
       "step": 9,
@@ -144,11 +144,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Allmänna svar.",
+      "en": "General answers.",
+      "uk": "Загальні відповіді.",
       "pause_sec": 0.6,
       "start": 16.016,
-      "end": 18.176,
-      "en": "General answers.",
-      "uk": "Загальні відповіді."
+      "end": 18.176
     },
     {
       "step": 10,
@@ -160,11 +160,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Загальні відповіді.",
+      "en": "General answers.",
+      "uk": "Загальні відповіді.",
       "pause_sec": 0.6,
       "start": 8.784,
-      "end": 11.136,
-      "en": "General answers.",
-      "uk": "Загальні відповіді."
+      "end": 11.136
     },
     {
       "step": 11,
@@ -176,11 +176,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Hon ger allmänna svar.",
+      "en": "She gives general answers.",
+      "uk": "Вона дає загальні відповіді.",
       "pause_sec": 0.6,
       "start": 19.176,
-      "end": 21.768,
-      "en": "She gives general answers.",
-      "uk": "Вона дає загальні відповіді."
+      "end": 21.768
     },
     {
       "step": 12,
@@ -192,11 +192,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Det är allmänna ord.",
+      "en": "These are general words.",
+      "uk": "Це загальні слова.",
       "pause_sec": 0.6,
       "start": 22.768,
-      "end": 25.12,
-      "en": "These are general words.",
-      "uk": "Це загальні слова."
+      "end": 25.12
     },
     {
       "step": 13,
@@ -208,11 +208,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "alltså",
+      "en": "that is",
+      "uk": "тобто",
       "pause_sec": 0.6,
       "start": 26.12,
-      "end": 27.992,
-      "en": "that is",
-      "uk": "тобто"
+      "end": 27.992
     },
     {
       "step": 14,
@@ -224,11 +224,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "тобто",
+      "en": "that is",
+      "uk": "тобто",
       "pause_sec": 0.6,
       "start": 12.136,
-      "end": 14.008,
-      "en": "that is",
-      "uk": "тобто"
+      "end": 14.008
     },
     {
       "step": 15,
@@ -240,11 +240,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Alltså pengar.",
+      "en": "That is, money.",
+      "uk": "Тобто гроші.",
       "pause_sec": 0.6,
       "start": 28.992,
-      "end": 31.056,
-      "en": "That is, money.",
-      "uk": "Тобто гроші."
+      "end": 31.056
     },
     {
       "step": 16,
@@ -256,11 +256,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Тобто гроші.",
+      "en": "That is, money.",
+      "uk": "Тобто гроші.",
       "pause_sec": 0.6,
       "start": 15.008,
-      "end": 16.928,
-      "en": "That is, money.",
-      "uk": "Тобто гроші."
+      "end": 16.928
     },
     {
       "step": 17,
@@ -272,11 +272,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Ta bussen, alltså inte bilen.",
+      "en": "Take the bus, that is, not the car.",
+      "uk": "Їдь автобусом, тобто не машиною.",
       "pause_sec": 0.6,
       "start": 32.056,
-      "end": 35.272,
-      "en": "Take the bus, that is, not the car.",
-      "uk": "Їдь автобусом, тобто не машиною."
+      "end": 35.272
     },
     {
       "step": 18,
@@ -288,11 +288,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Drick vatten, alltså inte läsk.",
+      "en": "Drink water, that is, not soda.",
+      "uk": "Пий воду, тобто не газованку.",
       "pause_sec": 0.6,
       "start": 36.272,
-      "end": 39.512,
-      "en": "Drink water, that is, not soda.",
-      "uk": "Пий воду, тобто не газованку."
+      "end": 39.512
     },
     {
       "step": 19,
@@ -304,11 +304,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "allvarliga",
+      "en": "serious",
+      "uk": "серйозними",
       "pause_sec": 0.6,
       "start": 40.512,
-      "end": 42.504,
-      "en": "serious",
-      "uk": "серйозними"
+      "end": 42.504
     },
     {
       "step": 20,
@@ -320,11 +320,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "серйозними",
+      "en": "serious",
+      "uk": "серйозними",
       "pause_sec": 0.6,
       "start": 17.928,
-      "end": 19.872,
-      "en": "serious",
-      "uk": "серйозними"
+      "end": 19.872
     },
     {
       "step": 21,
@@ -336,11 +336,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Allvarliga ögon.",
+      "en": "Serious eyes.",
+      "uk": "Серйозні очі.",
       "pause_sec": 0.6,
       "start": 43.504,
-      "end": 45.904,
-      "en": "Serious eyes.",
-      "uk": "Серйозні очі."
+      "end": 45.904
     },
     {
       "step": 22,
@@ -352,11 +352,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Серйозні очі.",
+      "en": "Serious eyes.",
+      "uk": "Серйозні очі.",
       "pause_sec": 0.6,
       "start": 20.872,
-      "end": 23.032,
-      "en": "Serious eyes.",
-      "uk": "Серйозні очі."
+      "end": 23.032
     },
     {
       "step": 23,
@@ -368,11 +368,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Han ser med allvarliga ögon.",
+      "en": "He looks with serious eyes.",
+      "uk": "Він дивиться серйозними очима.",
       "pause_sec": 0.6,
       "start": 46.904,
-      "end": 49.856,
-      "en": "He looks with serious eyes.",
-      "uk": "Він дивиться серйозними очима."
+      "end": 49.856
     },
     {
       "step": 24,
@@ -384,11 +384,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "De ställer allvarliga frågor.",
+      "en": "They ask serious questions.",
+      "uk": "Вони ставлять серйозні запитання.",
       "pause_sec": 0.6,
       "start": 50.856,
-      "end": 53.712,
-      "en": "They ask serious questions.",
-      "uk": "Вони ставлять серйозні запитання."
+      "end": 53.712
     },
     {
       "step": 25,
@@ -400,11 +400,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "andades",
+      "en": "breathed",
+      "uk": "видихнув",
       "pause_sec": 0.6,
       "start": 54.712,
-      "end": 56.632,
-      "en": "breathed",
-      "uk": "видихнув"
+      "end": 56.632
     },
     {
       "step": 26,
@@ -416,11 +416,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "видихнув",
+      "en": "breathed",
+      "uk": "видихнув",
       "pause_sec": 0.6,
       "start": 24.032,
-      "end": 25.904,
-      "en": "breathed",
-      "uk": "видихнув"
+      "end": 25.904
     },
     {
       "step": 27,
@@ -432,11 +432,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Andades ut.",
+      "en": "Breathed out.",
+      "uk": "Видихнув.",
       "pause_sec": 0.6,
       "start": 57.632,
-      "end": 59.864,
-      "en": "Breathed out.",
-      "uk": "Видихнув."
+      "end": 59.864
     },
     {
       "step": 28,
@@ -448,11 +448,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Видихнув.",
+      "en": "Breathed out.",
+      "uk": "Видихнув.",
       "pause_sec": 0.6,
       "start": 26.904,
-      "end": 28.776,
-      "en": "Breathed out.",
-      "uk": "Видихнув."
+      "end": 28.776
     },
     {
       "step": 29,
@@ -464,11 +464,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Han andades ut långsamt.",
+      "en": "He exhaled slowly.",
+      "uk": "Він повільно видихнув.",
       "pause_sec": 0.6,
       "start": 60.864,
-      "end": 63.912,
-      "en": "He exhaled slowly.",
-      "uk": "Він повільно видихнув."
+      "end": 63.912
     },
     {
       "step": 30,
@@ -480,11 +480,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Jag andades lugnt idag.",
+      "en": "I breathed calmly today.",
+      "uk": "Сьогодні я дихала спокійно.",
       "pause_sec": 0.6,
       "start": 64.912,
-      "end": 67.6,
-      "en": "I breathed calmly today.",
-      "uk": "Сьогодні я дихала спокійно."
+      "end": 67.6
     },
     {
       "step": 31,
@@ -496,11 +496,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "andetag",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 68.6,
-      "end": 70.568,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 70.568
     },
     {
       "step": 32,
@@ -512,11 +512,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "вдих",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 29.776,
-      "end": 31.648,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 31.648
     },
     {
       "step": 33,
@@ -528,11 +528,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Ett andetag.",
+      "en": "One breath.",
+      "uk": "Один вдих.",
       "pause_sec": 0.6,
       "start": 71.568,
-      "end": 73.752,
-      "en": "One breath.",
-      "uk": "Один вдих."
+      "end": 73.752
     },
     {
       "step": 34,
@@ -544,11 +544,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Один вдих.",
+      "en": "One breath.",
+      "uk": "Один вдих.",
       "pause_sec": 0.6,
       "start": 32.648,
-      "end": 34.52,
-      "en": "One breath.",
-      "uk": "Один вдих."
+      "end": 34.52
     },
     {
       "step": 35,
@@ -560,11 +560,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Jag tog ett andetag.",
+      "en": "I took a breath.",
+      "uk": "Я зробила вдих.",
       "pause_sec": 0.6,
       "start": 74.752,
-      "end": 77.272,
-      "en": "I took a breath.",
-      "uk": "Я зробила вдих."
+      "end": 77.272
     },
     {
       "step": 36,
@@ -576,11 +576,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Hon tar ett andetag.",
+      "en": "She takes a breath.",
+      "uk": "Вона робить вдих.",
       "pause_sec": 0.6,
       "start": 78.272,
-      "end": 80.816,
-      "en": "She takes a breath.",
-      "uk": "Вона робить вдих."
+      "end": 80.816
     },
     {
       "step": 37,
@@ -592,11 +592,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "andning",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 81.816,
-      "end": 83.712,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 83.712
     },
     {
       "step": 38,
@@ -608,11 +608,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "вдих",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 35.52,
-      "end": 37.392,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 37.392
     },
     {
       "step": 39,
@@ -624,11 +624,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Långsam andning.",
+      "en": "Slow breathing.",
+      "uk": "Повільне дихання.",
       "pause_sec": 0.6,
       "start": 84.712,
-      "end": 87.064,
-      "en": "Slow breathing.",
-      "uk": "Повільне дихання."
+      "end": 87.064
     },
     {
       "step": 40,
@@ -640,11 +640,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Повільне дихання.",
+      "en": "Slow breathing.",
+      "uk": "Повільне дихання.",
       "pause_sec": 0.6,
       "start": 38.392,
-      "end": 40.576,
-      "en": "Slow breathing.",
-      "uk": "Повільне дихання."
+      "end": 40.576
     },
     {
       "step": 41,
@@ -656,11 +656,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Hon tar en andning.",
+      "en": "She takes a breath.",
+      "uk": "Вона робить вдих.",
       "pause_sec": 0.6,
       "start": 88.064,
-      "end": 90.584,
-      "en": "She takes a breath.",
-      "uk": "Вона робить вдих."
+      "end": 90.584
     },
     {
       "step": 42,
@@ -672,11 +672,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Sara tog en andning.",
+      "en": "Sara took a breath.",
+      "uk": "Сара зробила вдих.",
       "pause_sec": 0.6,
       "start": 91.584,
-      "end": 94.32,
-      "en": "Sara took a breath.",
-      "uk": "Сара зробила вдих."
+      "end": 94.32
     },
     {
       "step": 43,
@@ -688,11 +688,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "anmäla",
+      "en": "sign up",
+      "uk": "записатися",
       "pause_sec": 0.6,
       "start": 95.32,
-      "end": 97.24,
-      "en": "sign up",
-      "uk": "записатися"
+      "end": 97.24
     },
     {
       "step": 44,
@@ -704,11 +704,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "записатися",
+      "en": "sign up",
+      "uk": "записатися",
       "pause_sec": 0.6,
       "start": 41.576,
-      "end": 43.544,
-      "en": "sign up",
-      "uk": "записатися"
+      "end": 43.544
     },
     {
       "step": 45,
@@ -720,11 +720,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Anmäla sig.",
+      "en": "Sign up.",
+      "uk": "Записатися.",
       "pause_sec": 0.6,
       "start": 98.24,
-      "end": 100.304,
-      "en": "Sign up.",
-      "uk": "Записатися."
+      "end": 100.304
     },
     {
       "step": 46,
@@ -736,11 +736,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Записатися.",
+      "en": "Sign up.",
+      "uk": "Записатися.",
       "pause_sec": 0.6,
       "start": 44.544,
-      "end": 46.512,
-      "en": "Sign up.",
-      "uk": "Записатися."
+      "end": 46.512
     },
     {
       "step": 47,
@@ -752,11 +752,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Vi ska anmäla oss.",
+      "en": "We will sign up.",
+      "uk": "Ми запишемося.",
       "pause_sec": 0.6,
       "start": 101.304,
-      "end": 103.704,
-      "en": "We will sign up.",
-      "uk": "Ми запишемося."
+      "end": 103.704
     },
     {
       "step": 48,
@@ -768,11 +768,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Jag vill anmäla mig.",
+      "en": "I want to sign up.",
+      "uk": "Я хочу записатися.",
       "pause_sec": 0.6,
       "start": 104.704,
-      "end": 107.104,
-      "en": "I want to sign up.",
-      "uk": "Я хочу записатися."
+      "end": 107.104
     },
     {
       "step": 49,
@@ -784,11 +784,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "ansiktet",
+      "en": "face",
+      "uk": "обличчя",
       "pause_sec": 0.6,
       "start": 108.104,
-      "end": 110.12,
-      "en": "face",
-      "uk": "обличчя"
+      "end": 110.12
     },
     {
       "step": 50,
@@ -800,11 +800,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "обличчя",
+      "en": "face",
+      "uk": "обличчя",
       "pause_sec": 0.6,
       "start": 47.512,
-      "end": 49.384,
-      "en": "face",
-      "uk": "обличчя"
+      "end": 49.384
     },
     {
       "step": 51,
@@ -816,11 +816,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Hela ansiktet.",
+      "en": "The whole face.",
+      "uk": "Усе обличчя.",
       "pause_sec": 0.6,
       "start": 111.12,
-      "end": 113.52,
-      "en": "The whole face.",
-      "uk": "Усе обличчя."
+      "end": 113.52
     },
     {
       "step": 52,
@@ -832,11 +832,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Усе обличчя.",
+      "en": "The whole face.",
+      "uk": "Усе обличчя.",
       "pause_sec": 0.6,
       "start": 50.384,
-      "end": 52.376,
-      "en": "The whole face.",
-      "uk": "Усе обличчя."
+      "end": 52.376
     },
     {
       "step": 53,
@@ -848,11 +848,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Jag tvättar ansiktet nu.",
+      "en": "I am washing my face now.",
+      "uk": "Я зараз мию обличчя.",
       "pause_sec": 0.6,
       "start": 114.52,
-      "end": 117.28,
-      "en": "I am washing my face now.",
-      "uk": "Я зараз мию обличчя."
+      "end": 117.28
     },
     {
       "step": 54,
@@ -864,11 +864,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Hon log med hela ansiktet.",
+      "en": "She smiled with her whole face.",
+      "uk": "Вона усміхнулася всім обличчям.",
       "pause_sec": 0.6,
       "start": 118.28,
-      "end": 121.184,
-      "en": "She smiled with her whole face.",
-      "uk": "Вона усміхнулася всім обличчям."
+      "end": 121.184
     },
     {
       "step": 55,
@@ -880,11 +880,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "ansöka",
+      "en": "apply",
+      "uk": "подати заявку",
       "pause_sec": 0.6,
       "start": 122.184,
-      "end": 124.152,
-      "en": "apply",
-      "uk": "подати заявку"
+      "end": 124.152
     },
     {
       "step": 56,
@@ -896,11 +896,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "подати заявку",
+      "en": "apply",
+      "uk": "подати заявку",
       "pause_sec": 0.6,
       "start": 53.376,
-      "end": 55.44,
-      "en": "apply",
-      "uk": "подати заявку"
+      "end": 55.44
     },
     {
       "step": 57,
@@ -912,11 +912,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Ansöka här.",
+      "en": "Apply here.",
+      "uk": "Подати заявку тут.",
       "pause_sec": 0.6,
       "start": 125.152,
-      "end": 127.288,
-      "en": "Apply here.",
-      "uk": "Подати заявку тут."
+      "end": 127.288
     },
     {
       "step": 58,
@@ -928,11 +928,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Подати заявку тут.",
+      "en": "Apply here.",
+      "uk": "Подати заявку тут.",
       "pause_sec": 0.6,
       "start": 56.44,
-      "end": 58.72,
-      "en": "Apply here.",
-      "uk": "Подати заявку тут."
+      "end": 58.72
     },
     {
       "step": 59,
@@ -944,11 +944,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Jag vill ansöka idag.",
+      "en": "I want to apply today.",
+      "uk": "Я хочу подати заявку сьогодні.",
       "pause_sec": 0.6,
       "start": 128.288,
-      "end": 130.928,
-      "en": "I want to apply today.",
-      "uk": "Я хочу подати заявку сьогодні."
+      "end": 130.928
     },
     {
       "step": 60,
@@ -960,11 +960,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Du kan ansöka här.",
+      "en": "You can apply here.",
+      "uk": "Ти можеш подати заявку тут.",
       "pause_sec": 0.6,
       "start": 131.928,
-      "end": 134.424,
-      "en": "You can apply here.",
-      "uk": "Ти можеш подати заявку тут."
+      "end": 134.424
     },
     {
       "step": 61,
@@ -976,11 +976,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "anteckningsbok",
+      "en": "notebook",
+      "uk": "блокнот",
       "pause_sec": 0.6,
       "start": 135.424,
-      "end": 137.752,
-      "en": "notebook",
-      "uk": "блокнот"
+      "end": 137.752
     },
     {
       "step": 62,
@@ -992,11 +992,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "блокнот",
+      "en": "notebook",
+      "uk": "блокнот",
       "pause_sec": 0.6,
       "start": 59.72,
-      "end": 61.592,
-      "en": "notebook",
-      "uk": "блокнот"
+      "end": 61.592
     },
     {
       "step": 63,
@@ -1008,11 +1008,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Blå anteckningsbok.",
+      "en": "A blue notebook.",
+      "uk": "Синій блокнот.",
       "pause_sec": 0.6,
       "start": 138.752,
-      "end": 141.44,
-      "en": "A blue notebook.",
-      "uk": "Синій блокнот."
+      "end": 141.44
     },
     {
       "step": 64,
@@ -1024,11 +1024,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Синій блокнот.",
+      "en": "A blue notebook.",
+      "uk": "Синій блокнот.",
       "pause_sec": 0.6,
       "start": 62.592,
-      "end": 64.632,
-      "en": "A blue notebook.",
-      "uk": "Синій блокнот."
+      "end": 64.632
     },
     {
       "step": 65,
@@ -1040,11 +1040,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Jag har en anteckningsbok.",
+      "en": "I have a notebook.",
+      "uk": "У мене є блокнот.",
       "pause_sec": 0.6,
       "start": 142.44,
-      "end": 145.272,
-      "en": "I have a notebook.",
-      "uk": "У мене є блокнот."
+      "end": 145.272
     },
     {
       "step": 66,
@@ -1056,11 +1056,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Var är min anteckningsbok?",
+      "en": "Where is my notebook?",
+      "uk": "Де мій блокнот?",
       "pause_sec": 0.6,
       "start": 146.272,
-      "end": 149.176,
-      "en": "Where is my notebook?",
-      "uk": "Де мій блокнот?"
+      "end": 149.176
     },
     {
       "step": 67,
@@ -1072,11 +1072,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "användbara",
+      "en": "useful",
+      "uk": "корисні",
       "pause_sec": 0.6,
       "start": 150.176,
-      "end": 152.36,
-      "en": "useful",
-      "uk": "корисні"
+      "end": 152.36
     },
     {
       "step": 68,
@@ -1088,11 +1088,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "корисні",
+      "en": "useful",
+      "uk": "корисні",
       "pause_sec": 0.6,
       "start": 65.632,
-      "end": 67.504,
-      "en": "useful",
-      "uk": "корисні"
+      "end": 67.504
     },
     {
       "step": 69,
@@ -1104,11 +1104,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Användbara ord.",
+      "en": "Useful words.",
+      "uk": "Корисні слова.",
       "pause_sec": 0.6,
       "start": 153.36,
-      "end": 155.808,
-      "en": "Useful words.",
-      "uk": "Корисні слова."
+      "end": 155.808
     },
     {
       "step": 70,
@@ -1120,11 +1120,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Корисні слова.",
+      "en": "Useful words.",
+      "uk": "Корисні слова.",
       "pause_sec": 0.6,
       "start": 68.504,
-      "end": 70.544,
-      "en": "Useful words.",
-      "uk": "Корисні слова."
+      "end": 70.544
     },
     {
       "step": 71,
@@ -1136,11 +1136,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Tipsen är mycket användbara.",
+      "en": "The tips are very useful.",
+      "uk": "Поради дуже корисні.",
       "pause_sec": 0.6,
       "start": 156.808,
-      "end": 159.928,
-      "en": "The tips are very useful.",
-      "uk": "Поради дуже корисні."
+      "end": 159.928
     },
     {
       "step": 72,
@@ -1152,11 +1152,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Boken har användbara tips.",
+      "en": "The book has useful tips.",
+      "uk": "У книжці є корисні поради.",
       "pause_sec": 0.6,
       "start": 160.928,
-      "end": 164.024,
-      "en": "The book has useful tips.",
-      "uk": "У книжці є корисні поради."
+      "end": 164.024
     },
     {
       "step": 73,
@@ -1168,11 +1168,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "arg",
+      "en": "angry",
+      "uk": "сердитий",
       "pause_sec": 0.6,
       "start": 165.024,
-      "end": 166.896,
-      "en": "angry",
-      "uk": "сердитий"
+      "end": 166.896
     },
     {
       "step": 74,
@@ -1184,11 +1184,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "сердитий",
+      "en": "angry",
+      "uk": "сердитий",
       "pause_sec": 0.6,
       "start": 71.544,
-      "end": 73.416,
-      "en": "angry",
-      "uk": "сердитий"
+      "end": 73.416
     },
     {
       "step": 75,
@@ -1200,11 +1200,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Blev arg.",
+      "en": "Got angry.",
+      "uk": "Розсердився.",
       "pause_sec": 0.6,
       "start": 167.896,
-      "end": 169.936,
-      "en": "Got angry.",
-      "uk": "Розсердився."
+      "end": 169.936
     },
     {
       "step": 76,
@@ -1216,11 +1216,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Розсердився.",
+      "en": "Got angry.",
+      "uk": "Розсердився.",
       "pause_sec": 0.6,
       "start": 74.416,
-      "end": 76.336,
-      "en": "Got angry.",
-      "uk": "Розсердився."
+      "end": 76.336
     },
     {
       "step": 77,
@@ -1232,11 +1232,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Han blev arg.",
+      "en": "He got angry.",
+      "uk": "Він розсердився.",
       "pause_sec": 0.6,
       "start": 170.936,
-      "end": 173.12,
-      "en": "He got angry.",
-      "uk": "Він розсердився."
+      "end": 173.12
     },
     {
       "step": 78,
@@ -1248,11 +1248,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Kunden är arg.",
+      "en": "The customer is angry.",
+      "uk": "Клієнт сердитий.",
       "pause_sec": 0.6,
       "start": 174.12,
-      "end": 176.304,
-      "en": "The customer is angry.",
-      "uk": "Клієнт сердитий."
+      "end": 176.304
     },
     {
       "step": 79,
@@ -1264,11 +1264,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "armen",
+      "en": "arm",
+      "uk": "руку",
       "pause_sec": 0.6,
       "start": 177.304,
-      "end": 179.176,
-      "en": "arm",
-      "uk": "руку"
+      "end": 179.176
     },
     {
       "step": 80,
@@ -1280,11 +1280,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "руку",
+      "en": "arm",
+      "uk": "руку",
       "pause_sec": 0.6,
       "start": 77.336,
-      "end": 79.208,
-      "en": "arm",
-      "uk": "руку"
+      "end": 79.208
     },
     {
       "step": 81,
@@ -1296,11 +1296,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Över armen.",
+      "en": "Over the arm.",
+      "uk": "На руці.",
       "pause_sec": 0.6,
       "start": 180.176,
-      "end": 182.432,
-      "en": "Over the arm.",
-      "uk": "На руці."
+      "end": 182.432
     },
     {
       "step": 82,
@@ -1312,11 +1312,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "На руці.",
+      "en": "Over the arm.",
+      "uk": "На руці.",
       "pause_sec": 0.6,
       "start": 80.208,
-      "end": 82.08,
-      "en": "Over the arm.",
-      "uk": "На руці."
+      "end": 82.08
     },
     {
       "step": 83,
@@ -1328,11 +1328,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Väskan hänger på armen.",
+      "en": "The bag is hanging on the arm.",
+      "uk": "Сумка висить на руці.",
       "pause_sec": 0.6,
       "start": 183.432,
-      "end": 186.144,
-      "en": "The bag is hanging on the arm.",
-      "uk": "Сумка висить на руці."
+      "end": 186.144
     },
     {
       "step": 84,
@@ -1344,11 +1344,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Hon har jackan över armen.",
+      "en": "She has her jacket over her arm.",
+      "uk": "У неї куртка на руці.",
       "pause_sec": 0.6,
       "start": 187.144,
-      "end": 190.048,
-      "en": "She has her jacket over her arm.",
-      "uk": "У неї куртка на руці."
+      "end": 190.048
     },
     {
       "step": 85,
@@ -1360,11 +1360,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "artigare",
+      "en": "more polite",
+      "uk": "ввічливіше",
       "pause_sec": 0.6,
       "start": 191.048,
-      "end": 192.968,
-      "en": "more polite",
-      "uk": "ввічливіше"
+      "end": 192.968
     },
     {
       "step": 86,
@@ -1376,11 +1376,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "ввічливіше",
+      "en": "more polite",
+      "uk": "ввічливіше",
       "pause_sec": 0.6,
       "start": 83.08,
-      "end": 85.0,
-      "en": "more polite",
-      "uk": "ввічливіше"
+      "end": 85.0
     },
     {
       "step": 87,
@@ -1392,11 +1392,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Lite artigare.",
+      "en": "A bit more polite.",
+      "uk": "Трохи ввічливіше.",
       "pause_sec": 0.6,
       "start": 193.968,
-      "end": 196.344,
-      "en": "A bit more polite.",
-      "uk": "Трохи ввічливіше."
+      "end": 196.344
     },
     {
       "step": 88,
@@ -1408,11 +1408,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "Трохи ввічливіше.",
+      "en": "A bit more polite.",
+      "uk": "Трохи ввічливіше.",
       "pause_sec": 0.6,
       "start": 86.0,
-      "end": 88.184,
-      "en": "A bit more polite.",
-      "uk": "Трохи ввічливіше."
+      "end": 88.184
     },
     {
       "step": 89,
@@ -1424,11 +1424,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Han är artigare nu.",
+      "en": "He is more polite now.",
+      "uk": "Він тепер ввічливіший.",
       "pause_sec": 0.6,
       "start": 197.344,
-      "end": 199.864,
-      "en": "He is more polite now.",
-      "uk": "Він тепер ввічливіший."
+      "end": 199.864
     },
     {
       "step": 90,
@@ -1440,11 +1440,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Var artigare mot henne.",
+      "en": "Be more polite to her.",
+      "uk": "Будь ввічливішим до неї.",
       "pause_sec": 0.6,
       "start": 200.864,
-      "end": 203.552,
-      "en": "Be more polite to her.",
-      "uk": "Будь ввічливішим до неї."
+      "end": 203.552
     },
     {
       "step": 91,
@@ -1456,11 +1456,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "aldrig",
+      "en": "never",
+      "uk": "ніколи",
       "pause_sec": 0.6,
       "start": 204.552,
-      "end": 206.424,
-      "en": "never",
-      "uk": "ніколи"
+      "end": 206.424
     },
     {
       "step": 92,
@@ -1472,11 +1472,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "ніколи",
+      "en": "never",
+      "uk": "ніколи",
       "pause_sec": 0.6,
       "start": 89.184,
-      "end": 91.056,
-      "en": "never",
-      "uk": "ніколи"
+      "end": 91.056
     },
     {
       "step": 93,
@@ -1488,11 +1488,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Aldrig hemma.",
+      "en": "Never at home.",
+      "uk": "Ніколи вдома.",
       "pause_sec": 0.6,
       "start": 207.424,
-      "end": 209.44,
-      "en": "Never at home.",
-      "uk": "Ніколи вдома."
+      "end": 209.44
     },
     {
       "step": 94,
@@ -1504,11 +1504,11 @@
       "slot_index": 1,
       "lang": "uk",
       "text": "Ніколи вдома.",
+      "en": "Never at home.",
+      "uk": "Ніколи вдома.",
       "pause_sec": 0.6,
       "start": 92.056,
-      "end": 94.072,
-      "en": "Never at home.",
-      "uk": "Ніколи вдома."
+      "end": 94.072
     },
     {
       "step": 95,
@@ -1520,11 +1520,11 @@
       "slot_index": 2,
       "lang": "sv",
       "text": "Han kommer aldrig hit.",
+      "en": "He never comes here.",
+      "uk": "Він ніколи не приходить сюди.",
       "pause_sec": 0.6,
       "start": 210.44,
-      "end": 213.008,
-      "en": "He never comes here.",
-      "uk": "Він ніколи не приходить сюди."
+      "end": 213.008
     },
     {
       "step": 96,
@@ -1536,11 +1536,11 @@
       "slot_index": 3,
       "lang": "sv",
       "text": "Vi ses aldrig här.",
+      "en": "We never see each other here.",
+      "uk": "Ми ніколи не бачимося тут.",
       "pause_sec": 0.6,
       "start": 214.008,
-      "end": 216.504,
-      "en": "We never see each other here.",
-      "uk": "Ми ніколи не бачимося тут."
+      "end": 216.504
     },
     {
       "step": 97,
@@ -1552,11 +1552,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "allmänna",
+      "en": "general",
+      "uk": "загальні",
       "pause_sec": 0.6,
       "start": 217.504,
-      "end": 219.376,
-      "en": "general",
-      "uk": "загальні"
+      "end": 219.376
     },
     {
       "step": 98,
@@ -1568,11 +1568,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "загальні",
+      "en": "general",
+      "uk": "загальні",
       "pause_sec": 0.6,
       "start": 95.072,
-      "end": 96.944,
-      "en": "general",
-      "uk": "загальні"
+      "end": 96.944
     },
     {
       "step": 99,
@@ -1584,11 +1584,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "alltså",
+      "en": "that is",
+      "uk": "тобто",
       "pause_sec": 0.6,
       "start": 220.376,
-      "end": 222.248,
-      "en": "that is",
-      "uk": "тобто"
+      "end": 222.248
     },
     {
       "step": 100,
@@ -1600,11 +1600,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "тобто",
+      "en": "that is",
+      "uk": "тобто",
       "pause_sec": 0.6,
       "start": 97.944,
-      "end": 99.816,
-      "en": "that is",
-      "uk": "тобто"
+      "end": 99.816
     },
     {
       "step": 101,
@@ -1616,11 +1616,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "allvarliga",
+      "en": "serious",
+      "uk": "серйозними",
       "pause_sec": 0.6,
       "start": 223.248,
-      "end": 225.24,
-      "en": "serious",
-      "uk": "серйозними"
+      "end": 225.24
     },
     {
       "step": 102,
@@ -1632,11 +1632,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "серйозними",
+      "en": "serious",
+      "uk": "серйозними",
       "pause_sec": 0.6,
       "start": 100.816,
-      "end": 102.76,
-      "en": "serious",
-      "uk": "серйозними"
+      "end": 102.76
     },
     {
       "step": 103,
@@ -1648,11 +1648,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "andades",
+      "en": "breathed",
+      "uk": "видихнув",
       "pause_sec": 0.6,
       "start": 226.24,
-      "end": 228.16,
-      "en": "breathed",
-      "uk": "видихнув"
+      "end": 228.16
     },
     {
       "step": 104,
@@ -1664,11 +1664,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "видихнув",
+      "en": "breathed",
+      "uk": "видихнув",
       "pause_sec": 0.6,
       "start": 103.76,
-      "end": 105.632,
-      "en": "breathed",
-      "uk": "видихнув"
+      "end": 105.632
     },
     {
       "step": 105,
@@ -1680,11 +1680,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Jag andades.",
+      "en": "I breathed.",
+      "uk": "Я дихала.",
       "pause_sec": 0.6,
       "start": 229.16,
-      "end": 231.464,
-      "en": "I breathed.",
-      "uk": "Я дихала."
+      "end": 231.464
     },
     {
       "step": 106,
@@ -1696,11 +1696,11 @@
       "slot_index": 1,
       "lang": "uk",
       "text": "Я дихала.",
+      "en": "I breathed.",
+      "uk": "Я дихала.",
       "pause_sec": 0.6,
       "start": 106.632,
-      "end": 108.504,
-      "en": "I breathed.",
-      "uk": "Я дихала."
+      "end": 108.504
     },
     {
       "step": 107,
@@ -1712,11 +1712,11 @@
       "slot_index": 2,
       "lang": "sv",
       "text": "Pappa andades ut tungt.",
+      "en": "Dad exhaled heavily.",
+      "uk": "Тато важко видихнув.",
       "pause_sec": 0.6,
       "start": 232.464,
-      "end": 235.368,
-      "en": "Dad exhaled heavily.",
-      "uk": "Тато важко видихнув."
+      "end": 235.368
     },
     {
       "step": 108,
@@ -1728,11 +1728,11 @@
       "slot_index": 3,
       "lang": "sv",
       "text": "Hon andades i sömnen.",
+      "en": "She breathed in her sleep.",
+      "uk": "Вона дихала уві сні.",
       "pause_sec": 0.6,
       "start": 236.368,
-      "end": 239.056,
-      "en": "She breathed in her sleep.",
-      "uk": "Вона дихала уві сні."
+      "end": 239.056
     },
     {
       "step": 109,
@@ -1744,11 +1744,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "andetag",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 240.056,
-      "end": 242.024,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 242.024
     },
     {
       "step": 110,
@@ -1760,11 +1760,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "вдих",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 109.504,
-      "end": 111.376,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 111.376
     },
     {
       "step": 111,
@@ -1776,11 +1776,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "andning",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 243.024,
-      "end": 244.92,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 244.92
     },
     {
       "step": 112,
@@ -1792,11 +1792,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "вдих",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 112.376,
-      "end": 114.248,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 114.248
     },
     {
       "step": 113,
@@ -1808,11 +1808,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "anmäla",
+      "en": "sign up",
+      "uk": "записатися",
       "pause_sec": 0.6,
       "start": 245.92,
-      "end": 247.84,
-      "en": "sign up",
-      "uk": "записатися"
+      "end": 247.84
     },
     {
       "step": 114,
@@ -1824,11 +1824,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "записатися",
+      "en": "sign up",
+      "uk": "записатися",
       "pause_sec": 0.6,
       "start": 115.248,
-      "end": 117.216,
-      "en": "sign up",
-      "uk": "записатися"
+      "end": 117.216
     },
     {
       "step": 115,
@@ -1840,11 +1840,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "ansiktet",
+      "en": "face",
+      "uk": "обличчя",
       "pause_sec": 0.6,
       "start": 248.84,
-      "end": 250.856,
-      "en": "face",
-      "uk": "обличчя"
+      "end": 250.856
     },
     {
       "step": 116,
@@ -1856,11 +1856,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "обличчя",
+      "en": "face",
+      "uk": "обличчя",
       "pause_sec": 0.6,
       "start": 118.216,
-      "end": 120.088,
-      "en": "face",
-      "uk": "обличчя"
+      "end": 120.088
     },
     {
       "step": 117,
@@ -1872,11 +1872,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Med ansiktet.",
+      "en": "With the face.",
+      "uk": "Обличчям.",
       "pause_sec": 0.6,
       "start": 251.856,
-      "end": 254.184,
-      "en": "With the face.",
-      "uk": "Обличчям."
+      "end": 254.184
     },
     {
       "step": 118,
@@ -1888,11 +1888,11 @@
       "slot_index": 1,
       "lang": "uk",
       "text": "Обличчям.",
+      "en": "With the face.",
+      "uk": "Обличчям.",
       "pause_sec": 0.6,
       "start": 121.088,
-      "end": 122.96,
-      "en": "With the face.",
-      "uk": "Обличчям."
+      "end": 122.96
     },
     {
       "step": 119,
@@ -1904,11 +1904,11 @@
       "slot_index": 2,
       "lang": "sv",
       "text": "Hon torkar ansiktet.",
+      "en": "She dries her face.",
+      "uk": "Вона витирає обличчя.",
       "pause_sec": 0.6,
       "start": 255.184,
-      "end": 257.872,
-      "en": "She dries her face.",
-      "uk": "Вона витирає обличчя."
+      "end": 257.872
     },
     {
       "step": 120,
@@ -1920,11 +1920,11 @@
       "slot_index": 3,
       "lang": "sv",
       "text": "Han ler med hela ansiktet.",
+      "en": "He smiles with his whole face.",
+      "uk": "Він усміхається всім обличчям.",
       "pause_sec": 0.6,
       "start": 258.872,
-      "end": 261.8,
-      "en": "He smiles with his whole face.",
-      "uk": "Він усміхається всім обличчям."
+      "end": 261.8
     },
     {
       "step": 121,
@@ -1936,11 +1936,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "ansöka",
+      "en": "apply",
+      "uk": "подати заявку",
       "pause_sec": 0.6,
       "start": 262.8,
-      "end": 264.768,
-      "en": "apply",
-      "uk": "подати заявку"
+      "end": 264.768
     },
     {
       "step": 122,
@@ -1952,11 +1952,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "подати заявку",
+      "en": "apply",
+      "uk": "подати заявку",
       "pause_sec": 0.6,
       "start": 123.96,
-      "end": 126.024,
-      "en": "apply",
-      "uk": "подати заявку"
+      "end": 126.024
     },
     {
       "step": 123,
@@ -1968,11 +1968,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "anteckningsbok",
+      "en": "notebook",
+      "uk": "блокнот",
       "pause_sec": 0.6,
       "start": 265.768,
-      "end": 268.096,
-      "en": "notebook",
-      "uk": "блокнот"
+      "end": 268.096
     },
     {
       "step": 124,
@@ -1984,11 +1984,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "блокнот",
+      "en": "notebook",
+      "uk": "блокнот",
       "pause_sec": 0.6,
       "start": 127.024,
-      "end": 128.896,
-      "en": "notebook",
-      "uk": "блокнот"
+      "end": 128.896
     },
     {
       "step": 125,
@@ -2000,11 +2000,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "användbara",
+      "en": "useful",
+      "uk": "корисні",
       "pause_sec": 0.6,
       "start": 269.096,
-      "end": 271.28,
-      "en": "useful",
-      "uk": "корисні"
+      "end": 271.28
     },
     {
       "step": 126,
@@ -2016,11 +2016,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "корисні",
+      "en": "useful",
+      "uk": "корисні",
       "pause_sec": 0.6,
       "start": 129.896,
-      "end": 131.768,
-      "en": "useful",
-      "uk": "корисні"
+      "end": 131.768
     },
     {
       "step": 127,
@@ -2032,11 +2032,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "arg",
+      "en": "angry",
+      "uk": "сердитий",
       "pause_sec": 0.6,
       "start": 272.28,
-      "end": 274.152,
-      "en": "angry",
-      "uk": "сердитий"
+      "end": 274.152
     },
     {
       "step": 128,
@@ -2048,11 +2048,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "сердитий",
+      "en": "angry",
+      "uk": "сердитий",
       "pause_sec": 0.6,
       "start": 132.768,
-      "end": 134.64,
-      "en": "angry",
-      "uk": "сердитий"
+      "end": 134.64
     },
     {
       "step": 129,
@@ -2064,11 +2064,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "armen",
+      "en": "arm",
+      "uk": "руку",
       "pause_sec": 0.6,
       "start": 275.152,
-      "end": 277.024,
-      "en": "arm",
-      "uk": "руку"
+      "end": 277.024
     },
     {
       "step": 130,
@@ -2080,11 +2080,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "руку",
+      "en": "arm",
+      "uk": "руку",
       "pause_sec": 0.6,
       "start": 135.64,
-      "end": 137.512,
-      "en": "arm",
-      "uk": "руку"
+      "end": 137.512
     },
     {
       "step": 131,
@@ -2096,11 +2096,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "artigare",
+      "en": "more polite",
+      "uk": "ввічливіше",
       "pause_sec": 0.6,
       "start": 278.024,
-      "end": 279.944,
-      "en": "more polite",
-      "uk": "ввічливіше"
+      "end": 279.944
     },
     {
       "step": 132,
@@ -2112,11 +2112,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "ввічливіше",
+      "en": "more polite",
+      "uk": "ввічливіше",
       "pause_sec": 0.6,
       "start": 138.512,
-      "end": 140.432,
-      "en": "more polite",
-      "uk": "ввічливіше"
+      "end": 140.432
     },
     {
       "step": 133,
@@ -2128,11 +2128,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "ніколи",
+      "en": "never",
+      "uk": "ніколи",
       "pause_sec": 0.6,
       "start": 141.432,
-      "end": 143.304,
-      "en": "never",
-      "uk": "ніколи"
+      "end": 143.304
     },
     {
       "step": 134,
@@ -2144,11 +2144,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Hon dricker aldrig kaffe på morgonen.",
+      "en": "She never drinks coffee in the morning.",
+      "uk": "Вона ніколи не п'є каву вранці.",
       "pause_sec": 0.6,
       "start": 280.944,
-      "end": 284.112,
-      "en": "She never drinks coffee in the morning.",
-      "uk": "Вона ніколи не п'є каву вранці."
+      "end": 284.112
     },
     {
       "step": 135,
@@ -2160,11 +2160,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Barnen vill aldrig gå och lägga sig.",
+      "en": "The children never want to go to bed.",
+      "uk": "Діти ніколи не хочуть лягати спати.",
       "pause_sec": 0.6,
       "start": 285.112,
-      "end": 288.184,
-      "en": "The children never want to go to bed.",
-      "uk": "Діти ніколи не хочуть лягати спати."
+      "end": 288.184
     },
     {
       "step": 136,
@@ -2176,11 +2176,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "загальні",
+      "en": "general",
+      "uk": "загальні",
       "pause_sec": 0.6,
       "start": 144.304,
-      "end": 146.176,
-      "en": "general",
-      "uk": "загальні"
+      "end": 146.176
     },
     {
       "step": 137,
@@ -2192,11 +2192,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Vi fick mycket allmänna svar idag.",
+      "en": "We got very general answers today.",
+      "uk": "Сьогодні ми отримали дуже загальні відповіді.",
       "pause_sec": 0.6,
       "start": 289.184,
-      "end": 292.232,
-      "en": "We got very general answers today.",
-      "uk": "Сьогодні ми отримали дуже загальні відповіді."
+      "end": 292.232
     },
     {
       "step": 138,
@@ -2208,11 +2208,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "тобто",
+      "en": "that is",
+      "uk": "тобто",
       "pause_sec": 0.6,
       "start": 147.176,
-      "end": 149.048,
-      "en": "that is",
-      "uk": "тобто"
+      "end": 149.048
     },
     {
       "step": 139,
@@ -2224,11 +2224,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Betala hyran, alltså pengar för bostaden.",
+      "en": "Pay the rent, that is money for the home.",
+      "uk": "Заплати оренду, тобто гроші за житло.",
       "pause_sec": 0.6,
       "start": 293.232,
-      "end": 297.336,
-      "en": "Pay the rent, that is money for the home.",
-      "uk": "Заплати оренду, тобто гроші за житло."
+      "end": 297.336
     },
     {
       "step": 140,
@@ -2240,11 +2240,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "серйозними",
+      "en": "serious",
+      "uk": "серйозними",
       "pause_sec": 0.6,
       "start": 150.048,
-      "end": 151.992,
-      "en": "serious",
-      "uk": "серйозними"
+      "end": 151.992
     },
     {
       "step": 141,
@@ -2256,11 +2256,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Han tittade på mig med allvarliga ögon.",
+      "en": "He looked at me with serious eyes.",
+      "uk": "Він подивився на мене серйозними очима.",
       "pause_sec": 0.6,
       "start": 298.336,
-      "end": 301.744,
-      "en": "He looked at me with serious eyes.",
-      "uk": "Він подивився на мене серйозними очима."
+      "end": 301.744
     },
     {
       "step": 142,
@@ -2272,11 +2272,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "видихнув",
+      "en": "breathed",
+      "uk": "видихнув",
       "pause_sec": 0.6,
       "start": 152.992,
-      "end": 154.864,
-      "en": "breathed",
-      "uk": "видихнув"
+      "end": 154.864
     },
     {
       "step": 143,
@@ -2288,11 +2288,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Han andades ut och blev lugn igen.",
+      "en": "He exhaled and became calm again.",
+      "uk": "Він видихнув і знову заспокоївся.",
       "pause_sec": 0.6,
       "start": 302.744,
-      "end": 306.152,
-      "en": "He exhaled and became calm again.",
-      "uk": "Він видихнув і знову заспокоївся."
+      "end": 306.152
     },
     {
       "step": 144,
@@ -2304,11 +2304,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Jag andades långsamt och kände mig lugn.",
+      "en": "I breathed slowly and felt calm.",
+      "uk": "Я дихала повільно і почувалася спокійно.",
       "pause_sec": 0.6,
       "start": 307.152,
-      "end": 310.704,
-      "en": "I breathed slowly and felt calm.",
-      "uk": "Я дихала повільно і почувалася спокійно."
+      "end": 310.704
     },
     {
       "step": 145,
@@ -2320,11 +2320,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "вдих",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 155.864,
-      "end": 157.736,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 157.736
     },
     {
       "step": 146,
@@ -2336,11 +2336,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Han tog ett andetag och log.",
+      "en": "He took a breath and smiled.",
+      "uk": "Він зробив вдих і усміхнувся.",
       "pause_sec": 0.6,
       "start": 311.704,
-      "end": 314.752,
-      "en": "He took a breath and smiled.",
-      "uk": "Він зробив вдих і усміхнувся."
+      "end": 314.752
     },
     {
       "step": 147,
@@ -2352,11 +2352,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "вдих",
+      "en": "breath",
+      "uk": "вдих",
       "pause_sec": 0.6,
       "start": 158.736,
-      "end": 160.608,
-      "en": "breath",
-      "uk": "вдих"
+      "end": 160.608
     },
     {
       "step": 148,
@@ -2368,11 +2368,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Sara tog en långsam andning och log.",
+      "en": "Sara took a slow breath and smiled.",
+      "uk": "Сара повільно вдихнула і усміхнулася.",
       "pause_sec": 0.6,
       "start": 315.752,
-      "end": 319.232,
-      "en": "Sara took a slow breath and smiled.",
-      "uk": "Сара повільно вдихнула і усміхнулася."
+      "end": 319.232
     },
     {
       "step": 149,
@@ -2384,11 +2384,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "записатися",
+      "en": "sign up",
+      "uk": "записатися",
       "pause_sec": 0.6,
       "start": 161.608,
-      "end": 163.576,
-      "en": "sign up",
-      "uk": "записатися"
+      "end": 163.576
     },
     {
       "step": 150,
@@ -2400,11 +2400,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Ska vi anmäla oss till kursen?",
+      "en": "Shall we sign up for the course?",
+      "uk": "Чи нам записатися на курс?",
       "pause_sec": 0.6,
       "start": 320.232,
-      "end": 323.184,
-      "en": "Shall we sign up for the course?",
-      "uk": "Чи нам записатися на курс?"
+      "end": 323.184
     },
     {
       "step": 151,
@@ -2416,11 +2416,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "обличчя",
+      "en": "face",
+      "uk": "обличчя",
       "pause_sec": 0.6,
       "start": 164.576,
-      "end": 166.448,
-      "en": "face",
-      "uk": "обличчя"
+      "end": 166.448
     },
     {
       "step": 152,
@@ -2432,11 +2432,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Jag blev röd i ansiktet av solen.",
+      "en": "I turned red in the face from the sun.",
+      "uk": "Я почервоніла в обличчі від сонця.",
       "pause_sec": 0.6,
       "start": 324.184,
-      "end": 327.616,
-      "en": "I turned red in the face from the sun.",
-      "uk": "Я почервоніла в обличчі від сонця."
+      "end": 327.616
     },
     {
       "step": 153,
@@ -2448,11 +2448,11 @@
       "slot_index": 1,
       "lang": "sv",
       "text": "Hon pratade långsamt och log med hela ansiktet.",
+      "en": "She spoke slowly and smiled with her whole face.",
+      "uk": "Вона говорила повільно і усміхалася всім обличчям.",
       "pause_sec": 0.6,
       "start": 328.616,
-      "end": 332.72,
-      "en": "She spoke slowly and smiled with her whole face.",
-      "uk": "Вона говорила повільно і усміхалася всім обличчям."
+      "end": 332.72
     },
     {
       "step": 154,
@@ -2464,11 +2464,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "подати заявку",
+      "en": "apply",
+      "uk": "подати заявку",
       "pause_sec": 0.6,
       "start": 167.448,
-      "end": 169.512,
-      "en": "apply",
-      "uk": "подати заявку"
+      "end": 169.512
     },
     {
       "step": 155,
@@ -2480,11 +2480,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Hon ska ansöka om jobbet imorgon.",
+      "en": "She will apply for the job tomorrow.",
+      "uk": "Завтра вона подасть заявку на роботу.",
       "pause_sec": 0.6,
       "start": 333.72,
-      "end": 337.104,
-      "en": "She will apply for the job tomorrow.",
-      "uk": "Завтра вона подасть заявку на роботу."
+      "end": 337.104
     },
     {
       "step": 156,
@@ -2496,11 +2496,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "блокнот",
+      "en": "notebook",
+      "uk": "блокнот",
       "pause_sec": 0.6,
       "start": 170.512,
-      "end": 172.384,
-      "en": "notebook",
-      "uk": "блокнот"
+      "end": 172.384
     },
     {
       "step": 157,
@@ -2512,11 +2512,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Jag skriver nya ord i en anteckningsbok.",
+      "en": "I write new words in a notebook.",
+      "uk": "Я записую нові слова в блокнот.",
       "pause_sec": 0.6,
       "start": 338.104,
-      "end": 341.848,
-      "en": "I write new words in a notebook.",
-      "uk": "Я записую нові слова в блокнот."
+      "end": 341.848
     },
     {
       "step": 158,
@@ -2528,11 +2528,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "корисні",
+      "en": "useful",
+      "uk": "корисні",
       "pause_sec": 0.6,
       "start": 173.384,
-      "end": 175.256,
-      "en": "useful",
-      "uk": "корисні"
+      "end": 175.256
     },
     {
       "step": 159,
@@ -2544,11 +2544,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Dessa ord är användbara i vardagen.",
+      "en": "These words are useful in everyday life.",
+      "uk": "Ці слова корисні в повсякденному житті.",
       "pause_sec": 0.6,
       "start": 342.848,
-      "end": 346.4,
-      "en": "These words are useful in everyday life.",
-      "uk": "Ці слова корисні в повсякденному житті."
+      "end": 346.4
     },
     {
       "step": 160,
@@ -2560,11 +2560,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "сердитий",
+      "en": "angry",
+      "uk": "сердитий",
       "pause_sec": 0.6,
       "start": 176.256,
-      "end": 178.128,
-      "en": "angry",
-      "uk": "сердитий"
+      "end": 178.128
     },
     {
       "step": 161,
@@ -2576,11 +2576,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "En kund blev arg i telefonen.",
+      "en": "A customer got angry on the phone.",
+      "uk": "Клієнт розсердився по телефону.",
       "pause_sec": 0.6,
       "start": 347.4,
-      "end": 350.568,
-      "en": "A customer got angry on the phone.",
-      "uk": "Клієнт розсердився по телефону."
+      "end": 350.568
     },
     {
       "step": 162,
@@ -2592,11 +2592,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "руку",
+      "en": "arm",
+      "uk": "руку",
       "pause_sec": 0.6,
       "start": 179.128,
-      "end": 181.0,
-      "en": "arm",
-      "uk": "руку"
+      "end": 181.0
     },
     {
       "step": 163,
@@ -2608,11 +2608,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Sara kom ut med jackan över armen.",
+      "en": "Sara came out with her jacket over her arm.",
+      "uk": "Сара вийшла з курткою на руці.",
       "pause_sec": 0.6,
       "start": 351.568,
-      "end": 355.0,
-      "en": "Sara came out with her jacket over her arm.",
-      "uk": "Сара вийшла з курткою на руці."
+      "end": 355.0
     },
     {
       "step": 164,
@@ -2624,11 +2624,11 @@
       "slot_index": 0,
       "lang": "uk",
       "text": "ввічливіше",
+      "en": "more polite",
+      "uk": "ввічливіше",
       "pause_sec": 0.6,
       "start": 182.0,
-      "end": 183.92,
-      "en": "more polite",
-      "uk": "ввічливіше"
+      "end": 183.92
     },
     {
       "step": 165,
@@ -2640,11 +2640,11 @@
       "slot_index": 0,
       "lang": "sv",
       "text": "Kan du vara artigare mot din vän?",
+      "en": "Can you be more polite to your friend?",
+      "uk": "Чи можеш ти бути ввічливішим до свого друга?",
       "pause_sec": 0.6,
       "start": 356.0,
-      "end": 359.216,
-      "en": "Can you be more polite to your friend?",
-      "uk": "Чи можеш ти бути ввічливішим до свого друга?"
+      "end": 359.216
     }
   ]
 }

@@ -203,9 +203,25 @@
     <p class="muted total" id="elTotal"></p>
     <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
 
-    <div class="row">
+    <div class="row" id="rowLegacyFlags">
       <button id="btnEn" class="flag" type="button" data-selected="0" aria-pressed="false">EN</button>
       <button id="btnUk" class="flag" type="button" data-selected="0" aria-pressed="false">UK</button>
+    </div>
+    <div class="row" id="rowAutoSettings" hidden>
+      <label class="muted">Мова перекладу
+        <select id="selTransLang">
+          <option value="uk">укр.</option>
+          <option value="en">англ.</option>
+          <option value="off">немає</option>
+        </select>
+      </label>
+      <label class="muted">Мітка на уроці
+        <select id="selTransFocus">
+          <option value="f1">f1</option>
+          <option value="f2">f2</option>
+          <option value="f3">f3</option>
+        </select>
+      </label>
     </div>
 
     <div class="row">
@@ -235,6 +251,8 @@
     const LS_MARKS_KEY = 'voicetrain_userMarks';
     const LS_EN_KEY = 'voicetrain_showEn';
     const LS_UK_KEY = 'voicetrain_showUk';
+    const LS_TRANS_LANG_KEY = 'voicetrain_translationLang';
+    const LS_TRANS_FOCUS_KEY = 'voicetrain_translationFocus';
     const DB_PATH = '../db_youtube2/ui_state/voicetrain';
 
     const DEFAULTS = {
@@ -247,7 +265,10 @@
       audioCtx: null,
       svBuffer: null,
       ukBuffer: null,
+      enBuffer: null,
       marks: null,
+      translationLang: 'uk',
+      translationFocus: 'f1',
       playing: false,
       stopRequested: false,
       activeSources: [],
@@ -268,6 +289,10 @@
     const posGoStart = document.getElementById('posGoStart');
     const btnEn = document.getElementById('btnEn');
     const btnUk = document.getElementById('btnUk');
+    const rowLegacyFlags = document.getElementById('rowLegacyFlags');
+    const rowAutoSettings = document.getElementById('rowAutoSettings');
+    const selTransLang = document.getElementById('selTransLang');
+    const selTransFocus = document.getElementById('selTransFocus');
     const btnGoN = document.getElementById('btnGoN');
     const btnPlayFromN = document.getElementById('btnPlayFromN');
     const elMediaLog = document.getElementById('elMediaLog');
@@ -452,7 +477,96 @@
         .replace(/>/g, '&gt;');
     }
 
+    function isAutoMode() {
+      return state.marks?.mode === 'auto';
+    }
+
+    function applyPlaybackUi() {
+      const auto = isAutoMode();
+      if (rowLegacyFlags) rowLegacyFlags.hidden = auto;
+      if (rowAutoSettings) rowAutoSettings.hidden = !auto;
+    }
+
+    function readStoredLang() {
+      try {
+        const v = localStorage.getItem(LS_TRANS_LANG_KEY);
+        return v === 'en' || v === 'off' ? v : 'uk';
+      } catch {
+        return 'uk';
+      }
+    }
+
+    function readStoredFocus() {
+      try {
+        const v = localStorage.getItem(LS_TRANS_FOCUS_KEY);
+        return v === 'f2' || v === 'f3' ? v : 'f1';
+      } catch {
+        return 'f1';
+      }
+    }
+
+    function syncAutoPlaybackControls() {
+      if (!selTransLang || !selTransFocus) return;
+      selTransLang.value = state.translationLang;
+      selTransFocus.value = state.translationFocus;
+    }
+
+    function initAutoPlaybackFromMarks() {
+      if (!isAutoMode()) return;
+      let hasLang = false;
+      let hasFocus = false;
+      try {
+        hasLang = localStorage.getItem(LS_TRANS_LANG_KEY) != null;
+        hasFocus = localStorage.getItem(LS_TRANS_FOCUS_KEY) != null;
+      } catch {
+        // ignore
+      }
+      if (hasLang) {
+        state.translationLang = readStoredLang();
+      } else {
+        const lang = state.marks.translation_lang;
+        state.translationLang = lang === 'en' || lang === 'off' ? lang : 'uk';
+      }
+      if (hasFocus) {
+        state.translationFocus = readStoredFocus();
+      } else {
+        const focus = state.marks.translation_focus;
+        state.translationFocus = focus === 'f2' || focus === 'f3' ? focus : 'f1';
+      }
+      syncAutoPlaybackControls();
+    }
+
+    function autoItemShowsTranslation(item) {
+      const lang = state.translationLang;
+      const focus = state.translationFocus;
+      if (lang === 'off') return false;
+      return !!(item.flags && item.flags[lang] && item.flags[lang][focus]);
+    }
+
+    function buildAutoPlaySegments(item) {
+      const segments = [];
+      if (item.sv_start != null && item.sv_end != null) {
+        segments.push({ lang: 'sv', start: item.sv_start, end: item.sv_end });
+      }
+      if (!autoItemShowsTranslation(item)) return segments;
+      const lang = state.translationLang;
+      if (lang === 'uk' && item.uk_start != null && item.uk_end != null) {
+        segments.push({ lang: 'uk', start: item.uk_start, end: item.uk_end });
+      }
+      if (lang === 'en' && item.en_start != null && item.en_end != null) {
+        segments.push({ lang: 'en', start: item.en_start, end: item.en_end });
+      }
+      return segments;
+    }
+
     function translationBits(item) {
+      if (isAutoMode()) {
+        if (!autoItemShowsTranslation(item)) return [];
+        const lang = state.translationLang;
+        if (lang === 'en' && item.en) return [item.en];
+        if (lang === 'uk' && item.uk) return [item.uk];
+        return [];
+      }
       const bits = [];
       if (state.showEn && item.en && item.en !== item.text) bits.push(item.en);
       if (state.showUk && item.uk && item.uk !== item.text) bits.push(item.uk);
@@ -461,6 +575,17 @@
 
     function translationHtml(item) {
       const parts = [];
+      if (isAutoMode()) {
+        if (!autoItemShowsTranslation(item)) return '';
+        const lang = state.translationLang;
+        if (lang === 'en' && item.en) {
+          parts.push(`<div class="tr tr-en">${esc(item.en)}</div>`);
+        }
+        if (lang === 'uk' && item.uk) {
+          parts.push(`<div class="tr tr-uk">${esc(item.uk)}</div>`);
+        }
+        return parts.join('');
+      }
       if (state.showEn && item.en && item.en !== item.text) {
         parts.push(`<div class="tr tr-en">${esc(item.en)}</div>`);
       }
@@ -481,6 +606,23 @@
       const items = marks.items || [];
       const rate = Math.max(DEFAULTS.PLAYBACK_RATE, 0.01);
       const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      if (marks.mode === 'auto') {
+        let sum = 0;
+        items.forEach((item, index) => {
+          const segments = buildAutoPlaySegments(item);
+          segments.forEach((seg, segIndex) => {
+            const speech = Math.max(0, Number(seg.end) - Number(seg.start));
+            const tail = segIndex < segments.length - 1 ? pad : 0;
+            sum += (speech + tail) / rate;
+          });
+          const pause = Number(item.pause_sec);
+          const after = Number.isFinite(pause) && pause >= 0
+            ? pause
+            : (marks.pause_sec ?? 0.6);
+          sum += after;
+        });
+        return sum;
+      }
       const lastOnTrack = {};
       items.forEach((item, index) => {
         lastOnTrack[item.lang] = index;
@@ -507,7 +649,8 @@
     function renderStepLabel(item, index) {
       const extra = translationBits(item);
       const tail = extra.length ? ` — ${extra.join(' · ')}` : '';
-      return `#${index + 1} ${item.text}${tail}`;
+      const line = isAutoMode() ? (item.sv || '') : item.text;
+      return `#${index + 1} ${line}${tail}`;
     }
 
     function goToN() {
@@ -696,6 +839,15 @@
       if (!state.ukBuffer) {
         state.ukBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.uk_file}`);
       }
+      if (isAutoMode() && state.marks.en_file && !state.enBuffer) {
+        state.enBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.en_file}`);
+      }
+    }
+
+    function bufferForLang(lang) {
+      if (lang === 'sv') return state.svBuffer;
+      if (lang === 'en') return state.enBuffer;
+      return state.ukBuffer;
     }
 
     function bufferForItem(item) {
@@ -781,7 +933,8 @@
         const li = document.createElement('li');
         li.dataset.index = String(index);
         const mark = userMarkForIndex(index);
-        li.innerHTML = `<div class="kind">${esc(mark)}</div><div class="line">${esc(item.text)}</div>${translationHtml(item)}`;
+        const line = isAutoMode() ? (item.sv || '') : item.text;
+        li.innerHTML = `<div class="kind">${esc(mark)}</div><div class="line">${esc(line)}</div>${translationHtml(item)}`;
         if (mark) li.dataset.mark = mark;
         li.addEventListener('click', () => {
           setPosInput(index);
@@ -817,7 +970,44 @@
       return Math.max(0, paddedEnd - start);
     }
 
+    async function playAutoStep(index) {
+      const item = state.marks.items[index];
+      const segments = buildAutoPlaySegments(item);
+      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      const rate = DEFAULTS.PLAYBACK_RATE;
+      const pauseSec = Number(item.pause_sec);
+      const afterSec = Number.isFinite(pauseSec) && pauseSec >= 0
+        ? pauseSec
+        : (state.marks.pause_sec ?? 0.6);
+
+      setActiveCard(index);
+      setPosInput(index);
+      persistState(index);
+      elCurrent.textContent = renderStepLabel(item, index);
+
+      for (let segIndex = 0; segIndex < segments.length; segIndex += 1) {
+        if (state.stopRequested) return;
+        const seg = segments[segIndex];
+        const buffer = bufferForLang(seg.lang);
+        const tailPad = segIndex < segments.length - 1 ? pad : 0;
+        const dur = clipSourceDuration(seg.start, seg.end, tailPad, buffer.duration);
+        const when = state.audioCtx.currentTime;
+        const src = startClip(buffer, when, seg.start, dur, DEFAULTS.VOLUME, rate);
+        await waitForSourceEnd(src);
+      }
+
+      if (state.stopRequested) {
+        return;
+      }
+
+      await waitMs(afterSec * 1000);
+    }
+
     async function playStep(index) {
+      if (isAutoMode()) {
+        await playAutoStep(index);
+        return;
+      }
       const item = state.marks.items[index];
       const buffer = bufferForItem(item);
       const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
@@ -996,9 +1186,39 @@
       }
     });
 
+    function onAutoPlaybackChange() {
+      if (!isAutoMode()) return;
+      state.translationLang = selTransLang?.value === 'en' || selTransLang?.value === 'off'
+        ? selTransLang.value
+        : 'uk';
+      state.translationFocus = selTransFocus?.value === 'f2' || selTransFocus?.value === 'f3'
+        ? selTransFocus.value
+        : 'f1';
+      try {
+        localStorage.setItem(LS_TRANS_LANG_KEY, state.translationLang);
+        localStorage.setItem(LS_TRANS_FOCUS_KEY, state.translationFocus);
+      } catch {
+        // ignore
+      }
+      if (state.playing) {
+        pausePlayback();
+      }
+      showTotal();
+      renderCardList();
+      const index = state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex;
+      if (index >= 0 && state.marks?.items?.[index]) {
+        elCurrent.textContent = renderStepLabel(state.marks.items[index], index);
+      }
+    }
+
+    selTransLang?.addEventListener('change', onAutoPlaybackChange);
+    selTransFocus?.addEventListener('change', onAutoPlaybackChange);
+
     loadMarks()
       .then(() => {
         state.userMarks = readLocalUserMarks();
+        applyPlaybackUi();
+        initAutoPlaybackFromMarks();
         state.showEn = readFlag(LS_EN_KEY);
         state.showUk = readFlag(LS_UK_KEY);
         paintFlag(btnEn, state.showEn);
