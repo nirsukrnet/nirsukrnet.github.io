@@ -35,6 +35,73 @@
     h1 {
       margin: 0 0 2px;
       font-size: 18px;
+      padding-right: 72px;
+    }
+
+    #btnListMenu {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 50;
+    }
+
+    #dlgListMenu {
+      width: calc(100vw - 16px);
+      max-width: 520px;
+      height: calc(100dvh - 16px);
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    #dlgListMenu::backdrop {
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    #dlgListMenu form {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    #btnListClose {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      min-height: 32px;
+      padding: 0;
+      line-height: 1;
+      font-size: 18px;
+    }
+
+    #listMenuTagRow {
+      margin: 28px 0 10px;
+    }
+
+    #inFilter {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    #lessonList {
+      flex: 1;
+      min-height: 0;
+      align-content: start;
+    }
+
+    #lessonList li {
+      cursor: pointer;
+      width: 100%;
+    }
+
+    #lessonList li[data-selected="1"] {
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
     }
 
     .total {
@@ -243,6 +310,7 @@
 <body>
   <div class="dialog">
     <h1 id="elMediaLog">VoiceTraining</h1>
+    <p class="muted total" id="lessonHeading"></p>
     <p class="muted total" id="elTotal"></p>
     <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
 
@@ -284,14 +352,28 @@
     <ul id="cardList"></ul>
   </div>
 
+  <button id="btnListMenu" type="button">List</button>
+  <dialog id="dlgListMenu">
+    <form method="dialog">
+      <button id="btnListClose" value="cancel" type="submit" aria-label="Close">×</button>
+      <div id="listMenuTagRow" class="row"></div>
+      <input id="inFilter" placeholder="type to filter" autocomplete="off" />
+      <p class="muted" id="listStatus" style="margin:10px 0 0;"></p>
+      <ul id="lessonList"></ul>
+    </form>
+  </dialog>
+
   <script src="../yout_pl2/yu2_global_var.js"></script>
   <script>
     'use strict';
 
-    const AUDIO_BASE = 'audio/';
-    const MARKS_URL = `${AUDIO_BASE}marks.json`;
+    let audioBase = 'audio/';
     const LS_KEY = 'voicetrain_stepIndex';
     const LS_MARKS_KEY = 'voicetrain_userMarks';
+    const LS_LESSON_KEY = 'voicetrain_lessonId';
+    const LESSONS_DB = '../db_youtube2/ref_voice_lessons';
+    const TAGS_DB = '../db_youtube2/ref_voice_tags';
+    const TAG_PAGE = 3;
     const LS_EN_KEY = 'voicetrain_showEn';
     const LS_UK_KEY = 'voicetrain_showUk';
     const LS_TRANS_LANG_KEY = 'voicetrain_translationLang';
@@ -322,6 +404,7 @@
       userMarks: {},
       showEn: false,
       showUk: false,
+      lessonId: '',
     };
 
     const elCurrent = document.getElementById('currentCard');
@@ -533,9 +616,17 @@
       return Math.min(Math.trunc(num), n - 1);
     }
 
+    function stepKey() {
+      return state.lessonId ? `${LS_KEY}_${state.lessonId}` : LS_KEY;
+    }
+
+    function marksKey() {
+      return state.lessonId ? `${LS_MARKS_KEY}_${state.lessonId}` : LS_MARKS_KEY;
+    }
+
     function readLocalSavedIndex() {
       try {
-        const raw = localStorage.getItem(LS_KEY);
+        const raw = localStorage.getItem(stepKey());
         if (raw == null || raw === '') return -1;
         return clampIndex(raw);
       } catch {
@@ -545,7 +636,7 @@
 
     function readLocalUserMarks() {
       try {
-        const raw = localStorage.getItem(LS_MARKS_KEY);
+        const raw = localStorage.getItem(marksKey());
         if (!raw) return {};
         const parsed = JSON.parse(raw);
         return parsed && typeof parsed === 'object' ? parsed : {};
@@ -592,6 +683,8 @@
       const auto = isAutoMode();
       if (langWrap) langWrap.hidden = !auto;
       if (focusWrap) focusWrap.hidden = !auto;
+      if (btnEn) btnEn.hidden = auto;
+      if (btnUk) btnUk.hidden = auto;
     }
 
     function readStoredLang() {
@@ -827,21 +920,17 @@
       });
     }
 
-    async function saveStateToDb(stepIndex) {
-      const index = clampIndex(stepIndex);
-      if (index < 0) return;
-      try {
-        localStorage.setItem(LS_KEY, String(index));
-        localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
-      } catch {
-        // ignore
-      }
+    async function saveStateToDb(stepIndex, lessonId, marks) {
+      const index = Number(stepIndex);
+      if (!Number.isFinite(index) || index < 0) return;
+      const id = lessonId || '';
       try {
         await ensureSignedIn();
         await requestByPath(DB_PATH, 'PUT', {
-          marksFile: 'marks_lesson1.json',
+          lessonId: id,
+          marksFile: id ? `lessons/${id}/marks.json` : 'marks.json',
           stepIndex: index,
-          marks: state.userMarks,
+          marks: marks || {},
           updatedAt: new Date().toISOString(),
         });
       } catch (err) {
@@ -853,10 +942,12 @@
       try {
         await ensureSignedIn();
         const data = await requestByPath(DB_PATH, 'GET', null);
+        const savedLesson = data && data.lessonId != null ? String(data.lessonId) : '';
+        if (state.lessonId && savedLesson !== state.lessonId) return -1;
         if (data && data.marks && typeof data.marks === 'object') {
           state.userMarks = { ...data.marks };
           try {
-            localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
+            localStorage.setItem(marksKey(), JSON.stringify(state.userMarks));
           } catch {
             // ignore
           }
@@ -878,25 +969,29 @@
       if (stepIndex < 0) return;
       markSavedCard(stepIndex);
       try {
-        localStorage.setItem(LS_KEY, String(stepIndex));
-        localStorage.setItem(LS_MARKS_KEY, JSON.stringify(state.userMarks));
+        localStorage.setItem(stepKey(), String(stepIndex));
+        localStorage.setItem(marksKey(), JSON.stringify(state.userMarks));
       } catch {
         // ignore
       }
-      persistQueued = stepIndex;
+      persistQueued = {
+        stepIndex,
+        lessonId: state.lessonId,
+        marks: { ...state.userMarks },
+      };
       persistChain = persistChain
         .then(async () => {
           const toSave = persistQueued;
           persistQueued = null;
           if (toSave == null) return;
-          await saveStateToDb(toSave);
+          await saveStateToDb(toSave.stepIndex, toSave.lessonId, toSave.marks);
         })
         .catch((err) => console.error('Auto-save failed', err));
     }
 
     async function loadMarks() {
       if (state.marks) return state.marks;
-      const res = await fetch(MARKS_URL);
+      const res = await fetch(`${audioBase}marks.json`);
       if (!res.ok) {
         throw new Error(`Failed to fetch marks: ${res.status}`);
       }
@@ -952,13 +1047,13 @@
       await loadMarks();
       await ensureAudioContext();
       if (!state.svBuffer) {
-        state.svBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.sv_file}`);
+        state.svBuffer = await loadBuffer(`${audioBase}${state.marks.sv_file}`);
       }
       if (!state.ukBuffer) {
-        state.ukBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.uk_file}`);
+        state.ukBuffer = await loadBuffer(`${audioBase}${state.marks.uk_file}`);
       }
       if (isAutoMode() && state.marks.en_file && !state.enBuffer) {
-        state.enBuffer = await loadBuffer(`${AUDIO_BASE}${state.marks.en_file}`);
+        state.enBuffer = await loadBuffer(`${audioBase}${state.marks.en_file}`);
       }
     }
 
@@ -1356,37 +1451,245 @@
       }
     }
 
-    loadMarks()
-      .then(() => {
-        state.userMarks = readLocalUserMarks();
-        applyPlaybackUi();
-        initAutoPlaybackFromMarks();
-        state.showEn = readFlag(LS_EN_KEY);
-        state.showUk = readFlag(LS_UK_KEY);
-        paintFlag(btnEn, state.showEn);
-        paintFlag(btnUk, state.showUk);
-        rebuildQueue();
-        showTotal();
-        renderCardList();
-        inPos.max = String(playList().length);
-        inPos.min = '1';
-        const local = applySavedIndex(readLocalSavedIndex());
-        elCurrent.textContent = local >= 0
-          ? `At saved #${local + 1}.`
-          : 'Ready.';
-        loadSavedStateFromDb().then((dbIndex) => {
-          if (Object.keys(state.userMarks).length) {
-            renderCardList();
-          }
-          if (dbIndex < 0) return;
-          applySavedIndex(dbIndex);
-          elCurrent.textContent = `At saved #${dbIndex + 1}.`;
-        });
-      })
-      .catch((err) => {
-        console.error(err);
-        elCurrent.textContent = `Load error: ${err.message}. Use http://localhost:8080/...`;
+    const elLessonHeading = document.getElementById('lessonHeading');
+    const dlgList = document.getElementById('dlgListMenu');
+    const elTagRow = document.getElementById('listMenuTagRow');
+    const elLessonList = document.getElementById('lessonList');
+    const elListStatus = document.getElementById('listStatus');
+    const elFilter = document.getElementById('inFilter');
+    let catalog = { lessons: [], tags: [] };
+    let selectedTag = '';
+    let tagPage = 0;
+    let listFilter = '';
+
+    function paintLesson(lesson) {
+      if (!elLessonHeading) return;
+      if (!lesson) {
+        elLessonHeading.textContent = '';
+        return;
+      }
+      const bits = [lesson.short || lesson.lesson_id];
+      if (lesson.title && lesson.title !== lesson.short) bits.push(lesson.title);
+      if (lesson.tag) bits.push(`тег ${lesson.tag}`);
+      elLessonHeading.textContent = bits.join(' · ');
+    }
+
+    function lessonRows(doc) {
+      const inner = doc && doc.lessons;
+      if (!inner || typeof inner !== 'object') return [];
+      return Object.values(inner)
+        .filter((row) => row && /^\d+$/.test(String(row.lesson_id || '')))
+        .map((row) => ({
+          lesson_id: String(row.lesson_id),
+          short: String(row.short || row.lesson_id),
+          title: String(row.title || ''),
+          tag: String(row.tag || '').toUpperCase(),
+          order: Number(row.order) || 0,
+          kind: row.kind === 'manual' ? 'manual' : 'auto',
+        }));
+    }
+
+    function tagRows(doc) {
+      const inner = doc && doc.tags;
+      if (!inner || typeof inner !== 'object') return [];
+      return Object.entries(inner)
+        .map(([code, row]) => ({
+          code: String((row && row.label) || code).toUpperCase(),
+          order: Number(row && row.order) || 0,
+        }))
+        .filter((row) => row.code)
+        .sort((a, b) => a.order - b.order || a.code.localeCompare(b.code));
+    }
+
+    async function loadCatalog() {
+      await ensureSignedIn();
+      const [lessonsDoc, tagsDoc] = await Promise.all([
+        requestByPath(LESSONS_DB, 'GET', null),
+        requestByPath(TAGS_DB, 'GET', null),
+      ]);
+      return { lessons: lessonRows(lessonsDoc), tags: tagRows(tagsDoc) };
+    }
+
+    function visibleLessons() {
+      const q = listFilter.trim().toLowerCase();
+      return catalog.lessons
+        .filter((item) => !selectedTag || item.tag === selectedTag)
+        .filter((item) => !q || item.short.toLowerCase().includes(q) || item.title.toLowerCase().includes(q))
+        .sort((a, b) => a.order - b.order || a.short.localeCompare(b.short));
+    }
+
+    function renderTags() {
+      elTagRow.innerHTML = '';
+      const page = catalog.tags.slice(tagPage, tagPage + TAG_PAGE);
+      page.forEach((tag) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = tag.code;
+        btn.dataset.tag = tag.code;
+        btn.title = `${tag.code} (order ${tag.order})`;
+        btn.dataset.selected = selectedTag === tag.code ? '1' : '0';
+        btn.onclick = () => {
+          selectedTag = tag.code;
+          renderTags();
+          renderLessonChoices();
+        };
+        elTagRow.appendChild(btn);
       });
+      const all = document.createElement('button');
+      all.type = 'button';
+      all.textContent = 'All';
+      all.dataset.all = '1';
+      all.title = 'All';
+      all.dataset.selected = selectedTag ? '0' : '1';
+      all.onclick = () => {
+        selectedTag = '';
+        renderTags();
+        renderLessonChoices();
+      };
+      elTagRow.appendChild(all);
+      if (catalog.tags.length > TAG_PAGE) {
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.textContent = '›';
+        next.title = 'Next tags';
+        next.setAttribute('aria-label', 'Next tags');
+        next.onclick = () => {
+          tagPage += TAG_PAGE;
+          if (tagPage >= catalog.tags.length) tagPage = 0;
+          renderTags();
+        };
+        elTagRow.appendChild(next);
+      }
+    }
+
+    function renderLessonChoices() {
+      const rows = visibleLessons();
+      elLessonList.innerHTML = '';
+      elListStatus.textContent = rows.length ? `${rows.length} уроків` : 'Немає уроків за цим фільтром.';
+      rows.forEach((lesson) => {
+        const li = document.createElement('li');
+        li.dataset.selected = lesson.lesson_id === state.lessonId ? '1' : '0';
+        li.textContent = lesson.short;
+        li.onclick = () => {
+          dlgList.close();
+          useLesson(lesson).catch((err) => {
+            console.error(err);
+            elCurrent.textContent = `Load error: ${err.message}`;
+          });
+        };
+        elLessonList.appendChild(li);
+      });
+    }
+
+    function finishLoad() {
+      state.userMarks = readLocalUserMarks();
+      applyPlaybackUi();
+      initAutoPlaybackFromMarks();
+      state.showEn = readFlag(LS_EN_KEY);
+      state.showUk = readFlag(LS_UK_KEY);
+      paintFlag(btnEn, state.showEn);
+      paintFlag(btnUk, state.showUk);
+      rebuildQueue();
+      showTotal();
+      renderCardList();
+      inPos.max = String(playList().length);
+      inPos.min = '1';
+      const local = applySavedIndex(readLocalSavedIndex());
+      if (local < 0) {
+        setPosInput(0);
+        elCardList.scrollTop = 0;
+      }
+      elCurrent.textContent = local >= 0
+        ? `At saved #${local + 1}.`
+        : 'Ready.';
+      loadSavedStateFromDb().then((dbIndex) => {
+        if (Object.keys(state.userMarks).length) {
+          renderCardList();
+        }
+        if (dbIndex < 0) return;
+        applySavedIndex(dbIndex);
+        elCurrent.textContent = `At saved #${dbIndex + 1}.`;
+      });
+    }
+
+    async function useLesson(lesson) {
+      const id = String(lesson.lesson_id || '');
+      if (!/^\d+$/.test(id)) throw new Error('lesson id');
+      const nextBase = `audio/lessons/${id}/`;
+      const res = await fetch(`${nextBase}marks.json`);
+      if (!res.ok) throw new Error(`marks ${res.status}`);
+      const marks = await res.json();
+      if (state.playing || state.lastPlayedIndex >= 0) pausePlayback();
+      audioBase = nextBase;
+      state.lessonId = id;
+      state.marks = marks;
+      state.svBuffer = null;
+      state.ukBuffer = null;
+      state.enBuffer = null;
+      state.currentIndex = -1;
+      state.lastPlayedIndex = -1;
+      state.userMarks = {};
+      try {
+        localStorage.setItem(LS_LESSON_KEY, id);
+      } catch {
+        // ignore
+      }
+      paintLesson(lesson);
+      finishLoad();
+    }
+
+    async function startPlayer() {
+      let saved = '';
+      try {
+        saved = localStorage.getItem(LS_LESSON_KEY) || '';
+      } catch {
+        saved = '';
+      }
+      if (/^\d+$/.test(saved)) {
+        try {
+          catalog = await loadCatalog();
+          const lesson = catalog.lessons.find((item) => item.lesson_id === saved);
+          if (lesson) {
+            await useLesson(lesson);
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      await loadMarks();
+      finishLoad();
+    }
+
+    document.getElementById('btnListMenu').onclick = async () => {
+      dlgList.showModal();
+      elListStatus.textContent = 'Завантаження…';
+      elLessonList.innerHTML = '';
+      try {
+        catalog = await loadCatalog();
+        tagPage = 0;
+        renderTags();
+        renderLessonChoices();
+      } catch (err) {
+        console.error(err);
+        elListStatus.textContent = 'Список не прочитано.';
+      }
+    };
+
+    elFilter.oninput = (event) => {
+      listFilter = event.target.value;
+      renderLessonChoices();
+    };
+
+    dlgList.querySelector('form').addEventListener('submit', (event) => {
+      if (event.submitter && event.submitter.id === 'btnListClose') return;
+      event.preventDefault();
+    });
+
+    startPlayer().catch((err) => {
+      console.error(err);
+      elCurrent.textContent = `Load error: ${err.message}. Use http://localhost:8080/...`;
+    });
   </script>
 </body>
 </html>
