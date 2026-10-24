@@ -1,369 +1,198 @@
 <!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VoiceTraining — lesson steps</title>
-  <style>
-    :root {
-      color-scheme: light;
-    }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #fff;
-      color: #111;
-    }
-
-    .dialog {
-      width: calc(100vw - 16px);
-      max-width: 560px;
-      height: calc(100vh - 16px);
-      height: calc(100dvh - 16px);
-      margin: 8px auto;
-      border: 1px solid currentColor;
-      border-radius: 12px;
-      padding: 12px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-    }
-
-    h1 {
-      margin: 0 0 2px;
-      font-size: 18px;
-      padding-right: 72px;
-    }
-
-    #btnListMenu {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 50;
-    }
-
-    #dlgListMenu {
-      width: calc(100vw - 16px);
-      max-width: 520px;
-      height: calc(100dvh - 16px);
-      border: 1px solid currentColor;
-      border-radius: 12px;
-      padding: 12px;
-    }
-
-    #dlgListMenu::backdrop {
-      background: rgba(0, 0, 0, 0.35);
-    }
-
-    #dlgListMenu form {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      min-height: 0;
-    }
-
-    #btnListClose {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 32px;
-      min-height: 32px;
-      padding: 0;
-      line-height: 1;
-      font-size: 18px;
-    }
-
-    #listMenuTagRow {
-      margin: 28px 0 10px;
-    }
-
-    #inFilter {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 10px;
-      border: 1px solid currentColor;
-      border-radius: 10px;
-      font-size: 16px;
-    }
-
-    #lessonList {
-      flex: 1;
-      min-height: 0;
-      align-content: start;
-    }
-
-    #lessonList li {
-      cursor: pointer;
-      width: 100%;
-    }
-
-    #lessonList li[data-selected="1"] {
-      background-color: color-mix(in srgb, currentColor 14%, transparent);
-    }
-
-    .total {
-      margin: 0 0 8px;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    #rowLegacyFlags {
-      margin-bottom: 5px;
-    }
-
-    button {
-      border: 1px solid currentColor;
-      background: transparent;
-      border-radius: 10px;
-      padding: 10px 14px;
-      min-height: 36px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    button[data-selected="1"] {
-      background-color: color-mix(in srgb, currentColor 14%, transparent);
-    }
-
-    .flag {
-      min-width: 52px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-
-    input[type="number"] {
-      width: 72px;
-      box-sizing: border-box;
-      padding: 8px 10px;
-      border: 1px solid currentColor;
-      border-radius: 10px;
-      font-size: 16px;
-      min-height: 36px;
-    }
-
-    .muted {
-      opacity: 0.7;
-      font-size: 14px;
-    }
-
-    .current {
-      padding: 10px;
-      border: 1px solid currentColor;
-      border-radius: 10px;
-      margin: 10px 0;
-      font-size: 15px;
-      line-height: 1.4;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 10px 0 0;
-      display: grid;
-      gap: 6px;
-      flex: 1;
-      overflow-y: auto;
-      min-height: 0;
-    }
-
-    li {
-      padding: 10px;
-      border: 1px solid currentColor;
-      border-radius: 10px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    li[data-active="1"]:not(:has(.say)) {
-      background-color: color-mix(in srgb, currentColor 14%, transparent);
-    }
-
-    .line.say,
-    .line.voiced,
-    .line.hint {
-      margin: 0;
-      border-radius: 4px;
-      line-height: 1.35;
-    }
-
-    .line.say {
-      font-weight: 700;
-      background: #fff4d6;
-      color: #3d3424;
-    }
-
-    .line.voiced {
-      margin-top: 4px;
-      font-weight: 700;
-      background: #fff6e4;
-      color: #8a3d12;
-    }
-
-    .line.hint {
-      margin-top: 4px;
-      font-weight: 400;
-      font-size: 14px;
-      background: #f3f1ee;
-      color: #6e7a86;
-    }
-
-    .line.on {
-      outline: 1px solid #c4b48a;
-      outline-offset: 2px;
-    }
-
-    li[data-saved="1"] {
-      outline: 2px solid currentColor;
-      outline-offset: -2px;
-    }
-
-    .kind {
-      display: none;
-    }
-
-    li[data-mark="skip"] {
-      box-shadow: inset 0 0 0 3px #1565c0;
-    }
-
-    li[data-mark="focus"] {
-      box-shadow: inset 0 0 0 3px #c45d28;
-    }
-
-    .tr {
-      margin-top: 4px;
-      font-size: 14px;
-      line-height: 1.35;
-    }
-
-    .tr-en { color: #243e6b; }
-    .tr-uk { color: #6a3114; }
-
-    .card-audio {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0.01;
-      pointer-events: none;
-    }
-
-    .pos-wrap {
-      position: relative;
-    }
-
-    .pos-menu {
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0;
-      z-index: 5;
-      width: max-content;
-      min-width: 100%;
-      box-sizing: border-box;
-      border: 1px solid currentColor;
-      border-radius: 10px;
-      background: #fff;
-      padding: 4px;
-      display: none;
-      box-shadow: 0 4px 12px color-mix(in srgb, currentColor 18%, transparent);
-    }
-
-    .pos-wrap.is-open .pos-menu,
-    .ico-wrap.is-open .pos-menu {
-      display: block;
-    }
-
-    .pos-menu button {
-      width: 100%;
-      text-align: left;
-      white-space: nowrap;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 10px;
-      min-height: 32px;
-    }
-
-    .pos-menu button:hover {
-      background-color: color-mix(in srgb, currentColor 10%, transparent);
-    }
-
-    .pos-menu button[aria-checked="true"] {
-      background-color: color-mix(in srgb, currentColor 14%, transparent);
-    }
-
-    .ico-wrap {
-      position: relative;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<base href="https://nirsukrnet.github.io/voicetrain/" />
+<title>VoiceTraining</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--acc:#2563eb;--acc2:#1d4ed8;--accfg:#fff;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675;--skip:#2563eb;--focus:#ea580c;--r:16px}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--acc:#3b82f6;--acc2:#60a5fa;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}}
+html[data-theme=light]{color-scheme:light;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675}
+html[data-theme=dark]{color-scheme:dark;--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg);-webkit-tap-highlight-color:transparent}
+.dialog{max-width:640px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;padding:0 12px calc(96px + env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 8px;display:flex;align-items:center;gap:10px}
+.top .ttl{flex:1;min-width:0}
+h1{margin:0;font-size:20px;font-weight:750;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.total{margin:0;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button{font:inherit;color:inherit;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 14px;min-height:44px;cursor:pointer;transition:background .15s,transform .05s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid color-mix(in srgb,var(--acc) 45%,transparent);outline-offset:2px}
+.icon{width:44px;padding:0;font-size:18px}
+#btnListMenu{font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.flag{min-width:56px;font-weight:700;letter-spacing:.04em}
+button[data-selected="1"],.flag[aria-pressed=true]{background:var(--soft);border-color:var(--acc);color:var(--acc2)}
+.seg{color:var(--mut);font-size:13px;margin-right:2px}
+input[type=number]{width:84px;padding:10px;border:1px solid var(--line);border-radius:12px;font:inherit;min-height:44px;background:var(--card);color:var(--fg);text-align:center}
+.muted{color:var(--mut);font-size:14px}
+.current{margin:10px 0 4px;padding:12px 14px;border-radius:var(--r);background:var(--soft);color:var(--fg);font-size:15px;border-left:4px solid var(--acc)}
+.progress{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 0}
+.progress>i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px;flex:1;overflow-y:auto;min-height:0;align-content:start;scroll-padding:12px}
+li{padding:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);cursor:pointer;user-select:none;position:relative}
+li:hover{border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+li[data-active="1"]{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+li[data-active="1"]:not(:has(.say)){background:var(--soft)}
+li[data-saved="1"]::after{content:"● saved";position:absolute;top:8px;right:10px;font-size:11px;color:var(--acc2);font-weight:600}
+li[data-mark=skip]{border-left:5px solid var(--skip)}
+li[data-mark=focus]{border-left:5px solid var(--focus)}
+.line.say,.line.voiced,.line.hint{margin:0;border-radius:10px;padding:6px 10px;line-height:1.4}
+.line.say{font-weight:700;font-size:17px;background:var(--say);color:var(--sayfg)}
+.line.voiced{margin-top:6px;font-weight:700;background:var(--voi);color:var(--voifg)}
+.line.hint{margin-top:6px;font-size:14px;background:var(--hint);color:var(--hintfg)}
+.line.on{outline:2px solid var(--acc);outline-offset:1px}
+.kind{display:none}
+.tr{margin-top:6px;font-size:14px;line-height:1.4}
+.tr-en{color:#3b6fd8}.tr-uk{color:#c2631f}
+.card-audio{position:absolute;width:1px;height:1px;opacity:.01;pointer-events:none}
+.pos-wrap,.ico-wrap{position:relative}
+.pos-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:30;min-width:100%;width:max-content;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:4px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.pos-wrap.is-open .pos-menu,.ico-wrap.is-open .pos-menu{display:block}
+.pos-menu button{width:100%;text-align:left;white-space:nowrap;border:0;border-radius:8px;min-height:40px;background:transparent}
+.pos-menu button:hover{background:var(--soft)}
+.pos-menu button[aria-checked=true]{background:var(--soft);color:var(--acc2);font-weight:600}
+/* bottom action bar */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.dock .in{max-width:640px;margin:0 auto;display:flex;gap:10px}
+#btnPlayFromN{flex:1;min-height:56px;border:0;border-radius:16px;background:var(--acc);color:var(--accfg);font-size:18px;font-weight:700;box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 35%,transparent)}
+#btnPlayFromN:hover{background:var(--acc2)}
+#btnGoN{min-height:56px;border-radius:16px;font-weight:600}
+/* lesson picker */
+#dlgListMenu{width:min(560px,calc(100vw - 16px));height:min(760px,calc(100dvh - 16px));border:1px solid var(--line);border-radius:20px;padding:16px;background:var(--card);color:var(--fg)}
+#dlgListMenu::backdrop{background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+#dlgListMenu form{display:flex;flex-direction:column;height:100%;min-height:0}
+#btnListClose{position:absolute;top:10px;right:10px;width:44px;padding:0;font-size:22px;border-radius:50%}
+#listMenuTagRow{margin:44px 0 10px}
+#inFilter{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--bg);color:var(--fg)}
+#lessonList{flex:1;min-height:0}
+#lessonList li{width:100%}
+#lessonList li[data-selected="1"]{background:var(--soft);border-color:var(--acc)}
+</style>
+<style id="compact">
+.dialog{padding:0 8px calc(60px + env(safe-area-inset-bottom))}
+.top{padding:4px 0;gap:6px;min-height:40px}
+.top .ttl{display:flex;align-items:baseline;gap:8px;overflow:hidden}
+h1{font-size:16px;flex:none}
+.total{font-size:12px}
+#lessonHeading:empty{display:none}
+button{min-height:40px;padding:6px 10px;border-radius:10px}
+.icon{width:40px}
+.panel{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:4px 6px;border-radius:12px;position:relative}
+.panel .row{gap:4px;flex-wrap:nowrap}
+.seg{font-size:12px}
+.flag{min-width:40px;padding:4px 8px;font-size:13px}
+input[type=number]{width:60px;min-height:36px;padding:4px}
+.progress{position:absolute;left:6px;right:6px;bottom:2px;height:3px;margin:0}
+.current{margin:4px 0 2px;padding:4px 8px;font-size:13px;border-left-width:3px;border-radius:8px}
+ul{gap:3px;margin-top:4px;counter-reset:st}
+li{padding:5px 8px 5px 34px;border-radius:10px;counter-increment:st}
+li::before{content:counter(st);position:absolute;left:6px;top:7px;font-size:10px;color:var(--mut);width:22px;text-align:right}
+li[data-saved="1"]::after{content:"●";top:4px;right:6px}
+li[data-active="1"]{box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 25%,transparent)}
+li[data-mark=skip],li[data-mark=focus]{border-left-width:4px}
+.line.say,.line.voiced,.line.hint{padding:1px 6px;border-radius:6px;line-height:1.3}
+.line.say{font-size:15px}
+.line.voiced,.line.hint,.tr{margin-top:1px}
+.line.hint,.tr{font-size:13px}
+.dock{padding:4px 8px calc(4px + env(safe-area-inset-bottom))}
+.dock .in{gap:6px}
+#btnPlayFromN,#btnGoN{min-height:44px;border-radius:12px}
+#btnPlayFromN{font-size:16px}
+#lessonList{gap:4px}#lessonList li{padding:8px 10px}#lessonList li::before{content:none}
+</style>
+<style id="bottom">
+.dialog{height:auto;padding:4px 6px 0}
+ul#cardList{overflow:visible;margin:0;padding-bottom:calc(130px + env(safe-area-inset-bottom))}
+.dock{background:var(--bg);padding:3px 6px calc(4px + env(safe-area-inset-bottom))}
+.dock .in{flex-direction:column;gap:3px}
+.info{display:flex;align-items:baseline;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;font-size:12px}
+.info h1{font-size:12px;font-weight:700;flex:none}
+.info .current{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;margin:0;padding:0;background:none;border:0;font-size:12px;color:var(--fg)}
+.info .total{flex:none;font-size:11px}
+.progress{position:static;height:3px;margin:0}
+.bar{display:flex;gap:4px;align-items:center}
+.bar .sp{flex:1}
+.bar .flag{min-width:40px}
+#btnListMenu{width:44px;padding:0;font-size:18px}
+#btnGoN{min-height:40px}
+#btnPlayFromN{flex:1;min-height:40px;font-size:15px;box-shadow:none}
+.pos-menu{top:auto;bottom:calc(100% + 6px)}
+</style>
+<style id="fullwidth">
+.dialog{max-width:none;padding:2px 0 0}
+.dock .in{max-width:none}
+ul#cardList{gap:2px}
+li{padding:3px 4px 3px 4px;border-radius:6px;border-left-width:1px;border-right-width:1px}
+li::before{position:absolute;left:auto;right:3px;top:1px;width:auto;font-size:9px;opacity:.7;z-index:1}
+li[data-saved="1"]::after{right:auto;left:1px;top:-2px;font-size:9px}
+.line.say,.line.voiced,.line.hint{padding:1px 12px 1px 4px;border-radius:4px;letter-spacing:-.012em}
+.line.say,.line.voiced{font-size:14px}
+.line.hint,.tr{font-size:13px;padding-right:12px}
+</style>
 </head>
 <body>
-  <div class="dialog">
+<div class="dialog">
+  <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
+  <ul id="cardList"></ul>
+</div>
+<nav class="dock"><div class="in">
+  <div class="info">
     <h1 id="elMediaLog">VoiceTraining</h1>
-    <p class="muted total" id="lessonHeading"></p>
-    <p class="muted total" id="elTotal"></p>
-    <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
-
-    <div class="row" id="rowLegacyFlags">
-      <button id="btnEn" class="flag" type="button" data-selected="0" aria-pressed="false">EN</button>
-      <button id="btnUk" class="flag" type="button" data-selected="0" aria-pressed="false">UK</button>
-      <div class="ico-wrap" id="langWrap" hidden>
-        <button type="button" id="btnTransLang" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мова перекладу">укр.</button>
-        <div class="pos-menu" id="langMenu" role="menu">
-          <button type="button" role="menuitemradio" data-lang="uk">укр.</button>
-          <button type="button" role="menuitemradio" data-lang="en">англ.</button>
-          <button type="button" role="menuitemradio" data-lang="off">немає</button>
-        </div>
-      </div>
-      <div class="ico-wrap" id="focusWrap" hidden>
-        <button type="button" id="btnTransFocus" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мітка на уроці">f1</button>
-        <div class="pos-menu" id="focusMenu" role="menu">
-          <button type="button" role="menuitemradio" data-focus="f1">f1</button>
-          <button type="button" role="menuitemradio" data-focus="f2">f2</button>
-          <button type="button" role="menuitemradio" data-focus="f3">f3</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <span class="muted">N:</span>
-      <div class="pos-wrap" id="posWrap">
-        <input id="inPos" type="number" min="1" step="1" value="1" autocomplete="off" />
-        <div class="pos-menu" id="posMenu" role="menu">
-          <button type="button" id="posGoStart" role="menuitem">На початок (1)</button>
-        </div>
-      </div>
-      <button id="btnGoN" type="button">Go to N</button>
-      <button id="btnPlayFromN" type="button">Play from N</button>
-    </div>
-
-    <div id="currentCard" class="current muted">Натисніть Play або крок у списку.</div>
-
-    <ul id="cardList"></ul>
+    <span id="lessonHeading" class="total"></span>
+    <span id="currentCard" class="current">Натисніть ▶ Play або оберіть крок.</span>
+    <span id="elTotal" class="total"></span>
   </div>
-
-  <button id="btnListMenu" type="button">List</button>
-  <dialog id="dlgListMenu">
-    <form method="dialog">
-      <button id="btnListClose" value="cancel" type="submit" aria-label="Close">×</button>
-      <div id="listMenuTagRow" class="row"></div>
-      <input id="inFilter" placeholder="type to filter" autocomplete="off" />
-      <p class="muted" id="listStatus" style="margin:10px 0 0;"></p>
-      <ul id="lessonList"></ul>
-    </form>
-  </dialog>
-
-  <script src="../yout_pl2/yu2_global_var.js"></script>
+  <div class="progress" aria-hidden="true"><i id="progBar"></i></div>
+  <div class="bar" id="rowLegacyFlags">
+    <button id="btnEn" class="flag" type="button" data-selected="0" aria-pressed="false">EN</button>
+    <button id="btnUk" class="flag" type="button" data-selected="0" aria-pressed="false">UK</button>
+    <div class="ico-wrap" id="langWrap" hidden>
+      <button type="button" id="btnTransLang" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мова перекладу">укр.</button>
+      <div class="pos-menu" id="langMenu" role="menu">
+        <button type="button" role="menuitemradio" data-lang="uk">укр.</button>
+        <button type="button" role="menuitemradio" data-lang="en">англ.</button>
+        <button type="button" role="menuitemradio" data-lang="off">немає</button>
+      </div>
+    </div>
+    <div class="ico-wrap" id="focusWrap" hidden>
+      <button type="button" id="btnTransFocus" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мітка на уроці">f1</button>
+      <div class="pos-menu" id="focusMenu" role="menu">
+        <button type="button" role="menuitemradio" data-focus="f1">f1</button>
+        <button type="button" role="menuitemradio" data-focus="f2">f2</button>
+        <button type="button" role="menuitemradio" data-focus="f3">f3</button>
+      </div>
+    </div>
+    <span class="sp"></span>
+    <button id="btnTheme" class="icon" type="button" aria-label="Theme">◐</button>
+    <button id="btnListMenu" type="button" aria-label="Lessons">☰</button>
+  </div>
+  <div class="bar">
+    <div class="pos-wrap" id="posWrap">
+      <input id="inPos" type="number" min="1" step="1" value="1" autocomplete="off" inputmode="numeric" aria-label="Step N" />
+      <div class="pos-menu" id="posMenu" role="menu">
+        <button type="button" id="posGoStart" role="menuitem">На початок (1)</button>
+      </div>
+    </div>
+    <span class="muted" id="posOf"></span>
+    <button id="btnGoN" type="button">Go</button>
+    <button id="btnPlayFromN" type="button">▶ Play from N</button>
+  </div>
+</div></nav>
+<dialog id="dlgListMenu">
+  <form method="dialog">
+    <button id="btnListClose" value="cancel" type="submit" aria-label="Close">×</button>
+    <div id="listMenuTagRow" class="row"></div>
+    <input id="inFilter" placeholder="Пошук уроку…" autocomplete="off" />
+    <p class="muted" id="listStatus" style="margin:10px 0 0;"></p>
+    <ul id="lessonList"></ul>
+  </form>
+</dialog>
+<script src="../yout_pl2/yu2_global_var.js"></script>
   <script>
     'use strict';
 
@@ -1689,5 +1518,16 @@
       elCurrent.textContent = `Load error: ${err.message}. Use http://localhost:8080/...`;
     });
   </script>
+<script>
+// UI-only additions: theme toggle + progress bar (no changes to original logic)
+(function(){
+  const h=document.documentElement,k='voicetrain_theme',t=localStorage.getItem(k);if(t)h.dataset.theme=t;
+  document.getElementById('btnTheme').onclick=()=>{const dark=h.dataset.theme?h.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;h.dataset.theme=dark?'light':'dark';localStorage.setItem(k,h.dataset.theme);};
+  const list=document.getElementById('cardList'),bar=document.getElementById('progBar'),of=document.getElementById('posOf');
+  function upd(){const n=list.children.length;const a=list.querySelector('li[data-active="1"]');const i=a?[...list.children].indexOf(a)+1:(+document.getElementById('inPos').value||0);bar.style.width=n?Math.min(100,i/n*100)+'%':'0';of.textContent=n?`з ${n}`:'';}
+  new MutationObserver(upd).observe(list,{subtree:true,childList:true,attributes:true,attributeFilter:['data-active']});
+  document.getElementById('inPos').addEventListener('input',upd);
+})();
+</script>
 </body>
 </html>
