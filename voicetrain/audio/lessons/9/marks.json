@@ -1,0 +1,6886 @@
+{
+  "gap_sec": 1.0,
+  "pause_sec": 0.6,
+  "lesson_id": "9",
+  "translation_lang": "uk",
+  "translation_focus": "f1",
+  "sv_file": "sv_auto.mp3",
+  "uk_file": "uk_auto.mp3",
+  "en_file": "en_auto.mp3",
+  "sv_voice": "sv-SE-SofieNeural",
+  "uk_voice": "uk-UA-PolinaNeural",
+  "en_voice": "en-US-JennyNeural",
+  "mode": "auto",
+  "items": [
+    {
+      "step": 1,
+      "word_n": 1,
+      "word": "skratta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "skratta",
+      "uk": "сміятися",
+      "en": "to laugh",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 0.0,
+      "sv_end": 1.872,
+      "uk_start": 0.0,
+      "uk_end": 1.92,
+      "en_start": 0.0,
+      "en_end": 1.872
+    },
+    {
+      "step": 2,
+      "word_n": 1,
+      "word": "skratta",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Alla skrattade.",
+      "uk": "Усі сміялися.",
+      "en": "Everyone laughed.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 2.872,
+      "sv_end": 5.008,
+      "uk_start": 2.92,
+      "uk_end": 5.056,
+      "en_start": 2.872,
+      "en_end": 4.912
+    },
+    {
+      "step": 3,
+      "word_n": 1,
+      "word": "skratta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill skratta åt skämtet.",
+      "uk": "Я хочу посміятися з жарту.",
+      "en": "I want to laugh at the joke.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 6.008,
+      "sv_end": 8.96,
+      "uk_start": 6.056,
+      "uk_end": 8.912,
+      "en_start": 5.912,
+      "en_end": 8.288
+    },
+    {
+      "step": 4,
+      "word_n": 1,
+      "word": "skratta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag skrattar jag åt skämtet.",
+      "uk": "Сьогодні я сміюся з жарту.",
+      "en": "Today I laugh at the joke.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 9.96,
+      "sv_end": 12.84,
+      "uk_start": 9.912,
+      "uk_end": 12.72,
+      "en_start": 9.288,
+      "en_end": 11.688
+    },
+    {
+      "step": 5,
+      "word_n": 1,
+      "word": "skratta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår skrattade jag åt skämtet.",
+      "uk": "Учора я сміявся з жарту.",
+      "en": "Yesterday I laughed at the joke.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 13.84,
+      "sv_end": 16.768,
+      "uk_start": 13.72,
+      "uk_end": 16.384,
+      "en_start": 12.688,
+      "en_end": 15.4
+    },
+    {
+      "step": 6,
+      "word_n": 1,
+      "word": "skratta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har skrattat åt skämtet.",
+      "uk": "Я вже сміявся з жарту.",
+      "en": "I have laughed at the joke.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 17.768,
+      "sv_end": 20.744,
+      "uk_start": 17.384,
+      "uk_end": 19.904,
+      "en_start": 16.4,
+      "en_end": 18.752
+    },
+    {
+      "step": 7,
+      "word_n": 2,
+      "word": "laga",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "laga",
+      "uk": "готувати, лагодити",
+      "en": "to cook, repair",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 21.744,
+      "sv_end": 23.544,
+      "uk_start": 20.904,
+      "uk_end": 23.52,
+      "en_start": 19.752,
+      "en_end": 22.104
+    },
+    {
+      "step": 8,
+      "word_n": 2,
+      "word": "laga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill laga mat.",
+      "uk": "Я хочу приготувати їжу.",
+      "en": "I want to cook food.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 24.544,
+      "sv_end": 26.968,
+      "uk_start": 24.52,
+      "uk_end": 27.16,
+      "en_start": 23.104,
+      "en_end": 25.168
+    },
+    {
+      "step": 9,
+      "word_n": 2,
+      "word": "laga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag lagar jag mat.",
+      "uk": "Сьогодні я готую їжу.",
+      "en": "Today I cook food.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 27.968,
+      "sv_end": 30.44,
+      "uk_start": 28.16,
+      "uk_end": 30.704,
+      "en_start": 26.168,
+      "en_end": 28.256
+    },
+    {
+      "step": 10,
+      "word_n": 2,
+      "word": "laga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår lagade jag mat.",
+      "uk": "Учора я приготував їжу.",
+      "en": "Yesterday I cooked food.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 31.44,
+      "sv_end": 34.032,
+      "uk_start": 31.704,
+      "uk_end": 34.344,
+      "en_start": 29.256,
+      "en_end": 31.632
+    },
+    {
+      "step": 11,
+      "word_n": 2,
+      "word": "laga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har lagat mat.",
+      "uk": "Я вже приготував їжу.",
+      "en": "I have cooked food.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 35.032,
+      "sv_end": 37.48,
+      "uk_start": 35.344,
+      "uk_end": 37.768,
+      "en_start": 32.632,
+      "en_end": 34.672
+    },
+    {
+      "step": 12,
+      "word_n": 3,
+      "word": "påverka",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "påverka",
+      "uk": "впливати",
+      "en": "to affect",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 38.48,
+      "sv_end": 40.424,
+      "uk_start": 38.768,
+      "uk_end": 40.64,
+      "en_start": 35.672,
+      "en_end": 37.424
+    },
+    {
+      "step": 13,
+      "word_n": 3,
+      "word": "påverka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill påverka beslutet.",
+      "uk": "Я хочу вплинути на рішення.",
+      "en": "I want to influence the decision.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 41.424,
+      "sv_end": 44.424,
+      "uk_start": 41.64,
+      "uk_end": 44.448,
+      "en_start": 38.424,
+      "en_end": 41.04
+    },
+    {
+      "step": 14,
+      "word_n": 3,
+      "word": "påverka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag påverkar jag beslutet.",
+      "uk": "Сьогодні я впливаю на рішення.",
+      "en": "Today I influence the decision.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 45.424,
+      "sv_end": 48.52,
+      "uk_start": 45.448,
+      "uk_end": 48.448,
+      "en_start": 42.04,
+      "en_end": 44.728
+    },
+    {
+      "step": 15,
+      "word_n": 3,
+      "word": "påverka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår påverkade jag beslutet.",
+      "uk": "Учора я вплинув на рішення.",
+      "en": "Yesterday I influenced the decision.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 49.52,
+      "sv_end": 52.592,
+      "uk_start": 49.448,
+      "uk_end": 52.304,
+      "en_start": 45.728,
+      "en_end": 48.68
+    },
+    {
+      "step": 16,
+      "word_n": 3,
+      "word": "påverka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har påverkat beslutet.",
+      "uk": "Я вже вплинув на рішення.",
+      "en": "I have influenced the decision.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 53.592,
+      "sv_end": 56.64,
+      "uk_start": 53.304,
+      "uk_end": 55.992,
+      "en_start": 49.68,
+      "en_end": 52.224
+    },
+    {
+      "step": 17,
+      "word_n": 4,
+      "word": "tvätta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "tvätta",
+      "uk": "прати, мити",
+      "en": "to wash",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 57.64,
+      "sv_end": 59.512,
+      "uk_start": 56.992,
+      "uk_end": 59.08,
+      "en_start": 53.224,
+      "en_end": 55.096
+    },
+    {
+      "step": 18,
+      "word_n": 4,
+      "word": "tvätta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill tvätta kläderna.",
+      "uk": "Я хочу випрати одяг.",
+      "en": "I want to wash the clothes.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 60.512,
+      "sv_end": 63.176,
+      "uk_start": 60.08,
+      "uk_end": 62.576,
+      "en_start": 56.096,
+      "en_end": 58.496
+    },
+    {
+      "step": 19,
+      "word_n": 4,
+      "word": "tvätta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag tvättar jag kläderna.",
+      "uk": "Сьогодні я перу одяг.",
+      "en": "Today I wash the clothes.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 64.176,
+      "sv_end": 66.84,
+      "uk_start": 63.576,
+      "uk_end": 66.072,
+      "en_start": 59.496,
+      "en_end": 61.92
+    },
+    {
+      "step": 20,
+      "word_n": 4,
+      "word": "tvätta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår tvättade jag kläderna.",
+      "uk": "Учора я прав одяг.",
+      "en": "Yesterday I washed the clothes.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 67.84,
+      "sv_end": 70.528,
+      "uk_start": 67.072,
+      "uk_end": 69.4,
+      "en_start": 62.92,
+      "en_end": 65.608
+    },
+    {
+      "step": 21,
+      "word_n": 4,
+      "word": "tvätta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har tvättat kläderna.",
+      "uk": "Я вже прав одяг.",
+      "en": "I have washed the clothes.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 71.528,
+      "sv_end": 74.24,
+      "uk_start": 70.4,
+      "uk_end": 72.584,
+      "en_start": 66.608,
+      "en_end": 68.984
+    },
+    {
+      "step": 22,
+      "word_n": 5,
+      "word": "bjuda",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "bjuda",
+      "uk": "запрошувати, пригощати",
+      "en": "to invite, treat",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 75.24,
+      "sv_end": 77.136,
+      "uk_start": 73.584,
+      "uk_end": 76.488,
+      "en_start": 69.984,
+      "en_end": 72.288
+    },
+    {
+      "step": 23,
+      "word_n": 6,
+      "word": "boka",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "boka",
+      "uk": "бронювати",
+      "en": "to book",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 78.136,
+      "sv_end": 80.008,
+      "uk_start": 77.488,
+      "uk_end": 79.288,
+      "en_start": 73.288,
+      "en_end": 75.16
+    },
+    {
+      "step": 24,
+      "word_n": 6,
+      "word": "boka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill boka ett bord.",
+      "uk": "Я хочу забронювати столик.",
+      "en": "I want to book a table.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 81.008,
+      "sv_end": 83.624,
+      "uk_start": 80.288,
+      "uk_end": 83.048,
+      "en_start": 76.16,
+      "en_end": 78.368
+    },
+    {
+      "step": 25,
+      "word_n": 6,
+      "word": "boka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag bokar jag ett bord.",
+      "uk": "Сьогодні я бронюю столик.",
+      "en": "Today I book a table.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 84.624,
+      "sv_end": 87.144,
+      "uk_start": 84.048,
+      "uk_end": 86.688,
+      "en_start": 79.368,
+      "en_end": 81.6
+    },
+    {
+      "step": 26,
+      "word_n": 6,
+      "word": "boka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår bokade jag ett bord.",
+      "uk": "Учора я забронював столик.",
+      "en": "Yesterday I booked a table.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 88.144,
+      "sv_end": 90.76,
+      "uk_start": 87.688,
+      "uk_end": 90.4,
+      "en_start": 82.6,
+      "en_end": 85.048
+    },
+    {
+      "step": 27,
+      "word_n": 6,
+      "word": "boka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har bokat ett bord.",
+      "uk": "Я вже забронював столик.",
+      "en": "I have booked a table.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 91.76,
+      "sv_end": 94.376,
+      "uk_start": 91.4,
+      "uk_end": 93.992,
+      "en_start": 86.048,
+      "en_end": 88.232
+    },
+    {
+      "step": 28,
+      "word_n": 7,
+      "word": "minska",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "minska",
+      "uk": "зменшувати",
+      "en": "to reduce",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 95.376,
+      "sv_end": 97.32,
+      "uk_start": 94.992,
+      "uk_end": 96.912,
+      "en_start": 89.232,
+      "en_end": 91.104
+    },
+    {
+      "step": 29,
+      "word_n": 7,
+      "word": "minska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill minska sockret.",
+      "uk": "Я хочу зменшити цукор.",
+      "en": "I want to reduce the sugar.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 98.32,
+      "sv_end": 101.032,
+      "uk_start": 97.912,
+      "uk_end": 100.504,
+      "en_start": 92.104,
+      "en_end": 94.48
+    },
+    {
+      "step": 30,
+      "word_n": 7,
+      "word": "minska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag minskar jag sockret.",
+      "uk": "Сьогодні я зменшую цукор.",
+      "en": "Today I reduce the sugar.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 102.032,
+      "sv_end": 104.816,
+      "uk_start": 101.504,
+      "uk_end": 104.24,
+      "en_start": 95.48,
+      "en_end": 97.928
+    },
+    {
+      "step": 31,
+      "word_n": 7,
+      "word": "minska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår minskade jag sockret.",
+      "uk": "Учора я зменшив цукор.",
+      "en": "Yesterday I reduced the sugar.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 105.816,
+      "sv_end": 108.6,
+      "uk_start": 105.24,
+      "uk_end": 107.832,
+      "en_start": 98.928,
+      "en_end": 101.64
+    },
+    {
+      "step": 32,
+      "word_n": 7,
+      "word": "minska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har minskat sockret.",
+      "uk": "Я вже зменшив цукор.",
+      "en": "I have reduced the sugar.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 109.6,
+      "sv_end": 112.336,
+      "uk_start": 108.832,
+      "uk_end": 111.232,
+      "en_start": 102.64,
+      "en_end": 104.944
+    },
+    {
+      "step": 33,
+      "word_n": 8,
+      "word": "stiga",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "stiga",
+      "uk": "підніматися, вставати",
+      "en": "to rise, step",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 113.336,
+      "sv_end": 115.232,
+      "uk_start": 112.232,
+      "uk_end": 114.944,
+      "en_start": 105.944,
+      "en_end": 108.176
+    },
+    {
+      "step": 34,
+      "word_n": 8,
+      "word": "stiga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill stiga upp tidigt.",
+      "uk": "Я хочу встати рано.",
+      "en": "I want to get up early.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 116.232,
+      "sv_end": 119.088,
+      "uk_start": 115.944,
+      "uk_end": 118.32,
+      "en_start": 109.176,
+      "en_end": 111.384
+    },
+    {
+      "step": 35,
+      "word_n": 8,
+      "word": "stiga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag stiger jag upp tidigt.",
+      "uk": "Сьогодні я встаю рано.",
+      "en": "Today I get up early.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 120.088,
+      "sv_end": 122.896,
+      "uk_start": 119.32,
+      "uk_end": 121.864,
+      "en_start": 112.384,
+      "en_end": 114.592
+    },
+    {
+      "step": 36,
+      "word_n": 8,
+      "word": "stiga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår steg jag upp tidigt.",
+      "uk": "Учора я встав рано.",
+      "en": "Yesterday I got up early.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 123.896,
+      "sv_end": 126.704,
+      "uk_start": 122.864,
+      "uk_end": 125.192,
+      "en_start": 115.592,
+      "en_end": 118.016
+    },
+    {
+      "step": 37,
+      "word_n": 8,
+      "word": "stiga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har stigit upp tidigt.",
+      "uk": "Я вже встав рано.",
+      "en": "I have got up early.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 127.704,
+      "sv_end": 130.56,
+      "uk_start": 126.192,
+      "uk_end": 128.4,
+      "en_start": 119.016,
+      "en_end": 121.128
+    },
+    {
+      "step": 38,
+      "word_n": 9,
+      "word": "bada",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "bada",
+      "uk": "купатися",
+      "en": "to swim, bathe",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 131.56,
+      "sv_end": 133.36,
+      "uk_start": 129.4,
+      "uk_end": 131.272,
+      "en_start": 122.128,
+      "en_end": 124.216
+    },
+    {
+      "step": 39,
+      "word_n": 9,
+      "word": "bada",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill bada i sjön.",
+      "uk": "Я хочу покупатися в озері.",
+      "en": "I want to swim in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 134.36,
+      "sv_end": 136.832,
+      "uk_start": 132.272,
+      "uk_end": 135.08,
+      "en_start": 125.216,
+      "en_end": 127.544
+    },
+    {
+      "step": 40,
+      "word_n": 9,
+      "word": "bada",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag badar jag i sjön.",
+      "uk": "Сьогодні я купаюся в озері.",
+      "en": "Today I swim in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 137.832,
+      "sv_end": 140.424,
+      "uk_start": 136.08,
+      "uk_end": 138.888,
+      "en_start": 128.544,
+      "en_end": 130.944
+    },
+    {
+      "step": 41,
+      "word_n": 9,
+      "word": "bada",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår badade jag i sjön.",
+      "uk": "Учора я купався в озері.",
+      "en": "Yesterday I swam in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 141.424,
+      "sv_end": 144.136,
+      "uk_start": 139.888,
+      "uk_end": 142.576,
+      "en_start": 131.944,
+      "en_end": 134.584
+    },
+    {
+      "step": 42,
+      "word_n": 9,
+      "word": "bada",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har badat i sjön.",
+      "uk": "Я вже купався в озері.",
+      "en": "I have swum in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 145.136,
+      "sv_end": 147.68,
+      "uk_start": 143.576,
+      "uk_end": 146.072,
+      "en_start": 135.584,
+      "en_end": 137.888
+    },
+    {
+      "step": 43,
+      "word_n": 10,
+      "word": "låta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "låta",
+      "uk": "звучати; дозволяти",
+      "en": "to sound; to let",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 148.68,
+      "sv_end": 150.552,
+      "uk_start": 147.072,
+      "uk_end": 149.76,
+      "en_start": 138.888,
+      "en_end": 141.24
+    },
+    {
+      "step": 44,
+      "word_n": 10,
+      "word": "låta",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Låter bra!",
+      "uk": "Звучить добре!",
+      "en": "Sounds good!",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 151.552,
+      "sv_end": 153.616,
+      "uk_start": 150.76,
+      "uk_end": 152.752,
+      "en_start": 142.24,
+      "en_end": 144.112
+    },
+    {
+      "step": 45,
+      "word_n": 10,
+      "word": "låta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Det kan låta konstigt.",
+      "uk": "Це може звучати дивно.",
+      "en": "It may sound strange.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 154.616,
+      "sv_end": 157.112,
+      "uk_start": 153.752,
+      "uk_end": 156.248,
+      "en_start": 145.112,
+      "en_end": 147.368
+    },
+    {
+      "step": 46,
+      "word_n": 10,
+      "word": "låta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Det låter bra.",
+      "uk": "Звучить добре.",
+      "en": "That sounds good.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 158.112,
+      "sv_end": 160.248,
+      "uk_start": 157.248,
+      "uk_end": 159.216,
+      "en_start": 148.368,
+      "en_end": 150.36
+    },
+    {
+      "step": 47,
+      "word_n": 10,
+      "word": "låta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Det lät bra.",
+      "uk": "Це звучало добре.",
+      "en": "It sounded good.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 161.248,
+      "sv_end": 163.336,
+      "uk_start": 160.216,
+      "uk_end": 162.352,
+      "en_start": 151.36,
+      "en_end": 153.328
+    },
+    {
+      "step": 48,
+      "word_n": 10,
+      "word": "låta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Det har låtit bra.",
+      "uk": "Це звучало добре.",
+      "en": "It has sounded good.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 164.336,
+      "sv_end": 166.64,
+      "uk_start": 160.216,
+      "uk_end": 162.352,
+      "en_start": 154.328,
+      "en_end": 156.416
+    },
+    {
+      "step": 49,
+      "word_n": 11,
+      "word": "hämta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "hämta",
+      "uk": "забирати",
+      "en": "to fetch",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 167.64,
+      "sv_end": 169.512,
+      "uk_start": 163.352,
+      "uk_end": 165.176,
+      "en_start": 157.416,
+      "en_end": 159.288
+    },
+    {
+      "step": 50,
+      "word_n": 11,
+      "word": "hämta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill hämta barnen.",
+      "uk": "Я хочу забрати дітей.",
+      "en": "I want to pick up the children.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 170.512,
+      "sv_end": 173.008,
+      "uk_start": 166.176,
+      "uk_end": 168.72,
+      "en_start": 160.288,
+      "en_end": 162.664
+    },
+    {
+      "step": 51,
+      "word_n": 11,
+      "word": "hämta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag hämtar jag barnen.",
+      "uk": "Сьогодні я забираю дітей.",
+      "en": "Today I pick up the children.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 174.008,
+      "sv_end": 176.576,
+      "uk_start": 169.72,
+      "uk_end": 172.408,
+      "en_start": 163.664,
+      "en_end": 166.184
+    },
+    {
+      "step": 52,
+      "word_n": 11,
+      "word": "hämta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår hämtade jag barnen.",
+      "uk": "Учора я забрав дітей.",
+      "en": "Yesterday I picked up the children.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 177.576,
+      "sv_end": 180.216,
+      "uk_start": 173.408,
+      "uk_end": 175.928,
+      "en_start": 167.184,
+      "en_end": 169.896
+    },
+    {
+      "step": 53,
+      "word_n": 11,
+      "word": "hämta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har hämtat barnen.",
+      "uk": "Я вже забрав дітей.",
+      "en": "I have picked up the children.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 181.216,
+      "sv_end": 183.76,
+      "uk_start": 176.928,
+      "uk_end": 179.328,
+      "en_start": 170.896,
+      "en_end": 173.224
+    },
+    {
+      "step": 54,
+      "word_n": 12,
+      "word": "gälla",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "gälla",
+      "uk": "стосуватися, діяти",
+      "en": "to apply, be valid",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 184.76,
+      "sv_end": 186.632,
+      "uk_start": 180.328,
+      "uk_end": 182.992,
+      "en_start": 174.224,
+      "en_end": 176.72
+    },
+    {
+      "step": 55,
+      "word_n": 12,
+      "word": "gälla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Biljetten ska gälla en månad.",
+      "uk": "Квиток має діяти місяць.",
+      "en": "The ticket should be valid for a month.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 187.632,
+      "sv_end": 190.656,
+      "uk_start": 183.992,
+      "uk_end": 186.632,
+      "en_start": 177.72,
+      "en_end": 180.552
+    },
+    {
+      "step": 56,
+      "word_n": 12,
+      "word": "gälla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Biljetten gäller idag.",
+      "uk": "Квиток дійсний сьогодні.",
+      "en": "The ticket is valid today.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 191.656,
+      "sv_end": 194.368,
+      "uk_start": 187.632,
+      "uk_end": 190.248,
+      "en_start": 181.552,
+      "en_end": 183.952
+    },
+    {
+      "step": 57,
+      "word_n": 12,
+      "word": "gälla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Biljetten gällde igår.",
+      "uk": "Квиток був дійсний учора.",
+      "en": "The ticket was valid yesterday.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 195.368,
+      "sv_end": 198.08,
+      "uk_start": 191.248,
+      "uk_end": 193.936,
+      "en_start": 184.952,
+      "en_end": 187.568
+    },
+    {
+      "step": 58,
+      "word_n": 12,
+      "word": "gälla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Biljetten har gällt hela året.",
+      "uk": "Квиток діяв увесь рік.",
+      "en": "The ticket has been valid all year.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 199.08,
+      "sv_end": 202.176,
+      "uk_start": 194.936,
+      "uk_end": 197.528,
+      "en_start": 188.568,
+      "en_end": 191.424
+    },
+    {
+      "step": 59,
+      "word_n": 13,
+      "word": "tala",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "tala",
+      "uk": "говорити",
+      "en": "to speak",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 203.176,
+      "sv_end": 205.048,
+      "uk_start": 198.528,
+      "uk_end": 200.4,
+      "en_start": 192.424,
+      "en_end": 194.296
+    },
+    {
+      "step": 60,
+      "word_n": 13,
+      "word": "tala",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill tala svenska.",
+      "uk": "Я хочу поговорити шведською.",
+      "en": "I want to speak Swedish.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 206.048,
+      "sv_end": 208.616,
+      "uk_start": 201.4,
+      "uk_end": 204.328,
+      "en_start": 195.296,
+      "en_end": 197.6
+    },
+    {
+      "step": 61,
+      "word_n": 13,
+      "word": "tala",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag talar jag svenska.",
+      "uk": "Сьогодні я говорю шведською.",
+      "en": "Today I speak Swedish.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 209.616,
+      "sv_end": 212.184,
+      "uk_start": 205.328,
+      "uk_end": 208.112,
+      "en_start": 198.6,
+      "en_end": 200.952
+    },
+    {
+      "step": 62,
+      "word_n": 13,
+      "word": "tala",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår talade jag svenska.",
+      "uk": "Учора я говорив шведською.",
+      "en": "Yesterday I spoke Swedish.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 213.184,
+      "sv_end": 215.872,
+      "uk_start": 209.112,
+      "uk_end": 211.8,
+      "en_start": 201.952,
+      "en_end": 204.52
+    },
+    {
+      "step": 63,
+      "word_n": 13,
+      "word": "tala",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har talat svenska.",
+      "uk": "Я вже говорив шведською.",
+      "en": "I have spoken Swedish.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 216.872,
+      "sv_end": 219.464,
+      "uk_start": 212.8,
+      "uk_end": 215.344,
+      "en_start": 205.52,
+      "en_end": 207.848
+    },
+    {
+      "step": 64,
+      "word_n": 14,
+      "word": "verka",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "verka",
+      "uk": "здаватися",
+      "en": "to seem",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 220.464,
+      "sv_end": 222.336,
+      "uk_start": 216.344,
+      "uk_end": 218.24,
+      "en_start": 208.848,
+      "en_end": 210.72
+    },
+    {
+      "step": 65,
+      "word_n": 14,
+      "word": "verka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Han kan verka trött.",
+      "uk": "Він може здаватися втомленим.",
+      "en": "He may seem tired.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 223.336,
+      "sv_end": 225.88,
+      "uk_start": 219.24,
+      "uk_end": 222.048,
+      "en_start": 211.72,
+      "en_end": 213.904
+    },
+    {
+      "step": 66,
+      "word_n": 14,
+      "word": "verka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Han verkar trött.",
+      "uk": "Він здається втомленим.",
+      "en": "He seems tired.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 226.88,
+      "sv_end": 229.304,
+      "uk_start": 223.048,
+      "uk_end": 225.472,
+      "en_start": 214.904,
+      "en_end": 216.944
+    },
+    {
+      "step": 67,
+      "word_n": 14,
+      "word": "verka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Han verkade trött.",
+      "uk": "Він здавався втомленим.",
+      "en": "He seemed tired.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 230.304,
+      "sv_end": 232.752,
+      "uk_start": 226.472,
+      "uk_end": 228.896,
+      "en_start": 217.944,
+      "en_end": 219.936
+    },
+    {
+      "step": 68,
+      "word_n": 14,
+      "word": "verka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Han har verkat trött.",
+      "uk": "Він здавався втомленим.",
+      "en": "He has seemed tired.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 233.752,
+      "sv_end": 236.368,
+      "uk_start": 226.472,
+      "uk_end": 228.896,
+      "en_start": 220.936,
+      "en_end": 223.072
+    },
+    {
+      "step": 69,
+      "word_n": 15,
+      "word": "låna",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "låna",
+      "uk": "позичати",
+      "en": "to borrow",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 237.368,
+      "sv_end": 239.168,
+      "uk_start": 229.896,
+      "uk_end": 231.768,
+      "en_start": 224.072,
+      "en_end": 225.944
+    },
+    {
+      "step": 70,
+      "word_n": 15,
+      "word": "låna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill låna en bok.",
+      "uk": "Я хочу позичити книжку.",
+      "en": "I want to borrow a book.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 240.168,
+      "sv_end": 242.808,
+      "uk_start": 232.768,
+      "uk_end": 235.456,
+      "en_start": 226.944,
+      "en_end": 229.176
+    },
+    {
+      "step": 71,
+      "word_n": 15,
+      "word": "låna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag lånar jag en bok.",
+      "uk": "Сьогодні я позичаю книжку.",
+      "en": "Today I borrow a book.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 243.808,
+      "sv_end": 246.424,
+      "uk_start": 236.456,
+      "uk_end": 239.264,
+      "en_start": 230.176,
+      "en_end": 232.48
+    },
+    {
+      "step": 72,
+      "word_n": 15,
+      "word": "låna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår lånade jag en bok.",
+      "uk": "Учора я позичив книжку.",
+      "en": "Yesterday I borrowed a book.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 247.424,
+      "sv_end": 250.136,
+      "uk_start": 240.264,
+      "uk_end": 242.928,
+      "en_start": 233.48,
+      "en_end": 235.976
+    },
+    {
+      "step": 73,
+      "word_n": 15,
+      "word": "låna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har lånat en bok.",
+      "uk": "Я вже позичив книжку.",
+      "en": "I have borrowed a book.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 251.136,
+      "sv_end": 253.776,
+      "uk_start": 243.928,
+      "uk_end": 246.424,
+      "en_start": 236.976,
+      "en_end": 239.088
+    },
+    {
+      "step": 74,
+      "word_n": 16,
+      "word": "dansa",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "dansa",
+      "uk": "танцювати",
+      "en": "to dance",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 254.776,
+      "sv_end": 256.648,
+      "uk_start": 247.424,
+      "uk_end": 249.296,
+      "en_start": 240.088,
+      "en_end": 241.96
+    },
+    {
+      "step": 75,
+      "word_n": 16,
+      "word": "dansa",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Vi dansar.",
+      "uk": "Ми танцюємо.",
+      "en": "We are dancing.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 257.648,
+      "sv_end": 259.76,
+      "uk_start": 250.296,
+      "uk_end": 252.264,
+      "en_start": 242.96,
+      "en_end": 244.928
+    },
+    {
+      "step": 76,
+      "word_n": 16,
+      "word": "dansa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill dansa salsa.",
+      "uk": "Я хочу потанцювати сальсу.",
+      "en": "I want to dance salsa.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 260.76,
+      "sv_end": 263.352,
+      "uk_start": 253.264,
+      "uk_end": 256.072,
+      "en_start": 245.928,
+      "en_end": 248.184
+    },
+    {
+      "step": 77,
+      "word_n": 16,
+      "word": "dansa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag dansar jag salsa.",
+      "uk": "Сьогодні я танцюю сальсу.",
+      "en": "Today I dance salsa.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 264.352,
+      "sv_end": 267.016,
+      "uk_start": 257.072,
+      "uk_end": 259.808,
+      "en_start": 249.184,
+      "en_end": 251.464
+    },
+    {
+      "step": 78,
+      "word_n": 16,
+      "word": "dansa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår dansade jag salsa.",
+      "uk": "Учора я танцював сальсу.",
+      "en": "Yesterday I danced salsa.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 268.016,
+      "sv_end": 270.776,
+      "uk_start": 260.808,
+      "uk_end": 263.424,
+      "en_start": 252.464,
+      "en_end": 255.056
+    },
+    {
+      "step": 79,
+      "word_n": 16,
+      "word": "dansa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har dansat salsa.",
+      "uk": "Я вже танцював сальсу.",
+      "en": "I have danced salsa.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 271.776,
+      "sv_end": 274.44,
+      "uk_start": 264.424,
+      "uk_end": 266.896,
+      "en_start": 256.056,
+      "en_end": 258.336
+    },
+    {
+      "step": 80,
+      "word_n": 17,
+      "word": "fylla",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "fylla",
+      "uk": "наповнювати",
+      "en": "to fill",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 275.44,
+      "sv_end": 277.216,
+      "uk_start": 267.896,
+      "uk_end": 269.864,
+      "en_start": 259.336,
+      "en_end": 260.992
+    },
+    {
+      "step": 81,
+      "word_n": 17,
+      "word": "fylla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill fylla glaset.",
+      "uk": "Я хочу наповнити склянку.",
+      "en": "I want to fill the glass.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 278.216,
+      "sv_end": 280.928,
+      "uk_start": 270.864,
+      "uk_end": 273.6,
+      "en_start": 261.992,
+      "en_end": 264.32
+    },
+    {
+      "step": 82,
+      "word_n": 17,
+      "word": "fylla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag fyller jag glaset.",
+      "uk": "Сьогодні я наповнюю склянку.",
+      "en": "Today I fill the glass.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 281.928,
+      "sv_end": 284.544,
+      "uk_start": 274.6,
+      "uk_end": 277.552,
+      "en_start": 265.32,
+      "en_end": 267.696
+    },
+    {
+      "step": 83,
+      "word_n": 17,
+      "word": "fylla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår fyllde jag glaset.",
+      "uk": "Учора я наповнив склянку.",
+      "en": "Yesterday I filled the glass.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 285.544,
+      "sv_end": 288.232,
+      "uk_start": 278.552,
+      "uk_end": 281.264,
+      "en_start": 268.696,
+      "en_end": 271.288
+    },
+    {
+      "step": 84,
+      "word_n": 17,
+      "word": "fylla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har fyllt glaset.",
+      "uk": "Я вже наповнив склянку.",
+      "en": "I have filled the glass.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 289.232,
+      "sv_end": 291.824,
+      "uk_start": 282.264,
+      "uk_end": 284.856,
+      "en_start": 272.288,
+      "en_end": 274.568
+    },
+    {
+      "step": 85,
+      "word_n": 18,
+      "word": "hinna",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "hinna",
+      "uk": "встигати",
+      "en": "to have time, make it",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 292.824,
+      "sv_end": 294.696,
+      "uk_start": 285.856,
+      "uk_end": 287.728,
+      "en_start": 275.568,
+      "en_end": 278.016
+    },
+    {
+      "step": 86,
+      "word_n": 18,
+      "word": "hinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill hinna bussen.",
+      "uk": "Я хочу встигнути на автобус.",
+      "en": "I want to catch the bus.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 295.696,
+      "sv_end": 298.264,
+      "uk_start": 288.728,
+      "uk_end": 291.536,
+      "en_start": 279.016,
+      "en_end": 281.344
+    },
+    {
+      "step": 87,
+      "word_n": 18,
+      "word": "hinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag hinner jag bussen.",
+      "uk": "Сьогодні я встигаю на автобус.",
+      "en": "Today I catch the bus.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 299.264,
+      "sv_end": 301.856,
+      "uk_start": 292.536,
+      "uk_end": 295.464,
+      "en_start": 282.344,
+      "en_end": 284.696
+    },
+    {
+      "step": 88,
+      "word_n": 18,
+      "word": "hinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår hann jag bussen.",
+      "uk": "Учора я встиг на автобус.",
+      "en": "Yesterday I caught the bus.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 302.856,
+      "sv_end": 305.4,
+      "uk_start": 296.464,
+      "uk_end": 299.104,
+      "en_start": 285.696,
+      "en_end": 288.216
+    },
+    {
+      "step": 89,
+      "word_n": 18,
+      "word": "hinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har hunnit bussen.",
+      "uk": "Я вже встиг на автобус.",
+      "en": "I have caught the bus.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 306.4,
+      "sv_end": 309.016,
+      "uk_start": 300.104,
+      "uk_end": 302.624,
+      "en_start": 289.216,
+      "en_end": 291.424
+    },
+    {
+      "step": 90,
+      "word_n": 19,
+      "word": "ändra",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "ändra",
+      "uk": "змінювати",
+      "en": "to change",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 310.016,
+      "sv_end": 311.768,
+      "uk_start": 303.624,
+      "uk_end": 305.496,
+      "en_start": 292.424,
+      "en_end": 294.296
+    },
+    {
+      "step": 91,
+      "word_n": 19,
+      "word": "ändra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill ändra planen.",
+      "uk": "Я хочу змінити план.",
+      "en": "I want to change the plan.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 312.768,
+      "sv_end": 315.36,
+      "uk_start": 306.496,
+      "uk_end": 308.92,
+      "en_start": 295.296,
+      "en_end": 297.648
+    },
+    {
+      "step": 92,
+      "word_n": 19,
+      "word": "ändra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag ändrar jag planen.",
+      "uk": "Сьогодні я змінюю план.",
+      "en": "Today I change the plan.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 316.36,
+      "sv_end": 319.0,
+      "uk_start": 309.92,
+      "uk_end": 312.536,
+      "en_start": 298.648,
+      "en_end": 301.048
+    },
+    {
+      "step": 93,
+      "word_n": 19,
+      "word": "ändra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår ändrade jag planen.",
+      "uk": "Учора я змінив план.",
+      "en": "Yesterday I changed the plan.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 320.0,
+      "sv_end": 322.688,
+      "uk_start": 313.536,
+      "uk_end": 315.96,
+      "en_start": 302.048,
+      "en_end": 304.712
+    },
+    {
+      "step": 94,
+      "word_n": 19,
+      "word": "ändra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har ändrat planen.",
+      "uk": "Я вже змінив план.",
+      "en": "I have changed the plan.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 323.688,
+      "sv_end": 326.28,
+      "uk_start": 316.96,
+      "uk_end": 319.24,
+      "en_start": 305.712,
+      "en_end": 308.04
+    },
+    {
+      "step": 95,
+      "word_n": 20,
+      "word": "röka",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "röka",
+      "uk": "курити",
+      "en": "to smoke",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 327.28,
+      "sv_end": 329.152,
+      "uk_start": 320.24,
+      "uk_end": 322.112,
+      "en_start": 309.04,
+      "en_end": 310.912
+    },
+    {
+      "step": 96,
+      "word_n": 20,
+      "word": "röka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill röka på balkongen.",
+      "uk": "Я хочу покурити на балконі.",
+      "en": "I want to smoke on the balcony.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 330.152,
+      "sv_end": 333.08,
+      "uk_start": 323.112,
+      "uk_end": 325.968,
+      "en_start": 311.912,
+      "en_end": 314.432
+    },
+    {
+      "step": 97,
+      "word_n": 20,
+      "word": "röka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag röker jag på balkongen.",
+      "uk": "Сьогодні я курю на балконі.",
+      "en": "Today I smoke on the balcony.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 334.08,
+      "sv_end": 336.912,
+      "uk_start": 326.968,
+      "uk_end": 329.752,
+      "en_start": 315.432,
+      "en_end": 317.976
+    },
+    {
+      "step": 98,
+      "word_n": 20,
+      "word": "röka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår rökte jag på balkongen.",
+      "uk": "Учора я курив на балконі.",
+      "en": "Yesterday I smoked on the balcony.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 337.912,
+      "sv_end": 340.816,
+      "uk_start": 330.752,
+      "uk_end": 333.512,
+      "en_start": 318.976,
+      "en_end": 321.784
+    },
+    {
+      "step": 99,
+      "word_n": 20,
+      "word": "röka",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har rökt på balkongen.",
+      "uk": "Я вже курив на балконі.",
+      "en": "I have smoked on the balcony.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 341.816,
+      "sv_end": 344.6,
+      "uk_start": 334.512,
+      "uk_end": 337.128,
+      "en_start": 322.784,
+      "en_end": 325.232
+    },
+    {
+      "step": 100,
+      "word_n": 21,
+      "word": "glömma",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "glömma",
+      "uk": "забувати",
+      "en": "to forget",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 345.6,
+      "sv_end": 347.472,
+      "uk_start": 338.128,
+      "uk_end": 340.0,
+      "en_start": 326.232,
+      "en_end": 328.104
+    },
+    {
+      "step": 101,
+      "word_n": 21,
+      "word": "glömma",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill glömma nyckeln.",
+      "uk": "Я хочу забути ключ.",
+      "en": "I want to forget the key.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 348.472,
+      "sv_end": 350.992,
+      "uk_start": 341.0,
+      "uk_end": 343.376,
+      "en_start": 329.104,
+      "en_end": 331.384
+    },
+    {
+      "step": 102,
+      "word_n": 21,
+      "word": "glömma",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag glömmer jag nyckeln.",
+      "uk": "Сьогодні я забуваю ключ.",
+      "en": "Today I forget the key.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 351.992,
+      "sv_end": 354.56,
+      "uk_start": 344.376,
+      "uk_end": 347.04,
+      "en_start": 332.384,
+      "en_end": 334.688
+    },
+    {
+      "step": 103,
+      "word_n": 21,
+      "word": "glömma",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår glömde jag nyckeln.",
+      "uk": "Учора я забув ключ.",
+      "en": "Yesterday I forgot the key.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 355.56,
+      "sv_end": 358.104,
+      "uk_start": 348.04,
+      "uk_end": 350.44,
+      "en_start": 335.688,
+      "en_end": 338.232
+    },
+    {
+      "step": 104,
+      "word_n": 21,
+      "word": "glömma",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har glömt nyckeln.",
+      "uk": "Я вже забув ключ.",
+      "en": "I have forgotten the key.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 359.104,
+      "sv_end": 361.624,
+      "uk_start": 351.44,
+      "uk_end": 353.72,
+      "en_start": 339.232,
+      "en_end": 341.536
+    },
+    {
+      "step": 105,
+      "word_n": 22,
+      "word": "fiska",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "fiska",
+      "uk": "рибалити",
+      "en": "to fish",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 362.624,
+      "sv_end": 364.496,
+      "uk_start": 354.72,
+      "uk_end": 356.592,
+      "en_start": 342.536,
+      "en_end": 344.408
+    },
+    {
+      "step": 106,
+      "word_n": 22,
+      "word": "fiska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill fiska i sjön.",
+      "uk": "Я хочу порибалити на озері.",
+      "en": "I want to fish in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 365.496,
+      "sv_end": 368.112,
+      "uk_start": 357.592,
+      "uk_end": 360.448,
+      "en_start": 345.408,
+      "en_end": 347.736
+    },
+    {
+      "step": 107,
+      "word_n": 22,
+      "word": "fiska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag fiskar jag i sjön.",
+      "uk": "Сьогодні я рибалю на озері.",
+      "en": "Today I fish in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 369.112,
+      "sv_end": 371.704,
+      "uk_start": 361.448,
+      "uk_end": 364.256,
+      "en_start": 348.736,
+      "en_end": 351.088
+    },
+    {
+      "step": 108,
+      "word_n": 22,
+      "word": "fiska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår fiskade jag i sjön.",
+      "uk": "Учора я рибалив на озері.",
+      "en": "Yesterday I fished in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 372.704,
+      "sv_end": 375.368,
+      "uk_start": 365.256,
+      "uk_end": 368.04,
+      "en_start": 352.088,
+      "en_end": 354.752
+    },
+    {
+      "step": 109,
+      "word_n": 22,
+      "word": "fiska",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har fiskat i sjön.",
+      "uk": "Я вже рибалив на озері.",
+      "en": "I have fished in the lake.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 376.368,
+      "sv_end": 379.056,
+      "uk_start": 369.04,
+      "uk_end": 371.608,
+      "en_start": 355.752,
+      "en_end": 358.056
+    },
+    {
+      "step": 110,
+      "word_n": 23,
+      "word": "köra",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "köra",
+      "uk": "їздити, кермувати",
+      "en": "to drive",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 380.056,
+      "sv_end": 381.928,
+      "uk_start": 372.608,
+      "uk_end": 375.248,
+      "en_start": 359.056,
+      "en_end": 360.928
+    },
+    {
+      "step": 111,
+      "word_n": 23,
+      "word": "köra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill köra bil.",
+      "uk": "Я хочу повести машину.",
+      "en": "I want to drive a car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 382.928,
+      "sv_end": 385.328,
+      "uk_start": 376.248,
+      "uk_end": 378.792,
+      "en_start": 361.928,
+      "en_end": 364.184
+    },
+    {
+      "step": 112,
+      "word_n": 23,
+      "word": "köra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag kör jag bil.",
+      "uk": "Сьогодні я веду машину.",
+      "en": "Today I drive a car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 386.328,
+      "sv_end": 388.608,
+      "uk_start": 379.792,
+      "uk_end": 382.384,
+      "en_start": 365.184,
+      "en_end": 367.44
+    },
+    {
+      "step": 113,
+      "word_n": 23,
+      "word": "köra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår körde jag bil.",
+      "uk": "Учора я вів машину.",
+      "en": "Yesterday I drove a car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 389.608,
+      "sv_end": 391.96,
+      "uk_start": 383.384,
+      "uk_end": 385.76,
+      "en_start": 368.44,
+      "en_end": 370.96
+    },
+    {
+      "step": 114,
+      "word_n": 23,
+      "word": "köra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har kört bil.",
+      "uk": "Я вже вів машину.",
+      "en": "I have driven a car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 392.96,
+      "sv_end": 395.312,
+      "uk_start": 386.76,
+      "uk_end": 389.016,
+      "en_start": 371.96,
+      "en_end": 374.12
+    },
+    {
+      "step": 115,
+      "word_n": 24,
+      "word": "hosta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "hosta",
+      "uk": "кашляти",
+      "en": "to cough",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 396.312,
+      "sv_end": 398.184,
+      "uk_start": 390.016,
+      "uk_end": 391.888,
+      "en_start": 375.12,
+      "en_end": 376.992
+    },
+    {
+      "step": 116,
+      "word_n": 24,
+      "word": "hosta",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Han hostar.",
+      "uk": "Він кашляє.",
+      "en": "He is coughing.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 399.184,
+      "sv_end": 401.368,
+      "uk_start": 392.888,
+      "uk_end": 394.808,
+      "en_start": 377.992,
+      "en_end": 379.888
+    },
+    {
+      "step": 117,
+      "word_n": 24,
+      "word": "hosta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill hosta mindre.",
+      "uk": "Я хочу кашляти менше.",
+      "en": "I want to cough less.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 402.368,
+      "sv_end": 404.936,
+      "uk_start": 395.808,
+      "uk_end": 398.4,
+      "en_start": 380.888,
+      "en_end": 383.072
+    },
+    {
+      "step": 118,
+      "word_n": 24,
+      "word": "hosta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag hostar jag mindre.",
+      "uk": "Сьогодні я кашляю менше.",
+      "en": "Today I cough less.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 405.936,
+      "sv_end": 408.552,
+      "uk_start": 399.4,
+      "uk_end": 402.112,
+      "en_start": 384.072,
+      "en_end": 386.28
+    },
+    {
+      "step": 119,
+      "word_n": 24,
+      "word": "hosta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår hostade jag mindre.",
+      "uk": "Учора я кашляв менше.",
+      "en": "Yesterday I coughed less.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 409.552,
+      "sv_end": 412.168,
+      "uk_start": 403.112,
+      "uk_end": 405.68,
+      "en_start": 387.28,
+      "en_end": 389.728
+    },
+    {
+      "step": 120,
+      "word_n": 24,
+      "word": "hosta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har hostat mindre.",
+      "uk": "Я вже кашляв менше.",
+      "en": "I have coughed less.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 413.168,
+      "sv_end": 415.856,
+      "uk_start": 406.68,
+      "uk_end": 409.08,
+      "en_start": 390.728,
+      "en_end": 392.912
+    },
+    {
+      "step": 121,
+      "word_n": 25,
+      "word": "behandla",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "behandla",
+      "uk": "лікувати, ставитися",
+      "en": "to treat",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 416.856,
+      "sv_end": 418.728,
+      "uk_start": 410.08,
+      "uk_end": 412.72,
+      "en_start": 393.912,
+      "en_end": 395.784
+    },
+    {
+      "step": 122,
+      "word_n": 25,
+      "word": "behandla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill behandla såret.",
+      "uk": "Я хочу вилікувати рану.",
+      "en": "I want to treat the wound.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 419.728,
+      "sv_end": 422.536,
+      "uk_start": 413.72,
+      "uk_end": 416.288,
+      "en_start": 396.784,
+      "en_end": 399.016
+    },
+    {
+      "step": 123,
+      "word_n": 25,
+      "word": "behandla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag behandlar jag såret.",
+      "uk": "Сьогодні я лікую рану.",
+      "en": "Today I treat the wound.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 423.536,
+      "sv_end": 426.32,
+      "uk_start": 417.288,
+      "uk_end": 419.832,
+      "en_start": 400.016,
+      "en_end": 402.296
+    },
+    {
+      "step": 124,
+      "word_n": 25,
+      "word": "behandla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår behandlade jag såret.",
+      "uk": "Учора я вилікував рану.",
+      "en": "Yesterday I treated the wound.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 427.32,
+      "sv_end": 430.128,
+      "uk_start": 420.832,
+      "uk_end": 423.472,
+      "en_start": 403.296,
+      "en_end": 405.912
+    },
+    {
+      "step": 125,
+      "word_n": 25,
+      "word": "behandla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har behandlat såret.",
+      "uk": "Я вже вилікував рану.",
+      "en": "I have treated the wound.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 431.128,
+      "sv_end": 433.912,
+      "uk_start": 424.472,
+      "uk_end": 426.92,
+      "en_start": 406.912,
+      "en_end": 409.12
+    },
+    {
+      "step": 126,
+      "word_n": 26,
+      "word": "öppna",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "öppna",
+      "uk": "відчиняти",
+      "en": "to open",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 434.912,
+      "sv_end": 436.784,
+      "uk_start": 427.92,
+      "uk_end": 429.816,
+      "en_start": 410.12,
+      "en_end": 411.776
+    },
+    {
+      "step": 127,
+      "word_n": 26,
+      "word": "öppna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill öppna fönstret.",
+      "uk": "Я хочу відчинити вікно.",
+      "en": "I want to open the window.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 437.784,
+      "sv_end": 440.424,
+      "uk_start": 430.816,
+      "uk_end": 433.408,
+      "en_start": 412.776,
+      "en_end": 415.056
+    },
+    {
+      "step": 128,
+      "word_n": 26,
+      "word": "öppna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag öppnar jag fönstret.",
+      "uk": "Сьогодні я відчиняю вікно.",
+      "en": "Today I open the window.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 441.424,
+      "sv_end": 444.16,
+      "uk_start": 434.408,
+      "uk_end": 437.216,
+      "en_start": 416.056,
+      "en_end": 418.408
+    },
+    {
+      "step": 129,
+      "word_n": 26,
+      "word": "öppna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår öppnade jag fönstret.",
+      "uk": "Учора я відчинив вікно.",
+      "en": "Yesterday I opened the window.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 445.16,
+      "sv_end": 448.016,
+      "uk_start": 438.216,
+      "uk_end": 440.736,
+      "en_start": 419.408,
+      "en_end": 422.024
+    },
+    {
+      "step": 130,
+      "word_n": 26,
+      "word": "öppna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har öppnat fönstret.",
+      "uk": "Я вже відчинив вікно.",
+      "en": "I have opened the window.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 449.016,
+      "sv_end": 451.752,
+      "uk_start": 441.736,
+      "uk_end": 444.136,
+      "en_start": 423.024,
+      "en_end": 425.256
+    },
+    {
+      "step": 131,
+      "word_n": 27,
+      "word": "slå",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "slå",
+      "uk": "бити, набирати",
+      "en": "to hit, dial",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 452.752,
+      "sv_end": 454.624,
+      "uk_start": 445.136,
+      "uk_end": 447.464,
+      "en_start": 426.256,
+      "en_end": 428.368
+    },
+    {
+      "step": 132,
+      "word_n": 27,
+      "word": "slå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill slå numret.",
+      "uk": "Я хочу набрати номер.",
+      "en": "I want to dial the number.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 455.624,
+      "sv_end": 458.264,
+      "uk_start": 448.464,
+      "uk_end": 450.936,
+      "en_start": 429.368,
+      "en_end": 431.696
+    },
+    {
+      "step": 133,
+      "word_n": 27,
+      "word": "slå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag slår jag numret.",
+      "uk": "Сьогодні я набираю номер.",
+      "en": "Today I dial the number.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 459.264,
+      "sv_end": 461.928,
+      "uk_start": 451.936,
+      "uk_end": 454.576,
+      "en_start": 432.696,
+      "en_end": 435.096
+    },
+    {
+      "step": 134,
+      "word_n": 27,
+      "word": "slå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår slog jag numret.",
+      "uk": "Учора я набрав номер.",
+      "en": "Yesterday I dialled the number.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 462.928,
+      "sv_end": 465.568,
+      "uk_start": 455.576,
+      "uk_end": 458.072,
+      "en_start": 436.096,
+      "en_end": 438.688
+    },
+    {
+      "step": 135,
+      "word_n": 27,
+      "word": "slå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har slagit numret.",
+      "uk": "Я вже набрав номер.",
+      "en": "I have dialled the number.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 466.568,
+      "sv_end": 469.328,
+      "uk_start": 459.072,
+      "uk_end": 461.352,
+      "en_start": 439.688,
+      "en_end": 441.968
+    },
+    {
+      "step": 136,
+      "word_n": 28,
+      "word": "frysa",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "frysa",
+      "uk": "мерзнути, заморожувати",
+      "en": "to freeze",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 470.328,
+      "sv_end": 472.2,
+      "uk_start": 462.352,
+      "uk_end": 465.16,
+      "en_start": 442.968,
+      "en_end": 444.84
+    },
+    {
+      "step": 137,
+      "word_n": 28,
+      "word": "frysa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill frysa bären.",
+      "uk": "Я хочу заморозити ягоди.",
+      "en": "I want to freeze the berries.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 473.2,
+      "sv_end": 475.888,
+      "uk_start": 466.16,
+      "uk_end": 468.872,
+      "en_start": 445.84,
+      "en_end": 448.216
+    },
+    {
+      "step": 138,
+      "word_n": 28,
+      "word": "frysa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag fryser jag bären.",
+      "uk": "Сьогодні я заморожую ягоди.",
+      "en": "Today I freeze the berries.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 476.888,
+      "sv_end": 479.504,
+      "uk_start": 469.872,
+      "uk_end": 472.752,
+      "en_start": 449.216,
+      "en_end": 451.64
+    },
+    {
+      "step": 139,
+      "word_n": 28,
+      "word": "frysa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår frös jag bären.",
+      "uk": "Учора я заморозив ягоди.",
+      "en": "Yesterday I froze the berries.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 480.504,
+      "sv_end": 483.192,
+      "uk_start": 473.752,
+      "uk_end": 476.512,
+      "en_start": 452.64,
+      "en_end": 455.256
+    },
+    {
+      "step": 140,
+      "word_n": 28,
+      "word": "frysa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har frusit bären.",
+      "uk": "Я вже заморозив ягоди.",
+      "en": "I have frozen the berries.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 484.192,
+      "sv_end": 486.88,
+      "uk_start": 477.512,
+      "uk_end": 480.104,
+      "en_start": 456.256,
+      "en_end": 458.608
+    },
+    {
+      "step": 141,
+      "word_n": 29,
+      "word": "sjunga",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "sjunga",
+      "uk": "співати",
+      "en": "to sing",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 487.88,
+      "sv_end": 489.752,
+      "uk_start": 481.104,
+      "uk_end": 482.976,
+      "en_start": 459.608,
+      "en_end": 461.48
+    },
+    {
+      "step": 142,
+      "word_n": 29,
+      "word": "sjunga",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Hon sjunger.",
+      "uk": "Вона співає.",
+      "en": "She is singing.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 490.752,
+      "sv_end": 492.816,
+      "uk_start": 483.976,
+      "uk_end": 485.944,
+      "en_start": 462.48,
+      "en_end": 464.352
+    },
+    {
+      "step": 143,
+      "word_n": 29,
+      "word": "sjunga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill sjunga en sång.",
+      "uk": "Я хочу заспівати пісню.",
+      "en": "I want to sing a song.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 493.816,
+      "sv_end": 496.504,
+      "uk_start": 486.944,
+      "uk_end": 489.656,
+      "en_start": 465.352,
+      "en_end": 467.584
+    },
+    {
+      "step": 144,
+      "word_n": 29,
+      "word": "sjunga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag sjunger jag en sång.",
+      "uk": "Сьогодні я співаю пісню.",
+      "en": "Today I sing a song.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 497.504,
+      "sv_end": 500.192,
+      "uk_start": 490.656,
+      "uk_end": 493.44,
+      "en_start": 468.584,
+      "en_end": 470.84
+    },
+    {
+      "step": 145,
+      "word_n": 29,
+      "word": "sjunga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår sjöng jag en sång.",
+      "uk": "Учора я співав пісню.",
+      "en": "Yesterday I sang a song.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 501.192,
+      "sv_end": 503.832,
+      "uk_start": 494.44,
+      "uk_end": 496.984,
+      "en_start": 471.84,
+      "en_end": 474.336
+    },
+    {
+      "step": 146,
+      "word_n": 29,
+      "word": "sjunga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har sjungit en sång.",
+      "uk": "Я вже співав пісню.",
+      "en": "I have sung a song.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 504.832,
+      "sv_end": 507.568,
+      "uk_start": 497.984,
+      "uk_end": 500.384,
+      "en_start": 475.336,
+      "en_end": 477.472
+    },
+    {
+      "step": 147,
+      "word_n": 30,
+      "word": "springa",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "springa",
+      "uk": "бігати",
+      "en": "to run",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 508.568,
+      "sv_end": 510.464,
+      "uk_start": 501.384,
+      "uk_end": 503.064,
+      "en_start": 478.472,
+      "en_end": 480.344
+    },
+    {
+      "step": 148,
+      "word_n": 30,
+      "word": "springa",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Hon springer.",
+      "uk": "Вона біжить.",
+      "en": "She is running.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 511.464,
+      "sv_end": 513.6,
+      "uk_start": 504.064,
+      "uk_end": 505.96,
+      "en_start": 481.344,
+      "en_end": 483.216
+    },
+    {
+      "step": 149,
+      "word_n": 30,
+      "word": "springa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill springa i parken.",
+      "uk": "Я хочу побігати у парку.",
+      "en": "I want to run in the park.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 514.6,
+      "sv_end": 517.36,
+      "uk_start": 506.96,
+      "uk_end": 509.648,
+      "en_start": 484.216,
+      "en_end": 486.544
+    },
+    {
+      "step": 150,
+      "word_n": 30,
+      "word": "springa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag springer jag i parken.",
+      "uk": "Сьогодні я бігаю у парку.",
+      "en": "Today I run in the park.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 518.36,
+      "sv_end": 521.12,
+      "uk_start": 510.648,
+      "uk_end": 513.408,
+      "en_start": 487.544,
+      "en_end": 489.968
+    },
+    {
+      "step": 151,
+      "word_n": 30,
+      "word": "springa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår sprang jag i parken.",
+      "uk": "Учора я бігав у парку.",
+      "en": "Yesterday I ran in the park.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 522.12,
+      "sv_end": 524.784,
+      "uk_start": 514.408,
+      "uk_end": 517.024,
+      "en_start": 490.968,
+      "en_end": 493.608
+    },
+    {
+      "step": 152,
+      "word_n": 30,
+      "word": "springa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har sprungit i parken.",
+      "uk": "Я вже бігав у парку.",
+      "en": "I have run in the park.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 525.784,
+      "sv_end": 528.568,
+      "uk_start": 518.024,
+      "uk_end": 520.448,
+      "en_start": 494.608,
+      "en_end": 496.84
+    },
+    {
+      "step": 153,
+      "word_n": 31,
+      "word": "gråta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "gråta",
+      "uk": "плакати",
+      "en": "to cry",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 529.568,
+      "sv_end": 531.416,
+      "uk_start": 521.448,
+      "uk_end": 523.32,
+      "en_start": 497.84,
+      "en_end": 499.712
+    },
+    {
+      "step": 154,
+      "word_n": 31,
+      "word": "gråta",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Barnet gråter.",
+      "uk": "Дитина плаче.",
+      "en": "The child is crying.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 532.416,
+      "sv_end": 534.696,
+      "uk_start": 524.32,
+      "uk_end": 526.336,
+      "en_start": 500.712,
+      "en_end": 502.848
+    },
+    {
+      "step": 155,
+      "word_n": 31,
+      "word": "gråta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill gråta av glädje.",
+      "uk": "Я хочу поплакати від радості.",
+      "en": "I want to cry with joy.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 535.696,
+      "sv_end": 538.6,
+      "uk_start": 527.336,
+      "uk_end": 530.336,
+      "en_start": 503.848,
+      "en_end": 506.104
+    },
+    {
+      "step": 156,
+      "word_n": 31,
+      "word": "gråta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag gråter jag av glädje.",
+      "uk": "Сьогодні я плачу від радості.",
+      "en": "Today I cry with joy.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 539.6,
+      "sv_end": 542.432,
+      "uk_start": 531.336,
+      "uk_end": 534.216,
+      "en_start": 507.104,
+      "en_end": 509.408
+    },
+    {
+      "step": 157,
+      "word_n": 31,
+      "word": "gråta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår grät jag av glädje.",
+      "uk": "Учора я плакав від радості.",
+      "en": "Yesterday I cried with joy.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 543.432,
+      "sv_end": 546.264,
+      "uk_start": 535.216,
+      "uk_end": 538.0,
+      "en_start": 510.408,
+      "en_end": 512.952
+    },
+    {
+      "step": 158,
+      "word_n": 31,
+      "word": "gråta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har gråtit av glädje.",
+      "uk": "Я вже плакав від радості.",
+      "en": "I have cried with joy.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 547.264,
+      "sv_end": 550.216,
+      "uk_start": 539.0,
+      "uk_end": 541.616,
+      "en_start": 513.952,
+      "en_end": 516.184
+    },
+    {
+      "step": 159,
+      "word_n": 32,
+      "word": "minnas",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "minnas",
+      "uk": "пам'ятати",
+      "en": "to remember",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 551.216,
+      "sv_end": 553.136,
+      "uk_start": 542.616,
+      "uk_end": 544.488,
+      "en_start": 517.184,
+      "en_end": 519.056
+    },
+    {
+      "step": 160,
+      "word_n": 32,
+      "word": "minnas",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill minnas sommaren.",
+      "uk": "Я хочу згадати те літо.",
+      "en": "I want to remember the summer.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 554.136,
+      "sv_end": 556.872,
+      "uk_start": 545.488,
+      "uk_end": 548.104,
+      "en_start": 520.056,
+      "en_end": 522.456
+    },
+    {
+      "step": 161,
+      "word_n": 32,
+      "word": "minnas",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag minns jag sommaren.",
+      "uk": "Сьогодні я пам'ятаю те літо.",
+      "en": "Today I remember the summer.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 557.872,
+      "sv_end": 560.536,
+      "uk_start": 549.104,
+      "uk_end": 552.008,
+      "en_start": 523.456,
+      "en_end": 525.952
+    },
+    {
+      "step": 162,
+      "word_n": 32,
+      "word": "minnas",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår mindes jag sommaren.",
+      "uk": "Учора я пам'ятав те літо.",
+      "en": "Yesterday I remembered the summer.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 561.536,
+      "sv_end": 564.392,
+      "uk_start": 553.008,
+      "uk_end": 555.744,
+      "en_start": 526.952,
+      "en_end": 529.664
+    },
+    {
+      "step": 163,
+      "word_n": 32,
+      "word": "minnas",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har mints sommaren.",
+      "uk": "Я вже пам'ятав те літо.",
+      "en": "I have remembered the summer.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 565.392,
+      "sv_end": 568.056,
+      "uk_start": 556.744,
+      "uk_end": 559.336,
+      "en_start": 530.664,
+      "en_end": 533.04
+    },
+    {
+      "step": 164,
+      "word_n": 33,
+      "word": "flyga",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "flyga",
+      "uk": "літати",
+      "en": "to fly",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 569.056,
+      "sv_end": 570.952,
+      "uk_start": 560.336,
+      "uk_end": 562.208,
+      "en_start": 534.04,
+      "en_end": 535.912
+    },
+    {
+      "step": 165,
+      "word_n": 33,
+      "word": "flyga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill flyga till London.",
+      "uk": "Я хочу полетіти до Лондона.",
+      "en": "I want to fly to London.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 571.952,
+      "sv_end": 574.712,
+      "uk_start": 563.208,
+      "uk_end": 566.04,
+      "en_start": 536.912,
+      "en_end": 539.24
+    },
+    {
+      "step": 166,
+      "word_n": 33,
+      "word": "flyga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag flyger jag till London.",
+      "uk": "Сьогодні я лечу до Лондона.",
+      "en": "Today I fly to London.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 575.712,
+      "sv_end": 578.448,
+      "uk_start": 567.04,
+      "uk_end": 569.848,
+      "en_start": 540.24,
+      "en_end": 542.592
+    },
+    {
+      "step": 167,
+      "word_n": 33,
+      "word": "flyga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår flög jag till London.",
+      "uk": "Учора я летів до Лондона.",
+      "en": "Yesterday I flew to London.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 579.448,
+      "sv_end": 582.208,
+      "uk_start": 570.848,
+      "uk_end": 573.536,
+      "en_start": 543.592,
+      "en_end": 546.16
+    },
+    {
+      "step": 168,
+      "word_n": 33,
+      "word": "flyga",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har flugit till London.",
+      "uk": "Я вже летів до Лондона.",
+      "en": "I have flown to London.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 583.208,
+      "sv_end": 586.016,
+      "uk_start": 574.536,
+      "uk_end": 577.08,
+      "en_start": 547.16,
+      "en_end": 549.416
+    },
+    {
+      "step": 169,
+      "word_n": 34,
+      "word": "dra",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "dra",
+      "uk": "тягнути",
+      "en": "to pull",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 587.016,
+      "sv_end": 588.888,
+      "uk_start": 578.08,
+      "uk_end": 579.952,
+      "en_start": 550.416,
+      "en_end": 552.288
+    },
+    {
+      "step": 170,
+      "word_n": 34,
+      "word": "dra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill dra i repet.",
+      "uk": "Я хочу потягнути за мотузку.",
+      "en": "I want to pull the rope.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 589.888,
+      "sv_end": 592.432,
+      "uk_start": 580.952,
+      "uk_end": 583.832,
+      "en_start": 553.288,
+      "en_end": 555.376
+    },
+    {
+      "step": 171,
+      "word_n": 34,
+      "word": "dra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag drar jag i repet.",
+      "uk": "Сьогодні я тягну за мотузку.",
+      "en": "Today I pull the rope.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 593.432,
+      "sv_end": 596.072,
+      "uk_start": 584.832,
+      "uk_end": 587.64,
+      "en_start": 556.376,
+      "en_end": 558.584
+    },
+    {
+      "step": 172,
+      "word_n": 34,
+      "word": "dra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår drog jag i repet.",
+      "uk": "Учора я тягнув за мотузку.",
+      "en": "Yesterday I pulled the rope.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 597.072,
+      "sv_end": 599.712,
+      "uk_start": 588.64,
+      "uk_end": 591.376,
+      "en_start": 559.584,
+      "en_end": 561.936
+    },
+    {
+      "step": 173,
+      "word_n": 34,
+      "word": "dra",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har dragit i repet.",
+      "uk": "Я вже тягнув за мотузку.",
+      "en": "I have pulled the rope.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 600.712,
+      "sv_end": 603.52,
+      "uk_start": 592.376,
+      "uk_end": 595.016,
+      "en_start": 562.936,
+      "en_end": 564.976
+    },
+    {
+      "step": 174,
+      "word_n": 35,
+      "word": "le",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "le",
+      "uk": "усміхатися",
+      "en": "to smile",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 604.52,
+      "sv_end": 606.392,
+      "uk_start": 596.016,
+      "uk_end": 598.032,
+      "en_start": 565.976,
+      "en_end": 567.848
+    },
+    {
+      "step": 175,
+      "word_n": 35,
+      "word": "le",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill le barnet.",
+      "uk": "Я хочу усміхнутися до дитини.",
+      "en": "I want to smile at the child.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 607.392,
+      "sv_end": 609.84,
+      "uk_start": 599.032,
+      "uk_end": 602.032,
+      "en_start": 568.848,
+      "en_end": 571.344
+    },
+    {
+      "step": 176,
+      "word_n": 35,
+      "word": "le",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag ler jag barnet.",
+      "uk": "Сьогодні я усміхаюся до дитини.",
+      "en": "Today I smile at the child.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 610.84,
+      "sv_end": 613.384,
+      "uk_start": 603.032,
+      "uk_end": 606.224,
+      "en_start": 572.344,
+      "en_end": 574.864
+    },
+    {
+      "step": 177,
+      "word_n": 35,
+      "word": "le",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår log jag barnet.",
+      "uk": "Учора я усміхнувся до дитини.",
+      "en": "Yesterday I smiled at the child.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 614.384,
+      "sv_end": 617.0,
+      "uk_start": 607.224,
+      "uk_end": 610.2,
+      "en_start": 575.864,
+      "en_end": 578.6
+    },
+    {
+      "step": 178,
+      "word_n": 35,
+      "word": "le",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har lett barnet.",
+      "uk": "Я вже усміхнувся до дитини.",
+      "en": "I have smiled at the child.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 618.0,
+      "sv_end": 620.52,
+      "uk_start": 611.2,
+      "uk_end": 614.008,
+      "en_start": 579.6,
+      "en_end": 582.0
+    },
+    {
+      "step": 179,
+      "word_n": 36,
+      "word": "växa",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "växa",
+      "uk": "рости",
+      "en": "to grow",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 621.52,
+      "sv_end": 623.392,
+      "uk_start": 615.008,
+      "uk_end": 616.88,
+      "en_start": 583.0,
+      "en_end": 584.872
+    },
+    {
+      "step": 180,
+      "word_n": 36,
+      "word": "växa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill växa snabbt.",
+      "uk": "Я хочу вирости швидко.",
+      "en": "I want to grow fast.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 624.392,
+      "sv_end": 626.936,
+      "uk_start": 617.88,
+      "uk_end": 620.448,
+      "en_start": 585.872,
+      "en_end": 588.152
+    },
+    {
+      "step": 181,
+      "word_n": 36,
+      "word": "växa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag växer jag snabbt.",
+      "uk": "Сьогодні я росту швидко.",
+      "en": "Today I grow fast.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 627.936,
+      "sv_end": 630.528,
+      "uk_start": 621.448,
+      "uk_end": 624.112,
+      "en_start": 589.152,
+      "en_end": 591.408
+    },
+    {
+      "step": 182,
+      "word_n": 36,
+      "word": "växa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår växte jag snabbt.",
+      "uk": "Учора я ріс швидко.",
+      "en": "Yesterday I grew fast.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 631.528,
+      "sv_end": 634.072,
+      "uk_start": 625.112,
+      "uk_end": 627.512,
+      "en_start": 592.408,
+      "en_end": 594.856
+    },
+    {
+      "step": 183,
+      "word_n": 36,
+      "word": "växa",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har vuxit snabbt.",
+      "uk": "Я вже ріс швидко.",
+      "en": "I have grown fast.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 635.072,
+      "sv_end": 637.616,
+      "uk_start": 628.512,
+      "uk_end": 630.768,
+      "en_start": 595.856,
+      "en_end": 598.064
+    },
+    {
+      "step": 184,
+      "word_n": 37,
+      "word": "bära",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "bära",
+      "uk": "нести",
+      "en": "to carry",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 638.616,
+      "sv_end": 640.488,
+      "uk_start": 631.768,
+      "uk_end": 633.64,
+      "en_start": 599.064,
+      "en_end": 600.744
+    },
+    {
+      "step": 185,
+      "word_n": 37,
+      "word": "bära",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill bära väskan.",
+      "uk": "Я хочу понести сумку.",
+      "en": "I want to carry the bag.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 641.488,
+      "sv_end": 644.008,
+      "uk_start": 634.64,
+      "uk_end": 637.16,
+      "en_start": 601.744,
+      "en_end": 604.024
+    },
+    {
+      "step": 186,
+      "word_n": 37,
+      "word": "bära",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag bär jag väskan.",
+      "uk": "Сьогодні я несу сумку.",
+      "en": "Today I carry the bag.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 645.008,
+      "sv_end": 647.456,
+      "uk_start": 638.16,
+      "uk_end": 640.704,
+      "en_start": 605.024,
+      "en_end": 607.328
+    },
+    {
+      "step": 187,
+      "word_n": 37,
+      "word": "bära",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår bar jag väskan.",
+      "uk": "Учора я ніс сумку.",
+      "en": "Yesterday I carried the bag.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 648.456,
+      "sv_end": 650.952,
+      "uk_start": 641.704,
+      "uk_end": 644.032,
+      "en_start": 608.328,
+      "en_end": 610.896
+    },
+    {
+      "step": 188,
+      "word_n": 37,
+      "word": "bära",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har burit väskan.",
+      "uk": "Я вже ніс сумку.",
+      "en": "I have carried the bag.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 651.952,
+      "sv_end": 654.592,
+      "uk_start": 645.032,
+      "uk_end": 647.24,
+      "en_start": 611.896,
+      "en_end": 614.104
+    },
+    {
+      "step": 189,
+      "word_n": 38,
+      "word": "sälja",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "sälja",
+      "uk": "продавати",
+      "en": "to sell",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 655.592,
+      "sv_end": 657.464,
+      "uk_start": 648.24,
+      "uk_end": 650.112,
+      "en_start": 615.104,
+      "en_end": 616.976
+    },
+    {
+      "step": 190,
+      "word_n": 38,
+      "word": "sälja",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill sälja bilen.",
+      "uk": "Я хочу продати машину.",
+      "en": "I want to sell the car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 658.464,
+      "sv_end": 661.056,
+      "uk_start": 651.112,
+      "uk_end": 653.704,
+      "en_start": 617.976,
+      "en_end": 620.232
+    },
+    {
+      "step": 191,
+      "word_n": 38,
+      "word": "sälja",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag säljer jag bilen.",
+      "uk": "Сьогодні я продаю машину.",
+      "en": "Today I sell the car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 662.056,
+      "sv_end": 664.6,
+      "uk_start": 654.704,
+      "uk_end": 657.416,
+      "en_start": 621.232,
+      "en_end": 623.512
+    },
+    {
+      "step": 192,
+      "word_n": 38,
+      "word": "sälja",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår sålde jag bilen.",
+      "uk": "Учора я продав машину.",
+      "en": "Yesterday I sold the car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 665.6,
+      "sv_end": 668.192,
+      "uk_start": 658.416,
+      "uk_end": 660.96,
+      "en_start": 624.512,
+      "en_end": 627.008
+    },
+    {
+      "step": 193,
+      "word_n": 38,
+      "word": "sälja",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har sålt bilen.",
+      "uk": "Я вже продав машину.",
+      "en": "I have sold the car.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 669.192,
+      "sv_end": 671.688,
+      "uk_start": 661.96,
+      "uk_end": 664.336,
+      "en_start": 628.008,
+      "en_end": 630.144
+    },
+    {
+      "step": 194,
+      "word_n": 39,
+      "word": "försvinna",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "försvinna",
+      "uk": "зникати",
+      "en": "to disappear",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 672.688,
+      "sv_end": 674.656,
+      "uk_start": 665.336,
+      "uk_end": 667.208,
+      "en_start": 631.144,
+      "en_end": 633.04
+    },
+    {
+      "step": 195,
+      "word_n": 39,
+      "word": "försvinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill försvinna i mängden.",
+      "uk": "Я хочу зникнути у натовпі.",
+      "en": "I want to disappear into the crowd.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 675.656,
+      "sv_end": 678.608,
+      "uk_start": 668.208,
+      "uk_end": 671.064,
+      "en_start": 634.04,
+      "en_end": 636.704
+    },
+    {
+      "step": 196,
+      "word_n": 39,
+      "word": "försvinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag försvinner jag i mängden.",
+      "uk": "Сьогодні я зникаю у натовпі.",
+      "en": "Today I disappear into the crowd.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 679.608,
+      "sv_end": 682.512,
+      "uk_start": 672.064,
+      "uk_end": 675.016,
+      "en_start": 637.704,
+      "en_end": 640.464
+    },
+    {
+      "step": 197,
+      "word_n": 39,
+      "word": "försvinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår försvann jag i mängden.",
+      "uk": "Учора я зник у натовпі.",
+      "en": "Yesterday I disappeared into the crowd.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 683.512,
+      "sv_end": 686.368,
+      "uk_start": 676.016,
+      "uk_end": 678.632,
+      "en_start": 641.464,
+      "en_end": 644.464
+    },
+    {
+      "step": 198,
+      "word_n": 39,
+      "word": "försvinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har försvunnit i mängden.",
+      "uk": "Я вже зник у натовпі.",
+      "en": "I have disappeared into the crowd.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 687.368,
+      "sv_end": 690.32,
+      "uk_start": 679.632,
+      "uk_end": 682.08,
+      "en_start": 645.464,
+      "en_end": 648.08
+    },
+    {
+      "step": 199,
+      "word_n": 40,
+      "word": "skjuta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "skjuta",
+      "uk": "відкладати, штовхати",
+      "en": "to push, postpone",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 691.32,
+      "sv_end": 693.192,
+      "uk_start": 683.08,
+      "uk_end": 685.744,
+      "en_start": 649.08,
+      "en_end": 651.48
+    },
+    {
+      "step": 200,
+      "word_n": 40,
+      "word": "skjuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill skjuta upp mötet.",
+      "uk": "Я хочу відкласти зустріч.",
+      "en": "I want to postpone the meeting.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 694.192,
+      "sv_end": 696.976,
+      "uk_start": 686.744,
+      "uk_end": 689.528,
+      "en_start": 652.48,
+      "en_end": 655.0
+    },
+    {
+      "step": 201,
+      "word_n": 40,
+      "word": "skjuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag skjuter jag upp mötet.",
+      "uk": "Сьогодні я відкладаю зустріч.",
+      "en": "Today I postpone the meeting.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 697.976,
+      "sv_end": 700.808,
+      "uk_start": 690.528,
+      "uk_end": 693.456,
+      "en_start": 656.0,
+      "en_end": 658.544
+    },
+    {
+      "step": 202,
+      "word_n": 40,
+      "word": "skjuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår sköt jag upp mötet.",
+      "uk": "Учора я відклав зустріч.",
+      "en": "Yesterday I postponed the meeting.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 701.808,
+      "sv_end": 704.664,
+      "uk_start": 694.456,
+      "uk_end": 697.096,
+      "en_start": 659.544,
+      "en_end": 662.328
+    },
+    {
+      "step": 203,
+      "word_n": 40,
+      "word": "skjuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har skjutit upp mötet.",
+      "uk": "Я вже відклав зустріч.",
+      "en": "I have postponed the meeting.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 705.664,
+      "sv_end": 708.544,
+      "uk_start": 698.096,
+      "uk_end": 700.592,
+      "en_start": 663.328,
+      "en_end": 665.8
+    },
+    {
+      "step": 204,
+      "word_n": 41,
+      "word": "bestå",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "bestå",
+      "uk": "складатися (bestå av)",
+      "en": "to consist",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 709.544,
+      "sv_end": 711.248,
+      "uk_start": 701.592,
+      "uk_end": 704.64,
+      "en_start": 666.8,
+      "en_end": 668.672
+    },
+    {
+      "step": 205,
+      "word_n": 41,
+      "word": "bestå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Gruppen består av fem personer.",
+      "uk": "Група складається з п'яти людей.",
+      "en": "The group consists of five people.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 712.248,
+      "sv_end": 715.416,
+      "uk_start": 705.64,
+      "uk_end": 708.664,
+      "en_start": 669.672,
+      "en_end": 672.552
+    },
+    {
+      "step": 206,
+      "word_n": 41,
+      "word": "bestå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Gruppen bestod av fem personer.",
+      "uk": "Група складалася з п'яти людей.",
+      "en": "The group consisted of five people.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 716.416,
+      "sv_end": 719.656,
+      "uk_start": 709.664,
+      "uk_end": 712.688,
+      "en_start": 673.552,
+      "en_end": 676.456
+    },
+    {
+      "step": 207,
+      "word_n": 41,
+      "word": "bestå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Maten kan bestå av fisk.",
+      "uk": "Їжа може складатися з риби.",
+      "en": "The food can consist of fish.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 720.656,
+      "sv_end": 723.656,
+      "uk_start": 713.688,
+      "uk_end": 716.52,
+      "en_start": 677.456,
+      "en_end": 680.168
+    },
+    {
+      "step": 208,
+      "word_n": 41,
+      "word": "bestå",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Maten har bestått av fisk.",
+      "uk": "Їжа складалася з риби.",
+      "en": "The food has consisted of fish.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 724.656,
+      "sv_end": 727.704,
+      "uk_start": 717.52,
+      "uk_end": 720.088,
+      "en_start": 681.168,
+      "en_end": 683.976
+    },
+    {
+      "step": 209,
+      "word_n": 42,
+      "word": "vinna",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "vinna",
+      "uk": "вигравати",
+      "en": "to win",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 728.704,
+      "sv_end": 730.576,
+      "uk_start": 721.088,
+      "uk_end": 722.96,
+      "en_start": 684.976,
+      "en_end": 686.848
+    },
+    {
+      "step": 210,
+      "word_n": 42,
+      "word": "vinna",
+      "stage_index": 0,
+      "band": "len_1_2",
+      "mark": "f1",
+      "sv": "Vi vann!",
+      "uk": "Ми виграли!",
+      "en": "We won!",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 731.576,
+      "sv_end": 733.52,
+      "uk_start": 723.96,
+      "uk_end": 725.832,
+      "en_start": 687.848,
+      "en_end": 689.456
+    },
+    {
+      "step": 211,
+      "word_n": 42,
+      "word": "vinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill vinna matchen.",
+      "uk": "Я хочу виграти матч.",
+      "en": "I want to win the match.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 734.52,
+      "sv_end": 737.064,
+      "uk_start": 726.832,
+      "uk_end": 729.256,
+      "en_start": 690.456,
+      "en_end": 692.688
+    },
+    {
+      "step": 212,
+      "word_n": 42,
+      "word": "vinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag vinner jag matchen.",
+      "uk": "Сьогодні я виграю матч.",
+      "en": "Today I win the match.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 738.064,
+      "sv_end": 740.584,
+      "uk_start": 730.256,
+      "uk_end": 732.8,
+      "en_start": 693.688,
+      "en_end": 695.968
+    },
+    {
+      "step": 213,
+      "word_n": 42,
+      "word": "vinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår vann jag matchen.",
+      "uk": "Учора я виграв матч.",
+      "en": "Yesterday I won the match.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 741.584,
+      "sv_end": 744.104,
+      "uk_start": 733.8,
+      "uk_end": 736.248,
+      "en_start": 696.968,
+      "en_end": 699.44
+    },
+    {
+      "step": 214,
+      "word_n": 42,
+      "word": "vinna",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har vunnit matchen.",
+      "uk": "Я вже виграв матч.",
+      "en": "I have won the match.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 745.104,
+      "sv_end": 747.624,
+      "uk_start": 737.248,
+      "uk_end": 739.528,
+      "en_start": 700.44,
+      "en_end": 702.6
+    },
+    {
+      "step": 215,
+      "word_n": 43,
+      "word": "skina",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "skina",
+      "uk": "світити",
+      "en": "to shine",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 748.624,
+      "sv_end": 750.496,
+      "uk_start": 740.528,
+      "uk_end": 742.304,
+      "en_start": 703.6,
+      "en_end": 705.472
+    },
+    {
+      "step": 216,
+      "word_n": 43,
+      "word": "skina",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Solen ska skina imorgon.",
+      "uk": "Завтра світитиме сонце.",
+      "en": "The sun will shine tomorrow.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 751.496,
+      "sv_end": 754.376,
+      "uk_start": 743.304,
+      "uk_end": 745.92,
+      "en_start": 706.472,
+      "en_end": 708.872
+    },
+    {
+      "step": 217,
+      "word_n": 43,
+      "word": "skina",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Solen skiner idag.",
+      "uk": "Сьогодні світить сонце.",
+      "en": "The sun is shining today.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 755.376,
+      "sv_end": 758.04,
+      "uk_start": 746.92,
+      "uk_end": 749.512,
+      "en_start": 709.872,
+      "en_end": 712.224
+    },
+    {
+      "step": 218,
+      "word_n": 43,
+      "word": "skina",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Solen sken igår.",
+      "uk": "Учора світило сонце.",
+      "en": "The sun shone yesterday.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 759.04,
+      "sv_end": 761.632,
+      "uk_start": 750.512,
+      "uk_end": 753.032,
+      "en_start": 713.224,
+      "en_end": 715.552
+    },
+    {
+      "step": 219,
+      "word_n": 43,
+      "word": "skina",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Solen har skinit hela dagen.",
+      "uk": "Сонце світило весь день.",
+      "en": "The sun has shone all day.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 762.632,
+      "sv_end": 765.8,
+      "uk_start": 754.032,
+      "uk_end": 756.48,
+      "en_start": 716.552,
+      "en_end": 719.024
+    },
+    {
+      "step": 220,
+      "word_n": 44,
+      "word": "njuta",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "njuta",
+      "uk": "насолоджуватися",
+      "en": "to enjoy",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 766.8,
+      "sv_end": 768.696,
+      "uk_start": 757.48,
+      "uk_end": 759.64,
+      "en_start": 720.024,
+      "en_end": 721.776
+    },
+    {
+      "step": 221,
+      "word_n": 44,
+      "word": "njuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill njuta av solen.",
+      "uk": "Я хочу насолодитися сонцем.",
+      "en": "I want to enjoy the sun.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 769.696,
+      "sv_end": 772.504,
+      "uk_start": 760.64,
+      "uk_end": 763.544,
+      "en_start": 722.776,
+      "en_end": 725.08
+    },
+    {
+      "step": 222,
+      "word_n": 44,
+      "word": "njuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag njuter jag av solen.",
+      "uk": "Сьогодні я насолоджуюся сонцем.",
+      "en": "Today I enjoy the sun.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 773.504,
+      "sv_end": 776.336,
+      "uk_start": 764.544,
+      "uk_end": 767.664,
+      "en_start": 726.08,
+      "en_end": 728.432
+    },
+    {
+      "step": 223,
+      "word_n": 44,
+      "word": "njuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår njöt jag av solen.",
+      "uk": "Учора я насолоджувався сонцем.",
+      "en": "Yesterday I enjoyed the sun.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 777.336,
+      "sv_end": 780.168,
+      "uk_start": 768.664,
+      "uk_end": 771.688,
+      "en_start": 729.432,
+      "en_end": 732.048
+    },
+    {
+      "step": 224,
+      "word_n": 44,
+      "word": "njuta",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har njutit av solen.",
+      "uk": "Я вже насолоджувався сонцем.",
+      "en": "I have enjoyed the sun.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 781.168,
+      "sv_end": 784.024,
+      "uk_start": 772.688,
+      "uk_end": 775.568,
+      "en_start": 733.048,
+      "en_end": 735.328
+    },
+    {
+      "step": 225,
+      "word_n": 45,
+      "word": "falla",
+      "stage_index": 0,
+      "band": "word",
+      "mark": "f1",
+      "sv": "falla",
+      "uk": "падати",
+      "en": "to fall",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": true,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 785.024,
+      "sv_end": 786.896,
+      "uk_start": 776.568,
+      "uk_end": 778.44,
+      "en_start": 736.328,
+      "en_end": 738.008
+    },
+    {
+      "step": 226,
+      "word_n": 45,
+      "word": "falla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag vill falla på isen.",
+      "uk": "Я хочу упасти на льоду.",
+      "en": "I want to fall on the ice.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 787.896,
+      "sv_end": 790.56,
+      "uk_start": 779.44,
+      "uk_end": 781.984,
+      "en_start": 739.008,
+      "en_end": 741.408
+    },
+    {
+      "step": 227,
+      "word_n": 45,
+      "word": "falla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Idag faller jag på isen.",
+      "uk": "Сьогодні я падаю на льоду.",
+      "en": "Today I fall on the ice.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": true,
+          "f3": false
+        }
+      },
+      "sv_start": 791.56,
+      "sv_end": 794.2,
+      "uk_start": 782.984,
+      "uk_end": 785.648,
+      "en_start": 742.408,
+      "en_end": 744.856
+    },
+    {
+      "step": 228,
+      "word_n": 45,
+      "word": "falla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Igår föll jag på isen.",
+      "uk": "Учора я упав на льоду.",
+      "en": "Yesterday I fell on the ice.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 795.2,
+      "sv_end": 797.888,
+      "uk_start": 786.648,
+      "uk_end": 789.144,
+      "en_start": 745.856,
+      "en_end": 748.52
+    },
+    {
+      "step": 229,
+      "word_n": 45,
+      "word": "falla",
+      "stage_index": 0,
+      "band": "len_3_5",
+      "mark": "f2",
+      "sv": "Jag har fallit på isen.",
+      "uk": "Я вже упав на льоду.",
+      "en": "I have fallen on the ice.",
+      "pause_sec": 0.6,
+      "flags": {
+        "uk": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        },
+        "en": {
+          "f1": false,
+          "f2": false,
+          "f3": false
+        }
+      },
+      "sv_start": 798.888,
+      "sv_end": 801.528,
+      "uk_start": 790.144,
+      "uk_end": 792.472,
+      "en_start": 749.52,
+      "en_end": 751.944
+    }
+  ]
+}
