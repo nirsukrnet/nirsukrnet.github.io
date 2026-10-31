@@ -8,8 +8,8 @@
 <style>
 :root{color-scheme:light dark;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--acc:#2563eb;--acc2:#1d4ed8;--accfg:#fff;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675;--skip:#2563eb;--focus:#ea580c;--r:16px}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--acc:#3b82f6;--acc2:#60a5fa;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}}
-html[data-theme=light]{color-scheme:light;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675}
-html[data-theme=dark]{color-scheme:dark;--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}
+html[data-theme=light],html[data-theme=light-big]{color-scheme:light;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675}
+html[data-theme=dark],html[data-theme=dark-big]{color-scheme:dark;--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg);-webkit-tap-highlight-color:transparent}
 .dialog{max-width:640px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;padding:0 12px calc(96px + env(safe-area-inset-bottom))}
@@ -133,6 +133,28 @@ li[data-saved="1"]::after{right:auto;left:1px;top:-2px;font-size:9px}
 .line.say,.line.voiced,.line.hint{padding:1px 12px 1px 4px;border-radius:4px;letter-spacing:-.012em}
 .line.say,.line.voiced{font-size:14px}
 .line.hint,.tr{font-size:13px;padding-right:12px}
+</style>
+<style id="big">
+/* large-font themes: light-big / dark-big (colors come from light / dark) */
+html[data-theme$="-big"] ul#cardList{gap:4px;padding-bottom:calc(180px + env(safe-area-inset-bottom))}
+html[data-theme$="-big"] li{padding:5px 6px}
+html[data-theme$="-big"] li::before{font-size:12px}
+html[data-theme$="-big"] li[data-saved="1"]::after{font-size:12px}
+html[data-theme$="-big"] .line.say,html[data-theme$="-big"] .line.voiced{font-size:21px;line-height:1.35}
+html[data-theme$="-big"] .line.hint,html[data-theme$="-big"] .tr{font-size:18px;line-height:1.35}
+html[data-theme$="-big"] .info,html[data-theme$="-big"] .info h1,html[data-theme$="-big"] .info .current{font-size:16px}
+html[data-theme$="-big"] .info .total,html[data-theme$="-big"] .muted{font-size:15px}
+html[data-theme$="-big"] .progress{height:4px}
+html[data-theme$="-big"] .dock .in{gap:5px}
+html[data-theme$="-big"] .bar{gap:6px}
+html[data-theme$="-big"] button{min-height:48px;font-size:18px}
+html[data-theme$="-big"] .bar .flag{min-width:52px;font-size:17px}
+html[data-theme$="-big"] .icon,html[data-theme$="-big"] #btnListMenu{width:48px;font-size:20px}
+html[data-theme$="-big"] input[type=number]{width:76px;min-height:48px;font-size:18px}
+html[data-theme$="-big"] #btnGoN{min-height:52px}
+html[data-theme$="-big"] #btnPlayFromN{min-height:52px;font-size:20px}
+html[data-theme$="-big"] .pos-menu button{min-height:48px;font-size:18px}
+html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-size:18px}
 </style>
 </head>
 <body>
@@ -1521,8 +1543,11 @@ li[data-saved="1"]::after{right:auto;left:1px;top:-2px;font-size:9px}
 <script>
 // UI-only additions: theme toggle + progress bar (no changes to original logic)
 (function(){
-  const h=document.documentElement,k='voicetrain_theme',t=localStorage.getItem(k);if(t)h.dataset.theme=t;
-  document.getElementById('btnTheme').onclick=()=>{const dark=h.dataset.theme?h.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;h.dataset.theme=dark?'light':'dark';localStorage.setItem(k,h.dataset.theme);};
+  const h=document.documentElement,k='voicetrain_theme',t=localStorage.getItem(k),bt=document.getElementById('btnTheme');
+  const themes=['light','dark','light-big','dark-big'],names={light:'Світла',dark:'Темна','light-big':'Світла, крупний шрифт','dark-big':'Темна, крупний шрифт'};
+  function show(){const big=(h.dataset.theme||'').endsWith('-big');bt.textContent=big?'A◐':'◐';bt.title=names[h.dataset.theme]||'Theme';}
+  if(themes.includes(t))h.dataset.theme=t;show();
+  bt.onclick=()=>{const cur=h.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');h.dataset.theme=themes[(themes.indexOf(cur)+1)%themes.length];localStorage.setItem(k,h.dataset.theme);show();};
   const list=document.getElementById('cardList'),bar=document.getElementById('progBar'),of=document.getElementById('posOf');
   function upd(){const n=list.children.length;const a=list.querySelector('li[data-active="1"]');const i=a?[...list.children].indexOf(a)+1:(+document.getElementById('inPos').value||0);bar.style.width=n?Math.min(100,i/n*100)+'%':'0';of.textContent=n?`з ${n}`:'';}
   new MutationObserver(upd).observe(list,{subtree:true,childList:true,attributes:true,attributeFilter:['data-active']});
