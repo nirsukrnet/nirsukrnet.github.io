@@ -122,6 +122,9 @@ ul#cardList{overflow:visible;margin:0;padding-bottom:calc(130px + env(safe-area-
 #btnGoN{min-height:40px}
 #btnPlayFromN{flex:1;min-height:40px;font-size:15px;box-shadow:none}
 .pos-menu{top:auto;bottom:calc(100% + 6px)}
+#themeMenu{left:auto;right:0;width:auto}
+#btnRestart{min-height:40px;font-weight:600;white-space:nowrap}
+.bar:has(#btnRestart:not([hidden])) :is(#btnGoN,#posOf){display:none}
 </style>
 <style id="fullwidth">
 .dialog{max-width:none;padding:2px 0 0}
@@ -151,8 +154,9 @@ html[data-theme$="-big"] button{min-height:48px;font-size:18px}
 html[data-theme$="-big"] .bar .flag{min-width:52px;font-size:17px}
 html[data-theme$="-big"] .icon,html[data-theme$="-big"] #btnListMenu{width:48px;font-size:20px}
 html[data-theme$="-big"] input[type=number]{width:76px;min-height:48px;font-size:18px}
-html[data-theme$="-big"] #btnGoN{min-height:52px}
-html[data-theme$="-big"] #btnPlayFromN{min-height:52px;font-size:20px}
+html[data-theme$="-big"] #btnGoN,html[data-theme$="-big"] #btnRestart{min-height:52px}
+html[data-theme$="-big"] #btnRestart{font-size:16px;padding:6px 8px}
+html[data-theme$="-big"] #btnPlayFromN{min-height:52px;font-size:18px;padding:6px 10px;white-space:nowrap}
 html[data-theme$="-big"] .pos-menu button{min-height:48px;font-size:18px}
 html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-size:18px}
 </style>
@@ -190,7 +194,15 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       </div>
     </div>
     <span class="sp"></span>
-    <button id="btnTheme" class="icon" type="button" aria-label="Theme">◐</button>
+    <div class="ico-wrap" id="themeWrap">
+      <button id="btnTheme" class="icon" type="button" aria-label="Theme" aria-haspopup="menu" aria-expanded="false">◐</button>
+      <div class="pos-menu" id="themeMenu" role="menu">
+        <button type="button" role="menuitemradio" data-theme-pick="light">Світла</button>
+        <button type="button" role="menuitemradio" data-theme-pick="dark">Темна</button>
+        <button type="button" role="menuitemradio" data-theme-pick="light-big">Світла, крупний шрифт</button>
+        <button type="button" role="menuitemradio" data-theme-pick="dark-big">Темна, крупний шрифт</button>
+      </div>
+    </div>
     <button id="btnListMenu" type="button" aria-label="Lessons">☰</button>
   </div>
   <div class="bar">
@@ -202,6 +214,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     </div>
     <span class="muted" id="posOf"></span>
     <button id="btnGoN" type="button">Go</button>
+    <button id="btnRestart" type="button" hidden>⟲ На початок</button>
     <button id="btnPlayFromN" type="button">▶ Play from N</button>
   </div>
 </div></nav>
@@ -276,6 +289,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     const FOCUS_LABEL = { f1: 'f1', f2: 'f2', f3: 'f3' };
     const btnGoN = document.getElementById('btnGoN');
     const btnPlayFromN = document.getElementById('btnPlayFromN');
+    const btnRestart = document.getElementById('btnRestart');
     const elMediaLog = document.getElementById('elMediaLog');
     const sessionKeeper = document.getElementById('sessionKeeper');
 
@@ -714,6 +728,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     }
 
     function goToN() {
+      if (btnRestart) btnRestart.hidden = true;
       const index = readPosIndex();
       if (index < 0) {
         elCurrent.textContent = 'Enter step number N.';
@@ -1087,6 +1102,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
       state.stopRequested = false;
       state.playing = true;
+      if (btnRestart) btnRestart.hidden = true;
       setPlayFromNLabel(true);
       const unlocked = unlockAudio();
 
@@ -1110,6 +1126,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         if (!state.stopRequested) {
           setActiveCard(-1);
           elCurrent.textContent = 'Finished.';
+          if (btnRestart) btnRestart.hidden = false;
         }
       } catch (err) {
         console.error(err);
@@ -1242,6 +1259,14 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     btnUk.addEventListener('click', () => toggleFlag('uk'));
 
     btnGoN.addEventListener('click', goToN);
+    if (btnRestart) {
+      btnRestart.addEventListener('click', () => {
+        if (state.playing) return;
+        inPos.value = '1';
+        const index = goToN();
+        if (index >= 0) persistState(index);
+      });
+    }
     btnPlayFromN.addEventListener('click', () => {
       if (state.playing) {
         pausePlayback();
@@ -1545,9 +1570,15 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 (function(){
   const h=document.documentElement,k='voicetrain_theme',t=localStorage.getItem(k),bt=document.getElementById('btnTheme');
   const themes=['light','dark','light-big','dark-big'],names={light:'Світла',dark:'Темна','light-big':'Світла, крупний шрифт','dark-big':'Темна, крупний шрифт'};
-  function show(){const big=(h.dataset.theme||'').endsWith('-big');bt.textContent=big?'A◐':'◐';bt.title=names[h.dataset.theme]||'Theme';}
+  const tw=document.getElementById('themeWrap'),tm=document.getElementById('themeMenu');
+  function cur(){return h.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+  function show(){const c=cur();bt.textContent=c.endsWith('-big')?'A◐':'◐';bt.title=names[c];tm.querySelectorAll('[data-theme-pick]').forEach(b=>b.setAttribute('aria-checked',b.dataset.themePick===c?'true':'false'));}
+  function setOpen(o){tw.classList.toggle('is-open',o);bt.setAttribute('aria-expanded',o?'true':'false');}
   if(themes.includes(t))h.dataset.theme=t;show();
-  bt.onclick=()=>{const cur=h.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');h.dataset.theme=themes[(themes.indexOf(cur)+1)%themes.length];localStorage.setItem(k,h.dataset.theme);show();};
+  bt.onclick=()=>setOpen(!tw.classList.contains('is-open'));
+  tm.addEventListener('click',e=>{const b=e.target.closest('[data-theme-pick]');if(!b)return;h.dataset.theme=b.dataset.themePick;localStorage.setItem(k,h.dataset.theme);show();setOpen(false);});
+  document.addEventListener('click',e=>{if(!tw.contains(e.target))setOpen(false);},true);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')setOpen(false);});
   const list=document.getElementById('cardList'),bar=document.getElementById('progBar'),of=document.getElementById('posOf');
   function upd(){const n=list.children.length;const a=list.querySelector('li[data-active="1"]');const i=a?[...list.children].indexOf(a)+1:(+document.getElementById('inPos').value||0);bar.style.width=n?Math.min(100,i/n*100)+'%':'0';of.textContent=n?`з ${n}`:'';}
   new MutationObserver(upd).observe(list,{subtree:true,childList:true,attributes:true,attributeFilter:['data-active']});
