@@ -72,6 +72,20 @@ li[data-mark=focus]{border-left:5px solid var(--focus)}
 #lessonList{flex:1;min-height:0}
 #lessonList li{width:100%}
 #lessonList li[data-selected="1"]{background:var(--soft);border-color:var(--acc)}
+#markChips{display:none;margin:44px 0 10px}
+#dlgListMenu[data-view=mark] #listMenuTagRow,#dlgListMenu[data-view=mark] #inFilter,#dlgListMenu[data-view=mark] #lessonList{display:none}
+#dlgListMenu[data-view=mark] #markChips{display:flex}
+#markList{display:none;flex:1;min-height:0}
+#dlgListMenu[data-view=mark] #markList{display:grid}
+#markList li{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;padding:4px 8px 4px 10px}
+#markList li::before{content:none}
+#markList li[data-known="1"]{background:var(--soft);border-color:var(--acc)}
+#markList .wd{flex:1;min-width:0;line-height:1.25}
+#markList .wd b,#markList .wd small{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#markList .wd small{font-size:13px;color:var(--mut)}
+#markTr{margin-left:auto}
+#markList[data-no-tr="1"] .wd small{display:none}
+#markList .mk{flex:none;width:28px;text-align:center;font-size:20px;color:var(--acc2)}
 #modeBar{flex:none;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 #modeBar button{height:44px;min-height:44px;padding:0;display:flex;align-items:center;justify-content:center}
 #modeBar button:disabled{opacity:.4;cursor:default}
@@ -170,6 +184,8 @@ html[data-theme$="-big"] #btnRestart{font-size:16px;padding:6px 8px}
 html[data-theme$="-big"] #btnPlayFromN{min-height:52px;font-size:18px;padding:6px 10px;white-space:nowrap}
 html[data-theme$="-big"] .pos-menu button{min-height:48px;font-size:18px}
 html[data-theme$="-big"] #modeBar button{height:52px;min-height:52px}
+html[data-theme$="-big"] #markList .wd b{font-size:20px}
+html[data-theme$="-big"] #markList .wd small{font-size:17px}
 html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-size:18px}
 </style>
 </head>
@@ -238,12 +254,18 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <form method="dialog">
     <button id="btnListClose" value="cancel" type="submit" aria-label="Close">×</button>
     <div id="listMenuTagRow" class="row"></div>
+    <div id="markChips" class="row">
+      <button type="button" id="markAll" data-selected="1">All</button>
+      <button type="button" id="markKnown" data-selected="0">✓</button>
+      <button type="button" id="markTr" data-selected="1" aria-pressed="true" title="Show translation" aria-label="Show translation">UK</button>
+    </div>
     <input id="inFilter" placeholder="Пошук уроку…" autocomplete="off" />
     <p class="muted" id="listStatus" style="margin:10px 0 0;"></p>
     <ul id="lessonList"></ul>
+    <ul id="markList"></ul>
     <nav id="modeBar" aria-label="Modes">
-      <button type="button" data-selected="1" aria-current="true" title="Listen" aria-label="Listen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></button>
-      <button type="button" disabled title="Words: coming later" aria-label="Words: coming later"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6.5h9M11 12.5h9M11 18.5h9"/></svg></button>
+      <button type="button" id="btnModeListen" data-selected="1" aria-current="true" title="Listen" aria-label="Listen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></button>
+      <button type="button" id="btnModeMark" data-selected="0" title="Mark words I know" aria-label="Mark words I know"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6.5h9M11 12.5h9M11 18.5h9"/></svg></button>
       <button type="button" disabled title="Text lesson: coming later" aria-label="Text lesson: coming later"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6c-2-1.500-5-2-8-2v15c3 0 6 .5 8 2 2-1.500 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v15"/></svg></button>
       <button type="button" disabled title="Recall: coming later" aria-label="Recall: coming later"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.500c.8.8 1 1.500 1 2.500h6c0-1 .2-1.700 1-2.500A6 6 0 0 0 12 3z"/></svg></button>
     </nav>
@@ -253,7 +275,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.04-3';
+    const VT_VERSION = '2026.11.04-4';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -273,6 +295,10 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     const LS_TRANS_LANG_KEY = 'voicetrain_translationLang';
     const LS_TRANS_FOCUS_KEY = 'voicetrain_translationFocus';
     const DB_PATH = `../db_youtube2/ui_state/voicetrain${CHANNEL_SUFFIX}`;
+    // Marks are the user's own data, so they stay when the beta becomes the working player.
+    const KNOWN_DB = '../db_youtube2/ui_state/known_words';
+    const LS_KNOWN_KEY = 'voicetrain_knownWords';
+    const LS_MARK_TR_KEY = 'voicetrain_markShowTranslation';
 
     const DEFAULTS = {
       PLAYBACK_RATE: 1,
@@ -1746,6 +1772,11 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     }
 
     document.getElementById('btnListMenu').onclick = async () => {
+      dlgList.dataset.view = 'lessons';
+      btnModeListen.dataset.selected = '1';
+      btnModeMark.dataset.selected = '0';
+      btnModeListen.setAttribute('aria-current', 'true');
+      btnModeMark.removeAttribute('aria-current');
       dlgList.showModal();
       elListStatus.textContent = 'Завантаження…';
       elLessonList.innerHTML = '';
@@ -1758,6 +1789,182 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         console.error(err);
         elListStatus.textContent = 'Список не прочитано.';
       }
+    };
+
+    const elMarkList = document.getElementById('markList');
+    const btnModeListen = document.getElementById('btnModeListen');
+    const btnModeMark = document.getElementById('btnModeMark');
+    const btnMarkAll = document.getElementById('markAll');
+    const btnMarkKnown = document.getElementById('markKnown');
+    const btnMarkTr = document.getElementById('markTr');
+    let knownWords = {};
+    let knownOps = {};
+    let knownOnly = false;
+    let knownChain = Promise.resolve();
+
+    function wordKey(word) {
+      return String(word).trim().toLowerCase().replace(/[.$#[\]/]/g, '_');
+    }
+
+    function lessonWords() {
+      const words = new Map();
+      for (const item of state.marks?.items || []) {
+        if (!item.word) continue;
+        const key = wordKey(item.word);
+        if (!words.has(key) || item.band === 'word') {
+          words.set(key, { key, word: item.word, tr: item.uk || item.en || '' });
+        }
+      }
+      return [...words.values()];
+    }
+
+    function readLocalKnown() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(LS_KNOWN_KEY) || '{}');
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function writeLocalKnown() {
+      try {
+        localStorage.setItem(LS_KNOWN_KEY, JSON.stringify(knownWords));
+      } catch {
+        // ignore
+      }
+    }
+
+    function paintMarkStatus(note) {
+      const words = lessonWords();
+      const known = words.filter((row) => knownWords[row.key]).length;
+      elListStatus.textContent = note || `${state.lessonId ? `Lesson ${state.lessonId} · ` : ''}${words.length} words · ✓ ${known}`;
+      btnMarkAll.textContent = `All ${words.length}`;
+      btnMarkKnown.textContent = `✓ ${known}`;
+      btnMarkAll.dataset.selected = knownOnly ? '0' : '1';
+      btnMarkKnown.dataset.selected = knownOnly ? '1' : '0';
+    }
+
+    function renderMarkList() {
+      elMarkList.innerHTML = '';
+      lessonWords()
+        .filter((row) => !knownOnly || knownWords[row.key])
+        .forEach((row) => {
+          const li = document.createElement('li');
+          const on = !!knownWords[row.key];
+          li.dataset.known = on ? '1' : '0';
+          li.setAttribute('role', 'button');
+          li.setAttribute('aria-pressed', on ? 'true' : 'false');
+          const text = document.createElement('span');
+          text.className = 'wd';
+          const word = document.createElement('b');
+          word.textContent = row.word;
+          const tr = document.createElement('small');
+          tr.textContent = row.tr;
+          text.append(word, tr);
+          const mark = document.createElement('span');
+          mark.className = 'mk';
+          mark.textContent = on ? '✓' : '';
+          li.append(text, mark);
+          li.onclick = () => toggleKnown(row.key);
+          elMarkList.appendChild(li);
+        });
+      paintMarkStatus();
+    }
+
+    function applyKnownOps(doc) {
+      const next = { ...(doc || {}) };
+      for (const [key, value] of Object.entries(knownOps)) {
+        if (value) next[key] = value;
+        else delete next[key];
+      }
+      return next;
+    }
+
+    // Always merges with the stored list, so marks from another device are not lost.
+    function syncKnown() {
+      knownChain = knownChain
+        .then(async () => {
+          await ensureSignedIn();
+          const stored = await requestByPath(KNOWN_DB, 'GET', null);
+          const sent = { ...knownOps };
+          const merged = applyKnownOps(stored);
+          if (Object.keys(sent).length) await requestByPath(KNOWN_DB, 'PUT', merged);
+          for (const [key, value] of Object.entries(sent)) {
+            if (knownOps[key] === value) delete knownOps[key];
+          }
+          knownWords = applyKnownOps(merged);
+          writeLocalKnown();
+          if (dlgList.dataset.view === 'mark') renderMarkList();
+        })
+        .catch((err) => {
+          console.error('Known words sync failed', err);
+          if (dlgList.dataset.view === 'mark') paintMarkStatus('Not saved. Will retry on the next tap.');
+        });
+      return knownChain;
+    }
+
+    function toggleKnown(key) {
+      const value = knownWords[key] ? null : new Date().toISOString();
+      if (value) knownWords[key] = value;
+      else delete knownWords[key];
+      knownOps[key] = value;
+      writeLocalKnown();
+      renderMarkList();
+      syncKnown();
+    }
+
+    function setDialogView(view) {
+      dlgList.dataset.view = view;
+      const mark = view === 'mark';
+      btnModeListen.dataset.selected = mark ? '0' : '1';
+      btnModeMark.dataset.selected = mark ? '1' : '0';
+      btnModeListen.toggleAttribute('aria-current', !mark);
+      btnModeMark.toggleAttribute('aria-current', mark);
+      if (mark) {
+        knownWords = readLocalKnown();
+        knownOnly = false;
+        renderMarkList();
+        syncKnown();
+      } else {
+        renderLessonChoices();
+      }
+    }
+
+    function readMarkTr() {
+      try {
+        return localStorage.getItem(LS_MARK_TR_KEY) !== '0';
+      } catch {
+        return true;
+      }
+    }
+
+    function paintMarkTr(on) {
+      elMarkList.dataset.noTr = on ? '0' : '1';
+      btnMarkTr.dataset.selected = on ? '1' : '0';
+      btnMarkTr.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    btnMarkTr.onclick = () => {
+      const on = elMarkList.dataset.noTr === '1';
+      try {
+        localStorage.setItem(LS_MARK_TR_KEY, on ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      paintMarkTr(on);
+    };
+    paintMarkTr(readMarkTr());
+
+    btnModeListen.onclick = () => setDialogView('lessons');
+    btnModeMark.onclick = () => setDialogView('mark');
+    btnMarkAll.onclick = () => {
+      knownOnly = false;
+      renderMarkList();
+    };
+    btnMarkKnown.onclick = () => {
+      knownOnly = true;
+      renderMarkList();
     };
 
     elFilter.oninput = (event) => {
