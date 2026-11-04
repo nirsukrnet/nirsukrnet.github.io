@@ -139,8 +139,12 @@ ul#cardList{overflow:visible;margin:0;padding-bottom:calc(130px + env(safe-area-
 #btnListMenu{width:44px;padding:0;font-size:18px}
 #btnPause{flex:none;width:44px;min-width:44px;padding:0;white-space:nowrap}
 #btnShuffle{flex:none;width:40px;padding:0;font-size:18px}
+#btnPlayFromN{white-space:nowrap;padding:0 4px}
+#posOf{flex:none;white-space:nowrap}
+#btnSkipKnown{flex:none;width:40px;padding:0;display:flex;align-items:center;justify-content:center}
+#btnSkipKnown svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #btnSeq{flex:none;width:60px;padding:0;font-size:13px;white-space:nowrap}
-@media (max-width:374px){.bar{gap:2px}.bar .flag{min-width:36px;padding:4px 2px}.icon{width:36px}#btnListMenu{width:38px}#btnPause{width:40px;min-width:40px}#btnShuffle{width:36px}}
+@media (max-width:374px){.bar{gap:2px}.bar .flag{min-width:36px;padding:4px 2px}.icon{width:36px}#btnListMenu{width:38px}#btnPause{width:40px;min-width:40px}#btnShuffle{width:36px}#btnSkipKnown{width:36px}#btnPlayFromN{font-size:13px}}
 #btnGoN{min-height:40px}
 #btnPlayFromN{flex:1;min-height:40px;font-size:15px;box-shadow:none}
 .pos-menu{top:auto;bottom:calc(100% + 6px)}
@@ -174,6 +178,7 @@ html[data-theme$="-big"] .dock .in{gap:5px}
 html[data-theme$="-big"] .bar{gap:6px;flex-wrap:wrap}
 html[data-theme$="-big"] #btnPause{width:64px;min-width:64px}
 html[data-theme$="-big"] #btnShuffle{width:52px;min-width:52px;font-size:22px}
+html[data-theme$="-big"] #btnSkipKnown{width:52px;min-width:52px}
 html[data-theme$="-big"] #btnSeq{width:84px;min-width:84px;font-size:16px}
 html[data-theme$="-big"] button{min-height:48px;font-size:18px}
 html[data-theme$="-big"] .bar .flag{min-width:52px;font-size:17px}
@@ -247,6 +252,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     <button id="btnGoN" type="button">Go</button>
     <button id="btnSeq" class="flag" type="button" title="Which language plays first" aria-label="Which language plays first" hidden>SV→UK</button>
     <button id="btnRestart" type="button" hidden>⟲ На початок</button>
+    <button id="btnSkipKnown" class="flag" type="button" title="Do not play words I know" aria-label="Do not play words I know" data-selected="0" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4 4 10-10M4 20L20 4"/></svg></button>
     <button id="btnPlayFromN" type="button">▶ Play from N</button>
   </div>
 </div></nav>
@@ -275,7 +281,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.04-4';
+    const VT_VERSION = '2026.11.04-5';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -287,6 +293,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     const LS_PAUSE_KEY = `voicetrain_pauseExtra${CHANNEL_SUFFIX}`;
     const LS_SHUFFLE_KEY = `voicetrain_shuffle${CHANNEL_SUFFIX}`;
     const LS_TR_FIRST_KEY = `voicetrain_translationFirst${CHANNEL_SUFFIX}`;
+    const LS_SKIP_KNOWN_KEY = `voicetrain_skipKnown${CHANNEL_SUFFIX}`;
     const LESSONS_DB = '../db_youtube2/ref_voice_lessons';
     const TAGS_DB = '../db_youtube2/ref_voice_tags';
     const TAG_PAGE = 3;
@@ -317,6 +324,8 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       pauseExtra: 0,
       shuffle: false,
       translationFirst: false,
+      skipKnown: false,
+      queueKnown: '',
       playing: false,
       stopRequested: false,
       activeSources: [],
@@ -349,6 +358,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     const btnPause = document.getElementById('btnPause');
     const btnShuffle = document.getElementById('btnShuffle');
     const btnSeq = document.getElementById('btnSeq');
+    const btnSkipKnown = document.getElementById('btnSkipKnown');
     const btnGoN = document.getElementById('btnGoN');
     const btnPlayFromN = document.getElementById('btnPlayFromN');
     const btnRestart = document.getElementById('btnRestart');
@@ -487,7 +497,8 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         state.queue = null;
         return;
       }
-      const items = orderedItems(state.marks.items || []);
+      const items = orderedItems(state.marks.items || []).filter((item) => !isKnownItem(item));
+      state.queueKnown = knownSignature();
       const queue = [];
       const playLang = state.translationLang;
       for (const item of items) {
@@ -509,6 +520,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
             end: item.sv_end,
             pause_sec: item.pause_sec,
             step: item.step,
+            word: item.word,
             hints,
           });
         }
@@ -524,6 +536,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
             end,
             pause_sec: item.pause_sec,
             step: item.step,
+            word: item.word,
             hints: [],
           });
         }
@@ -531,6 +544,14 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         queue.push(...pair);
       }
       state.queue = queue;
+    }
+
+    function isKnownItem(item) {
+      return state.skipKnown && !!item.word && !!knownWords[wordKey(item.word)];
+    }
+
+    function knownSignature() {
+      return state.skipKnown ? Object.keys(knownWords).sort().join('|') : '';
     }
 
     function orderedItems(items) {
@@ -674,6 +695,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       if (focusWrap) focusWrap.hidden = !auto;
       if (btnShuffle) btnShuffle.hidden = !auto;
       if (btnSeq) btnSeq.hidden = !auto;
+      if (btnSkipKnown) btnSkipKnown.hidden = !auto;
     }
 
     function readStoredLang() {
@@ -711,6 +733,10 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     }
 
     function paintOrder() {
+      if (btnSkipKnown) {
+        btnSkipKnown.dataset.selected = state.skipKnown ? '1' : '0';
+        btnSkipKnown.setAttribute('aria-pressed', state.skipKnown ? 'true' : 'false');
+      }
       if (btnShuffle) {
         btnShuffle.dataset.selected = state.shuffle ? '1' : '0';
         btnShuffle.setAttribute('aria-pressed', state.shuffle ? 'true' : 'false');
@@ -1206,6 +1232,8 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     async function playStep(index) {
       const item = playList()[index];
       if (!item) return;
+      // A word marked while the lesson plays is skipped without stopping playback.
+      if (isKnownItem(item)) return;
       if (isAutoMode()) setPlayingLine(index, item.lang);
       const buffer = isAutoMode() ? bufferForLang(item.lang) : bufferForItem(item);
       const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
@@ -1653,15 +1681,20 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
     // A new order changes step numbers, so the place is carried over by step, not by number.
     function changeOrder(apply) {
-      const anchor = stepIdForIndex(readPosIndex());
+      const from = Math.max(readPosIndex(), 0);
+      const ahead = playList().map((_, index) => stepIdForIndex(index));
+      const anchors = [...ahead.slice(from), ...ahead.slice(0, from).reverse()];
       if (state.playing) pausePlayback();
       apply();
       paintOrder();
       rebuildQueue();
       showTotal();
       renderCardList();
-      const index = indexForStepId(anchor);
-      if (index < 0) return;
+      const index = anchors.map(indexForStepId).find((found) => found >= 0) ?? (playList().length ? 0 : -1);
+      if (index < 0) {
+        elCurrent.textContent = 'All words are known.';
+        return;
+      }
       setPosInput(index);
       setActiveCard(index);
       persistState(index);
@@ -1673,6 +1706,16 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         state.shuffle = !state.shuffle;
         writeLessonFlag(LS_SHUFFLE_KEY, state.shuffle);
       }));
+    }
+    if (btnSkipKnown) {
+      btnSkipKnown.addEventListener('click', () => changeOrder(() => {
+        state.skipKnown = !state.skipKnown;
+        writeLessonFlag(LS_SKIP_KNOWN_KEY, state.skipKnown);
+      }));
+    }
+    function refreshQueueForKnown() {
+      if (!state.skipKnown || state.playing || knownSignature() === state.queueKnown) return;
+      changeOrder(() => {});
     }
     if (btnSeq) {
       btnSeq.addEventListener('click', () => changeOrder(() => {
@@ -1692,6 +1735,8 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       state.pauseExtra = readPauseExtra();
       state.shuffle = readLessonFlag(LS_SHUFFLE_KEY);
       state.translationFirst = readLessonFlag(LS_TR_FIRST_KEY);
+      state.skipKnown = readLessonFlag(LS_SKIP_KNOWN_KEY);
+      knownWords = readLocalKnown();
       paintPause();
       applyPlaybackUi();
       initAutoPlaybackFromMarks();
@@ -1702,6 +1747,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       rebuildQueue();
       showTotal();
       renderCardList();
+      syncKnown().then(refreshQueueForKnown);
       inPos.max = String(playList().length);
       inPos.min = '1';
       const local = applySavedIndex(readLocalSavedIndex());
@@ -1956,6 +2002,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     };
     paintMarkTr(readMarkTr());
 
+    dlgList.addEventListener('close', refreshQueueForKnown);
     btnModeListen.onclick = () => setDialogView('lessons');
     btnModeMark.onclick = () => setDialogView('mark');
     btnMarkAll.onclick = () => {
