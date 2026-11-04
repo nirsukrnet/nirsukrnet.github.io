@@ -1,0 +1,1639 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<base href="https://nirsukrnet.github.io/voicetrain/" />
+<title>VoiceTraining</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--acc:#2563eb;--acc2:#1d4ed8;--accfg:#fff;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675;--skip:#2563eb;--focus:#ea580c;--r:16px}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--acc:#3b82f6;--acc2:#60a5fa;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}}
+html[data-theme=light],html[data-theme=light-big]{color-scheme:light;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675}
+html[data-theme=dark],html[data-theme=dark-big]{color-scheme:dark;--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg);-webkit-tap-highlight-color:transparent}
+.dialog{max-width:640px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;padding:0 12px calc(96px + env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 8px;display:flex;align-items:center;gap:10px}
+.top .ttl{flex:1;min-width:0}
+h1{margin:0;font-size:20px;font-weight:750;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.total{margin:0;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button{font:inherit;color:inherit;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 14px;min-height:44px;cursor:pointer;transition:background .15s,transform .05s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid color-mix(in srgb,var(--acc) 45%,transparent);outline-offset:2px}
+.icon{width:44px;padding:0;font-size:18px}
+#btnListMenu{font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.flag{min-width:56px;font-weight:700;letter-spacing:.04em}
+button[data-selected="1"],.flag[aria-pressed=true]{background:var(--soft);border-color:var(--acc);color:var(--acc2)}
+.seg{color:var(--mut);font-size:13px;margin-right:2px}
+input[type=number]{width:84px;padding:10px;border:1px solid var(--line);border-radius:12px;font:inherit;min-height:44px;background:var(--card);color:var(--fg);text-align:center}
+.muted{color:var(--mut);font-size:14px}
+.current{margin:10px 0 4px;padding:12px 14px;border-radius:var(--r);background:var(--soft);color:var(--fg);font-size:15px;border-left:4px solid var(--acc)}
+.progress{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 0}
+.progress>i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px;flex:1;overflow-y:auto;min-height:0;align-content:start;scroll-padding:12px}
+li{padding:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);cursor:pointer;user-select:none;position:relative}
+li:hover{border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+li[data-active="1"]{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+li[data-active="1"]:not(:has(.say)){background:var(--soft)}
+li[data-saved="1"]::after{content:"● saved";position:absolute;top:8px;right:10px;font-size:11px;color:var(--acc2);font-weight:600}
+li[data-mark=skip]{border-left:5px solid var(--skip)}
+li[data-mark=focus]{border-left:5px solid var(--focus)}
+.line.say,.line.voiced,.line.hint{margin:0;border-radius:10px;padding:6px 10px;line-height:1.4}
+.line.say{font-weight:700;font-size:17px;background:var(--say);color:var(--sayfg)}
+.line.voiced{margin-top:6px;font-weight:700;background:var(--voi);color:var(--voifg)}
+.line.hint{margin-top:6px;font-size:14px;background:var(--hint);color:var(--hintfg)}
+.line.on{outline:2px solid var(--acc);outline-offset:1px}
+.kind{display:none}
+.tr{margin-top:6px;font-size:14px;line-height:1.4}
+.tr-en{color:#3b6fd8}.tr-uk{color:#c2631f}
+.card-audio{position:absolute;width:1px;height:1px;opacity:.01;pointer-events:none}
+.pos-wrap,.ico-wrap{position:relative}
+.pos-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:30;min-width:100%;width:max-content;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:4px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.pos-wrap.is-open .pos-menu,.ico-wrap.is-open .pos-menu{display:block}
+.pos-menu button{width:100%;text-align:left;white-space:nowrap;border:0;border-radius:8px;min-height:40px;background:transparent}
+.pos-menu button:hover{background:var(--soft)}
+.pos-menu button[aria-checked=true]{background:var(--soft);color:var(--acc2);font-weight:600}
+/* bottom action bar */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.dock .in{max-width:640px;margin:0 auto;display:flex;gap:10px}
+#btnPlayFromN{flex:1;min-height:56px;border:0;border-radius:16px;background:var(--acc);color:var(--accfg);font-size:18px;font-weight:700;box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 35%,transparent)}
+#btnPlayFromN:hover{background:var(--acc2)}
+#btnGoN{min-height:56px;border-radius:16px;font-weight:600}
+/* lesson picker */
+#dlgListMenu{width:min(560px,calc(100vw - 16px));height:min(760px,calc(100dvh - 16px));border:1px solid var(--line);border-radius:20px;padding:16px;background:var(--card);color:var(--fg)}
+#dlgListMenu::backdrop{background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+#dlgListMenu form{display:flex;flex-direction:column;height:100%;min-height:0}
+#btnListClose{position:absolute;top:10px;right:10px;width:44px;padding:0;font-size:22px;border-radius:50%}
+#listMenuTagRow{margin:44px 0 10px}
+#inFilter{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--bg);color:var(--fg)}
+#lessonList{flex:1;min-height:0}
+#lessonList li{width:100%}
+#lessonList li[data-selected="1"]{background:var(--soft);border-color:var(--acc)}
+</style>
+<style id="compact">
+.dialog{padding:0 8px calc(60px + env(safe-area-inset-bottom))}
+.top{padding:4px 0;gap:6px;min-height:40px}
+.top .ttl{display:flex;align-items:baseline;gap:8px;overflow:hidden}
+h1{font-size:16px;flex:none}
+.total{font-size:12px}
+#lessonHeading:empty{display:none}
+button{min-height:40px;padding:6px 10px;border-radius:10px}
+.icon{width:40px}
+.panel{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:4px 6px;border-radius:12px;position:relative}
+.panel .row{gap:4px;flex-wrap:nowrap}
+.seg{font-size:12px}
+.flag{min-width:40px;padding:4px 8px;font-size:13px}
+input[type=number]{width:60px;min-height:36px;padding:4px}
+.progress{position:absolute;left:6px;right:6px;bottom:2px;height:3px;margin:0}
+.current{margin:4px 0 2px;padding:4px 8px;font-size:13px;border-left-width:3px;border-radius:8px}
+ul{gap:3px;margin-top:4px;counter-reset:st}
+li{padding:5px 8px 5px 34px;border-radius:10px;counter-increment:st}
+li::before{content:counter(st);position:absolute;left:6px;top:7px;font-size:10px;color:var(--mut);width:22px;text-align:right}
+li[data-saved="1"]::after{content:"●";top:4px;right:6px}
+li[data-active="1"]{box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 25%,transparent)}
+li[data-mark=skip],li[data-mark=focus]{border-left-width:4px}
+.line.say,.line.voiced,.line.hint{padding:1px 6px;border-radius:6px;line-height:1.3}
+.line.say{font-size:15px}
+.line.voiced,.line.hint,.tr{margin-top:1px}
+.line.hint,.tr{font-size:13px}
+.dock{padding:4px 8px calc(4px + env(safe-area-inset-bottom))}
+.dock .in{gap:6px}
+#btnPlayFromN,#btnGoN{min-height:44px;border-radius:12px}
+#btnPlayFromN{font-size:16px}
+#lessonList{gap:4px}#lessonList li{padding:8px 10px}#lessonList li::before{content:none}
+</style>
+<style id="bottom">
+.dialog{height:auto;padding:4px 6px 0}
+ul#cardList{overflow:visible;margin:0;padding-bottom:calc(130px + env(safe-area-inset-bottom))}
+.dock{background:var(--bg);padding:3px 6px calc(4px + env(safe-area-inset-bottom))}
+.dock .in{flex-direction:column;gap:3px}
+.info{display:flex;align-items:baseline;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;font-size:12px}
+.info h1{font-size:12px;font-weight:700;flex:none}
+.info .current{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;margin:0;padding:0;background:none;border:0;font-size:12px;color:var(--fg)}
+.info .total{flex:none;font-size:11px}
+.progress{position:static;height:3px;margin:0}
+.bar{display:flex;gap:4px;align-items:center}
+.bar .sp{flex:1}
+.bar .flag{min-width:40px}
+#btnListMenu{width:44px;padding:0;font-size:18px}
+#btnPause{flex:none;padding:0 8px;white-space:nowrap}
+#btnGoN{min-height:40px}
+#btnPlayFromN{flex:1;min-height:40px;font-size:15px;box-shadow:none}
+.pos-menu{top:auto;bottom:calc(100% + 6px)}
+#themeMenu{left:auto;right:0;width:auto}
+#btnRestart{min-height:40px;font-weight:600;white-space:nowrap}
+.bar:has(#btnRestart:not([hidden])) :is(#btnGoN,#posOf){display:none}
+</style>
+<style id="fullwidth">
+.dialog{max-width:none;padding:2px 0 0}
+.dock .in{max-width:none}
+ul#cardList{gap:2px}
+li{padding:3px 4px 3px 4px;border-radius:6px;border-left-width:1px;border-right-width:1px}
+li::before{position:absolute;left:auto;right:3px;top:1px;width:auto;font-size:9px;opacity:.7;z-index:1}
+li[data-saved="1"]::after{right:auto;left:1px;top:-2px;font-size:9px}
+.line.say,.line.voiced,.line.hint{padding:1px 12px 1px 4px;border-radius:4px;letter-spacing:-.012em}
+.line.say,.line.voiced{font-size:14px}
+.line.hint,.tr{font-size:13px;padding-right:12px}
+</style>
+<style id="big">
+/* large-font themes: light-big / dark-big (colors come from light / dark) */
+html[data-theme$="-big"] ul#cardList{gap:4px;padding-bottom:calc(180px + env(safe-area-inset-bottom))}
+html[data-theme$="-big"] li{padding:5px 6px}
+html[data-theme$="-big"] li::before{font-size:12px}
+html[data-theme$="-big"] li[data-saved="1"]::after{font-size:12px}
+html[data-theme$="-big"] .line.say,html[data-theme$="-big"] .line.voiced{font-size:21px;line-height:1.35}
+html[data-theme$="-big"] .line.hint,html[data-theme$="-big"] .tr{font-size:18px;line-height:1.35}
+html[data-theme$="-big"] .info,html[data-theme$="-big"] .info h1,html[data-theme$="-big"] .info .current{font-size:16px}
+html[data-theme$="-big"] .info .total,html[data-theme$="-big"] .muted{font-size:15px}
+html[data-theme$="-big"] .progress{height:4px}
+html[data-theme$="-big"] .dock .in{gap:5px}
+html[data-theme$="-big"] .bar{gap:6px}
+html[data-theme$="-big"] button{min-height:48px;font-size:18px}
+html[data-theme$="-big"] .bar .flag{min-width:52px;font-size:17px}
+html[data-theme$="-big"] .icon,html[data-theme$="-big"] #btnListMenu{width:48px;font-size:20px}
+html[data-theme$="-big"] input[type=number]{width:76px;min-height:48px;font-size:18px}
+html[data-theme$="-big"] #btnGoN,html[data-theme$="-big"] #btnRestart{min-height:52px}
+html[data-theme$="-big"] #btnRestart{font-size:16px;padding:6px 8px}
+html[data-theme$="-big"] #btnPlayFromN{min-height:52px;font-size:18px;padding:6px 10px;white-space:nowrap}
+html[data-theme$="-big"] .pos-menu button{min-height:48px;font-size:18px}
+html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-size:18px}
+</style>
+</head>
+<body>
+<div class="dialog">
+  <audio id="sessionKeeper" class="card-audio" loop playsinline webkit-playsinline preload="auto" src="audio/session_keeper.wav"></audio>
+  <ul id="cardList"></ul>
+</div>
+<nav class="dock"><div class="in">
+  <div class="info">
+    <h1 id="elMediaLog">VoiceTraining</h1>
+    <span id="elChannel" class="total"></span>
+    <span id="lessonHeading" class="total"></span>
+    <span id="currentCard" class="current">Натисніть ▶ Play або оберіть крок.</span>
+    <span id="elTotal" class="total"></span>
+  </div>
+  <div class="progress" aria-hidden="true"><i id="progBar"></i></div>
+  <div class="bar" id="rowLegacyFlags">
+    <button id="btnEn" class="flag" type="button" data-selected="0" aria-pressed="false">EN</button>
+    <button id="btnUk" class="flag" type="button" data-selected="0" aria-pressed="false">UK</button>
+    <div class="ico-wrap" id="langWrap" hidden>
+      <button type="button" id="btnTransLang" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мова перекладу">укр.</button>
+      <div class="pos-menu" id="langMenu" role="menu">
+        <button type="button" role="menuitemradio" data-lang="uk">укр.</button>
+        <button type="button" role="menuitemradio" data-lang="en">англ.</button>
+        <button type="button" role="menuitemradio" data-lang="off">немає</button>
+      </div>
+    </div>
+    <div class="ico-wrap" id="focusWrap" hidden>
+      <button type="button" id="btnTransFocus" class="flag" aria-haspopup="menu" aria-expanded="false" aria-label="Мітка на уроці">f1</button>
+      <div class="pos-menu" id="focusMenu" role="menu">
+        <button type="button" role="menuitemradio" data-focus="f1">f1</button>
+        <button type="button" role="menuitemradio" data-focus="f2">f2</button>
+        <button type="button" role="menuitemradio" data-focus="f3">f3</button>
+      </div>
+    </div>
+    <button id="btnPause" class="flag" type="button" aria-label="Пауза між кроками. Натисніть, щоб збільшити">Пауза +0 с</button>
+    <span class="sp"></span>
+    <div class="ico-wrap" id="themeWrap">
+      <button id="btnTheme" class="icon" type="button" aria-label="Theme" aria-haspopup="menu" aria-expanded="false">◐</button>
+      <div class="pos-menu" id="themeMenu" role="menu">
+        <button type="button" role="menuitemradio" data-theme-pick="light">Світла</button>
+        <button type="button" role="menuitemradio" data-theme-pick="dark">Темна</button>
+        <button type="button" role="menuitemradio" data-theme-pick="light-big">Світла, крупний шрифт</button>
+        <button type="button" role="menuitemradio" data-theme-pick="dark-big">Темна, крупний шрифт</button>
+      </div>
+    </div>
+    <button id="btnListMenu" type="button" aria-label="Lessons">☰</button>
+  </div>
+  <div class="bar">
+    <div class="pos-wrap" id="posWrap">
+      <input id="inPos" type="number" min="1" step="1" value="1" autocomplete="off" inputmode="numeric" aria-label="Step N" />
+      <div class="pos-menu" id="posMenu" role="menu">
+        <button type="button" id="posGoStart" role="menuitem">На початок (1)</button>
+      </div>
+    </div>
+    <span class="muted" id="posOf"></span>
+    <button id="btnGoN" type="button">Go</button>
+    <button id="btnRestart" type="button" hidden>⟲ На початок</button>
+    <button id="btnPlayFromN" type="button">▶ Play from N</button>
+  </div>
+</div></nav>
+<dialog id="dlgListMenu">
+  <form method="dialog">
+    <button id="btnListClose" value="cancel" type="submit" aria-label="Close">×</button>
+    <div id="listMenuTagRow" class="row"></div>
+    <input id="inFilter" placeholder="Пошук уроку…" autocomplete="off" />
+    <p class="muted" id="listStatus" style="margin:10px 0 0;"></p>
+    <ul id="lessonList"></ul>
+  </form>
+</dialog>
+<script src="../yout_pl2/yu2_global_var.js"></script>
+  <script>
+    'use strict';
+
+    const VT_VERSION = '2026.11.04-1';
+    const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+    const IS_BETA = location.pathname.includes('/voicetrain/beta/');
+    const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
+    const PAUSE_EXTRA_MAX = 5;
+    let audioBase = 'audio/';
+    const LS_KEY = `voicetrain_stepIndex${CHANNEL_SUFFIX}`;
+    const LS_MARKS_KEY = `voicetrain_userMarks${CHANNEL_SUFFIX}`;
+    const LS_LESSON_KEY = `voicetrain_lessonId${CHANNEL_SUFFIX}`;
+    const LS_PAUSE_KEY = `voicetrain_pauseExtra${CHANNEL_SUFFIX}`;
+    const LESSONS_DB = '../db_youtube2/ref_voice_lessons';
+    const TAGS_DB = '../db_youtube2/ref_voice_tags';
+    const TAG_PAGE = 3;
+    const LS_EN_KEY = 'voicetrain_showEn';
+    const LS_UK_KEY = 'voicetrain_showUk';
+    const LS_TRANS_LANG_KEY = 'voicetrain_translationLang';
+    const LS_TRANS_FOCUS_KEY = 'voicetrain_translationFocus';
+    const DB_PATH = `../db_youtube2/ui_state/voicetrain${CHANNEL_SUFFIX}`;
+
+    const DEFAULTS = {
+      PLAYBACK_RATE: 1,
+      CLIP_TAIL_PAD_SEC: 0.2,
+      VOLUME: 1,
+    };
+
+    const state = {
+      audioCtx: null,
+      svBuffer: null,
+      ukBuffer: null,
+      enBuffer: null,
+      marks: null,
+      translationLang: 'uk',
+      translationFocus: 'f1',
+      pauseExtra: 0,
+      playing: false,
+      stopRequested: false,
+      activeSources: [],
+      nextTimer: null,
+      currentIndex: -1,
+      lastPlayedIndex: -1,
+      savedIndex: -1,
+      userMarks: {},
+      showEn: false,
+      showUk: false,
+      lessonId: '',
+    };
+
+    const elCurrent = document.getElementById('currentCard');
+    const elCardList = document.getElementById('cardList');
+    const inPos = document.getElementById('inPos');
+    const posWrap = document.getElementById('posWrap');
+    const posMenu = document.getElementById('posMenu');
+    const posGoStart = document.getElementById('posGoStart');
+    const btnEn = document.getElementById('btnEn');
+    const btnUk = document.getElementById('btnUk');
+    const langWrap = document.getElementById('langWrap');
+    const focusWrap = document.getElementById('focusWrap');
+    const btnTransLang = document.getElementById('btnTransLang');
+    const btnTransFocus = document.getElementById('btnTransFocus');
+    const langMenu = document.getElementById('langMenu');
+    const focusMenu = document.getElementById('focusMenu');
+    const LANG_LABEL = { uk: 'укр.', en: 'англ.', off: '—' };
+    const FOCUS_LABEL = { f1: 'f1', f2: 'f2', f3: 'f3' };
+    const btnPause = document.getElementById('btnPause');
+    const btnGoN = document.getElementById('btnGoN');
+    const btnPlayFromN = document.getElementById('btnPlayFromN');
+    const btnRestart = document.getElementById('btnRestart');
+    const elMediaLog = document.getElementById('elMediaLog');
+    const sessionKeeper = document.getElementById('sessionKeeper');
+
+    let mediaSessionReady = false;
+
+    const MEDIA_ACTION_NOTES = {
+      play: 'F8 / ○',
+      pause: 'F8 / ○ → skip',
+      nexttrack: 'F9 / + → focus',
+      previoustrack: 'F7 / −',
+    };
+
+    function logMedia(action, note) {
+      if (!elMediaLog) return;
+      const t = new Date().toLocaleTimeString('uk-UA', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      elMediaLog.textContent = note ? `${action} — ${note} · ${t}` : `${action} · ${t}`;
+    }
+
+    function syncMediaPlaybackState() {
+      if (!('mediaSession' in navigator)) return;
+      const keeperOn = sessionKeeper && !sessionKeeper.paused;
+      navigator.mediaSession.playbackState = keeperOn ? 'playing' : 'paused';
+    }
+
+    function bindMediaHandlers() {
+      if (!('mediaSession' in navigator)) {
+        if (!mediaSessionReady) {
+          logMedia('no-session', 'Media Session недоступний');
+        }
+        mediaSessionReady = true;
+        return false;
+      }
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'EarPods receiver',
+        artist: 'VoiceTraining',
+      });
+      for (const action of ['play', 'pause', 'nexttrack', 'previoustrack']) {
+        try {
+          navigator.mediaSession.setActionHandler(action, () => onMediaAction(action));
+        } catch (err) {
+          console.warn(`Media Session ${action} unsupported`, err);
+        }
+      }
+      mediaSessionReady = true;
+      syncMediaPlaybackState();
+      return true;
+    }
+
+    async function startSilentKeeper() {
+      if (!sessionKeeper) return;
+      sessionKeeper.muted = false;
+      sessionKeeper.volume = 0.01;
+      sessionKeeper.loop = true;
+      try {
+        await sessionKeeper.play();
+      } catch (err) {
+        logMedia('keeper-error', err.message);
+        return;
+      }
+      bindMediaHandlers();
+      syncMediaPlaybackState();
+    }
+
+    let resumingKeeper = false;
+
+    function keepSilentKeeperPlaying() {
+      if (!sessionKeeper || resumingKeeper) return;
+      if (sessionKeeper.paused) {
+        resumingKeeper = true;
+        sessionKeeper.play().finally(() => {
+          resumingKeeper = false;
+          bindMediaHandlers();
+          syncMediaPlaybackState();
+        });
+        return;
+      }
+      bindMediaHandlers();
+      syncMediaPlaybackState();
+    }
+
+    function onMediaAction(action) {
+      logMedia(action, MEDIA_ACTION_NOTES[action] || '');
+      keepSilentKeeperPlaying();
+      if (action === 'pause') {
+        markCurrentUserMark('skip');
+      } else if (action === 'nexttrack') {
+        markCurrentUserMark('focus');
+      }
+    }
+
+    function stepIdForIndex(index) {
+      const item = playList()[index];
+      if (!item) return null;
+      if (isAutoMode()) return `${item.step}:${item.lang}`;
+      return String(item.step);
+    }
+
+    function userMarkForIndex(index) {
+      const id = stepIdForIndex(index);
+      if (!id) return '';
+      return state.userMarks[id] || '';
+    }
+
+    function markCurrentUserMark(label) {
+      let index = state.lastPlayedIndex;
+      if (index < 0) index = readPosIndex();
+      if (index < 0) return;
+      const stepId = stepIdForIndex(index);
+      if (!stepId) return;
+      state.userMarks[stepId] = label;
+      setKindMark(index, label);
+      persistState(index);
+    }
+
+    function ensureGv() {
+      if (window.gv && window.gv.URL_DS) return window.gv;
+      if (typeof GlobalVars !== 'function') return null;
+      window.gv = new GlobalVars();
+      return window.gv;
+    }
+
+    function playList() {
+      if (isAutoMode()) return state.queue || [];
+      return state.marks?.items || [];
+    }
+
+    function rebuildQueue() {
+      if (!state.marks || !isAutoMode()) {
+        state.queue = null;
+        return;
+      }
+      const items = (state.marks.items || []).slice().sort((a, b) => {
+        const stage = (a.stage_index || 0) - (b.stage_index || 0);
+        if (stage) return stage;
+        const word = (a.word_n || 0) - (b.word_n || 0);
+        if (word) return word;
+        return (a.step || 0) - (b.step || 0);
+      });
+      const queue = [];
+      const playLang = state.translationLang;
+      for (const item of items) {
+        const plays = autoItemShowsTranslation(item);
+        const hints = [];
+        if (state.showUk && item.uk && !(plays && playLang === 'uk')) {
+          hints.push({ text: item.uk });
+        }
+        if (state.showEn && item.en && !(plays && playLang === 'en')) {
+          hints.push({ text: item.en });
+        }
+        if (item.sv_start != null && item.sv_end != null) {
+          queue.push({
+            lang: 'sv',
+            role: 'sv',
+            text: item.sv || '',
+            start: item.sv_start,
+            end: item.sv_end,
+            pause_sec: item.pause_sec,
+            step: item.step,
+            hints,
+          });
+        }
+        if (!plays) continue;
+        const start = playLang === 'en' ? item.en_start : item.uk_start;
+        const end = playLang === 'en' ? item.en_end : item.uk_end;
+        const text = playLang === 'en' ? item.en : item.uk;
+        if (start == null || end == null || !text) continue;
+        queue.push({
+          lang: playLang,
+          role: 'tr',
+          text,
+          start,
+          end,
+          pause_sec: item.pause_sec,
+          step: item.step,
+          hints: [],
+        });
+      }
+      state.queue = queue;
+    }
+
+    function clampIndex(index) {
+      const n = playList().length;
+      const num = Number(index);
+      if (!n || !Number.isFinite(num) || num < 0) return -1;
+      return Math.min(Math.trunc(num), n - 1);
+    }
+
+    function stepKey() {
+      return state.lessonId ? `${LS_KEY}_${state.lessonId}` : LS_KEY;
+    }
+
+    function marksKey() {
+      return state.lessonId ? `${LS_MARKS_KEY}_${state.lessonId}` : LS_MARKS_KEY;
+    }
+
+    function readLocalSavedIndex() {
+      try {
+        const raw = localStorage.getItem(stepKey());
+        if (raw == null || raw === '') return -1;
+        return clampIndex(raw);
+      } catch {
+        return -1;
+      }
+    }
+
+    function readLocalUserMarks() {
+      try {
+        const raw = localStorage.getItem(marksKey());
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function applySavedIndex(index) {
+      const stepIndex = clampIndex(index);
+      markSavedCard(stepIndex);
+      if (stepIndex >= 0) {
+        setPosInput(stepIndex);
+        scrollCardIntoView(stepIndex);
+      }
+      return stepIndex;
+    }
+
+    function setPosInput(index) {
+      if (!inPos || index < 0) return;
+      inPos.value = String(index + 1);
+    }
+
+    function readPosIndex() {
+      const n = playList().length;
+      if (inPos) inPos.max = String(Math.max(1, n));
+      const oneBased = Number.parseInt(inPos.value, 10);
+      if (!Number.isFinite(oneBased)) return -1;
+      return clampIndex(oneBased - 1);
+    }
+
+    function esc(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function isAutoMode() {
+      return state.marks?.mode === 'auto';
+    }
+
+    function applyPlaybackUi() {
+      const auto = isAutoMode();
+      if (langWrap) langWrap.hidden = !auto;
+      if (focusWrap) focusWrap.hidden = !auto;
+    }
+
+    function readStoredLang() {
+      try {
+        const v = localStorage.getItem(LS_TRANS_LANG_KEY);
+        return v === 'en' || v === 'off' ? v : 'uk';
+      } catch {
+        return 'uk';
+      }
+    }
+
+    function readStoredFocus() {
+      try {
+        const v = localStorage.getItem(LS_TRANS_FOCUS_KEY);
+        return v === 'f2' || v === 'f3' ? v : 'f1';
+      } catch {
+        return 'f1';
+      }
+    }
+
+    function syncAutoPlaybackControls() {
+      if (btnTransLang) {
+        btnTransLang.textContent = LANG_LABEL[state.translationLang] || LANG_LABEL.uk;
+      }
+      if (btnTransFocus) {
+        btnTransFocus.textContent = FOCUS_LABEL[state.translationFocus] || FOCUS_LABEL.f1;
+      }
+      langMenu?.querySelectorAll('[data-lang]').forEach((btn) => {
+        btn.setAttribute('aria-checked', btn.dataset.lang === state.translationLang ? 'true' : 'false');
+      });
+      focusMenu?.querySelectorAll('[data-focus]').forEach((btn) => {
+        btn.setAttribute('aria-checked', btn.dataset.focus === state.translationFocus ? 'true' : 'false');
+      });
+    }
+
+    function initAutoPlaybackFromMarks() {
+      if (!isAutoMode()) return;
+      let hasLang = false;
+      let hasFocus = false;
+      try {
+        hasLang = localStorage.getItem(LS_TRANS_LANG_KEY) != null;
+        hasFocus = localStorage.getItem(LS_TRANS_FOCUS_KEY) != null;
+      } catch {
+        // ignore
+      }
+      if (hasLang) {
+        state.translationLang = readStoredLang();
+      } else {
+        const lang = state.marks.translation_lang;
+        state.translationLang = lang === 'en' || lang === 'off' ? lang : 'uk';
+      }
+      if (hasFocus) {
+        state.translationFocus = readStoredFocus();
+      } else {
+        const focus = state.marks.translation_focus;
+        state.translationFocus = focus === 'f2' || focus === 'f3' ? focus : 'f1';
+      }
+      syncAutoPlaybackControls();
+    }
+
+    function autoItemShowsTranslation(item) {
+      const lang = state.translationLang;
+      const focus = state.translationFocus;
+      if (lang === 'off') return false;
+      return !!(item.flags && item.flags[lang] && item.flags[lang][focus]);
+    }
+
+    function buildAutoPlaySegments(item) {
+      const segments = [];
+      if (item.sv_start != null && item.sv_end != null) {
+        segments.push({ lang: 'sv', start: item.sv_start, end: item.sv_end });
+      }
+      if (!autoItemShowsTranslation(item)) return segments;
+      const lang = state.translationLang;
+      if (lang === 'uk' && item.uk_start != null && item.uk_end != null) {
+        segments.push({ lang: 'uk', start: item.uk_start, end: item.uk_end });
+      }
+      if (lang === 'en' && item.en_start != null && item.en_end != null) {
+        segments.push({ lang: 'en', start: item.en_start, end: item.en_end });
+      }
+      return segments;
+    }
+
+    function translationBits(item) {
+      if (isAutoMode()) {
+        if (!autoItemShowsTranslation(item)) return [];
+        const lang = state.translationLang;
+        if (lang === 'en' && item.en) return [item.en];
+        if (lang === 'uk' && item.uk) return [item.uk];
+        return [];
+      }
+      const bits = [];
+      if (state.showEn && item.en && item.en !== item.text) bits.push(item.en);
+      if (state.showUk && item.uk && item.uk !== item.text) bits.push(item.uk);
+      return bits;
+    }
+
+    function autoCardHtml(item) {
+      const parts = [`<p class="line say" data-seg="sv">${esc(item.sv || '')}</p>`];
+      const playLang = state.translationLang;
+      const plays = autoItemShowsTranslation(item);
+      function add(lang, text) {
+        if (!text) return;
+        if (plays && playLang === lang) {
+          parts.push(`<p class="line voiced" data-seg="${lang}">${esc(text)}</p>`);
+          return;
+        }
+        const show = (lang === 'en' && state.showEn) || (lang === 'uk' && state.showUk);
+        if (show) parts.push(`<p class="line hint" data-seg="${lang}">${esc(text)}</p>`);
+      }
+      add('uk', item.uk);
+      add('en', item.en);
+      return parts.join('');
+    }
+
+    function translationHtml(item) {
+      const parts = [];
+      if (state.showEn && item.en && item.en !== item.text) {
+        parts.push(`<div class="tr tr-en">${esc(item.en)}</div>`);
+      }
+      if (state.showUk && item.uk && item.uk !== item.text) {
+        parts.push(`<div class="tr tr-uk">${esc(item.uk)}</div>`);
+      }
+      return parts.join('');
+    }
+
+    function formatDuration(sec) {
+      const total = Math.max(0, Math.round(sec));
+      const minutes = Math.floor(total / 60);
+      const seconds = total % 60;
+      return `${minutes} хв ${seconds} с`;
+    }
+
+    function lessonDurationSec(marks) {
+      const items = marks.items || [];
+      const rate = Math.max(DEFAULTS.PLAYBACK_RATE, 0.01);
+      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      if (marks.mode === 'auto') {
+        let sum = 0;
+        (state.queue || []).forEach((item) => {
+          const speech = Math.max(0, Number(item.end) - Number(item.start));
+          const pause = Number(item.pause_sec);
+          const after = Number.isFinite(pause) && pause >= 0
+            ? pause
+            : (marks.pause_sec ?? 0.6);
+          sum += speech / rate + after + state.pauseExtra;
+        });
+        return sum;
+      }
+      const lastOnTrack = {};
+      items.forEach((item, index) => {
+        lastOnTrack[item.lang] = index;
+      });
+      let sum = 0;
+      items.forEach((item, index) => {
+        const speech = Math.max(0, Number(item.end) - Number(item.start));
+        const pause = Number(item.pause_sec);
+        const after = Number.isFinite(pause) && pause >= 0
+          ? pause
+          : (marks.pause_sec ?? 0.6);
+        const tail = index === lastOnTrack[item.lang] ? 0 : pad;
+        sum += (speech + tail) / rate + after + state.pauseExtra;
+      });
+      return sum;
+    }
+
+    function showTotal() {
+      const el = document.getElementById('elTotal');
+      if (!el || !state.marks?.items?.length) return;
+      el.textContent = `Без перерви ${formatDuration(lessonDurationSec(state.marks))}`;
+    }
+
+    function renderStepLabel(item, index) {
+      if (isAutoMode()) return `#${index + 1} ${item.text || ''}`;
+      const extra = translationBits(item);
+      const tail = extra.length ? ` — ${extra.join(' · ')}` : '';
+      return `#${index + 1} ${item.text}${tail}`;
+    }
+
+    function goToN() {
+      if (btnRestart) btnRestart.hidden = true;
+      const index = readPosIndex();
+      if (index < 0) {
+        elCurrent.textContent = 'Enter step number N.';
+        return -1;
+      }
+      setPosInput(index);
+      scrollCardIntoView(index);
+      const item = playList()[index];
+      elCurrent.textContent = renderStepLabel(item, index);
+      return index;
+    }
+
+    function setPlayFromNLabel(playing) {
+      btnPlayFromN.textContent = playing ? 'Pause' : 'Play from N';
+    }
+
+    function markSavedCard(index) {
+      state.savedIndex = clampIndex(index);
+      for (const li of elCardList.querySelectorAll('li')) {
+        li.dataset.saved = li.dataset.index === String(state.savedIndex) ? '1' : '0';
+      }
+    }
+
+    function scrollCardIntoView(index) {
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      if (li) {
+        li.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    }
+
+    async function ensureSignedIn() {
+      const gv = ensureGv();
+      if (!gv) throw new Error('GlobalVars is not available');
+      if (gv.URL_DS.idToken) return gv;
+      await gv.SignIn_User();
+      return gv;
+    }
+
+    function requestByPath(addurl, method, body) {
+      return new Promise((resolve, reject) => {
+        const gv = ensureGv();
+        if (!gv) {
+          reject(new Error('GlobalVars is not available'));
+          return;
+        }
+        const req = gv.URL_DS.GetObjForRequest();
+        req.addUrl = addurl;
+        req.ametod = method;
+        req.vobj = body;
+        req.CallBackFunction = (data) => resolve(data);
+        req.ErrorCallback = (err) => reject(err || new Error('DB request failed'));
+        gv.URL_DS.requestData_By_URL_Path(req);
+      });
+    }
+
+    async function saveStateToDb(stepIndex, lessonId, marks) {
+      const index = Number(stepIndex);
+      if (!Number.isFinite(index) || index < 0) return;
+      const id = lessonId || '';
+      try {
+        await ensureSignedIn();
+        await requestByPath(DB_PATH, 'PUT', {
+          lessonId: id,
+          marksFile: id ? `lessons/${id}/marks.json` : 'marks.json',
+          stepIndex: index,
+          marks: marks || {},
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error('Save state failed', err);
+      }
+    }
+
+    async function loadSavedStateFromDb() {
+      try {
+        await ensureSignedIn();
+        const data = await requestByPath(DB_PATH, 'GET', null);
+        const savedLesson = data && data.lessonId != null ? String(data.lessonId) : '';
+        if (state.lessonId && savedLesson !== state.lessonId) return -1;
+        if (data && data.marks && typeof data.marks === 'object') {
+          state.userMarks = { ...data.marks };
+          try {
+            localStorage.setItem(marksKey(), JSON.stringify(state.userMarks));
+          } catch {
+            // ignore
+          }
+        }
+        if (data && data.stepIndex != null) {
+          return clampIndex(data.stepIndex);
+        }
+      } catch (err) {
+        console.error('Load state failed', err);
+      }
+      return -1;
+    }
+
+    let persistChain = Promise.resolve();
+    let persistQueued = null;
+
+    function persistState(index) {
+      const stepIndex = clampIndex(index);
+      if (stepIndex < 0) return;
+      markSavedCard(stepIndex);
+      try {
+        localStorage.setItem(stepKey(), String(stepIndex));
+        localStorage.setItem(marksKey(), JSON.stringify(state.userMarks));
+      } catch {
+        // ignore
+      }
+      persistQueued = {
+        stepIndex,
+        lessonId: state.lessonId,
+        marks: { ...state.userMarks },
+      };
+      persistChain = persistChain
+        .then(async () => {
+          const toSave = persistQueued;
+          persistQueued = null;
+          if (toSave == null) return;
+          await saveStateToDb(toSave.stepIndex, toSave.lessonId, toSave.marks);
+        })
+        .catch((err) => console.error('Auto-save failed', err));
+    }
+
+    async function loadMarks() {
+      if (state.marks) return state.marks;
+      const res = await fetch(`${audioBase}marks.json`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch marks: ${res.status}`);
+      }
+      state.marks = await res.json();
+      return state.marks;
+    }
+
+    function unlockAudio() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (navigator.audioSession) {
+        try {
+          navigator.audioSession.type = 'playback';
+        } catch {
+          // ignore
+        }
+      }
+      const resumePromise = state.audioCtx.state === 'suspended'
+        ? state.audioCtx.resume()
+        : Promise.resolve();
+      const keeperPromise = startSilentKeeper();
+      return Promise.all([resumePromise, keeperPromise]);
+    }
+
+    async function ensureAudioContext() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (navigator.audioSession) {
+        try {
+          navigator.audioSession.type = 'playback';
+        } catch {
+          // ignore
+        }
+      }
+      if (state.audioCtx.state === 'suspended') {
+        await state.audioCtx.resume();
+      }
+      return state.audioCtx;
+    }
+
+    async function loadBuffer(url) {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch ${url}: ${res.status}`);
+      }
+      const arr = await res.arrayBuffer();
+      return state.audioCtx.decodeAudioData(arr);
+    }
+
+    async function ensureAssetsLoaded() {
+      await loadMarks();
+      await ensureAudioContext();
+      if (!state.svBuffer) {
+        state.svBuffer = await loadBuffer(`${audioBase}${state.marks.sv_file}`);
+      }
+      if (!state.ukBuffer) {
+        state.ukBuffer = await loadBuffer(`${audioBase}${state.marks.uk_file}`);
+      }
+      if (isAutoMode() && state.marks.en_file && !state.enBuffer) {
+        state.enBuffer = await loadBuffer(`${audioBase}${state.marks.en_file}`);
+      }
+    }
+
+    function bufferForLang(lang) {
+      if (lang === 'sv') return state.svBuffer;
+      if (lang === 'en') return state.enBuffer;
+      return state.ukBuffer;
+    }
+
+    function bufferForItem(item) {
+      return item.lang === 'sv' ? state.svBuffer : state.ukBuffer;
+    }
+
+    function startClip(buffer, when, offset, duration, volume, rate) {
+      const src = state.audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.playbackRate.value = rate;
+
+      const gain = state.audioCtx.createGain();
+      gain.gain.value = volume;
+
+      src.connect(gain);
+      gain.connect(state.audioCtx.destination);
+
+      src.start(when, offset, duration);
+      state.activeSources.push(src);
+      src.onended = () => {
+        state.activeSources = state.activeSources.filter((s) => s !== src);
+      };
+      return src;
+    }
+
+    function pausePlayback() {
+      if (state.lastPlayedIndex >= 0) {
+        persistState(state.lastPlayedIndex);
+        setPosInput(state.lastPlayedIndex);
+      }
+      state.stopRequested = true;
+      state.playing = false;
+      if (state.nextTimer) {
+        clearTimeout(state.nextTimer);
+        state.nextTimer = null;
+      }
+      for (const src of state.activeSources) {
+        try {
+          src.stop();
+        } catch {
+          // already stopped
+        }
+      }
+      state.activeSources = [];
+      setPlayFromNLabel(false);
+      if (state.lastPlayedIndex >= 0) {
+        const item = playList()[state.lastPlayedIndex];
+        elCurrent.textContent = `Paused at ${renderStepLabel(item, state.lastPlayedIndex)}`;
+        setActiveCard(state.lastPlayedIndex);
+      } else {
+        elCurrent.textContent = 'Paused.';
+      }
+    }
+
+    function setKindMark(index, label) {
+      if (index < 0 || !label) return;
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      if (!li) return;
+      li.dataset.mark = label;
+    }
+
+    function setActiveCard(index) {
+      state.currentIndex = index;
+      if (index >= 0) {
+        state.lastPlayedIndex = index;
+      }
+      for (const li of elCardList.querySelectorAll('li')) {
+        li.dataset.active = li.dataset.index === String(index) ? '1' : '0';
+      }
+      if (index >= 0) {
+        scrollCardIntoView(index);
+      }
+    }
+
+    function setPlayingLine(index, seg) {
+      setActiveCard(index);
+      elCardList.querySelectorAll('.line.on').forEach((el) => el.classList.remove('on'));
+      const li = elCardList.querySelector(`li[data-index="${index}"]`);
+      const line = li && seg ? li.querySelector(`.line[data-seg="${seg}"]`) : null;
+      if (line) line.classList.add('on');
+    }
+
+    function renderCardList() {
+      elCardList.innerHTML = '';
+      if (!state.marks?.items?.length) {
+        return;
+      }
+      playList().forEach((item, index) => {
+        const li = document.createElement('li');
+        li.dataset.index = String(index);
+        const mark = userMarkForIndex(index);
+        const line = isAutoMode() ? '' : item.text;
+        const hints = isAutoMode()
+          ? (item.hints || []).map((hint) => `<p class="line hint">${esc(hint.text)}</p>`).join('')
+          : '';
+        li.innerHTML = isAutoMode()
+          ? `<p class="line ${item.role === 'tr' ? 'voiced' : 'say'}" data-seg="${item.lang}">${esc(item.text)}</p>${hints}`
+          : `<div class="line">${esc(line)}</div>${translationHtml(item)}`;
+        if (mark) li.dataset.mark = mark;
+        li.addEventListener('click', () => {
+          setPosInput(index);
+          goToN();
+        });
+        elCardList.appendChild(li);
+      });
+      if (state.savedIndex >= 0) {
+        markSavedCard(state.savedIndex);
+      }
+    }
+
+    function waitMs(ms) {
+      return new Promise((resolve) => {
+        state.nextTimer = setTimeout(() => {
+          state.nextTimer = null;
+          resolve();
+        }, ms);
+      });
+    }
+
+    function waitForSourceEnd(src) {
+      return new Promise((resolve) => {
+        src.onended = () => {
+          state.activeSources = state.activeSources.filter((s) => s !== src);
+          resolve();
+        };
+      });
+    }
+
+    function clipSourceDuration(start, end, pad, bufferDuration) {
+      const paddedEnd = Math.min(end + pad, bufferDuration);
+      return Math.max(0, paddedEnd - start);
+    }
+
+    async function playStep(index) {
+      const item = playList()[index];
+      if (!item) return;
+      if (isAutoMode()) setPlayingLine(index, item.lang);
+      const buffer = isAutoMode() ? bufferForLang(item.lang) : bufferForItem(item);
+      const pad = DEFAULTS.CLIP_TAIL_PAD_SEC;
+      const rate = DEFAULTS.PLAYBACK_RATE;
+      const dur = clipSourceDuration(item.start, item.end, pad, buffer.duration);
+      const pauseSec = Number(item.pause_sec);
+      const afterSec = Number.isFinite(pauseSec) && pauseSec >= 0
+        ? pauseSec
+        : (state.marks.pause_sec ?? 0.6);
+
+      setActiveCard(index);
+      setPosInput(index);
+      persistState(index);
+      elCurrent.textContent = renderStepLabel(item, index);
+
+      const when = state.audioCtx.currentTime;
+      const src = startClip(
+        buffer,
+        when,
+        item.start,
+        dur,
+        DEFAULTS.VOLUME,
+        rate,
+      );
+      await waitForSourceEnd(src);
+
+      if (state.stopRequested) {
+        return;
+      }
+
+      await waitMs((afterSec + state.pauseExtra) * 1000);
+    }
+
+    async function playFromIndex(startIndex) {
+      if (state.playing) {
+        pausePlayback();
+        return;
+      }
+
+      state.stopRequested = false;
+      state.playing = true;
+      if (btnRestart) btnRestart.hidden = true;
+      setPlayFromNLabel(true);
+      const unlocked = unlockAudio();
+
+      try {
+        await Promise.all([ensureAssetsLoaded(), unlocked]);
+        if (!playList().length) {
+          throw new Error('No items in marks JSON');
+        }
+
+        await startSilentKeeper();
+
+        const endIndex = playList().length - 1;
+
+        for (let i = startIndex; i <= endIndex; i += 1) {
+          if (state.stopRequested) {
+            break;
+          }
+          await playStep(i);
+        }
+
+        if (!state.stopRequested) {
+          setActiveCard(-1);
+          elCurrent.textContent = 'Finished.';
+          if (btnRestart) btnRestart.hidden = false;
+        }
+      } catch (err) {
+        console.error(err);
+        elCurrent.textContent = `Error: ${err.message}`;
+      } finally {
+        state.playing = false;
+        setPlayFromNLabel(false);
+      }
+    }
+
+    function setPosMenuOpen(open) {
+      if (!posWrap) return;
+      posWrap.classList.toggle('is-open', open);
+    }
+
+    function setIcoMenuOpen(wrap, btn, open) {
+      if (!wrap || !btn) return;
+      wrap.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function closeAllMenus(exceptWrap) {
+      if (exceptWrap !== posWrap) setPosMenuOpen(false);
+      if (exceptWrap !== langWrap) setIcoMenuOpen(langWrap, btnTransLang, false);
+      if (exceptWrap !== focusWrap) setIcoMenuOpen(focusWrap, btnTransFocus, false);
+    }
+
+    if (posWrap && inPos) {
+      inPos.addEventListener('focus', () => {
+        closeAllMenus(posWrap);
+        setPosMenuOpen(true);
+      });
+      inPos.addEventListener('click', () => {
+        closeAllMenus(posWrap);
+        setPosMenuOpen(true);
+      });
+      if (posMenu) {
+        posMenu.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+        });
+      }
+      if (posGoStart) {
+        posGoStart.addEventListener('click', () => {
+          inPos.value = '1';
+          setPosMenuOpen(false);
+          goToN();
+        });
+      }
+    }
+
+    function bindIcoMenu(wrap, btn, onPick) {
+      if (!wrap || !btn) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !wrap.classList.contains('is-open');
+        closeAllMenus(wrap);
+        setIcoMenuOpen(wrap, btn, open);
+      });
+      wrap.querySelector('.pos-menu')?.addEventListener('click', (e) => {
+        const item = e.target.closest('[role="menuitemradio"]');
+        if (!item || !wrap.contains(item)) return;
+        onPick(item);
+        setIcoMenuOpen(wrap, btn, false);
+      });
+    }
+
+    bindIcoMenu(langWrap, btnTransLang, (item) => {
+      const lang = item.dataset.lang;
+      state.translationLang = lang === 'en' || lang === 'off' ? lang : 'uk';
+      syncAutoPlaybackControls();
+      onAutoPlaybackChange();
+    });
+    bindIcoMenu(focusWrap, btnTransFocus, (item) => {
+      const focus = item.dataset.focus;
+      state.translationFocus = focus === 'f2' || focus === 'f3' ? focus : 'f1';
+      syncAutoPlaybackControls();
+      onAutoPlaybackChange();
+    });
+
+    document.addEventListener('click', (e) => {
+      const t = e.target;
+      if (posWrap && posWrap.contains(t)) return;
+      if (langWrap && langWrap.contains(t)) return;
+      if (focusWrap && focusWrap.contains(t)) return;
+      closeAllMenus();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAllMenus();
+    });
+
+    function readFlag(key) {
+      try {
+        return localStorage.getItem(key) === '1';
+      } catch {
+        return false;
+      }
+    }
+
+    function paintFlag(button, on) {
+      button.dataset.selected = on ? '1' : '0';
+      button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    function applyFlags() {
+      paintFlag(btnEn, state.showEn);
+      paintFlag(btnUk, state.showUk);
+      if (state.marks) {
+        rebuildQueue();
+        renderCardList();
+      }
+      const index = state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex;
+      if (index >= 0 && playList()[index]) {
+        elCurrent.textContent = renderStepLabel(playList()[index], index);
+      }
+    }
+
+    function toggleFlag(which) {
+      if (which === 'en') state.showEn = !state.showEn;
+      if (which === 'uk') state.showUk = !state.showUk;
+      try {
+        localStorage.setItem(LS_EN_KEY, state.showEn ? '1' : '0');
+        localStorage.setItem(LS_UK_KEY, state.showUk ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      applyFlags();
+    }
+
+    btnEn.addEventListener('click', () => toggleFlag('en'));
+    btnUk.addEventListener('click', () => toggleFlag('uk'));
+
+    btnGoN.addEventListener('click', goToN);
+    if (btnRestart) {
+      btnRestart.addEventListener('click', () => {
+        if (state.playing) return;
+        inPos.value = '1';
+        const index = goToN();
+        if (index >= 0) persistState(index);
+      });
+    }
+    btnPlayFromN.addEventListener('click', () => {
+      if (state.playing) {
+        pausePlayback();
+        return;
+      }
+      const index = goToN();
+      if (index < 0) return;
+      playFromIndex(index);
+    });
+    if (sessionKeeper) {
+      sessionKeeper.addEventListener('playing', () => {
+        bindMediaHandlers();
+        syncMediaPlaybackState();
+      });
+      sessionKeeper.addEventListener('pause', () => {
+        keepSilentKeeperPlaying();
+      });
+    }
+    inPos.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (state.playing) return;
+        const index = goToN();
+        if (index >= 0) playFromIndex(index);
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && state.lastPlayedIndex >= 0) {
+        persistState(state.lastPlayedIndex);
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      if (state.lastPlayedIndex >= 0) {
+        persistState(state.lastPlayedIndex);
+      }
+    });
+
+    function onAutoPlaybackChange() {
+      if (!isAutoMode()) return;
+      try {
+        localStorage.setItem(LS_TRANS_LANG_KEY, state.translationLang);
+        localStorage.setItem(LS_TRANS_FOCUS_KEY, state.translationFocus);
+      } catch {
+        // ignore
+      }
+      if (state.playing) {
+        pausePlayback();
+      }
+      rebuildQueue();
+      showTotal();
+      renderCardList();
+      const index = clampIndex(state.currentIndex >= 0 ? state.currentIndex : state.lastPlayedIndex);
+      if (index >= 0 && playList()[index]) {
+        elCurrent.textContent = renderStepLabel(playList()[index], index);
+      }
+    }
+
+    const elLessonHeading = document.getElementById('lessonHeading');
+    const dlgList = document.getElementById('dlgListMenu');
+    const elTagRow = document.getElementById('listMenuTagRow');
+    const elLessonList = document.getElementById('lessonList');
+    const elListStatus = document.getElementById('listStatus');
+    const elFilter = document.getElementById('inFilter');
+    let catalog = { lessons: [], tags: [] };
+    let selectedTag = '';
+    let tagPage = 0;
+    let listFilter = '';
+
+    function paintLesson(lesson) {
+      if (!elLessonHeading) return;
+      if (!lesson) {
+        elLessonHeading.textContent = '';
+        return;
+      }
+      const bits = [lesson.short || lesson.lesson_id];
+      if (lesson.title && lesson.title !== lesson.short) bits.push(lesson.title);
+      if (lesson.tag) bits.push(`тег ${lesson.tag}`);
+      elLessonHeading.textContent = bits.join(' · ');
+    }
+
+    function lessonRows(doc) {
+      const inner = doc && doc.lessons;
+      if (!inner || typeof inner !== 'object') return [];
+      return Object.values(inner)
+        .filter((row) => row && /^\d+$/.test(String(row.lesson_id || '')))
+        .map((row) => ({
+          lesson_id: String(row.lesson_id),
+          short: String(row.short || row.lesson_id),
+          title: String(row.title || ''),
+          tag: String(row.tag || '').toUpperCase(),
+          order: Number(row.order) || 0,
+          kind: row.kind === 'manual' ? 'manual' : 'auto',
+        }));
+    }
+
+    function tagRows(doc) {
+      const inner = doc && doc.tags;
+      if (!inner || typeof inner !== 'object') return [];
+      return Object.entries(inner)
+        .map(([code, row]) => ({
+          code: String((row && row.label) || code).toUpperCase(),
+          order: Number(row && row.order) || 0,
+        }))
+        .filter((row) => row.code)
+        .sort((a, b) => a.order - b.order || a.code.localeCompare(b.code));
+    }
+
+    async function loadCatalog() {
+      await ensureSignedIn();
+      const [lessonsDoc, tagsDoc] = await Promise.all([
+        requestByPath(LESSONS_DB, 'GET', null),
+        requestByPath(TAGS_DB, 'GET', null),
+      ]);
+      return { lessons: lessonRows(lessonsDoc), tags: tagRows(tagsDoc) };
+    }
+
+    function visibleLessons() {
+      const q = listFilter.trim().toLowerCase();
+      return catalog.lessons
+        .filter((item) => !selectedTag || item.tag === selectedTag)
+        .filter((item) => !q || item.short.toLowerCase().includes(q) || item.title.toLowerCase().includes(q))
+        .sort((a, b) => a.order - b.order || a.short.localeCompare(b.short));
+    }
+
+    function renderTags() {
+      elTagRow.innerHTML = '';
+      const page = catalog.tags.slice(tagPage, tagPage + TAG_PAGE);
+      page.forEach((tag) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = tag.code;
+        btn.dataset.tag = tag.code;
+        btn.title = `${tag.code} (order ${tag.order})`;
+        btn.dataset.selected = selectedTag === tag.code ? '1' : '0';
+        btn.onclick = () => {
+          selectedTag = tag.code;
+          renderTags();
+          renderLessonChoices();
+        };
+        elTagRow.appendChild(btn);
+      });
+      const all = document.createElement('button');
+      all.type = 'button';
+      all.textContent = 'All';
+      all.dataset.all = '1';
+      all.title = 'All';
+      all.dataset.selected = selectedTag ? '0' : '1';
+      all.onclick = () => {
+        selectedTag = '';
+        renderTags();
+        renderLessonChoices();
+      };
+      elTagRow.appendChild(all);
+      if (catalog.tags.length > TAG_PAGE) {
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.textContent = '›';
+        next.title = 'Next tags';
+        next.setAttribute('aria-label', 'Next tags');
+        next.onclick = () => {
+          tagPage += TAG_PAGE;
+          if (tagPage >= catalog.tags.length) tagPage = 0;
+          renderTags();
+        };
+        elTagRow.appendChild(next);
+      }
+    }
+
+    function renderLessonChoices() {
+      const rows = visibleLessons();
+      elLessonList.innerHTML = '';
+      elListStatus.textContent = rows.length ? `${rows.length} уроків` : 'Немає уроків за цим фільтром.';
+      rows.forEach((lesson) => {
+        const li = document.createElement('li');
+        li.dataset.selected = lesson.lesson_id === state.lessonId ? '1' : '0';
+        li.textContent = lesson.short;
+        li.onclick = () => {
+          dlgList.close();
+          useLesson(lesson).catch((err) => {
+            console.error(err);
+            elCurrent.textContent = `Load error: ${err.message}`;
+          });
+        };
+        elLessonList.appendChild(li);
+      });
+    }
+
+    function pauseKey() {
+      const lesson = state.lessonId || state.marks?.lesson_id || 'default';
+      return `${LS_PAUSE_KEY}_${lesson}`;
+    }
+
+    function readPauseExtra() {
+      try {
+        const value = Number.parseInt(localStorage.getItem(pauseKey()), 10);
+        return value >= 0 && value <= PAUSE_EXTRA_MAX ? value : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function paintPause() {
+      if (btnPause) btnPause.textContent = `Пауза +${state.pauseExtra} с`;
+    }
+
+    function cyclePauseExtra() {
+      state.pauseExtra = (state.pauseExtra + 1) % (PAUSE_EXTRA_MAX + 1);
+      try {
+        localStorage.setItem(pauseKey(), String(state.pauseExtra));
+      } catch {
+        // ignore
+      }
+      paintPause();
+      showTotal();
+    }
+
+    if (btnPause) btnPause.addEventListener('click', cyclePauseExtra);
+
+    const elChannel = document.getElementById('elChannel');
+    if (elChannel) {
+      const channel = IS_LOCAL ? 'ЛОКАЛЬНО ' : IS_BETA ? 'БЕТА ' : '';
+      elChannel.textContent = `${channel}v${VT_VERSION}`;
+    }
+
+    function finishLoad() {
+      state.userMarks = readLocalUserMarks();
+      state.pauseExtra = readPauseExtra();
+      paintPause();
+      applyPlaybackUi();
+      initAutoPlaybackFromMarks();
+      state.showEn = readFlag(LS_EN_KEY);
+      state.showUk = readFlag(LS_UK_KEY);
+      paintFlag(btnEn, state.showEn);
+      paintFlag(btnUk, state.showUk);
+      rebuildQueue();
+      showTotal();
+      renderCardList();
+      inPos.max = String(playList().length);
+      inPos.min = '1';
+      const local = applySavedIndex(readLocalSavedIndex());
+      if (local < 0) {
+        setPosInput(0);
+        elCardList.scrollTop = 0;
+      }
+      elCurrent.textContent = local >= 0
+        ? `At saved #${local + 1}.`
+        : 'Ready.';
+      loadSavedStateFromDb().then((dbIndex) => {
+        if (Object.keys(state.userMarks).length) {
+          renderCardList();
+        }
+        if (dbIndex < 0) return;
+        applySavedIndex(dbIndex);
+        elCurrent.textContent = `At saved #${dbIndex + 1}.`;
+      });
+    }
+
+    async function useLesson(lesson) {
+      const id = String(lesson.lesson_id || '');
+      if (!/^\d+$/.test(id)) throw new Error('lesson id');
+      const nextBase = `audio/lessons/${id}/`;
+      const res = await fetch(`${nextBase}marks.json`);
+      if (!res.ok) throw new Error(`marks ${res.status}`);
+      const marks = await res.json();
+      if (state.playing || state.lastPlayedIndex >= 0) pausePlayback();
+      audioBase = nextBase;
+      state.lessonId = id;
+      state.marks = marks;
+      state.svBuffer = null;
+      state.ukBuffer = null;
+      state.enBuffer = null;
+      state.currentIndex = -1;
+      state.lastPlayedIndex = -1;
+      state.userMarks = {};
+      try {
+        localStorage.setItem(LS_LESSON_KEY, id);
+      } catch {
+        // ignore
+      }
+      paintLesson(lesson);
+      finishLoad();
+    }
+
+    async function startPlayer() {
+      let saved = '';
+      try {
+        saved = localStorage.getItem(LS_LESSON_KEY) || '';
+      } catch {
+        saved = '';
+      }
+      if (/^\d+$/.test(saved)) {
+        try {
+          catalog = await loadCatalog();
+          const lesson = catalog.lessons.find((item) => item.lesson_id === saved);
+          if (lesson) {
+            await useLesson(lesson);
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      await loadMarks();
+      finishLoad();
+    }
+
+    document.getElementById('btnListMenu').onclick = async () => {
+      dlgList.showModal();
+      elListStatus.textContent = 'Завантаження…';
+      elLessonList.innerHTML = '';
+      try {
+        catalog = await loadCatalog();
+        tagPage = 0;
+        renderTags();
+        renderLessonChoices();
+      } catch (err) {
+        console.error(err);
+        elListStatus.textContent = 'Список не прочитано.';
+      }
+    };
+
+    elFilter.oninput = (event) => {
+      listFilter = event.target.value;
+      renderLessonChoices();
+    };
+
+    dlgList.querySelector('form').addEventListener('submit', (event) => {
+      if (event.submitter && event.submitter.id === 'btnListClose') return;
+      event.preventDefault();
+    });
+
+    startPlayer().catch((err) => {
+      console.error(err);
+      elCurrent.textContent = `Load error: ${err.message}. Use http://localhost:8080/...`;
+    });
+  </script>
+<script>
+// UI-only additions: theme toggle + progress bar (no changes to original logic)
+(function(){
+  const h=document.documentElement,k='voicetrain_theme',t=localStorage.getItem(k),bt=document.getElementById('btnTheme');
+  const themes=['light','dark','light-big','dark-big'],names={light:'Світла',dark:'Темна','light-big':'Світла, крупний шрифт','dark-big':'Темна, крупний шрифт'};
+  const tw=document.getElementById('themeWrap'),tm=document.getElementById('themeMenu');
+  function cur(){return h.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+  function show(){const c=cur();bt.textContent=c.endsWith('-big')?'A◐':'◐';bt.title=names[c];tm.querySelectorAll('[data-theme-pick]').forEach(b=>b.setAttribute('aria-checked',b.dataset.themePick===c?'true':'false'));}
+  function setOpen(o){tw.classList.toggle('is-open',o);bt.setAttribute('aria-expanded',o?'true':'false');}
+  if(themes.includes(t))h.dataset.theme=t;show();
+  bt.onclick=()=>setOpen(!tw.classList.contains('is-open'));
+  tm.addEventListener('click',e=>{const b=e.target.closest('[data-theme-pick]');if(!b)return;h.dataset.theme=b.dataset.themePick;localStorage.setItem(k,h.dataset.theme);show();setOpen(false);});
+  document.addEventListener('click',e=>{if(!tw.contains(e.target))setOpen(false);},true);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')setOpen(false);});
+  const list=document.getElementById('cardList'),bar=document.getElementById('progBar'),of=document.getElementById('posOf');
+  function upd(){const n=list.children.length;const a=list.querySelector('li[data-active="1"]');const i=a?[...list.children].indexOf(a)+1:(+document.getElementById('inPos').value||0);bar.style.width=n?Math.min(100,i/n*100)+'%':'0';of.textContent=n?`з ${n}`:'';}
+  new MutationObserver(upd).observe(list,{subtree:true,childList:true,attributes:true,attributeFilter:['data-active']});
+  document.getElementById('inPos').addEventListener('input',upd);
+})();
+</script>
+</body>
+</html>
