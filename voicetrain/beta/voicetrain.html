@@ -72,6 +72,10 @@ li[data-mark=focus]{border-left:5px solid var(--focus)}
 #lessonList{flex:1;min-height:0}
 #lessonList li{width:100%}
 #lessonList li[data-selected="1"]{background:var(--soft);border-color:var(--acc)}
+#modeBar{flex:none;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+#modeBar button{height:44px;min-height:44px;padding:0;display:flex;align-items:center;justify-content:center}
+#modeBar button:disabled{opacity:.4;cursor:default}
+#modeBar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 <style id="compact">
 .dialog{padding:0 8px calc(60px + env(safe-area-inset-bottom))}
@@ -165,6 +169,7 @@ html[data-theme$="-big"] #btnGoN,html[data-theme$="-big"] #btnRestart{min-height
 html[data-theme$="-big"] #btnRestart{font-size:16px;padding:6px 8px}
 html[data-theme$="-big"] #btnPlayFromN{min-height:52px;font-size:18px;padding:6px 10px;white-space:nowrap}
 html[data-theme$="-big"] .pos-menu button{min-height:48px;font-size:18px}
+html[data-theme$="-big"] #modeBar button{height:52px;min-height:52px}
 html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-size:18px}
 </style>
 </head>
@@ -236,13 +241,19 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     <input id="inFilter" placeholder="Пошук уроку…" autocomplete="off" />
     <p class="muted" id="listStatus" style="margin:10px 0 0;"></p>
     <ul id="lessonList"></ul>
+    <nav id="modeBar" aria-label="Modes">
+      <button type="button" data-selected="1" aria-current="true" title="Listen" aria-label="Listen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></button>
+      <button type="button" disabled title="Words: coming later" aria-label="Words: coming later"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6.5h9M11 12.5h9M11 18.5h9"/></svg></button>
+      <button type="button" disabled title="Text lesson: coming later" aria-label="Text lesson: coming later"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6c-2-1.500-5-2-8-2v15c3 0 6 .5 8 2 2-1.500 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v15"/></svg></button>
+      <button type="button" disabled title="Recall: coming later" aria-label="Recall: coming later"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.500c.8.8 1 1.500 1 2.500h6c0-1 .2-1.700 1-2.500A6 6 0 0 0 12 3z"/></svg></button>
+    </nav>
   </form>
 </dialog>
 <script src="../yout_pl2/yu2_global_var.js"></script>
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.04-2';
+    const VT_VERSION = '2026.11.04-3';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
