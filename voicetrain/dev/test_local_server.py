@@ -10,7 +10,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from local_server import SITE_ROOT, make_server  # noqa: E402
+from local_server import LESSONS_DIR, SITE_ROOT, make_server  # noqa: E402
 
 BETA = "/voicetrain/beta/voicetrain.html"
 
@@ -79,12 +79,31 @@ class LocalServerTest(unittest.TestCase):
         self.assertIn("ui_state/voicetrain${CHANNEL_SUFFIX}", html)
         self.assertIn('id="btnPause"', html)
 
-    def test_beta_glued_lesson_plays_steps_by_byte_range(self) -> None:
+    def test_beta_glue_batches_screen_and_byte_range_playback(self) -> None:
         html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
-        self.assertIn("const GLUED_ID = 'glued'", html)
-        self.assertIn("async function buildGluedMarks(", html)
-        self.assertIn("Range: `bytes=${clip.bytes[0]}-${clip.bytes[1] - 1}`", html)
-        self.assertIn("item.start - shift", html)
+        for needle in (
+            '<script src="beta/glue_batches.js"></script>',
+            'id="btnModeGlue"',
+            'id="glueGo"',
+            "const GLUE_DB = '../db_youtube2/ui_state/glue_batches'",
+            "Перезаписати поточну чергу склейок",
+            "Range: `bytes=${clip.bytes[0]}-${clip.bytes[1] - 1}`",
+            "item.start - shift",
+            "`▶ ${inPos.value || '1'}/${playList().length}`",
+            "readLessonFlag(LS_SKIP_KNOWN_KEY, true)",
+        ):
+            self.assertIn(needle, html)
+        for gone in ("GLUED_ID", "buildGluedMarks", "useGlued"):
+            self.assertNotIn(gone, html)
+        self.assertFalse((SITE_ROOT / "voicetrain/beta/range_demo.html").exists())
+
+    def test_glue_module_is_served(self) -> None:
+        body, _ = self.get("/voicetrain/beta/glue_batches.js")
+        self.assertIn("window.GlueBatches", body.replace("root.GlueBatches", "window.GlueBatches"))
+
+    def test_every_auto_lesson_has_byte_marks(self) -> None:
+        for marks in LESSONS_DIR.glob("*/marks.json"):
+            self.assertIn("byte_marks", json.loads(marks.read_text(encoding="utf-8")), marks.parent.name)
 
 
 if __name__ == "__main__":
