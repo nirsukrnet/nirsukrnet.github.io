@@ -89,6 +89,17 @@ li[data-mark=focus]{border-left:5px solid var(--focus)}
 #settingsView{display:none;flex:1;min-height:0;overflow:auto;margin-top:44px;flex-direction:column;gap:18px}
 #dlgListMenu[data-view=settings] :is(#listMenuTagRow,#inFilter,#lessonList,#listStatus){display:none}
 #dlgListMenu[data-view=settings] #settingsView{display:flex}
+#glueView{display:none;flex:1;min-height:0;overflow:auto;margin-top:44px;flex-direction:column;gap:16px}
+#dlgListMenu[data-view=glue] :is(#listMenuTagRow,#inFilter,#lessonList,#listStatus){display:none}
+#dlgListMenu[data-view=glue] #glueView{display:flex}
+#glueView .row{gap:8px;align-items:center}
+#glueView button[data-selected="1"]{border-color:var(--acc)}
+#glueView label{display:flex;gap:6px;align-items:center;font-size:14px}
+#glueLessons,#glueHistory{display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow:auto}
+#glueLessons li{display:flex;gap:8px;align-items:center;padding:6px 10px}
+#glueLessons li[data-off="1"]{opacity:.4}
+#glueHistory li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 10px;font-size:14px}
+#glueGo{width:100%}
 .set-sec h4{margin:0 0 8px;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
 .set-sec:has(> [hidden]){display:none}
 #settingsView .ico-wrap > button{display:none}
@@ -267,6 +278,30 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     <p class="muted" id="listStatus" style="margin:10px 0 0;"></p>
     <ul id="lessonList"></ul>
     <ul id="markList"></ul>
+    <div id="glueView">
+      <section class="set-sec">
+        <h4>Склейки з невивчених слів</h4>
+        <div class="row">
+          <label>Слів у склейці <input id="glueN" type="number" min="1" value="45" /></label>
+        </div>
+        <div class="row">
+          <button type="button" id="glueModeRange" data-selected="1">Діапазон уроків</button>
+          <button type="button" id="glueModeList" data-selected="0">Вибір зі списку</button>
+        </div>
+        <div class="row" id="glueRange">
+          <label>від <input id="glueFrom" type="number" min="0" /></label>
+          <label>до <input id="glueTo" type="number" min="0" /></label>
+        </div>
+        <ul id="glueLessons" hidden></ul>
+        <p class="muted" id="glueInfo"></p>
+        <button type="button" id="glueGo">Згенерувати</button>
+        <p class="muted" id="glueStatus"></p>
+      </section>
+      <section class="set-sec">
+        <h4>Резерв (5 останніх)</h4>
+        <ul id="glueHistory"></ul>
+      </section>
+    </div>
     <div id="settingsView">
       <section class="set-sec" id="setFocus">
         <h4>Фокус</h4>
@@ -299,16 +334,17 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     <nav id="modeBar" aria-label="Modes">
       <button type="button" id="btnModeListen" data-selected="1" aria-current="true" title="Listen" aria-label="Listen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></button>
       <button type="button" id="btnModeMark" data-selected="0" title="Mark words I know" aria-label="Mark words I know"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6.5h9M11 12.5h9M11 18.5h9"/></svg></button>
-      <button type="button" disabled title="Text lesson: coming later" aria-label="Text lesson: coming later"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6c-2-1.500-5-2-8-2v15c3 0 6 .5 8 2 2-1.500 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v15"/></svg></button>
+      <button type="button" id="btnModeGlue" data-selected="0" title="Склейки" aria-label="Склейки"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6c-2-1.500-5-2-8-2v15c3 0 6 .5 8 2 2-1.500 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v15"/></svg></button>
       <button type="button" id="btnModeSettings" data-selected="0" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.700 1.700 0 0 0 .3 1.800l.1.1a2 2 0 1 1-2.800 2.800l-.1-.1a1.700 1.700 0 0 0-1.800-.3 1.700 1.700 0 0 0-1 1.500V21a2 2 0 1 1-4 0v-.1a1.700 1.700 0 0 0-1.100-1.500 1.700 1.700 0 0 0-1.800.3l-.1.1a2 2 0 1 1-2.800-2.800l.1-.1a1.700 1.700 0 0 0 .3-1.800 1.700 1.700 0 0 0-1.500-1H3a2 2 0 1 1 0-4h.1a1.700 1.700 0 0 0 1.500-1.100 1.700 1.700 0 0 0-.3-1.800l-.1-.1a2 2 0 1 1 2.800-2.800l.1.1a1.700 1.700 0 0 0 1.800.3H9a1.700 1.700 0 0 0 1-1.500V3a2 2 0 1 1 4 0v.1a1.700 1.700 0 0 0 1 1.500 1.700 1.700 0 0 0 1.800-.3l.1-.1a2 2 0 1 1 2.800 2.800l-.1.1a1.700 1.700 0 0 0-.3 1.800V9a1.700 1.700 0 0 0 1.500 1H21a2 2 0 1 1 0 4h-.1a1.700 1.700 0 0 0-1.500 1z"/></svg></button>
     </nav>
   </form>
 </dialog>
 <script src="../yout_pl2/yu2_global_var.js"></script>
+<script src="beta/glue_batches.js"></script>
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.13-1';
+    const VT_VERSION = '2026.11.13-2';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -333,8 +369,11 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     const KNOWN_DB = '../db_youtube2/ui_state/known_words';
     const LS_KNOWN_KEY = 'voicetrain_knownWords';
     const LS_MARK_TR_KEY = 'voicetrain_markShowTranslation';
-    // Glued lesson: known words from every lesson whose marks carry byte ranges, fetched step by step.
-    const GLUED_ID = 'glued';
+    // Glue batches: unlearned words cut from many lessons, played by byte range (beta/glue_batches.js).
+    const { wordKey, shuffledApart } = window.GlueBatches;
+    const GLUE_TAG = '__glue__';
+    const GLUE_DB = '../db_youtube2/ui_state/glue_batches';
+    const LS_GLUE_KEY = 'voicetrain_glueBatches';
     const CLIP_PREFETCH = 8;
 
     const DEFAULTS = {
@@ -580,7 +619,6 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     }
 
     function isKnownItem(item) {
-      if (state.lessonId === GLUED_ID) return false;
       return state.skipKnown && !!item.word && !!knownWords[wordKey(item.word)];
     }
 
@@ -611,41 +649,6 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         for (const group of shuffledApart([...words.values()], seed)) result.push(...group);
       }
       return result;
-    }
-
-    function seededRandom(text) {
-      let h = 2166136261;
-      for (let i = 0; i < text.length; i += 1) {
-        h = Math.imul(h ^ text.charCodeAt(i), 16777619);
-      }
-      return () => {
-        h = (h + 0x6d2b79f5) | 0;
-        let t = Math.imul(h ^ (h >>> 15), 1 | h);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-
-    function looksAlike(groupA, groupB) {
-      const a = String(groupA[0]?.word || '').toLowerCase();
-      const b = String(groupB[0]?.word || '').toLowerCase();
-      return a.length >= 2 && a.slice(0, 2) === b.slice(0, 2);
-    }
-
-    // The same lesson always gets the same order, so a saved place stays valid on every device.
-    function shuffledApart(groups, seed) {
-      const random = seededRandom(seed);
-      const out = groups.slice();
-      for (let i = out.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(random() * (i + 1));
-        [out[i], out[j]] = [out[j], out[i]];
-      }
-      for (let i = 1; i < out.length; i += 1) {
-        if (!looksAlike(out[i - 1], out[i])) continue;
-        const j = out.findIndex((group, k) => k > i && !looksAlike(out[i - 1], group));
-        if (j > 0) [out[i], out[j]] = [out[j], out[i]];
-      }
-      return out;
     }
 
     function indexForStepId(stepId) {
@@ -701,7 +704,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
     let playLabelPlaying = false;
     function renderPlayLabel() {
-      btnPlayFromN.textContent = playLabelPlaying ? 'Pause' : `▶ ${inPos.value || '1'}`;
+      btnPlayFromN.textContent = playLabelPlaying ? 'Pause' : `▶ ${inPos.value || '1'}/${playList().length}`;
     }
 
     function setPosInput(index) {
@@ -1122,7 +1125,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     async function ensureAssetsLoaded() {
       await loadMarks();
       await ensureAudioContext();
-      if (state.lessonId === GLUED_ID) return;
+      if (isGlueId(state.lessonId)) return;
       if (!state.svBuffer) {
         state.svBuffer = await loadBuffer(`${audioBase}${state.marks.sv_file}`);
       }
@@ -1670,6 +1673,17 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         renderLessonChoices();
       };
       elTagRow.appendChild(all);
+      const glue = document.createElement('button');
+      glue.type = 'button';
+      glue.textContent = 'Склейки';
+      glue.dataset.tag = GLUE_TAG;
+      glue.dataset.selected = selectedTag === GLUE_TAG ? '1' : '0';
+      glue.onclick = () => {
+        selectedTag = GLUE_TAG;
+        renderTags();
+        renderLessonChoices();
+      };
+      elTagRow.appendChild(glue);
       if (catalog.tags.length > TAG_PAGE) {
         const next = document.createElement('button');
         next.type = 'button';
@@ -1685,33 +1699,53 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       }
     }
 
-    function renderLessonChoices() {
-      const rows = visibleLessons();
-      elLessonList.innerHTML = '';
-      elListStatus.textContent = rows.length ? `${rows.length} уроків` : 'Немає уроків за цим фільтром.';
-      const knownCount = Object.keys(knownWords).length;
-      if (knownCount && !listFilter.trim()) {
-        rows.unshift({ lesson_id: GLUED_ID, short: `Склейка · вивчені слова ✓${knownCount}` });
+    function openRow(li, label, load) {
+      elLessonList.querySelectorAll('li').forEach((x) => { x.dataset.selected = '0'; x.dataset.loading = '0'; });
+      li.dataset.loading = '1';
+      elListStatus.textContent = 'Завантаження уроку…';
+      load().then(() => {
+        li.dataset.loading = '0';
+        li.dataset.selected = '1';
+        elListStatus.textContent = `Урок завантажено: ${label}`;
+      }).catch((err) => {
+        console.error(err);
+        li.dataset.loading = '0';
+        elListStatus.textContent = `Load error: ${err.message}`;
+        elCurrent.textContent = `Load error: ${err.message}`;
+      });
+    }
+
+    function renderGlueRows() {
+      const gen = glueDoc.current;
+      if (!gen) {
+        elListStatus.textContent = 'Склейок ще немає: кнопка з книжкою → «Згенерувати».';
+        return;
       }
+      elListStatus.textContent = `${gen.batches.length} склейок від ${new Date(gen.created_at).toLocaleString('uk')}`;
+      gen.batches.forEach((batch) => {
+        const li = document.createElement('li');
+        const left = GlueBatches.remaining(batch, knownWords);
+        const label = `Склейка ${batch.idx}/${gen.batches.length}`;
+        li.dataset.selected = GlueBatches.batchLessonId(gen, batch) === state.lessonId ? '1' : '0';
+        li.textContent = `${label} · ${batch.words.length} слів · лишилось ${left}`;
+        li.onclick = () => openRow(li, label, () => useBatch(gen, batch));
+        elLessonList.appendChild(li);
+      });
+    }
+
+    function renderLessonChoices() {
+      elLessonList.innerHTML = '';
+      if (selectedTag === GLUE_TAG) {
+        renderGlueRows();
+        return;
+      }
+      const rows = visibleLessons();
+      elListStatus.textContent = rows.length ? `${rows.length} уроків` : 'Немає уроків за цим фільтром.';
       rows.forEach((lesson) => {
         const li = document.createElement('li');
         li.dataset.selected = lesson.lesson_id === state.lessonId ? '1' : '0';
         li.textContent = lesson.short;
-        li.onclick = () => {
-          elLessonList.querySelectorAll('li').forEach((x) => { x.dataset.selected = '0'; x.dataset.loading = '0'; });
-          li.dataset.loading = '1';
-          elListStatus.textContent = 'Завантаження уроку…';
-          useLesson(lesson).then(() => {
-            li.dataset.loading = '0';
-            li.dataset.selected = '1';
-            elListStatus.textContent = `Урок завантажено: ${lesson.short}`;
-          }).catch((err) => {
-            console.error(err);
-            li.dataset.loading = '0';
-            elListStatus.textContent = `Load error: ${err.message}`;
-            elCurrent.textContent = `Load error: ${err.message}`;
-          });
-        };
+        li.onclick = () => openRow(li, lesson.short, () => useLesson(lesson));
         elLessonList.appendChild(li);
       });
     }
@@ -1858,72 +1892,11 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
     async function useLesson(lesson) {
       const id = String(lesson.lesson_id || '');
-      if (id === GLUED_ID) return useGlued();
       if (!/^\d+$/.test(id)) throw new Error('lesson id');
       const nextBase = `audio/lessons/${id}/`;
       const res = await fetch(`${nextBase}marks.json`);
       if (!res.ok) throw new Error(`marks ${res.status}`);
       applyLesson(id, nextBase, await res.json(), lesson);
-    }
-
-    async function useGlued() {
-      if (!catalog.lessons.length) catalog = await loadCatalog();
-      const marks = await buildGluedMarks(catalog.lessons, knownWords);
-      if (!marks.items.length) throw new Error('немає вивчених слів в уроках з байтовими межами');
-      const count = new Set(marks.items.map((item) => item.word)).size;
-      applyLesson(GLUED_ID, audioBase, marks, {
-        lesson_id: GLUED_ID,
-        short: 'Склейка',
-        title: `вивчені слова: ${count} з уроків ${marks.glued_from.join(', ')}`,
-      });
-    }
-
-    // Known words of every lesson whose marks.json has byte ranges (dev/byte_marks.py), as one auto lesson.
-    async function buildGluedMarks(lessons, known) {
-      const docs = await Promise.all(lessons.filter((row) => row.kind === 'auto').map(async (row) => {
-        const base = `audio/lessons/${row.lesson_id}/`;
-        try {
-          const res = await fetch(`${base}marks.json`);
-          return res.ok ? { id: row.lesson_id, base, marks: await res.json() } : null;
-        } catch {
-          return null;
-        }
-      }));
-      const items = [];
-      const from = [];
-      let first = null;
-      for (const doc of docs) {
-        if (!doc || !doc.marks.byte_marks) continue;
-        const n = Number(doc.id);
-        let used = false;
-        for (const item of doc.marks.items || []) {
-          if (!item.word || !known[wordKey(item.word)]) continue;
-          const copy = { ...item, step: n * 100000 + item.step, word_n: n * 1000 + (item.word_n || 0), lesson_id: doc.id };
-          for (const lang of ['sv', 'uk', 'en']) {
-            if (!item[`${lang}_bytes`] || !doc.marks[`${lang}_file`]) continue;
-            copy[`${lang}_clip`] = {
-              url: `${doc.base}${doc.marks[`${lang}_file`]}`,
-              bytes: item[`${lang}_bytes`],
-              cut: item[`${lang}_cut`],
-            };
-          }
-          items.push(copy);
-          used = true;
-        }
-        if (used) {
-          from.push(doc.id);
-          first = first || doc.marks;
-        }
-      }
-      return {
-        mode: 'auto',
-        lesson_id: GLUED_ID,
-        pause_sec: first?.pause_sec ?? 0.6,
-        translation_lang: first?.translation_lang || 'uk',
-        translation_focus: first?.translation_focus || 'f1',
-        glued_from: from,
-        items,
-      };
     }
 
     function applyLesson(id, nextBase, marks, lesson) {
@@ -1947,6 +1920,225 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       finishLoad();
     }
 
+    // ---- Glue batches: storage, screen, playback ----
+    const marksCache = new Map();
+    let glueDoc = GlueBatches.normalizeDoc(null);
+    let glueMode = 'range';
+    let glueLessons = [];
+
+    function isGlueId(id) {
+      return String(id || '').startsWith('glue:');
+    }
+
+    async function fetchLessonMarks(id) {
+      if (!marksCache.has(id)) {
+        const res = await fetch(`audio/lessons/${id}/marks.json`);
+        if (!res.ok) throw new Error(`marks ${id}: ${res.status}`);
+        marksCache.set(id, await res.json());
+      }
+      return marksCache.get(id);
+    }
+
+    function writeLocalGlue(doc) {
+      try {
+        localStorage.setItem(LS_GLUE_KEY, JSON.stringify(doc));
+      } catch {
+        // ignore
+      }
+    }
+
+    function readLocalGlue() {
+      try {
+        return GlueBatches.normalizeDoc(JSON.parse(localStorage.getItem(LS_GLUE_KEY)));
+      } catch {
+        return GlueBatches.normalizeDoc(null);
+      }
+    }
+
+    // The stored document wins over the local copy; offline the local copy is used.
+    async function loadGlue() {
+      glueDoc = readLocalGlue();
+      try {
+        await ensureSignedIn();
+        const stored = await requestByPath(GLUE_DB, 'GET', null);
+        if (stored) {
+          glueDoc = GlueBatches.normalizeDoc(stored);
+          writeLocalGlue(glueDoc);
+        }
+      } catch (err) {
+        console.error('Glue read failed', err);
+      }
+      return glueDoc;
+    }
+
+    // Whole-document PUT; the local state changes only after the PUT succeeded.
+    async function saveGlue(doc) {
+      await ensureSignedIn();
+      await requestByPath(GLUE_DB, 'PUT', doc);
+      glueDoc = doc;
+      writeLocalGlue(doc);
+    }
+
+    async function useBatch(generation, batch) {
+      const ids = [...new Set(batch.words.map((w) => w.lesson_id))];
+      const marksById = {};
+      await Promise.all(ids.map(async (id) => { marksById[id] = await fetchLessonMarks(id); }));
+      const marks = GlueBatches.buildBatchMarks(generation, batch, marksById);
+      if (!marks.items.length) throw new Error('у склейці немає кроків');
+      applyLesson(marks.lesson_id, audioBase, marks, {
+        lesson_id: marks.lesson_id,
+        short: `Склейка ${batch.idx}/${generation.batches.length}`,
+        title: `${batch.words.length} слів`,
+      });
+    }
+
+    const elGlueN = document.getElementById('glueN');
+    const elGlueFrom = document.getElementById('glueFrom');
+    const elGlueTo = document.getElementById('glueTo');
+    const elGlueLessons = document.getElementById('glueLessons');
+    const elGlueInfo = document.getElementById('glueInfo');
+    const elGlueStatus = document.getElementById('glueStatus');
+    const elGlueHistory = document.getElementById('glueHistory');
+
+    function glueSelection() {
+      if (glueMode === 'list') {
+        const ids = [...elGlueLessons.querySelectorAll('input:checked')].map((box) => box.value);
+        return { mode: 'list', ids };
+      }
+      return { mode: 'range', from: Number(elGlueFrom.value), to: Number(elGlueTo.value) };
+    }
+
+    function glueIds() {
+      return GlueBatches.selectedIds(glueSelection(), glueLessons.filter((x) => x.ok).map((x) => x.id));
+    }
+
+    function glueDate(gen) {
+      return new Date(gen.created_at).toLocaleString('uk');
+    }
+
+    function paintGlueInfo() {
+      const ids = glueIds();
+      const pool = ids.reduce((sum, id) => sum + GlueBatches.unlearnedWords(id, marksCache.get(id), knownWords).length, 0);
+      const n = Math.max(1, Number(elGlueN.value) || 1);
+      elGlueInfo.textContent = `Уроків: ${ids.length}. Невивчених слів: ${pool}. Склейок: ${Math.ceil(pool / n)}.`;
+    }
+
+    function paintGlueHistory() {
+      elGlueHistory.innerHTML = '';
+      if (!glueDoc.history.length) {
+        const li = document.createElement('li');
+        li.textContent = 'Резервів ще немає.';
+        elGlueHistory.appendChild(li);
+      }
+      glueDoc.history.forEach((gen) => {
+        const li = document.createElement('li');
+        const text = document.createElement('span');
+        text.textContent = `${glueDate(gen)} · уроки ${gen.lessons.join(', ')} · N=${gen.n} · ${gen.batches.length} склейок`;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Відновити';
+        btn.onclick = async () => {
+          try {
+            await saveGlue(GlueBatches.restoreGeneration(glueDoc, gen.id));
+            elGlueStatus.textContent = 'Відновлено; попередня черга пішла в резерв.';
+          } catch (err) {
+            elGlueStatus.textContent = `Не збережено: ${err.message}`;
+          }
+          paintGlueHistory();
+        };
+        li.append(text, btn);
+        elGlueHistory.appendChild(li);
+      });
+    }
+
+    function paintGlueMode() {
+      document.getElementById('glueModeRange').dataset.selected = glueMode === 'range' ? '1' : '0';
+      document.getElementById('glueModeList').dataset.selected = glueMode === 'list' ? '1' : '0';
+      document.getElementById('glueRange').hidden = glueMode !== 'range';
+      elGlueLessons.hidden = glueMode !== 'list';
+      paintGlueInfo();
+    }
+
+    async function paintGlueView() {
+      elGlueStatus.textContent = 'Читання уроків…';
+      try {
+        if (!catalog.lessons.length) catalog = await loadCatalog();
+        await loadGlue();
+        const autos = catalog.lessons.filter((row) => row.kind === 'auto')
+          .sort((a, b) => Number(a.lesson_id) - Number(b.lesson_id));
+        glueLessons = await Promise.all(autos.map(async (row) => {
+          try {
+            const marks = await fetchLessonMarks(row.lesson_id);
+            return { id: row.lesson_id, short: row.short, ok: !!marks.byte_marks };
+          } catch {
+            return { id: row.lesson_id, short: row.short, ok: false };
+          }
+        }));
+      } catch (err) {
+        console.error(err);
+        elGlueStatus.textContent = 'Список уроків не прочитано.';
+        return;
+      }
+      knownWords = readLocalKnown();
+      const usable = glueLessons.filter((x) => x.ok).map((x) => Number(x.id));
+      if (usable.length && !elGlueFrom.value) elGlueFrom.value = String(Math.min(...usable));
+      if (usable.length && !elGlueTo.value) elGlueTo.value = String(Math.max(...usable));
+      elGlueLessons.innerHTML = '';
+      glueLessons.forEach((lesson) => {
+        const li = document.createElement('li');
+        li.dataset.off = lesson.ok ? '0' : '1';
+        const label = document.createElement('label');
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.value = lesson.id;
+        box.disabled = !lesson.ok;
+        box.onchange = paintGlueInfo;
+        label.append(box, ` ${lesson.short}${lesson.ok ? '' : ' (немає байтових меж)'}`);
+        li.appendChild(label);
+        elGlueLessons.appendChild(li);
+      });
+      elGlueStatus.textContent = glueDoc.current
+        ? `Поточна черга: ${glueDoc.current.batches.length} склейок від ${glueDate(glueDoc.current)}.`
+        : 'Черги склейок ще немає.';
+      paintGlueMode();
+      paintGlueHistory();
+    }
+
+    async function runGlue() {
+      const ids = glueIds();
+      if (!ids.length) {
+        elGlueStatus.textContent = 'Не обрано жодного уроку з байтовими межами.';
+        return;
+      }
+      await syncKnown();
+      const gen = GlueBatches.generate({
+        lessons: ids.map((id) => ({ id, marks: marksCache.get(id) })),
+        known: knownWords,
+        selection: glueSelection(),
+        n: Number(elGlueN.value),
+        seed: crypto.getRandomValues(new Uint32Array(1))[0],
+      });
+      if (!gen.batches.length) {
+        elGlueStatus.textContent = 'У вибраних уроках немає невивчених слів.';
+        return;
+      }
+      const cur = glueDoc.current;
+      if (cur && !confirm(`Перезаписати поточну чергу склейок (${cur.batches.length} склейок від ${glueDate(cur)})?\nПопередня піде в резерв (зберігаються 5 останніх).`)) return;
+      try {
+        await saveGlue(GlueBatches.pushGeneration(glueDoc, gen));
+        elGlueStatus.textContent = `Готово: ${gen.batches.length} склейок, ${gen.pool_size} слів. Вони в списку уроків, тег «Склейки».`;
+      } catch (err) {
+        console.error(err);
+        elGlueStatus.textContent = `Не збережено: ${err.message}`;
+      }
+      paintGlueHistory();
+    }
+
+    document.getElementById('glueModeRange').onclick = () => { glueMode = 'range'; paintGlueMode(); };
+    document.getElementById('glueModeList').onclick = () => { glueMode = 'list'; paintGlueMode(); };
+    for (const el of [elGlueN, elGlueFrom, elGlueTo]) el.oninput = paintGlueInfo;
+    document.getElementById('glueGo').onclick = runGlue;
+
     async function startPlayer() {
       let saved = '';
       try {
@@ -1954,11 +2146,15 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       } catch {
         saved = '';
       }
-      if (saved === GLUED_ID) {
+      if (isGlueId(saved)) {
         try {
           knownWords = readLocalKnown();
-          await useGlued();
-          return;
+          await loadGlue();
+          const found = GlueBatches.findBatch(glueDoc, saved);
+          if (found) {
+            await useBatch(found.generation, found.batch);
+            return;
+          }
         } catch (err) {
           console.error(err);
         }
@@ -1984,6 +2180,8 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       btnModeListen.dataset.selected = '1';
       btnModeMark.dataset.selected = '0';
       btnModeSettings.dataset.selected = '0';
+      btnModeGlue.dataset.selected = '0';
+      btnModeGlue.removeAttribute('aria-current');
       btnModeListen.setAttribute('aria-current', 'true');
       btnModeMark.removeAttribute('aria-current');
       btnModeSettings.removeAttribute('aria-current');
@@ -2005,6 +2203,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     const btnModeListen = document.getElementById('btnModeListen');
     const btnModeMark = document.getElementById('btnModeMark');
     const btnModeSettings = document.getElementById('btnModeSettings');
+    const btnModeGlue = document.getElementById('btnModeGlue');
     const btnMarkAll = document.getElementById('markAll');
     const btnMarkKnown = document.getElementById('markKnown');
     const btnMarkTr = document.getElementById('markTr');
@@ -2012,10 +2211,6 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     let knownOps = {};
     let knownOnly = false;
     let knownChain = Promise.resolve();
-
-    function wordKey(word) {
-      return String(word).trim().toLowerCase().replace(/[.$#[\]/]/g, '_');
-    }
 
     function lessonWords() {
       const words = new Map();
@@ -2129,14 +2324,21 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       dlgList.dataset.view = view;
       const mark = view === 'mark';
       const settings = view === 'settings';
-      const listen = !mark && !settings;
+      const glue = view === 'glue';
+      const listen = !mark && !settings && !glue;
       btnModeListen.dataset.selected = listen ? '1' : '0';
       btnModeMark.dataset.selected = mark ? '1' : '0';
       btnModeSettings.dataset.selected = settings ? '1' : '0';
+      btnModeGlue.dataset.selected = glue ? '1' : '0';
+      btnModeGlue.toggleAttribute('aria-current', glue);
       btnModeListen.toggleAttribute('aria-current', listen);
       btnModeMark.toggleAttribute('aria-current', mark);
       btnModeSettings.toggleAttribute('aria-current', settings);
       if (settings) return;
+      if (glue) {
+        paintGlueView();
+        return;
+      }
       if (mark) {
         knownWords = readLocalKnown();
         knownOnly = false;
@@ -2182,6 +2384,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     };
     btnModeSettings.onclick = () => setDialogView('settings');
     btnModeMark.onclick = () => setDialogView('mark');
+    btnModeGlue.onclick = () => setDialogView('glue');
     btnMarkAll.onclick = () => {
       knownOnly = false;
       renderMarkList();
