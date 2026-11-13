@@ -22,6 +22,7 @@ CATALOG_URL = "/__local/catalog.json"
 # Blocks every request that leaves this server, including Firebase.
 CSP = "default-src 'self' 'unsafe-inline' data: blob:; connect-src 'self'; base-uri 'self'"
 _BASE_TAG = re.compile(rb"<base\s+href=\"[^\"]*\"\s*/?>")
+_RANGE = re.compile(r"bytes=(\d*)-(\d*)")
 
 STUB_JS = """// Local replacement for the Firebase client. State lives in this browser tab only.
 class GlobalVars {
@@ -90,8 +91,39 @@ class Handler(SimpleHTTPRequestHandler):
             # The published pages point <base> at the live site; keep them on this server.
             html = _BASE_TAG.sub(b'<base href="/voicetrain/" />', file.read_bytes())
             self._send(html, "text/html; charset=utf-8")
+        elif self.headers.get("Range"):
+            self._send_range(path, self.headers["Range"])
         else:
             super().do_GET()
+
+    def _send_range(self, path: str, header: str) -> None:
+        """Single byte range, as GitHub Pages serves it (the player fetches lesson steps this way)."""
+        file = Path(self.translate_path(path))
+        match = _RANGE.fullmatch(header.strip())
+        if not file.is_file() or not match:
+            super().do_GET()
+            return
+        size = file.stat().st_size
+        first, last = match.groups()
+        if first == "":
+            start, end = max(0, size - int(last)), size - 1
+        else:
+            start, end = int(first), min(size - 1, int(last) if last else size - 1)
+        if start > end or start >= size:
+            self.send_response(416)
+            self.send_header("Content-Range", f"bytes */{size}")
+            self.end_headers()
+            return
+        with file.open("rb") as fh:
+            fh.seek(start)
+            body = fh.read(end - start + 1)
+        self.send_response(206)
+        self.send_header("Content-Type", self.guess_type(str(file)))
+        self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
 
 def make_server(port: int = DEFAULT_PORT) -> ThreadingHTTPServer:

@@ -53,6 +53,24 @@ class LocalServerTest(unittest.TestCase):
         self.assertIn("11", doc["lessons"])
         self.assertEqual(doc["lessons"]["11"]["tag"], "LOCAL")
 
+    def test_byte_range_returns_206_with_the_exact_slice(self) -> None:
+        path = "/voicetrain/audio/lessons/2/marks.json"
+        whole = (SITE_ROOT / path.lstrip("/")).read_bytes()
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", headers={"Range": "bytes=10-19"})
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 206)
+            self.assertEqual(resp.headers["Content-Range"], f"bytes 10-19/{len(whole)}")
+            self.assertEqual(resp.read(), whole[10:20])
+
+    def test_byte_range_past_the_end_is_416(self) -> None:
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{self.port}/voicetrain/audio/lessons/2/marks.json",
+            headers={"Range": "bytes=999999999-"},
+        )
+        with self.assertRaises(urllib.error.HTTPError) as err:
+            urllib.request.urlopen(req)
+        self.assertEqual(err.exception.code, 416)
+
     def test_beta_page_is_the_published_player_with_its_own_storage(self) -> None:
         html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
         self.assertIn('<base href="https://nirsukrnet.github.io/voicetrain/" />', html)
@@ -60,6 +78,13 @@ class LocalServerTest(unittest.TestCase):
         self.assertIn("IS_BETA ? '_beta' : ''", html)
         self.assertIn("ui_state/voicetrain${CHANNEL_SUFFIX}", html)
         self.assertIn('id="btnPause"', html)
+
+    def test_beta_glued_lesson_plays_steps_by_byte_range(self) -> None:
+        html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
+        self.assertIn("const GLUED_ID = 'glued'", html)
+        self.assertIn("async function buildGluedMarks(", html)
+        self.assertIn("Range: `bytes=${clip.bytes[0]}-${clip.bytes[1] - 1}`", html)
+        self.assertIn("item.start - shift", html)
 
 
 if __name__ == "__main__":
