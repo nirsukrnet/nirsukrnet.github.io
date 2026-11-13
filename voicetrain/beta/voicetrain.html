@@ -344,7 +344,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.13-2';
+    const VT_VERSION = '2026.11.13-3';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -1785,11 +1785,13 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       return `${base}_${state.lessonId || state.marks?.lesson_id || 'default'}`;
     }
 
-    function readLessonFlag(base) {
+    // fallback: value while the user has not toggled the flag for this lesson.
+    function readLessonFlag(base, fallback = false) {
       try {
-        return localStorage.getItem(lessonPrefKey(base)) === '1';
+        const value = localStorage.getItem(lessonPrefKey(base));
+        return value === null ? fallback : value === '1';
       } catch {
-        return false;
+        return fallback;
       }
     }
 
@@ -1857,7 +1859,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       state.pauseExtra = readPauseExtra();
       state.shuffle = readLessonFlag(LS_SHUFFLE_KEY);
       state.translationFirst = readLessonFlag(LS_TR_FIRST_KEY);
-      state.skipKnown = readLessonFlag(LS_SKIP_KNOWN_KEY);
+      state.skipKnown = readLessonFlag(LS_SKIP_KNOWN_KEY, true);
       knownWords = readLocalKnown();
       paintPause();
       applyPlaybackUi();
@@ -2190,6 +2192,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       elLessonList.innerHTML = '';
       try {
         catalog = await loadCatalog();
+        await loadGlue();
         tagPage = 0;
         renderTags();
         renderLessonChoices();

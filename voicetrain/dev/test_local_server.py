@@ -90,6 +90,7 @@ class LocalServerTest(unittest.TestCase):
             "Range: `bytes=${clip.bytes[0]}-${clip.bytes[1] - 1}`",
             "item.start - shift",
             "`▶ ${inPos.value || '1'}/${playList().length}`",
+            "readLessonFlag(LS_SKIP_KNOWN_KEY, true)",
         ):
             self.assertIn(needle, html)
         for gone in ("GLUED_ID", "buildGluedMarks", "useGlued"):
