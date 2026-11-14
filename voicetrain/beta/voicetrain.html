@@ -101,7 +101,7 @@ li[data-mark=focus]{border-left:5px solid var(--focus)}
 #glueHistory li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 10px;font-size:14px}
 #glueGo{width:100%}
 .set-sec h4{margin:0 0 8px;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
-.set-sec:has(> [hidden]){display:none}
+#settingsView .set-sec:has(> [hidden]){display:none}
 #settingsView .ico-wrap > button{display:none}
 #settingsView .pos-menu{position:static;display:flex;flex-wrap:wrap;gap:6px;width:auto;min-width:0;border:0;padding:0;box-shadow:none;background:none}
 #settingsView .pos-menu button{width:auto;flex:1 1 auto;border:1px solid var(--line);border-radius:10px;padding:6px 14px;text-align:center}
@@ -343,7 +343,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.14-3';
+    const VT_VERSION = '2026.11.14-4';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
