@@ -89,8 +89,11 @@ class LocalServerTest(unittest.TestCase):
             "Перезаписати поточну чергу склейок",
             "Range: `bytes=${clip.bytes[0]}-${clip.bytes[1] - 1}`",
             "item.start - shift",
-            "`▶ ${inPos.value || '1'}/${playList().length}`",
+            "`▶ ${inPos.value || '1'}/${total}`",
             "readLessonFlag(LS_SKIP_KNOWN_KEY, true)",
+            "btnPlayFromN.textContent = `Pause ${now}/${total}`",
+            "li.addEventListener('dblclick', () => makeNext(index))",
+            "state.jumpTo = -1",
         ):
             self.assertIn(needle, html)
         for gone in ("GLUED_ID", "buildGluedMarks", "useGlued"):

@@ -183,6 +183,7 @@ ul#cardList{overflow:visible;margin:0;padding-bottom:calc(130px + env(safe-area-
 .dialog{max-width:none;padding:2px 0 0}
 .dock .in{max-width:none}
 ul#cardList{gap:2px}
+ul#cardList li{touch-action:manipulation}
 li{padding:3px 4px 3px 4px;border-radius:6px;border-left-width:1px;border-right-width:1px}
 li::before{position:absolute;left:auto;right:3px;top:1px;width:auto;font-size:9px;opacity:.7;z-index:1}
 li[data-saved="1"]::after{right:auto;left:1px;top:-2px;font-size:9px}
@@ -344,7 +345,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.13-3';
+    const VT_VERSION = '2026.11.14-2';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -401,6 +402,8 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       nextTimer: null,
       currentIndex: -1,
       lastPlayedIndex: -1,
+      jumpTo: -1,
+      playingIndex: 0,
       savedIndex: -1,
       userMarks: {},
       showEn: false,
@@ -704,7 +707,14 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
     let playLabelPlaying = false;
     function renderPlayLabel() {
-      btnPlayFromN.textContent = playLabelPlaying ? 'Pause' : `▶ ${inPos.value || '1'}/${playList().length}`;
+      const total = playList().length;
+      if (playLabelPlaying) {
+        // While playing, the number is the step being played, not the value typed in the position field.
+        const now = state.playingIndex + 1;
+        btnPlayFromN.textContent = `Pause ${now}/${total}`;
+        return;
+      }
+      btnPlayFromN.textContent = `▶ ${inPos.value || '1'}/${total}`;
     }
 
     function setPosInput(index) {
@@ -1188,9 +1198,12 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     }
 
     function pausePlayback() {
-      if (state.lastPlayedIndex >= 0) {
-        persistState(state.lastPlayedIndex);
-        setPosInput(state.lastPlayedIndex);
+      // A double-clicked card waiting to be played next is where the resume starts.
+      const resumeAt = state.jumpTo >= 0 ? state.jumpTo : state.lastPlayedIndex;
+      state.jumpTo = -1;
+      if (resumeAt >= 0) {
+        persistState(resumeAt);
+        setPosInput(resumeAt);
       }
       state.stopRequested = true;
       state.playing = false;
@@ -1244,6 +1257,19 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       if (line) line.classList.add('on');
     }
 
+    // Double click: this card becomes the next step. Playing: it starts when the current step ends. Paused: the position moves here.
+    function makeNext(index) {
+      if (state.playing) {
+        state.jumpTo = index;
+        markSavedCard(index);
+        elCurrent.textContent = `Next: ${renderStepLabel(playList()[index], index)}`;
+        return;
+      }
+      setPosInput(index);
+      goToN();
+      persistState(index);
+    }
+
     function renderCardList() {
       elCardList.innerHTML = '';
       if (!state.marks?.items?.length) {
@@ -1265,6 +1291,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
           setPosInput(index);
           goToN();
         });
+        li.addEventListener('dblclick', () => makeNext(index));
         elCardList.appendChild(li);
       });
       if (state.savedIndex >= 0) {
@@ -1347,6 +1374,9 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
       state.stopRequested = false;
       state.playing = true;
+      // Reset before any await, so a double click made while the audio loads is kept.
+      state.jumpTo = -1;
+      state.playingIndex = startIndex;
       if (btnRestart) btnRestart.hidden = true;
       setPlayFromNLabel(true);
       const unlocked = unlockAudio();
@@ -1361,11 +1391,22 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
         const endIndex = playList().length - 1;
 
-        for (let i = startIndex; i <= endIndex; i += 1) {
+        let i = state.jumpTo >= 0 ? state.jumpTo : startIndex;
+        state.jumpTo = -1;
+        while (i <= endIndex) {
           if (state.stopRequested) {
             break;
           }
+          state.playingIndex = i;
+          renderPlayLabel();
           await playStep(i);
+          // A double click on a card chose the next step; otherwise go on in order.
+          if (state.jumpTo >= 0) {
+            i = state.jumpTo;
+            state.jumpTo = -1;
+          } else {
+            i += 1;
+          }
         }
 
         if (!state.stopRequested) {
