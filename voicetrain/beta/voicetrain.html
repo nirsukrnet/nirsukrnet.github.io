@@ -345,7 +345,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.14-1';
+    const VT_VERSION = '2026.11.14-2';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -403,6 +403,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       currentIndex: -1,
       lastPlayedIndex: -1,
       jumpTo: -1,
+      playingIndex: 0,
       savedIndex: -1,
       userMarks: {},
       showEn: false,
@@ -709,7 +710,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       const total = playList().length;
       if (playLabelPlaying) {
         // While playing, the number is the step being played, not the value typed in the position field.
-        const now = state.lastPlayedIndex >= 0 ? state.lastPlayedIndex + 1 : (inPos.value || '1');
+        const now = state.playingIndex + 1;
         btnPlayFromN.textContent = `Pause ${now}/${total}`;
         return;
       }
@@ -1373,6 +1374,9 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
       state.stopRequested = false;
       state.playing = true;
+      // Reset before any await, so a double click made while the audio loads is kept.
+      state.jumpTo = -1;
+      state.playingIndex = startIndex;
       if (btnRestart) btnRestart.hidden = true;
       setPlayFromNLabel(true);
       const unlocked = unlockAudio();
@@ -1387,12 +1391,14 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
 
         const endIndex = playList().length - 1;
 
+        let i = state.jumpTo >= 0 ? state.jumpTo : startIndex;
         state.jumpTo = -1;
-        let i = startIndex;
         while (i <= endIndex) {
           if (state.stopRequested) {
             break;
           }
+          state.playingIndex = i;
+          renderPlayLabel();
           await playStep(i);
           // A double click on a card chose the next step; otherwise go on in order.
           if (state.jumpTo >= 0) {
