@@ -330,9 +330,9 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         <div class="glue-field">
           <span>Слів у склейці</span>
           <div class="stepper">
-            <button type="button" id="glueNMinus" aria-label="Менше на 5">−</button>
+            <button type="button" id="glueNMinus" aria-label="Менше на 1">−</button>
             <button type="button" class="pick" id="glueN" aria-label="Слів у склейці">45</button>
-            <button type="button" id="glueNPlus" aria-label="Більше на 5">+</button>
+            <button type="button" id="glueNPlus" aria-label="Більше на 1">+</button>
           </div>
         </div>
       </section>
@@ -409,11 +409,11 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   </form>
 </dialog>
 <script src="../yout_pl2/yu2_global_var.js"></script>
-<script src="beta/glue_batches.js?v=2026.11.14-7"></script>
+<script src="beta/glue_batches.js?v=2026.11.14-8"></script>
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.14-7';
+    const VT_VERSION = '2026.11.14-8';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';

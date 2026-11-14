@@ -85,7 +85,7 @@ class LocalServerTest(unittest.TestCase):
     def test_beta_glue_batches_screen_and_byte_range_playback(self) -> None:
         html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
         for needle in (
-            '<script src="beta/glue_batches.js?v=2026.11.14-7"></script>',
+            '<script src="beta/glue_batches.js?v=2026.11.14-8"></script>',
             'id="btnModeGlue"',
             'id="glueGo"',
             "const GLUE_DB = '../db_youtube2/ui_state/glue_batches'",

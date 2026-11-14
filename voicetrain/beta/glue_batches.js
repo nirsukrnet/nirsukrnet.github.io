@@ -56,9 +56,9 @@
     return avail.filter((id) => Number(id) >= from && Number(id) <= to);
   }
 
-  const N_MIN = 5;
+  const N_MIN = 1;
   const N_MAX = 150;
-  const N_STEP = 5;
+  const N_STEP = 1;
 
   // Items of the number sheet: kind 'n' | 'from' | 'to'; ids = usable lesson ids; state = { n, from, to }.
   // 'from' cannot pass 'to' and 'to' cannot go below 'from': those items come back disabled.
