@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 import sys
 import threading
 import unittest
@@ -99,6 +101,33 @@ class LocalServerTest(unittest.TestCase):
         for gone in ("GLUED_ID", "buildGluedMarks", "useGlued"):
             self.assertNotIn(gone, html)
         self.assertFalse((SITE_ROOT / "voicetrain/beta/range_demo.html").exists())
+
+    def test_glue_save_reads_the_document_before_put(self) -> None:
+        html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
+        self.assertIn("change(GlueBatches.normalizeDoc(await requestByPath(GLUE_DB, 'GET', null)))", html)
+        self.assertIn("saveGlue((doc) => GlueBatches.pushGeneration(doc, gen))", html)
+        self.assertIn("saveGlue((doc) => GlueBatches.restoreGeneration(doc, gen.id))", html)
+
+    @unittest.skipUnless(shutil.which("node"), "node is not installed")
+    def test_firebase_stub_accepts_put_of_glue_batches(self) -> None:
+        stub, _ = self.get("/yout_pl2/yu2_global_var.js")
+        script = stub + """
+const store = new Map();
+globalThis.sessionStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)) };
+const ds = new GlobalVars().URL_DS;
+const call = (ametod, vobj) => new Promise((resolve, reject) => ds.requestData_By_URL_Path(
+  { addUrl: '../db_youtube2/ui_state/glue_batches', ametod, vobj, CallBackFunction: resolve, ErrorCallback: reject }));
+(async () => {
+  const doc = { current: { id: 'g1', batches: [] }, history: [] };
+  const afterPut = await call('PUT', doc);
+  const afterGet = await call('GET', null);
+  console.log(JSON.stringify({ afterPut, afterGet }));
+})();
+"""
+        out = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=30, check=True)
+        result = json.loads(out.stdout)
+        self.assertEqual(result["afterPut"]["current"]["id"], "g1")
+        self.assertEqual(result["afterGet"], result["afterPut"])
 
     def test_glue_module_is_served(self) -> None:
         body, _ = self.get("/voicetrain/beta/glue_batches.js")
