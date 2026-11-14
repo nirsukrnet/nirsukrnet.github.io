@@ -96,6 +96,7 @@ class LocalServerTest(unittest.TestCase):
             "btnPlayFromN.textContent = `Pause ${now}/${total}`",
             "li.addEventListener('dblclick', () => makeNext(index))",
             "state.jumpTo = -1",
+            "elMediaLog.textContent = bits.join(' · ')",
         ):
             self.assertIn(needle, html)
         for gone in ("GLUED_ID", "buildGluedMarks", "useGlued"):
