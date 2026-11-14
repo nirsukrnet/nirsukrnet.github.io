@@ -85,7 +85,7 @@ class LocalServerTest(unittest.TestCase):
     def test_beta_glue_batches_screen_and_byte_range_playback(self) -> None:
         html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
         for needle in (
-            '<script src="beta/glue_batches.js"></script>',
+            '<script src="beta/glue_batches.js?v=2026.11.14-7"></script>',
             'id="btnModeGlue"',
             'id="glueGo"',
             "const GLUE_DB = '../db_youtube2/ui_state/glue_batches'",
@@ -103,6 +103,12 @@ class LocalServerTest(unittest.TestCase):
         for gone in ("GLUED_ID", "buildGluedMarks", "useGlued"):
             self.assertNotIn(gone, html)
         self.assertFalse((SITE_ROOT / "voicetrain/beta/range_demo.html").exists())
+
+    def test_glue_script_url_carries_the_page_version(self) -> None:
+        # GitHub Pages caches the module for 10 minutes; a new page with an old module broke the glue screen.
+        html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
+        version = re.search(r"const VT_VERSION = '([^']+)'", html).group(1)
+        self.assertIn(f'<script src="beta/glue_batches.js?v={version}"></script>', html)
 
     def test_glue_save_reads_the_document_before_put(self) -> None:
         html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
