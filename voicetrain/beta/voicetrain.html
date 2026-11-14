@@ -1973,9 +1973,11 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       return glueDoc;
     }
 
-    // Whole-document PUT; the local state changes only after the PUT succeeded.
-    async function saveGlue(doc) {
+    // GET → change → PUT of the whole document, so a generation written by another device is not lost.
+    // The local state changes only after the PUT succeeded.
+    async function saveGlue(change) {
       await ensureSignedIn();
+      const doc = change(GlueBatches.normalizeDoc(await requestByPath(GLUE_DB, 'GET', null)));
       await requestByPath(GLUE_DB, 'PUT', doc);
       glueDoc = doc;
       writeLocalGlue(doc);
@@ -2041,7 +2043,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         btn.textContent = 'Відновити';
         btn.onclick = async () => {
           try {
-            await saveGlue(GlueBatches.restoreGeneration(glueDoc, gen.id));
+            await saveGlue((doc) => GlueBatches.restoreGeneration(doc, gen.id));
             elGlueStatus.textContent = 'Відновлено; попередня черга пішла в резерв.';
           } catch (err) {
             elGlueStatus.textContent = `Не збережено: ${err.message}`;
@@ -2127,7 +2129,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       const cur = glueDoc.current;
       if (cur && !confirm(`Перезаписати поточну чергу склейок (${cur.batches.length} склейок від ${glueDate(cur)})?\nПопередня піде в резерв (зберігаються 5 останніх).`)) return;
       try {
-        await saveGlue(GlueBatches.pushGeneration(glueDoc, gen));
+        await saveGlue((doc) => GlueBatches.pushGeneration(doc, gen));
         elGlueStatus.textContent = `Готово: ${gen.batches.length} склейок, ${gen.pool_size} слів. Вони в списку уроків, тег «Склейки».`;
       } catch (err) {
         console.error(err);
