@@ -117,6 +117,11 @@ class LocalServerTest(unittest.TestCase):
         rules = re.findall(r"^(.*)\.set-sec:has\(> \[hidden\]\)\{display:none\}$", html, re.M)
         self.assertEqual(rules, ["#settingsView "])
 
+    def test_glue_view_hidden_attribute_is_honoured(self) -> None:
+        # `#glueLessons{display:flex}` and `.row` beat the UA `[hidden]` rule, so the list showed in range mode.
+        html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
+        self.assertIn("#glueView [hidden]{display:none!important}", html)
+
     @unittest.skipUnless(shutil.which("node"), "node is not installed")
     def test_firebase_stub_accepts_put_of_glue_batches(self) -> None:
         stub, _ = self.get("/yout_pl2/yu2_global_var.js")
