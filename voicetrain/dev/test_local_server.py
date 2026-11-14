@@ -117,6 +117,30 @@ class LocalServerTest(unittest.TestCase):
         rules = re.findall(r"^(.*)\.set-sec:has\(> \[hidden\]\)\{display:none\}$", html, re.M)
         self.assertEqual(rules, ["#settingsView "])
 
+    def test_glue_view_hidden_attribute_is_honoured(self) -> None:
+        # `#glueLessons{display:flex}` and `.row` beat the UA `[hidden]` rule, so the list showed in range mode.
+        html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
+        self.assertIn("#glueView [hidden]{display:none!important}", html)
+
+    def test_glue_screen_uses_touch_pickers_not_keyboard_fields(self) -> None:
+        html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
+        view = html[html.index('<div id="glueView">'):html.index('<div id="settingsView">')]
+        self.assertNotIn('type="number"', view)
+        self.assertNotIn("<input", view)
+        for needle in (
+            'id="numSheet"',
+            '<button type="button" class="pick" id="glueN"',
+            '<button type="button" class="pick" id="glueFrom"',
+            '<button type="button" class="pick" id="glueTo"',
+            'id="glueModeRange" aria-pressed="true"',
+            'id="glueSumBatches"',
+            "event.target.closest('button.id')",
+            "localStorage.setItem(LS_GLUE_FORM",
+        ):
+            self.assertIn(needle, html)
+        for gone in ("#glueView label{", "input:checked", "button[data-selected=\"1\"]{border-color:var(--acc)}", "max-height:34vh"):
+            self.assertNotIn(gone, html[html.index("#glueView{display:none"):html.index("</style>")] + html[html.index("function glueSelection"):html.index("function glueIds")])
+
     @unittest.skipUnless(shutil.which("node"), "node is not installed")
     def test_firebase_stub_accepts_put_of_glue_batches(self) -> None:
         stub, _ = self.get("/yout_pl2/yu2_global_var.js")

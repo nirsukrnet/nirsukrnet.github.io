@@ -56,6 +56,26 @@
     return avail.filter((id) => Number(id) >= from && Number(id) <= to);
   }
 
+  const N_MIN = 5;
+  const N_MAX = 150;
+  const N_STEP = 5;
+
+  // Items of the number sheet: kind 'n' | 'from' | 'to'; ids = usable lesson ids; state = { n, from, to }.
+  // 'from' cannot pass 'to' and 'to' cannot go below 'from': those items come back disabled.
+  function numOptions(kind, state, ids) {
+    if (kind === 'n') {
+      const out = [];
+      for (let v = N_MIN; v <= N_MAX; v += N_STEP) out.push({ v, disabled: false, selected: v === state.n });
+      return out;
+    }
+    const cur = kind === 'from' ? state.from : state.to;
+    return ids.map(Number).sort((a, b) => a - b).map((v) => ({
+      v,
+      disabled: kind === 'from' ? v > state.to : v < state.from,
+      selected: v === cur,
+    }));
+  }
+
   // One entry per word of the lesson (first step of the word), not yet known.
   function unlearnedWords(lessonId, marks, known) {
     const seen = new Set();
@@ -176,7 +196,7 @@
   }
 
   const api = {
-    HISTORY_LIMIT, wordKey, seededRandom, shuffledApart, selectedIds, unlearnedWords, generate,
+    HISTORY_LIMIT, N_MIN, N_MAX, N_STEP, numOptions, wordKey, seededRandom, shuffledApart, selectedIds, unlearnedWords, generate,
     normalizeDoc, pushGeneration, restoreGeneration, findBatch, batchLessonId, remaining, buildBatchMarks,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
