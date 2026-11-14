@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -108,6 +109,13 @@ class LocalServerTest(unittest.TestCase):
         self.assertIn("change(GlueBatches.normalizeDoc(await requestByPath(GLUE_DB, 'GET', null)))", html)
         self.assertIn("saveGlue((doc) => GlueBatches.pushGeneration(doc, gen))", html)
         self.assertIn("saveGlue((doc) => GlueBatches.restoreGeneration(doc, gen.id))", html)
+
+    def test_glue_section_is_not_hidden_by_the_settings_rule(self) -> None:
+        # The glue section always has one hidden child (#glueRange or #glueLessons);
+        # a page-wide `.set-sec:has(> [hidden])` rule hid the N field and the Generate button.
+        html = (SITE_ROOT / BETA.lstrip("/")).read_text(encoding="utf-8")
+        rules = re.findall(r"^(.*)\.set-sec:has\(> \[hidden\]\)\{display:none\}$", html, re.M)
+        self.assertEqual(rules, ["#settingsView "])
 
     @unittest.skipUnless(shutil.which("node"), "node is not installed")
     def test_firebase_stub_accepts_put_of_glue_batches(self) -> None:
