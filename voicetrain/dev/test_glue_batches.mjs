@@ -119,10 +119,10 @@ test('findBatch and remaining', () => {
   assert.equal(G.remaining(gen.batches[1], { [G.wordKey(first.word)]: 'x' }), gen.batches[1].words.length - 1);
 });
 
-test('numOptions: N list is 5..150 step 5 with the current value marked', () => {
+test('numOptions: N list is 1..150 step 1 with the current value marked', () => {
   const opts = G.numOptions('n', { n: 45 }, []);
-  assert.equal(opts.length, 30);
-  assert.deepEqual([opts[0].v, opts[29].v], [5, 150]);
+  assert.equal(opts.length, 150);
+  assert.deepEqual([opts[0].v, opts[149].v], [1, 150]);
   assert.deepEqual(opts.filter((o) => o.selected).map((o) => o.v), [45]);
 });
 
