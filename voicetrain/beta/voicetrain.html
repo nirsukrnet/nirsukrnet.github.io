@@ -124,7 +124,6 @@ li[data-mark=focus]{border-left:5px solid var(--focus)}
 .top .ttl{display:flex;align-items:baseline;gap:8px;overflow:hidden}
 h1{font-size:16px;flex:none}
 .total{font-size:12px}
-#lessonHeading:empty{display:none}
 button{min-height:40px;padding:6px 10px;border-radius:10px}
 .icon{width:40px}
 .panel{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:4px 6px;border-radius:12px;position:relative}
@@ -231,7 +230,6 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <div class="info">
     <h1 id="elMediaLog">VoiceTraining</h1>
     <span id="elChannel" class="total"></span>
-    <span id="lessonHeading" class="total"></span>
     <span id="currentCard" class="current">Натисніть ▶ Play або оберіть крок.</span>
     <span id="elTotal" class="total"></span>
   </div>
@@ -345,7 +343,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.14-2';
+    const VT_VERSION = '2026.11.14-3';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -454,7 +452,8 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         minute: '2-digit',
         second: '2-digit',
       });
-      elMediaLog.textContent = note ? `${action} — ${note} · ${t}` : `${action} · ${t}`;
+      // The heading shows the lesson name; the media-key log moves into its tooltip.
+      elMediaLog.title = note ? `${action} — ${note} · ${t}` : `${action} · ${t}`;
     }
 
     function syncMediaPlaybackState() {
@@ -1618,7 +1617,6 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       }
     }
 
-    const elLessonHeading = document.getElementById('lessonHeading');
     const dlgList = document.getElementById('dlgListMenu');
     const elTagRow = document.getElementById('listMenuTagRow');
     const elLessonList = document.getElementById('lessonList');
@@ -1629,16 +1627,16 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     let tagPage = 0;
     let listFilter = '';
 
+    // The dock heading is the lesson name.
     function paintLesson(lesson) {
-      if (!elLessonHeading) return;
+      if (!elMediaLog) return;
       if (!lesson) {
-        elLessonHeading.textContent = '';
+        elMediaLog.textContent = 'VoiceTraining';
         return;
       }
       const bits = [lesson.short || lesson.lesson_id];
       if (lesson.title && lesson.title !== lesson.short) bits.push(lesson.title);
-      if (lesson.tag) bits.push(`тег ${lesson.tag}`);
-      elLessonHeading.textContent = bits.join(' · ');
+      elMediaLog.textContent = bits.join(' · ');
     }
 
     function lessonRows(doc) {
@@ -2216,6 +2214,14 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       }
       await loadMarks();
       finishLoad();
+      // The default lesson has no catalog row yet: look its name up, the page works without it.
+      try {
+        catalog = await loadCatalog();
+        const own = catalog.lessons.find((item) => item.lesson_id === String(state.marks?.lesson_id));
+        if (own) paintLesson(own);
+      } catch (err) {
+        console.error(err);
+      }
     }
 
     document.getElementById('btnListMenu').onclick = async () => {
