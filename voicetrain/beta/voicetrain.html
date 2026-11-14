@@ -6,10 +6,10 @@
 <base href="https://nirsukrnet.github.io/voicetrain/" />
 <title>VoiceTraining</title>
 <style>
-:root{color-scheme:light dark;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--acc:#2563eb;--acc2:#1d4ed8;--accfg:#fff;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675;--skip:#2563eb;--focus:#ea580c;--r:16px}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--acc:#3b82f6;--acc2:#60a5fa;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}}
-html[data-theme=light],html[data-theme=light-big]{color-scheme:light;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675}
-html[data-theme=dark],html[data-theme=dark-big]{color-scheme:dark;--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4}
+:root{color-scheme:light dark;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--acc:#2563eb;--acc2:#1d4ed8;--accfg:#fff;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675;--skip:#2563eb;--focus:#ea580c;--r:16px;--ctl:#b9c0cd;--ctlbg:#f1f3f8}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--acc:#3b82f6;--acc2:#60a5fa;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4;--ctl:#4a5468;--ctlbg:#10141b}}
+html[data-theme=light],html[data-theme=light-big]{color-scheme:light;--bg:#f6f7fb;--card:#fff;--fg:#14161c;--mut:#667085;--line:#e4e7ee;--soft:#eef2ff;--say:#fff6dc;--sayfg:#3d3424;--voi:#fff1e6;--voifg:#9a3f10;--hint:#f2f4f7;--hintfg:#5b6675;--ctl:#b9c0cd;--ctlbg:#f1f3f8}
+html[data-theme=dark],html[data-theme=dark-big]{color-scheme:dark;--bg:#0e1117;--card:#171b23;--fg:#e8eaf0;--mut:#98a2b3;--line:#2a303c;--soft:#1e2a44;--say:#2e2816;--sayfg:#f5e7bf;--voi:#33200f;--voifg:#ffb784;--hint:#1f242e;--hintfg:#a9b4c4;--ctl:#4a5468;--ctlbg:#10141b}
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg);-webkit-tap-highlight-color:transparent}
 .dialog{max-width:640px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;padding:0 12px calc(96px + env(safe-area-inset-bottom))}
@@ -89,18 +89,64 @@ li[data-mark=focus]{border-left:5px solid var(--focus)}
 #settingsView{display:none;flex:1;min-height:0;overflow:auto;margin-top:44px;flex-direction:column;gap:18px}
 #dlgListMenu[data-view=settings] :is(#listMenuTagRow,#inFilter,#lessonList,#listStatus){display:none}
 #dlgListMenu[data-view=settings] #settingsView{display:flex}
-#glueView{display:none;flex:1;min-height:0;overflow:auto;margin-top:44px;flex-direction:column;gap:16px}
+#glueView{display:none;flex:1;min-height:0;overflow:auto;margin-top:44px;flex-direction:column;gap:20px;-webkit-overflow-scrolling:touch}
 #dlgListMenu[data-view=glue] :is(#listMenuTagRow,#inFilter,#lessonList,#listStatus){display:none}
 #dlgListMenu[data-view=glue] #glueView{display:flex}
 #glueView [hidden]{display:none!important}
-#glueView .row{gap:8px;align-items:center}
-#glueView button[data-selected="1"]{border-color:var(--acc)}
-#glueView label{display:flex;gap:6px;align-items:center;font-size:14px}
-#glueLessons,#glueHistory{display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow:auto}
-#glueLessons li{display:flex;gap:8px;align-items:center;padding:6px 10px}
-#glueLessons li[data-off="1"]{opacity:.4}
-#glueHistory li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 10px;font-size:14px}
-#glueGo{width:100%}
+#glueView .set-sec{display:flex;flex-direction:column;gap:12px}
+#glueView h4{margin:0;font-size:12px;font-weight:700;color:var(--fg);text-transform:uppercase;letter-spacing:.06em;opacity:.75}
+#glueView button{font:inherit;color:inherit;cursor:pointer}
+#glueView button:focus-visible{outline:3px solid color-mix(in srgb,var(--acc) 45%,transparent);outline-offset:2px}
+.glue-field{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px}
+.glue-field>span{font-size:15px;font-weight:600}
+.stepper{display:flex;align-items:stretch;border:1.5px solid var(--ctl);border-radius:12px;overflow:hidden;background:var(--ctlbg)}
+.stepper button{width:44px;border:0;background:transparent;font-size:20px;font-weight:700;color:var(--acc2)}
+.stepper button:active{background:var(--soft)}
+.segm{display:grid;grid-template-columns:1fr 1fr;padding:4px;gap:4px;border:1.5px solid var(--ctl);border-radius:14px;background:var(--ctlbg)}
+.segm button{min-height:44px;border:0;border-radius:10px;background:transparent;font-size:15px;font-weight:600;color:var(--mut)}
+.segm button[aria-pressed="true"]{background:var(--acc);color:var(--accfg);box-shadow:0 2px 6px color-mix(in srgb,var(--acc) 35%,transparent)}
+.glue-range{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:10px;align-items:center}
+.glue-range span{font-size:15px;font-weight:600}
+.pick{width:100%;min-height:48px;border:1.5px solid var(--ctl);border-radius:12px;background:var(--ctlbg);font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center;gap:6px}
+.pick::after{content:"▾";font-size:13px;color:var(--mut)}
+.stepper .pick{width:64px;min-height:46px;border:0;border-inline:1.5px solid var(--ctl);border-radius:0;background:var(--card)}
+.stepper .pick::after{content:none}
+.glue-hint{margin:0;font-size:13px;color:var(--mut)}
+#glueLessons,#glueHistory{display:flex;flex-direction:column;gap:8px;flex:none;overflow:visible;margin:0}
+#glueLessons li::before,#glueHistory li::before{content:none}
+#glueLessons li.glue-lesson{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;min-height:58px;padding:0 12px 0 0;border:2px solid transparent;border-radius:14px;background:var(--ctlbg);cursor:default;opacity:.5;overflow:hidden}
+.glue-lesson .id{align-self:stretch;display:grid;place-items:center;border:0;border-right:1.5px solid var(--ctl);border-radius:0;background:transparent;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;min-height:58px}
+.glue-lesson .id:active{background:var(--soft)}
+.glue-lesson .nm{font-size:15px;line-height:1.3}
+.glue-lesson .cnt{font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums;text-align:right}
+#glueLessons li.glue-lesson[data-in="1"]{opacity:1;border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.glue-lesson[data-in="1"] .id{background:var(--acc);color:var(--accfg);border-right-color:var(--acc)}
+.glue-lesson[data-in="1"] .cnt{color:var(--fg);font-weight:600}
+#glueLessons li.glue-lesson[data-off="1"]{opacity:.35;border:2px dashed var(--ctl)}
+.glue-lesson[data-off="1"] .id{cursor:not-allowed}
+.glue-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.glue-sum div{border:1.5px solid var(--ctl);border-radius:12px;padding:8px 10px;background:var(--ctlbg)}
+.glue-sum b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.glue-sum small{font-size:12px;color:var(--mut)}
+.glue-split{margin:0;font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+#glueStatus{margin:0;padding:12px 14px;border-radius:12px;background:var(--ctlbg);border:1px dashed var(--ctl);font-size:14px}
+#glueHistory li{display:flex;gap:8px;align-items:center;justify-content:space-between;min-height:58px;padding:6px 10px;font-size:14px;cursor:default;background:var(--ctlbg);border:1.5px solid var(--ctl)}
+#glueHistory button{border:1.5px solid var(--ctl);background:var(--card);border-radius:10px;min-height:44px;padding:0 14px}
+.glue-go{position:sticky;bottom:0;padding:10px 0 2px;background:linear-gradient(transparent,var(--card) 30%)}
+#glueGo{width:100%;min-height:56px;border:0;border-radius:16px;background:var(--acc);color:var(--accfg);font-size:18px;font-weight:700;box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 35%,transparent)}
+#glueGo:disabled{opacity:.45;box-shadow:none;cursor:not-allowed}
+#numSheet{position:fixed;inset:0;display:none;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.45);z-index:10}
+#numSheet[data-open="1"]{display:flex}
+.num-box{background:var(--card);color:var(--fg);border-radius:20px 20px 0 0;max-height:72%;display:flex;flex-direction:column;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.num-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:700}
+.num-hd button{border:1.5px solid var(--ctl);background:var(--ctlbg);border-radius:10px;min-height:40px;padding:0 14px;font:inherit;color:inherit}
+#numSheetList{margin:0;padding:8px 12px 16px;gap:6px;overscroll-behavior:contain}
+#numSheetList li{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 14px;border-radius:12px;border:2px solid transparent;background:var(--ctlbg);cursor:pointer;font-size:15px}
+#numSheetList li::before{content:none}
+#numSheetList li b{min-width:34px;font-size:19px;font-variant-numeric:tabular-nums}
+#numSheetList li span{color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#numSheetList li[aria-selected="true"]{border-color:var(--acc);background:var(--soft)}
+#numSheetList li[aria-disabled="true"]{opacity:.35;cursor:not-allowed}
 .set-sec h4{margin:0 0 8px;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
 #settingsView .set-sec:has(> [hidden]){display:none}
 #settingsView .ico-wrap > button{display:none}
@@ -280,27 +326,50 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     <ul id="markList"></ul>
     <div id="glueView">
       <section class="set-sec">
-        <h4>Склейки з невивчених слів</h4>
-        <div class="row">
-          <label>Слів у склейці <input id="glueN" type="number" min="1" value="45" /></label>
+        <h4>1. Розмір склейки</h4>
+        <div class="glue-field">
+          <span>Слів у склейці</span>
+          <div class="stepper">
+            <button type="button" id="glueNMinus" aria-label="Менше на 5">−</button>
+            <button type="button" class="pick" id="glueN" aria-label="Слів у склейці">45</button>
+            <button type="button" id="glueNPlus" aria-label="Більше на 5">+</button>
+          </div>
         </div>
-        <div class="row">
-          <button type="button" id="glueModeRange" data-selected="1">Діапазон уроків</button>
-          <button type="button" id="glueModeList" data-selected="0">Вибір зі списку</button>
+      </section>
+      <section class="set-sec">
+        <h4>2. Уроки</h4>
+        <div class="segm" role="group" aria-label="Як вибрати уроки">
+          <button type="button" id="glueModeRange" aria-pressed="true">Діапазон</button>
+          <button type="button" id="glueModeList" aria-pressed="false">Зі списку</button>
         </div>
-        <div class="row" id="glueRange">
-          <label>від <input id="glueFrom" type="number" min="0" /></label>
-          <label>до <input id="glueTo" type="number" min="0" /></label>
+        <div class="glue-range" id="glueRange">
+          <span>від</span><button type="button" class="pick" id="glueFrom" aria-label="Від уроку">–</button>
+          <span>до</span><button type="button" class="pick" id="glueTo" aria-label="До уроку">–</button>
         </div>
-        <ul id="glueLessons" hidden></ul>
-        <p class="muted" id="glueInfo"></p>
-        <button type="button" id="glueGo">Згенерувати</button>
+        <p class="glue-hint">Щоб вибрати урок, торкніться його номера. Гортати можна по назвах.</p>
+        <ul id="glueLessons"></ul>
+      </section>
+      <section class="set-sec">
+        <h4>3. Результат</h4>
+        <div class="glue-sum">
+          <div><b id="glueSumLessons">0</b><small>уроків</small></div>
+          <div><b id="glueSumWords">0</b><small>невивчених слів</small></div>
+          <div><b id="glueSumBatches">0</b><small>склейок</small></div>
+        </div>
+        <p class="glue-split" id="glueSplit"></p>
         <p class="muted" id="glueStatus"></p>
       </section>
       <section class="set-sec">
-        <h4>Резерв (5 останніх)</h4>
+        <h4>Резерв · 5 останніх</h4>
         <ul id="glueHistory"></ul>
       </section>
+      <div class="glue-go"><button type="button" id="glueGo">Згенерувати</button></div>
+    </div>
+    <div id="numSheet" data-open="0">
+      <div class="num-box" role="dialog" aria-labelledby="numSheetTitle">
+        <div class="num-hd"><span id="numSheetTitle"></span><button type="button" id="numSheetClose">Закрити</button></div>
+        <ul id="numSheetList" role="listbox"></ul>
+      </div>
     </div>
     <div id="settingsView">
       <section class="set-sec" id="setFocus">
@@ -344,7 +413,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
   <script>
     'use strict';
 
-    const VT_VERSION = '2026.11.14-5';
+    const VT_VERSION = '2026.11.14-6';
     const IS_LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
     const IS_BETA = location.pathname.includes('/voicetrain/beta/');
     const CHANNEL_SUFFIX = IS_BETA ? '_beta' : '';
@@ -1965,7 +2034,6 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     // ---- Glue batches: storage, screen, playback ----
     const marksCache = new Map();
     let glueDoc = GlueBatches.normalizeDoc(null);
-    let glueMode = 'range';
     let glueLessons = [];
 
     function isGlueId(id) {
@@ -2040,38 +2108,81 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
     const elGlueFrom = document.getElementById('glueFrom');
     const elGlueTo = document.getElementById('glueTo');
     const elGlueLessons = document.getElementById('glueLessons');
-    const elGlueInfo = document.getElementById('glueInfo');
     const elGlueStatus = document.getElementById('glueStatus');
     const elGlueHistory = document.getElementById('glueHistory');
+    const elGlueGo = document.getElementById('glueGo');
+    const elNumSheet = document.getElementById('numSheet');
+    const LS_GLUE_FORM = 'voicetrain_glueForm';
+    const glueState = { n: 45, mode: 'range', from: null, to: null, picked: new Set() };
+
+    function readGlueForm() {
+      try {
+        const form = JSON.parse(localStorage.getItem(LS_GLUE_FORM) || 'null');
+        if (!form) return;
+        const n = Number(form.n);
+        if (n >= GlueBatches.N_MIN && n <= GlueBatches.N_MAX) glueState.n = n;
+        if (form.mode === 'list' || form.mode === 'range') glueState.mode = form.mode;
+        if (Number.isFinite(form.from)) glueState.from = form.from;
+        if (Number.isFinite(form.to)) glueState.to = form.to;
+        glueState.picked = new Set((form.picked || []).map(String));
+      } catch {
+        // a broken saved form is ignored
+      }
+    }
+
+    function writeGlueForm() {
+      try {
+        const { n, mode, from, to, picked } = glueState;
+        localStorage.setItem(LS_GLUE_FORM, JSON.stringify({ n, mode, from, to, picked: [...picked] }));
+      } catch {
+        // storage is only a convenience of this device
+      }
+    }
 
     function glueSelection() {
-      if (glueMode === 'list') {
-        const ids = [...elGlueLessons.querySelectorAll('input:checked')].map((box) => box.value);
+      if (glueState.mode === 'list') {
+        const ids = [...glueState.picked].sort((a, b) => Number(a) - Number(b));
         return { mode: 'list', ids };
       }
-      return { mode: 'range', from: Number(elGlueFrom.value), to: Number(elGlueTo.value) };
+      return { mode: 'range', from: glueState.from, to: glueState.to };
+    }
+
+    function glueUsableIds() {
+      return glueLessons.filter((x) => x.ok).map((x) => x.id);
     }
 
     function glueIds() {
-      return GlueBatches.selectedIds(glueSelection(), glueLessons.filter((x) => x.ok).map((x) => x.id));
+      return GlueBatches.selectedIds(glueSelection(), glueUsableIds());
     }
 
     function glueDate(gen) {
       return new Date(gen.created_at).toLocaleString('uk');
     }
 
+    function glueUnlearned(id) {
+      return GlueBatches.unlearnedWords(id, marksCache.get(id), knownWords).length;
+    }
+
     function paintGlueInfo() {
       const ids = glueIds();
-      const pool = ids.reduce((sum, id) => sum + GlueBatches.unlearnedWords(id, marksCache.get(id), knownWords).length, 0);
-      const n = Math.max(1, Number(elGlueN.value) || 1);
-      elGlueInfo.textContent = `Уроків: ${ids.length}. Невивчених слів: ${pool}. Склейок: ${Math.ceil(pool / n)}.`;
+      const pool = ids.reduce((sum, id) => sum + glueUnlearned(id), 0);
+      const n = glueState.n;
+      const full = Math.floor(pool / n);
+      const rest = pool % n;
+      document.getElementById('glueSumLessons').textContent = String(ids.length);
+      document.getElementById('glueSumWords').textContent = String(pool);
+      document.getElementById('glueSumBatches').textContent = String(full + (rest ? 1 : 0));
+      document.getElementById('glueSplit').textContent = !ids.length ? 'Не вибрано жодного уроку.'
+        : !pool ? 'У вибраних уроках немає невивчених слів.'
+          : `Розклад: ${full} × ${n}${rest ? ` + ${rest}` : ''} слів.`;
+      elGlueGo.disabled = !pool;
     }
 
     function paintGlueHistory() {
       elGlueHistory.innerHTML = '';
       if (!glueDoc.history.length) {
         const li = document.createElement('li');
-        li.textContent = 'Резервів ще немає.';
+        li.textContent = 'Резервів ще немає. Попередня черга потрапить сюди, коли згенеруєте нову.';
         elGlueHistory.appendChild(li);
       }
       glueDoc.history.forEach((gen) => {
@@ -2095,12 +2206,87 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       });
     }
 
+    function paintGlueLessons() {
+      const chosen = new Set(glueIds());
+      elGlueLessons.innerHTML = '';
+      glueLessons.forEach((lesson) => {
+        const on = chosen.has(String(lesson.id));
+        const li = document.createElement('li');
+        li.className = 'glue-lesson';
+        li.dataset.in = on ? '1' : '0';
+        li.dataset.off = lesson.ok ? '0' : '1';
+        const id = document.createElement('button');
+        id.type = 'button';
+        id.className = 'id';
+        id.dataset.id = lesson.id;
+        id.disabled = !lesson.ok;
+        id.setAttribute('role', 'checkbox');
+        id.setAttribute('aria-checked', String(on));
+        id.setAttribute('aria-label', `Урок ${lesson.id}`);
+        id.textContent = lesson.id;
+        const name = document.createElement('span');
+        name.className = 'nm';
+        name.textContent = lesson.short;
+        const cnt = document.createElement('span');
+        cnt.className = 'cnt';
+        cnt.textContent = lesson.ok ? `${glueUnlearned(lesson.id)} сл.` : 'без меж';
+        li.append(id, name, cnt);
+        elGlueLessons.appendChild(li);
+      });
+    }
+
     function paintGlueMode() {
-      document.getElementById('glueModeRange').dataset.selected = glueMode === 'range' ? '1' : '0';
-      document.getElementById('glueModeList').dataset.selected = glueMode === 'list' ? '1' : '0';
-      document.getElementById('glueRange').hidden = glueMode !== 'range';
-      elGlueLessons.hidden = glueMode !== 'list';
+      const range = glueState.mode === 'range';
+      document.getElementById('glueModeRange').setAttribute('aria-pressed', String(range));
+      document.getElementById('glueModeList').setAttribute('aria-pressed', String(!range));
+      document.getElementById('glueRange').hidden = !range;
+      elGlueN.textContent = String(glueState.n);
+      elGlueFrom.textContent = glueState.from ?? '–';
+      elGlueTo.textContent = glueState.to ?? '–';
+      paintGlueLessons();
       paintGlueInfo();
+      writeGlueForm();
+    }
+
+    function setGlueMode(mode) {
+      if (mode === 'list' && glueState.mode === 'range') glueState.picked = new Set(glueIds());
+      glueState.mode = mode;
+      paintGlueMode();
+    }
+
+    function openNumSheet(kind) {
+      const titles = { n: 'Слів у склейці', from: 'Від уроку', to: 'До уроку' };
+      const options = GlueBatches.numOptions(kind, glueState, glueUsableIds());
+      const names = new Map(glueLessons.map((x) => [Number(x.id), x.short]));
+      document.getElementById('numSheetTitle').textContent = titles[kind];
+      const list = document.getElementById('numSheetList');
+      list.innerHTML = '';
+      options.forEach((opt) => {
+        const li = document.createElement('li');
+        li.setAttribute('role', 'option');
+        li.dataset.v = String(opt.v);
+        li.setAttribute('aria-selected', String(opt.selected));
+        li.setAttribute('aria-disabled', String(opt.disabled));
+        const num = document.createElement('b');
+        num.textContent = String(opt.v);
+        const name = document.createElement('span');
+        name.textContent = kind === 'n' ? '' : names.get(opt.v) || '';
+        li.append(num, name);
+        list.appendChild(li);
+      });
+      list.onclick = (event) => {
+        const li = event.target.closest('li');
+        if (!li || li.getAttribute('aria-disabled') === 'true') return;
+        glueState[kind] = Number(li.dataset.v);
+        closeNumSheet();
+        paintGlueMode();
+      };
+      elNumSheet.dataset.open = '1';
+      list.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' });
+    }
+
+    function closeNumSheet() {
+      elNumSheet.dataset.open = '0';
     }
 
     async function paintGlueView() {
@@ -2124,23 +2310,13 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         return;
       }
       knownWords = readLocalKnown();
+      readGlueForm();
       const usable = glueLessons.filter((x) => x.ok).map((x) => Number(x.id));
-      if (usable.length && !elGlueFrom.value) elGlueFrom.value = String(Math.min(...usable));
-      if (usable.length && !elGlueTo.value) elGlueTo.value = String(Math.max(...usable));
-      elGlueLessons.innerHTML = '';
-      glueLessons.forEach((lesson) => {
-        const li = document.createElement('li');
-        li.dataset.off = lesson.ok ? '0' : '1';
-        const label = document.createElement('label');
-        const box = document.createElement('input');
-        box.type = 'checkbox';
-        box.value = lesson.id;
-        box.disabled = !lesson.ok;
-        box.onchange = paintGlueInfo;
-        label.append(box, ` ${lesson.short}${lesson.ok ? '' : ' (немає байтових меж)'}`);
-        li.appendChild(label);
-        elGlueLessons.appendChild(li);
-      });
+      if (usable.length) {
+        if (!usable.includes(glueState.from)) glueState.from = Math.min(...usable);
+        if (!usable.includes(glueState.to)) glueState.to = Math.max(...usable);
+        if (glueState.from > glueState.to) [glueState.from, glueState.to] = [glueState.to, glueState.from];
+      }
       elGlueStatus.textContent = glueDoc.current
         ? `Поточна черга: ${glueDoc.current.batches.length} склейок від ${glueDate(glueDoc.current)}.`
         : 'Черги склейок ще немає.';
@@ -2159,7 +2335,7 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
         lessons: ids.map((id) => ({ id, marks: marksCache.get(id) })),
         known: knownWords,
         selection: glueSelection(),
-        n: Number(elGlueN.value),
+        n: glueState.n,
         seed: crypto.getRandomValues(new Uint32Array(1))[0],
       });
       if (!gen.batches.length) {
@@ -2178,9 +2354,31 @@ html[data-theme$="-big"] #inFilter,html[data-theme$="-big"] #lessonList li{font-
       paintGlueHistory();
     }
 
-    document.getElementById('glueModeRange').onclick = () => { glueMode = 'range'; paintGlueMode(); };
-    document.getElementById('glueModeList').onclick = () => { glueMode = 'list'; paintGlueMode(); };
-    for (const el of [elGlueN, elGlueFrom, elGlueTo]) el.oninput = paintGlueInfo;
+    document.getElementById('glueModeRange').onclick = () => setGlueMode('range');
+    document.getElementById('glueModeList').onclick = () => setGlueMode('list');
+    document.getElementById('glueNMinus').onclick = () => {
+      glueState.n = Math.max(GlueBatches.N_MIN, glueState.n - GlueBatches.N_STEP);
+      paintGlueMode();
+    };
+    document.getElementById('glueNPlus').onclick = () => {
+      glueState.n = Math.min(GlueBatches.N_MAX, glueState.n + GlueBatches.N_STEP);
+      paintGlueMode();
+    };
+    elGlueN.onclick = () => openNumSheet('n');
+    elGlueFrom.onclick = () => openNumSheet('from');
+    elGlueTo.onclick = () => openNumSheet('to');
+    document.getElementById('numSheetClose').onclick = closeNumSheet;
+    elNumSheet.onclick = (event) => { if (event.target === elNumSheet) closeNumSheet(); };
+    elGlueLessons.onclick = (event) => {
+      const btn = event.target.closest('button.id');
+      if (!btn || btn.disabled) return;
+      if (glueState.mode === 'range') glueState.picked = new Set(glueIds());
+      glueState.mode = 'list';
+      const id = String(btn.dataset.id);
+      if (glueState.picked.has(id)) glueState.picked.delete(id);
+      else glueState.picked.add(id);
+      paintGlueMode();
+    };
     document.getElementById('glueGo').onclick = runGlue;
 
     async function startPlayer() {

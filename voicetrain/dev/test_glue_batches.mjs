@@ -118,3 +118,26 @@ test('findBatch and remaining', () => {
   const first = gen.batches[1].words[0];
   assert.equal(G.remaining(gen.batches[1], { [G.wordKey(first.word)]: 'x' }), gen.batches[1].words.length - 1);
 });
+
+test('numOptions: N list is 5..150 step 5 with the current value marked', () => {
+  const opts = G.numOptions('n', { n: 45 }, []);
+  assert.equal(opts.length, 30);
+  assert.deepEqual([opts[0].v, opts[29].v], [5, 150]);
+  assert.deepEqual(opts.filter((o) => o.selected).map((o) => o.v), [45]);
+});
+
+test('numOptions: from cannot pass to, to cannot go below from', () => {
+  const state = { from: 6, to: 10 };
+  const from = G.numOptions('from', state, IDS);
+  assert.deepEqual(from.filter((o) => o.disabled).map((o) => o.v), [11, 12]);
+  assert.deepEqual(from.filter((o) => o.selected).map((o) => o.v), [6]);
+  const to = G.numOptions('to', state, IDS);
+  assert.deepEqual(to.filter((o) => o.disabled).map((o) => o.v), [2, 5]);
+  assert.deepEqual(to.filter((o) => o.selected).map((o) => o.v), [10]);
+});
+
+test('range 2-12 turned into a list selects the same lessons', () => {
+  const range = { mode: 'range', from: 2, to: 12 };
+  const ids = G.selectedIds(range, IDS);
+  assert.deepEqual(G.selectedIds({ mode: 'list', ids }, IDS), ids);
+});
